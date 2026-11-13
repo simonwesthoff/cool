@@ -1,0 +1,67 @@
+schema: spec-driven
+
+context: |
+  Product: A web app where Olympic weightlifting coaches plan training for
+  the athletes in their team, and athletes see and log their training.
+  Olympic weightlifting only (snatch, clean & jerk and their assistance
+  exercises); no other sports.
+
+  Domain terms: Read openspec/glossary.md before writing any artifact and use
+  its terms; do not invent alternatives. For glossary terms, artifacts use the
+  German term with the English name in parentheses on first use; code uses
+  the English name. App and role terms (team, coach, athlete, ...) are English.
+  Do not invent exercise lists; the exercise catalog is defined in its own spec.
+  Entity relations: Read openspec/domain-model.md before writing any artifact.
+  It shows the currently built domain model plus a draft of planned parts.
+
+  Platform:
+  - Responsive web app, mobile-first (athletes use phones at the gym;
+    coaches also plan on desktop).
+  - Native iOS/Android apps may follow later. Therefore all business rules
+    and authorization live in a server-side domain layer exposed via an HTTP
+    API (Next.js route handlers). UI code, server components and server
+    actions only call into that layer and must not contain business logic.
+  - No offline mode.
+
+  Tech stack:
+  - Next.js (App Router), React, TypeScript (strict), Tailwind CSS
+  - PostgreSQL with Drizzle ORM and migrations
+  - Better Auth for authentication
+  - next-intl for internationalization
+  - Zod for validation at API boundaries
+
+  Authentication: Google and Apple sign-in only. No email/password.
+  Apple sign-in may be added after Google (requires an Apple Developer account).
+
+  Internationalization: UI in English and German from the start. No
+  hardcoded user-facing strings; every string exists in both languages.
+  Specs, code, and comments are in English.
+
+  Units: kilograms only.
+
+  Hosting and deployment:
+  - Runs locally first, later on an Ionos VPS.
+  - Docker Compose (app, PostgreSQL, Caddy reverse proxy with HTTPS) must run
+    the same way locally and on the VPS; environment-specific values come
+    from environment variables only.
+  - Production requires automated PostgreSQL backups stored off the VPS.
+
+  Out of scope for now: offline mode, native mobile apps, imperial units,
+  sports other than Olympic weightlifting.
+
+rules:
+  proposal:
+    - One feature per change; state explicitly what is out of scope.
+    - List any new domain terms the change introduces.
+  specs:
+    - Cover both the coach and the athlete perspective where a feature affects both.
+  design:
+    - If the change adds or changes entities or relations, include a "Domain
+      model changes" section using glossary terms and a Mermaid erDiagram
+      excerpt. Do not decide open questions from domain-model.md yourself;
+      ask the user.
+  tasks:
+    - Include adding English and German translations for all new user-facing text.
+    - Include adding new domain terms to openspec/glossary.md.
+    - If design.md has a "Domain model changes" section, include applying it
+      to openspec/domain-model.md (move built parts from "Draft" to "Current model").
