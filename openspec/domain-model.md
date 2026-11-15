@@ -69,3 +69,10 @@ erDiagram
 - A user account is linked to at most one Athlete, in one Team.
 - An Invitation can be used once and expires after 7 days. The coach can
   create a new one at any time; the previous one then stops working.
+- A coach trains themselves by linking their own user account to an
+  Athlete in their own Team ("This is me"), without an invitation.
+- A user account can be the coach of one Team and at the same time be
+  linked to an Athlete in another Team; it is still linked to at most one
+  Athlete overall.
+- Users whose automatically created Team has no athletes lose it when user
+  roles are introduced and choose their role again.
