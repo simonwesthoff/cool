@@ -22,7 +22,11 @@
   "Athletes": {
     "title": "Athleten",
     "add": "Athlet hinzufügen",
-    "empty": "Noch keine Athleten. Füge deinen ersten Athleten hinzu."
+    "empty": "Noch keine Athleten. Füge deinen ersten Athleten hinzu.",
+    "carouselLabel": "Athleten",
+    "previous": "Vorherige Athleten",
+    "next": "Nächste Athleten",
+    "pictureAlt": "Profilbild von {name}"
   },
   "AthleteForm": {
     "newTitle": "Neuer Athlet",
@@ -114,5 +118,10 @@
     "label": "Rolle",
     "team": "Mein Team",
     "training": "Mein Training"
+  },
+  "AthleteDetails": {
+    "back": "Zurück zu den Athleten",
+    "basicData": "Stammdaten",
+    "pictureAlt": "Profilbild von {name}"
   }
 }
