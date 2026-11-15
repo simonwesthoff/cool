@@ -7,21 +7,6 @@ basic data, as the foundation for planning their training.
 
 ## Requirements
 
-### Requirement: Coach's Team
-Every signed-in user SHALL be the coach of exactly one Team. The Team SHALL
-be created automatically the first time the user needs it. This applies
-until user roles are introduced.
-
-#### Scenario: First visit creates the Team
-- **GIVEN** a user account that has no Team
-- **WHEN** the user opens the home page
-- **THEN** a Team led by this user exists and its athlete list is shown, empty
-
-#### Scenario: Later visits reuse the Team
-- **GIVEN** a user who already leads a Team
-- **WHEN** the user opens the home page again
-- **THEN** no new Team is created and the athletes of their existing Team are shown
-
 ### Requirement: Add an athlete
 A coach SHALL be able to add an athlete to their Team. Only the name is
 required; all other basic data can be left empty and filled in later.
@@ -44,7 +29,8 @@ An athlete's basic data entered by the coach SHALL consist of: name
 (required, 1 to 100 characters, surrounding spaces removed), date of birth,
 gender (female, male or diverse), start date of the weightlifting career,
 and height in whole centimetres. Email address and profile picture SHALL
-NOT be entered by the coach.
+NOT be entered by the coach; for an athlete linked to a user account they
+SHALL be taken from that user account.
 
 #### Scenario: Invalid values are rejected
 - **WHEN** a coach saves a date of birth in the future, a career start date in the future, a career start date before the date of birth, or a height outside 100 to 250 cm
@@ -52,7 +38,12 @@ NOT be entered by the coach.
 
 #### Scenario: No email or picture fields
 - **WHEN** a coach opens the form to add or edit an athlete
-- **THEN** the form has no fields for email address or profile picture
+- **THEN** the form has no input fields for email address or profile picture
+
+#### Scenario: Email and picture of a linked athlete
+- **GIVEN** an athlete linked to a user account
+- **WHEN** the coach opens the athlete's edit page or requests the athlete through the API
+- **THEN** the email address and profile picture of that user account are shown, read-only
 
 ### Requirement: Edit basic data
 A coach SHALL be able to change the basic data of each athlete in their
@@ -99,9 +90,10 @@ exist.
 
 ### Requirement: Athletes API
 The HTTP API SHALL let the signed-in coach list the athletes of their Team,
-add an athlete, read one athlete and update an athlete's basic data. Invalid
-input SHALL be answered with status 400, the code `VALIDATION_FAILED` and
-field codes. Requests without a session SHALL be answered with status 401.
+add an athlete, read one athlete and update an athlete's basic data,
+including whether each athlete is linked and the email address and picture
+of the linked account. Errors SHALL use status 400 `VALIDATION_FAILED` with
+field codes, 401 without a session and 403 `NOT_A_COACH` without a Team.
 
 #### Scenario: Create through the API
 - **WHEN** a signed-in client sends a valid new athlete with a name
@@ -115,11 +107,37 @@ field codes. Requests without a session SHALL be answered with status 401.
 - **WHEN** a client without a session calls any athletes endpoint
 - **THEN** the response has status 401 and code `UNAUTHENTICATED`
 
-### Requirement: Athlete perspective
-Athletes SHALL NOT yet have their own access to their basic data. They get
-it when they are linked to their Athlete through an invitation (user roles
-feature).
+#### Scenario: Not a coach
+- **WHEN** a signed-in user who leads no Team calls any athletes endpoint
+- **THEN** the response has status 403 and code `NOT_A_COACH`, and no Team is created
 
-#### Scenario: Athlete without invitation
-- **WHEN** an athlete signs in to the app themselves
-- **THEN** they are treated like any signed-in user (coach of their own Team) and do not see the basic data their coach entered
+### Requirement: Team through Start as Coach
+A user SHALL become the coach of exactly one Team by choosing "Start as
+Coach" (see user-roles). Only users who lead a Team SHALL see the athlete
+list and add, read or edit athletes.
+
+#### Scenario: Start as Coach creates the Team
+- **GIVEN** a user account that has no Team
+- **WHEN** the user chooses "Start as Coach"
+- **THEN** a Team led by this user exists and its athlete list is shown, empty
+
+#### Scenario: Later visits reuse the Team
+- **GIVEN** a user who already leads a Team
+- **WHEN** the user opens the home page again
+- **THEN** no new Team is created and the athletes of their existing Team are shown
+
+#### Scenario: User without a Team
+- **GIVEN** a user who leads no Team
+- **WHEN** they open the form to add an athlete or an athlete's edit page
+- **THEN** they are sent to the home page and no Team is created
+
+### Requirement: Athlete access to basic data
+Athletes SHALL NOT yet see or edit their basic data themselves; their
+athlete view shows only their name, profile picture and coach (see
+user-roles). Viewing and editing basic data by the athlete comes with the
+basic data overview.
+
+#### Scenario: Linked athlete opens the app
+- **GIVEN** a user who is only an athlete
+- **WHEN** they open the app
+- **THEN** they see their athlete view and cannot open the coach's athlete list or edit pages

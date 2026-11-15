@@ -37,4 +37,5 @@
 
 ## Workflow follow-up
 
-- User acceptance test with two real Google accounts, then commit, archive and continue with feature 4 (athlete overview).
+- Open item: acceptance test with two real Google accounts (invitation and athlete view) is postponed by the user until the app runs on the VPS; it is part of the VPS deployment change.
+- Archived after acceptance with one account; continue with feature 4 (athlete overview).

@@ -25,12 +25,10 @@ SHALL be taken from that user account.
 
 ### Requirement: Athletes API
 The HTTP API SHALL let the signed-in coach list the athletes of their Team,
-add an athlete, read one athlete and update an athlete's basic data. Each
-athlete SHALL include whether it is linked to a user account and, if so,
-that account's email address and profile picture. Invalid input SHALL be
-answered with status 400, the code `VALIDATION_FAILED` and field codes.
-Requests without a session SHALL be answered with status 401, requests of
-users who lead no Team with status 403 and the code `NOT_A_COACH`.
+add an athlete, read one athlete and update an athlete's basic data,
+including whether each athlete is linked and the email address and picture
+of the linked account. Errors SHALL use status 400 `VALIDATION_FAILED` with
+field codes, 401 without a session and 403 `NOT_A_COACH` without a Team.
 
 #### Scenario: Create through the API
 - **WHEN** a signed-in client sends a valid new athlete with a name
