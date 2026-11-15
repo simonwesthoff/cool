@@ -31,6 +31,35 @@ first time you open `https://localhost:3000` (dev server) and
 `https://localhost` (Docker stack). Accept it to continue; the connection is
 still encrypted. The `certs/` folder is gitignored.
 
+### Sign-in with Google (one-time)
+
+Sign-in uses Google only. Create an OAuth client in the
+[Google Cloud Console](https://console.cloud.google.com/):
+
+1. Create a project, e.g. "cool".
+2. **Google Auth Platform → Branding / Audience**: set up the consent screen
+   (app name, support email), user type **External**, and keep the
+   publishing status **Testing**. Add every Google account that should be
+   able to sign in under **Test users**. While the app is in Testing mode,
+   only these accounts can sign in.
+3. **Data access**: the scopes `openid`, `.../auth/userinfo.email` and
+   `.../auth/userinfo.profile` are enough.
+4. **Clients → Create client**, type **Web application**, with these
+   authorized redirect URIs:
+   - `https://localhost:3000/api/auth/callback/google` (`npm run dev`)
+   - `https://localhost/api/auth/callback/google` (Docker Compose)
+5. Copy the client ID and secret into `.env` as `GOOGLE_CLIENT_ID` and
+   `GOOGLE_CLIENT_SECRET`, and set `BETTER_AUTH_SECRET` to a random value:
+
+   ```sh
+   openssl rand -base64 32
+   ```
+
+`BETTER_AUTH_URL` in `.env` is the dev server's URL
+(`https://localhost:3000`); Docker Compose sets it to `https://$APP_DOMAIN`
+itself. Docker Compose refuses to start while one of these variables is
+missing.
+
 ## Local development
 
 Start only PostgreSQL in Docker, published on `localhost`:

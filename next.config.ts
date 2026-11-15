@@ -5,6 +5,12 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  images: {
+    // Google profile pictures of signed-in users.
+    remotePatterns: [
+      { protocol: "https", hostname: "*.googleusercontent.com" },
+    ],
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

@@ -3,12 +3,58 @@
     "name": "cool",
     "description": "Competitive Olympic Weightlifting – Trainingspläne für Trainer und Athleten."
   },
-  "Home": {
-    "tagline": "Plane das Training deiner Athleten und setze es im Kraftraum um."
-  },
   "LanguageSwitcher": {
     "label": "Sprache",
     "en": "English",
     "de": "Deutsch"
+  },
+  "SignIn": {
+    "tagline": "Plane das Training deiner Athleten und setze es im Kraftraum um.",
+    "continueWithGoogle": "Weiter mit Google",
+    "errorCancelled": "Die Anmeldung wurde nicht abgeschlossen. Bitte versuche es erneut.",
+    "errorFailed": "Die Anmeldung ist fehlgeschlagen. Bitte versuche es erneut."
+  },
+  "UserMenu": {
+    "pictureAlt": "Profilbild von {name}",
+    "signOut": "Abmelden"
+  },
+  "Athletes": {
+    "title": "Athleten",
+    "add": "Athlet hinzufügen",
+    "empty": "Noch keine Athleten. Füge deinen ersten Athleten hinzu."
+  },
+  "AthleteForm": {
+    "newTitle": "Neuer Athlet",
+    "editTitle": "Athlet bearbeiten",
+    "name": "Name",
+    "dateOfBirth": "Geburtsdatum",
+    "gender": "Geschlecht",
+    "careerStartDate": "Beginn der Gewichtheberkarriere",
+    "heightCm": "Größe (cm)",
+    "notSpecified": "Keine Angabe",
+    "genders": {
+      "female": "Weiblich",
+      "male": "Männlich",
+      "diverse": "Divers"
+    },
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
+    "notFound": "Diesen Athleten gibt es nicht mehr.",
+    "errors": {
+      "REQUIRED": "Bitte gib einen Namen ein.",
+      "TOO_LONG": "Höchstens 100 Zeichen.",
+      "IN_FUTURE": "Darf nicht in der Zukunft liegen.",
+      "BEFORE_DATE_OF_BIRTH": "Darf nicht vor dem Geburtsdatum liegen.",
+      "OUT_OF_RANGE": "Muss zwischen 100 und 250 cm liegen.",
+      "NOT_INTEGER": "Bitte ganze Zentimeter eingeben.",
+      "INVALID_FORMAT": "Bitte ein gültiges Datum eingeben.",
+      "INVALID": "Ungültiger Wert."
+    }
+  },
+  "NotFound": {
+    "title": "Seite nicht gefunden",
+    "text": "Diese Seite gibt es nicht oder du hast keinen Zugriff darauf.",
+    "home": "Zurück zur Startseite"
   }
 }

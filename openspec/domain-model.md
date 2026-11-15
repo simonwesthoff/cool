@@ -15,7 +15,33 @@ keys, columns) belong in each change's `design.md` and in the code.
 
 ## Current model
 
-Nothing is built yet.
+```mermaid
+erDiagram
+    UserAccount ||--o| Team : "leads as coach"
+    Team ||--o{ Athlete : "has"
+    UserAccount {
+        string name
+        string email
+        string picture
+    }
+    Athlete {
+        string name
+        date dateOfBirth
+        string gender
+        date careerStartDate
+        int heightCm
+    }
+```
+
+- A user account is created by the first sign-in with Google and is
+  identified by that Google account. Name and picture follow the Google
+  profile on every sign-in.
+- A user account has no role by itself. Until user roles exist, every user
+  account leads exactly one Team, created automatically.
+- A Team has exactly one coach.
+- An Athlete belongs to exactly one Team and is created by its coach.
+- Email address and profile picture are part of an athlete's basic data but
+  come from the linked user account; they are not stored on the Athlete.
 
 ## Draft (not yet built)
 
@@ -24,23 +50,22 @@ them into "Current model" above.
 
 ```mermaid
 erDiagram
-    UserAccount ||--o{ Team : "leads as coach"
-    Team ||--o{ Athlete : "has"
-    UserAccount |o--o{ Athlete : "is linked to"
+    UserAccount |o--o| Athlete : "is linked to"
     Athlete ||--o{ Invitation : "is invited via"
 ```
 
-- A user account is created by signing in with Google or Apple. It has no
-  role by itself; a coach is a user account in the coach role of a Team.
-  Roles are per Team, not global.
-- A coach creates an Athlete in their Team before the athlete has an account.
+- User account, Team and Athlete are built (see "Current model"); the
+  relations below are not. A coach is a user account in the coach role of a
+  Team. Roles are per Team, not global. Signing in with Apple will lead to
+  the same kind of user account.
 - An Invitation belongs to one Athlete. When someone signs in through it,
   their user account is linked to that Athlete.
 - A coach can train themselves: their user account is then also linked to
   an Athlete in their own Team.
 
-### Open questions
+### Decisions (answered by the user on 2026-11-15)
 
-- Can a Team have more than one coach?
-- Can one user account be linked to Athletes in several Teams?
-- Can an Invitation be used more than once, and does it expire?
+- A Team has exactly one coach.
+- A user account is linked to at most one Athlete, in one Team.
+- An Invitation can be used once and expires after 7 days. The coach can
+  create a new one at any time; the previous one then stops working.

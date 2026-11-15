@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorKind } from "@/domain/errors";
+import { DomainValidationError, type FieldErrors } from "@/domain/validation";
 
-/** Field-level error codes, keyed by dotted field path. */
-export type FieldErrors = Record<string, string[]>;
+export type { FieldErrors };
 
 /** The single JSON shape of every API error response. */
 export type ApiErrorBody = {
@@ -47,6 +47,9 @@ export function errorResponse(
 export function toErrorResponse(error: unknown): Response {
   if (error instanceof HttpError) {
     return errorResponse(error.status, error.code, error.fields);
+  }
+  if (error instanceof DomainValidationError) {
+    return errorResponse(400, error.code, error.fields);
   }
   if (error instanceof DomainError) {
     return errorResponse(statusByKind[error.kind], error.code);
