@@ -16,6 +16,8 @@
 - [x] 3.1 Build the catalog list `/exercises` (number, name, group code/name, best value; every row links to the exercise) and the exercise page `/exercises/{number}` (all information, "not defined" for empty values, back link, not found for unknown numbers) for every signed-in user, with locale number formatting; add English and German texts; verify component tests (German and English names, list row of exercise 31 without best value, all values of exercise 13) and page tests
 - [x] 3.2 Replace the role switch with `AppNavigation` (tabs per role, bottom bar on phones, header from `sm`, current tab marked, safe-area padding), move the language switcher into the account menu and the footer to the signed-out pages; add English and German texts; verify component tests for the tabs per role and the account menu
 
+- [x] 3.3 Acceptance feedback: group the catalog list into one block per exercise group (heading with code and name) instead of a group column; verify component tests and the browser check (phone and desktop screenshots)
+
 ## 4. Project records
 
 - [x] 4.1 Add Exercise group, Best value, Reference lift and the group names with abbreviations to `openspec/glossary.md`

@@ -57,14 +57,16 @@ values like 87.5 % fit.
   changes.
 
 ### Catalog page `/exercises` and exercise page `/exercises/{number}`
-(Layout decided by the user after the first plan: list with number, name,
-group and best value; every exercise clickable for all information.)
+(Layout decided by the user: exercises grouped in one block per exercise
+group, each row with number, name and best value; every exercise clickable
+for all information. A first version with the group as a column was
+replaced during acceptance.)
 - `/exercises`: server component for every signed-in user (no role
-  needed); texts in the current locale. One list in catalog order, each
-  row a link with four parts: number, name, group and best value. The
-  group shows its code (`K3`) on phones and code plus name from `md` up;
-  the best value is right-aligned (`108 %`, `–` when empty). No table and
-  no fixed widths, so nothing scrolls sideways.
+  needed); texts in the current locale. One `section` per exercise group
+  with an `h2` heading (`K3 · Speed strength`) and a list of its exercises;
+  each row is a link with number, name and the right-aligned best value
+  (`108 %`, `–` when empty). No table and no fixed widths, so nothing
+  scrolls sideways.
 - `/exercises/{number}`: all information as a definition list: number,
   name, group (code and name), reference lift, best value, max. weekly
   average weight, reps per set (`3–8`), reps per week (`18–48`) and

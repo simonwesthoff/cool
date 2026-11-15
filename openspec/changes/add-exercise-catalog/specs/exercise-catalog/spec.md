@@ -49,14 +49,15 @@ English.
 
 ### Requirement: Catalog page
 Every signed-in user SHALL be able to open the catalog page from the app's
-navigation. It SHALL list all exercises in catalog order, each with its
-number, name, exercise group and best value, readable on a phone without
+navigation. It SHALL show one block per exercise group (K1 to K9) with the
+group's code and name as heading, listing the group's exercises in catalog
+order with number, name and best value, readable on a phone without
 horizontal scrolling. Each exercise SHALL be selectable.
 
 #### Scenario: Open the catalog
 - **GIVEN** a signed-in coach or athlete
 - **WHEN** they choose "Exercises" in the navigation
-- **THEN** they see the exercises 1 to 45 in order, each with number, name, group and best value
+- **THEN** they see the blocks K1 to K9 in order, each headed by the group's code and name and listing its exercises with number, name and best value
 
 #### Scenario: Exercise without best value
 - **WHEN** a user looks at exercise 31 "Bankdrücken" in the list
@@ -64,7 +65,7 @@ horizontal scrolling. Each exercise SHALL be selectable.
 
 #### Scenario: Phone
 - **WHEN** a user opens the catalog on a phone
-- **THEN** number, name, group and best value are readable without scrolling sideways
+- **THEN** group headings, numbers, names and best values are readable without scrolling sideways
 
 ### Requirement: Exercise details
 Selecting an exercise in the catalog SHALL show all its information: number,

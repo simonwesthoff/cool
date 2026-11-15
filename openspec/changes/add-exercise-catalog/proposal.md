@@ -23,9 +23,9 @@ app gets a separate tab for it.
 - **English and German.** Exercise, group and comment texts exist in both
   languages; the English names are proposed in `translations.md` and
   reviewed by the user.
-- **Catalog tab.** A new "Exercises" page lists all exercises with number,
-  name, exercise group and best value; selecting one shows all its
-  information on its own page.
+- **Catalog tab.** A new "Exercises" page shows the exercises in one block
+  per exercise group, each with number, name and best value; selecting one
+  shows all its information on its own page.
 - **Navigation.** The app gets tabs: "Athletes" (coaches), "My training"
   (athletes) and "Exercises" (every signed-in user). On phones they form a
   bottom tab bar, on larger screens they sit in the header. This replaces

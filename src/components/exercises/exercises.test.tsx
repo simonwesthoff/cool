@@ -63,16 +63,23 @@ function renderIn(locale: "en" | "de", node: React.ReactNode) {
 }
 
 describe("ExerciseList", () => {
-  it("shows number, name, group and best value per exercise, linking to it", () => {
+  it("shows one block per group with number, name and best value per exercise", () => {
     renderIn("en", <ExerciseList groups={[k3, k8]} />);
-    const rows = within(
-      screen.getByRole("list", { name: "Exercises" }),
+    expect(
+      screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent),
+    ).toEqual(["K3 · Speed strength", "K8 · General strength training 1"]);
+    const k3Rows = within(
+      screen.getByRole("list", { name: "K3 · Speed strength" }),
     ).getAllByRole("link");
-    expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveProperty("pathname", "/exercises/13");
-    expect(rows[0]!.textContent).toBe("13Snatch pullK3 · Speed strength108%");
-    expect(rows[1]!.textContent).toContain("31Bench pressK8");
-    expect(within(rows[1]!).getByLabelText("Not defined").textContent).toBe(
+    expect(k3Rows).toHaveLength(1);
+    expect(k3Rows[0]).toHaveProperty("pathname", "/exercises/13");
+    expect(k3Rows[0]!.textContent).toBe("13Snatch pullBest value 108%");
+    expect(k3Rows[0]!.textContent).not.toContain("K3");
+    const k8Rows = within(
+      screen.getByRole("list", { name: "K8 · General strength training 1" }),
+    ).getAllByRole("link");
+    expect(k8Rows[0]!.textContent).toContain("31Bench press");
+    expect(within(k8Rows[0]!).getByLabelText("Not defined").textContent).toBe(
       "–",
     );
   });
@@ -82,10 +89,12 @@ describe("ExerciseList", () => {
     expect(
       screen.getByRole("heading", { name: "Trainingsmittelkatalog" }),
     ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "K3 · Schnellkraftfähigkeit (SKF)" }),
+    ).toBeTruthy();
     const row = screen.getByRole("link");
     expect(row.textContent).toContain("Zug breit");
-    expect(row.textContent).toContain("Schnellkraftfähigkeit (SKF)");
-    expect(row.textContent).toContain("108 %");
+    expect(row.textContent).toContain("108\u00a0%");
   });
 });
 
