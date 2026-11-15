@@ -10,6 +10,7 @@ vi.mock("@/server/auth", () => ({
 }));
 
 const collection = await import("./route");
+const teamRoute = await import("../team/route");
 const item = await import("./[id]/route");
 
 const base = "https://localhost/api/athletes";
@@ -21,9 +22,13 @@ const json = (method: string, body: unknown, url = base) =>
   });
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
 
-async function signInAs() {
+async function signInAs({ coach = true } = {}) {
   const user = await createUser(testDb.db);
   getSession.mockResolvedValue({ session: {}, user });
+  if (coach)
+    await teamRoute.POST(
+      new Request("https://localhost/api/team", { method: "POST" }),
+    );
   return user;
 }
 
@@ -118,5 +123,45 @@ describe("athletes API", () => {
         error: { code: "UNAUTHENTICATED" },
       });
     }
+  });
+
+  it("answers users without a Team with 403 NOT_A_COACH", async () => {
+    await signInAs({ coach: false });
+    const id = "00000000-0000-4000-8000-000000000000";
+    for (const response of [
+      await collection.GET(new Request(base)),
+      await collection.POST(json("POST", { name: "Anna" })),
+      await item.GET(new Request(`${base}/${id}`), ctx(id)),
+      await item.PATCH(json("PATCH", { name: "A" }, `${base}/${id}`), ctx(id)),
+    ]) {
+      expect(response.status).toBe(403);
+      expect(await response.json()).toEqual({ error: { code: "NOT_A_COACH" } });
+    }
+  });
+});
+
+describe("POST /api/team", () => {
+  beforeEach(() => getSession.mockReset());
+
+  it("creates the Team (201) and returns it on a second call (200)", async () => {
+    const user = await createUser(testDb.db);
+    getSession.mockResolvedValue({ session: {}, user });
+    const request = () =>
+      new Request("https://localhost/api/team", { method: "POST" });
+    const first = await teamRoute.POST(request());
+    expect(first.status).toBe(201);
+    const created = await first.json();
+    expect(created).toMatchObject({ coachId: user.id });
+    const second = await teamRoute.POST(request());
+    expect(second.status).toBe(200);
+    expect(await second.json()).toEqual(created);
+  });
+
+  it("needs a session", async () => {
+    getSession.mockResolvedValue(null);
+    const response = await teamRoute.POST(
+      new Request("https://localhost/api/team", { method: "POST" }),
+    );
+    expect(response.status).toBe(401);
   });
 });

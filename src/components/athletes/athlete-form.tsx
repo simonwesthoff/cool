@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { genders, today, type Athlete } from "@/domain/athletes/basic-data";
+import {
+  InvitationLink,
+  requestInvitation,
+  type CreatedInvitation,
+} from "../invitations/invitation-panel";
 
 /** Field error codes the API can return, with a message each. */
 const knownCodes = [
@@ -62,6 +67,10 @@ function AthleteFormFields({ athlete }: Props) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [invited, setInvited] = useState<{
+    name: string;
+    invitation: CreatedInvitation;
+  } | null>(null);
 
   function message(code: string): string {
     return (knownCodes as readonly string[]).includes(code)
@@ -72,6 +81,8 @@ function AthleteFormFields({ athlete }: Props) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const andInvite = submitter?.getAttribute("value") === "invite";
     setPending(true);
     setErrors({});
     setFormError(null);
@@ -94,6 +105,14 @@ function AthleteFormFields({ athlete }: Props) {
       if (response.ok) {
         // Leave nothing behind for a restored page (e.g. browser back).
         if (!athlete) form.reset();
+        if (andInvite) {
+          const created = (await response.json()) as Athlete;
+          const invitation = await requestInvitation(created.id);
+          setPending(false);
+          if (invitation) setInvited({ name: created.name, invitation });
+          else router.push(`/athletes/${created.id}`);
+          return;
+        }
         setPending(false);
         router.push("/");
         router.refresh();
@@ -150,6 +169,26 @@ function AthleteFormFields({ athlete }: Props) {
 
   const inputClass =
     "min-h-11 rounded-lg border border-zinc-300 bg-transparent px-3 aria-invalid:border-red-600 dark:border-zinc-700";
+
+  if (invited) {
+    return (
+      <section className="flex flex-col gap-5">
+        <h1 className="text-2xl font-semibold">
+          {t("invitedTitle", { name: invited.name })}
+        </h1>
+        <p className="text-zinc-600 dark:text-zinc-400">{t("invitedText")}</p>
+        <InvitationLink invitation={invited.invitation} />
+        <div>
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-6 font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          >
+            {t("done")}
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-5">
@@ -226,6 +265,17 @@ function AthleteFormFields({ athlete }: Props) {
         >
           {t("save")}
         </button>
+        {!athlete && (
+          <button
+            type="submit"
+            name="action"
+            value="invite"
+            disabled={pending}
+            className="inline-flex min-h-11 items-center rounded-full border border-zinc-300 px-6 font-medium hover:bg-zinc-100 disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          >
+            {t("saveAndInvite")}
+          </button>
+        )}
         <Link
           href="/"
           className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"

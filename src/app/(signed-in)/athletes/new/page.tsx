@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { AthleteForm } from "@/components/athletes/athlete-form";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
-import { requirePageUser } from "../../current-user";
+import { requireCoachPage } from "../../current-user";
 
 export default function NewAthletePage() {
   return (
@@ -14,6 +14,6 @@ export default function NewAthletePage() {
 }
 
 async function NewAthlete() {
-  await requirePageUser("/athletes/new");
+  await requireCoachPage("/athletes/new");
   return <AthleteForm />;
 }

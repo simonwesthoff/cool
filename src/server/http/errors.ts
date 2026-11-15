@@ -29,6 +29,7 @@ const statusByKind: Record<DomainErrorKind, number> = {
   forbidden: 403,
   not_found: 404,
   conflict: 409,
+  gone: 410,
 };
 
 export function errorResponse(

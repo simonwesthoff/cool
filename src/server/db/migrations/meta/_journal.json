@@ -15,6 +15,20 @@
       "when": 1794758587074,
       "tag": "0001_athletes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794763667742,
+      "tag": "0002_invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794763678306,
+      "tag": "0003_remove_empty_teams",
+      "breakpoints": true
     }
   ]
 }

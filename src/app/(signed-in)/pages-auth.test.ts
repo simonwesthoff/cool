@@ -19,6 +19,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("@/domain/athletes", () => ({ listAthletes: async () => [] }));
+const getRoles = vi.fn();
+vi.mock("@/domain/roles", () => ({ getRoles }));
 vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string) => key,
 }));
@@ -27,14 +29,36 @@ const { Home } = await import("./page");
 const { SignIn: SignInPage } = await import("../sign-in/page");
 
 async function redirectOf(render: () => Promise<unknown>) {
-  const error = await render().catch((e: unknown) => e);
-  return error instanceof Redirect ? error.url : null;
+  const result = await render().then(
+    () => null,
+    (e: unknown) => {
+      if (e instanceof Redirect) return e;
+      throw e;
+    },
+  );
+  return result ? result.url : null;
 }
 
 const user = { id: "u1", name: "Ada", email: "ada@example.com", image: null };
 
+const noRoles = { coach: null, athlete: null };
+const coachRole = { coach: { teamId: "t1" }, athlete: null };
+const athleteRole = {
+  coach: null,
+  athlete: {
+    athleteId: "a1",
+    athleteName: "Ada",
+    teamId: "t2",
+    coachName: "Max",
+  },
+};
+
 describe("server-side session check", () => {
-  beforeEach(() => getSession.mockReset());
+  beforeEach(() => {
+    getSession.mockReset();
+    getRoles.mockReset();
+    getRoles.mockResolvedValue(coachRole);
+  });
 
   it("sends the home page to sign-in when the session cookie is invalid", async () => {
     getSession.mockResolvedValue(null);
@@ -68,5 +92,29 @@ describe("server-side session check", () => {
     expect(
       await redirectOf(() => SignInPage({ searchParams } as never)),
     ).toBeNull();
+  });
+});
+
+describe("home page by role", () => {
+  beforeEach(() => {
+    getSession.mockReset();
+    getSession.mockResolvedValue({ session: {}, user });
+  });
+
+  it("shows the start choice to users without a role", async () => {
+    getRoles.mockResolvedValue(noRoles);
+    const element = (await Home()) as { type: { name: string } };
+    expect(element.type.name).toBe("StartChoice");
+  });
+
+  it("shows the athlete list to coaches", async () => {
+    getRoles.mockResolvedValue(coachRole);
+    const element = (await Home()) as { type: { name: string } };
+    expect(element.type.name).toBe("AthleteList");
+  });
+
+  it("sends users who are only athletes to their athlete view", async () => {
+    getRoles.mockResolvedValue(athleteRole);
+    expect(await redirectOf(() => Home())).toBe("/training");
   });
 });

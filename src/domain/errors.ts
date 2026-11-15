@@ -6,7 +6,12 @@
  * without the domain layer knowing about HTTP.
  */
 export type DomainErrorKind =
-  "invalid" | "unauthenticated" | "forbidden" | "not_found" | "conflict";
+  | "invalid"
+  | "unauthenticated"
+  | "forbidden"
+  | "not_found"
+  | "conflict"
+  | "gone";
 
 export class DomainError extends Error {
   constructor(
