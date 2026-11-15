@@ -4,11 +4,19 @@
     "description": "Competitive Olympic Weightlifting – training plans for coaches and athletes."
   },
   "Home": {
-    "tagline": "Plan training for your athletes and follow it at the gym."
+    "signedInAs": "Signed in as",
+    "pictureAlt": "Profile picture of {name}",
+    "signOut": "Sign out"
   },
   "LanguageSwitcher": {
     "label": "Language",
     "en": "English",
     "de": "Deutsch"
+  },
+  "SignIn": {
+    "tagline": "Plan training for your athletes and follow it at the gym.",
+    "continueWithGoogle": "Continue with Google",
+    "errorCancelled": "Sign-in was not completed. Please try again.",
+    "errorFailed": "Sign-in failed. Please try again."
   }
 }

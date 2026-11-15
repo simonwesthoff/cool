@@ -1,21 +1,43 @@
 import { getTranslations } from "next-intl/server";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { Avatar } from "@/components/avatar";
+import { LoadingPlaceholder } from "@/components/loading-placeholder";
+import { PageHeader } from "@/components/page-header";
+import { getCurrentUser, signInUrl } from "@/domain/auth";
 
-export default async function Home() {
-  const t = await getTranslations();
+/** Placeholder home page until user roles exist (feature 2). */
+export default function HomePage() {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex justify-end px-4 py-3 sm:px-8">
-        <LanguageSwitcher />
-      </header>
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-4 px-4 pb-24 sm:px-8">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
-          {t("App.name")}
-        </h1>
-        <p className="text-lg text-zinc-600 sm:text-xl dark:text-zinc-400">
-          {t("Home.tagline")}
-        </p>
-      </main>
+      <PageHeader />
+      <Suspense fallback={<LoadingPlaceholder />}>
+        <Home />
+      </Suspense>
     </div>
+  );
+}
+
+export async function Home() {
+  const user = await getCurrentUser(await headers());
+  if (!user) redirect(signInUrl("/"));
+
+  const t = await getTranslations("Home");
+  return (
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-4 pb-24 text-center">
+      <Avatar
+        name={user.name}
+        image={user.image}
+        alt={t("pictureAlt", { name: user.name })}
+        size={96}
+      />
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        {t("signedInAs")}
+      </p>
+      <h1 className="text-2xl font-semibold">{user.name}</h1>
+      <SignOutButton />
+    </main>
   );
 }

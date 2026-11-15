@@ -4,11 +4,19 @@
     "description": "Competitive Olympic Weightlifting – Trainingspläne für Trainer und Athleten."
   },
   "Home": {
-    "tagline": "Plane das Training deiner Athleten und setze es im Kraftraum um."
+    "signedInAs": "Angemeldet als",
+    "pictureAlt": "Profilbild von {name}",
+    "signOut": "Abmelden"
   },
   "LanguageSwitcher": {
     "label": "Sprache",
     "en": "English",
     "de": "Deutsch"
+  },
+  "SignIn": {
+    "tagline": "Plane das Training deiner Athleten und setze es im Kraftraum um.",
+    "continueWithGoogle": "Weiter mit Google",
+    "errorCancelled": "Die Anmeldung wurde nicht abgeschlossen. Bitte versuche es erneut.",
+    "errorFailed": "Die Anmeldung ist fehlgeschlagen. Bitte versuche es erneut."
   }
 }

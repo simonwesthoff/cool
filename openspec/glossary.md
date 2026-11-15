@@ -29,3 +29,9 @@ Domain terms for the weightlifting coaching app.
 | Trainingseinheit | TE | Training session | Unit of training. Can be up to 3 times a day. |
 | Trainingsübung | TÜ | Exercise | Training exercise from the exercise catalog. |
 | Mittleres Hantelgewicht | mHG | Average Weight | Average weight for a TÜ within a TE. Can also be calculated for all of the weights moved within a week. |
+
+## App
+
+| German | Abbreviation | English | Definition |
+|---|---|---|---|
+| Benutzerkonto | - | User account | The identity of a person in the app, created by their first sign-in with Google. Has no role by itself. |

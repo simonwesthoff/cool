@@ -15,7 +15,19 @@ keys, columns) belong in each change's `design.md` and in the code.
 
 ## Current model
 
-Nothing is built yet.
+```mermaid
+erDiagram
+    UserAccount {
+        string name
+        string email
+        string picture
+    }
+```
+
+- A user account is created by the first sign-in with Google and is
+  identified by that Google account. Name and picture follow the Google
+  profile on every sign-in.
+- A user account has no role by itself.
 
 ## Draft (not yet built)
 
@@ -30,9 +42,10 @@ erDiagram
     Athlete ||--o{ Invitation : "is invited via"
 ```
 
-- A user account is created by signing in with Google or Apple. It has no
-  role by itself; a coach is a user account in the coach role of a Team.
-  Roles are per Team, not global.
+- The user account itself is built (see "Current model"); its relations
+  below are not. A coach is a user account in the coach role of a Team.
+  Roles are per Team, not global. Signing in with Apple will lead to the
+  same kind of user account.
 - A coach creates an Athlete in their Team before the athlete has an account.
 - An Invitation belongs to one Athlete. When someone signs in through it,
   their user account is linked to that Athlete.
