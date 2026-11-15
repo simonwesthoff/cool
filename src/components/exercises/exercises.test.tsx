@@ -135,16 +135,17 @@ describe("exercise dialog", () => {
     return Object.fromEntries(terms.map((term, i) => [term, values[i]]));
   };
 
-  it("shows all information of the selected exercise", async () => {
+  it("shows title, subtitle and all values of the selected exercise", async () => {
     renderIn("en", <ExerciseList groups={[k3, k8]} />);
     expect(screen.queryByRole("dialog")).toBeNull();
     const dialog = await openExercise("Snatch pull");
+    const title = within(dialog).getByRole("heading", { level: 2 });
+    expect(title.textContent).toBe("13 Snatch pull");
+    expect(title.children).toHaveLength(0);
     expect(
-      within(dialog).getByRole("heading", { name: /^13\s*Snatch pull$/ }),
+      within(dialog).getByText("K3 · Speed strength · Snatch exercise"),
     ).toBeTruthy();
     expect(valuesOf(dialog)).toEqual({
-      "Exercise group": "K3 · Speed strength",
-      "Reference lift": "Snatch",
       "Best value (% of snatch / clean & jerk max)": "108%",
       "Max. weekly average weight": "94%",
       "Reps per set": "3–8",
@@ -153,10 +154,35 @@ describe("exercise dialog", () => {
     });
   });
 
+  it("names clean & jerk exercises in the subtitle, in German too", async () => {
+    const clean = {
+      ...k3,
+      exercises: [
+        { ...k3.exercises[0]!, referenceLift: "clean_and_jerk" as const },
+      ],
+    };
+    renderIn("en", <ExerciseList groups={[clean]} />);
+    const dialog = await openExercise("Snatch pull");
+    expect(
+      within(dialog).getByText("K3 · Speed strength · C&J exercise"),
+    ).toBeTruthy();
+    cleanup();
+    renderIn("de", <ExerciseList groups={[k3]} />);
+    const dialogDe = await openExercise("Zug breit");
+    expect(
+      within(dialogDe).getByRole("heading", { level: 2 }).textContent,
+    ).toBe("13 Zug breit");
+    expect(
+      within(dialogDe).getByText(
+        "K3 · Schnellkraftfähigkeit (SKF) · Reißübung",
+      ),
+    ).toBeTruthy();
+  });
+
   it("marks values the catalog does not define", async () => {
     renderIn("de", <ExerciseList groups={[k8]} />);
     const dialog = await openExercise("Bankdrücken");
-    expect(within(dialog).getAllByText("Nicht festgelegt")).toHaveLength(6);
+    expect(within(dialog).getAllByText("Nicht festgelegt")).toHaveLength(5);
     expect(
       within(dialog).getByText("K8 · Allgemeines Muskelkrafttraining 1 (AMKT)"),
     ).toBeTruthy();

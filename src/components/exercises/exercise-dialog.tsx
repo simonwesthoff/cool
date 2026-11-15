@@ -39,16 +39,27 @@ export function ExerciseDialog({ exercise, group, onClose }: Props) {
           maximumFractionDigits: 1,
         });
 
+  // Title: number and name as one text.
+  const title = exercise
+    ? `${exercise.number} ${localized(exercise.name, locale)}`
+    : "";
+
+  // Subtitle: exercise group and, if defined, the reference lift.
+  const subtitle =
+    exercise && group
+      ? [
+          `${group.code} · ${localized(group.name, locale)}`,
+          exercise.referenceLift
+            ? t(`liftExercise.${exercise.referenceLift}`)
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : "";
+
   const items: [string, ReactNode | null][] =
     exercise && group
       ? [
-          [t("group"), `${group.code} · ${localized(group.name, locale)}`],
-          [
-            t("referenceLift"),
-            exercise.referenceLift
-              ? t(`lifts.${exercise.referenceLift}`)
-              : null,
-          ],
           [t("bestValueLong"), percent(exercise.bestValuePct)],
           [
             t("maxWeeklyAverageWeight"),
@@ -78,17 +89,14 @@ export function ExerciseDialog({ exercise, group, onClose }: Props) {
       {exercise && (
         <div className="flex max-h-[85vh] flex-col">
           <div className="flex items-start justify-between gap-3 border-b border-zinc-200 p-4 dark:border-zinc-800">
-            <h2
-              id={titleId}
-              className="flex items-baseline gap-3 text-xl font-semibold"
-            >
-              <span className="text-base font-normal text-zinc-500 tabular-nums">
-                {exercise.number}
-              </span>
-              <span className="break-words">
-                {localized(exercise.name, locale)}
-              </span>
-            </h2>
+            <div className="flex min-w-0 flex-col gap-1">
+              <h2 id={titleId} className="text-xl font-semibold break-words">
+                {title}
+              </h2>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                {subtitle}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => dialog.current?.close()}

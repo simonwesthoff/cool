@@ -70,10 +70,13 @@ with a group column and a separate exercise page was replaced.)
 - Selecting a row opens a native `<dialog>` (`showModal()`): modal, focus
   moves into it and returns to the row afterwards, Escape closes it, a
   click on the backdrop closes it, and a close button in the dialog's
-  header. Content: number and name as heading, then a definition list of
-  group, reference lift, best value, max. weekly average weight, reps per
-  set (`3–8`), reps per week (`18–48`) and comment; empty values shown as
-  "not defined". On phones the dialog is nearly full width and scrolls
+  header. Content: the title "13 Snatch pull" (number and name as one
+  text), a subtitle with group and reference lift ("K3 · Speed strength ·
+  Snatch exercise", "C&J exercise"; only the group when there is no
+  reference lift), then a definition list of best value, max. weekly
+  average weight, reps per set (`3–8`), reps per week (`18–48`) and
+  comment; empty values shown as "not defined" (title and subtitle
+  layout requested by the user during acceptance). On phones the dialog is nearly full width and scrolls
   inside if needed.
 - No own URL for an exercise: the data is already on the page, and later
   planning views can open the same `ExerciseDialog` component directly.

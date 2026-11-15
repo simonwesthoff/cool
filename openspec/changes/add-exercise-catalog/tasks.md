@@ -20,6 +20,8 @@
 
 - [x] 3.4 Acceptance feedback: show an exercise's information in a dialog over the list instead of a separate page (close button, Escape, outside click, focus handling) and remove the `/exercises/{number}` page; verify component tests and the browser check
 
+- [x] 3.5 Acceptance feedback: dialog title "number name" as one text, subtitle with exercise group and reference lift ("Snatch exercise" / "C&J exercise"); add English and German texts; verify component tests and a screenshot
+
 ## 4. Project records
 
 - [x] 4.1 Add Exercise group, Best value, Reference lift and the group names with abbreviations to `openspec/glossary.md`

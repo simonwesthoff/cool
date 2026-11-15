@@ -121,22 +121,18 @@
   },
   "Catalog": {
     "title": "Exercises",
-    "number": "No.",
-    "exercise": "Exercise",
-    "group": "Exercise group",
     "bestValue": "Best value",
     "bestValueLong": "Best value (% of snatch / clean & jerk max)",
-    "referenceLift": "Reference lift",
     "maxWeeklyAverageWeight": "Max. weekly average weight",
     "repsPerSet": "Reps per set",
     "repsPerWeek": "Reps per week",
     "comment": "Comment",
     "notDefined": "Not defined",
-    "lifts": {
-      "snatch": "Snatch",
-      "clean_and_jerk": "Clean & jerk"
-    },
-    "close": "Close"
+    "close": "Close",
+    "liftExercise": {
+      "snatch": "Snatch exercise",
+      "clean_and_jerk": "C&J exercise"
+    }
   },
   "Navigation": {
     "label": "Main navigation",

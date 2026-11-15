@@ -77,7 +77,7 @@ Escape key or a click outside it, and the list SHALL stay where it was.
 
 #### Scenario: Show all information
 - **WHEN** a user selects exercise 13 "Zug breit"
-- **THEN** a dialog shows group K3, reference lift snatch, best value 108 %, max. weekly average weight 94 %, 3 to 8 reps per set and 18 to 48 reps per week
+- **THEN** a dialog titled "13 Zug breit" with the subtitle "K3 · Schnellkraftfähigkeit (SKF) · Reißübung" (English: "Snatch exercise") shows best value 108 %, max. weekly average weight 94 %, 3 to 8 reps per set and 18 to 48 reps per week
 
 #### Scenario: Close the dialog
 - **GIVEN** the dialog of an exercise is open
@@ -86,7 +86,7 @@ Escape key or a click outside it, and the list SHALL stay where it was.
 
 #### Scenario: Value not defined
 - **WHEN** a user selects exercise 31 "Bankdrücken"
-- **THEN** the dialog marks reference lift, best value, average weight and repetitions as not defined
+- **THEN** the dialog's subtitle shows only the exercise group, and best value, average weight and repetitions are marked as not defined
 
 ### Requirement: Catalog API
 The HTTP API SHALL return the catalog to signed-in users: the exercise groups

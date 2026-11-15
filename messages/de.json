@@ -121,22 +121,18 @@
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",
-    "number": "Nr.",
-    "exercise": "Übung",
-    "group": "Komplex",
     "bestValue": "Bestwert",
     "bestValueLong": "Bestwert (% vom Reiß-/Stoß-Max.)",
-    "referenceLift": "Referenzübung",
     "maxWeeklyAverageWeight": "Max. Wochen-MHG",
     "repsPerSet": "Wiederholungen pro Satz",
     "repsPerWeek": "Wiederholungen pro Woche",
     "comment": "Kommentar",
     "notDefined": "Nicht festgelegt",
-    "lifts": {
-      "snatch": "Reißen",
-      "clean_and_jerk": "Stoßen"
-    },
-    "close": "Schließen"
+    "close": "Schließen",
+    "liftExercise": {
+      "snatch": "Reißübung",
+      "clean_and_jerk": "Stoßübung"
+    }
   },
   "Navigation": {
     "label": "Hauptnavigation",
