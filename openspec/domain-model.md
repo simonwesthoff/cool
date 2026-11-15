@@ -52,8 +52,9 @@ erDiagram
 - A coach can train themselves: their user account is then also linked to
   an Athlete in their own Team.
 
-### Open questions
+### Decisions (answered by the user on 2026-11-15)
 
-- Can a Team have more than one coach?
-- Can one user account be linked to Athletes in several Teams?
-- Can an Invitation be used more than once, and does it expire?
+- A Team has exactly one coach.
+- A user account is linked to at most one Athlete, in one Team.
+- An Invitation can be used once and expires after 7 days. The coach can
+  create a new one at any time; the previous one then stops working.
