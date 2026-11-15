@@ -7,9 +7,10 @@ context: |
   exercises); no other sports.
 
   Domain terms: Read openspec/glossary.md before writing any artifact and use
-  its terms; do not invent alternatives. For glossary terms, artifacts use the
-  German term with the English name in parentheses on first use; code uses
-  the English name. App and role terms (team, coach, athlete, ...) are English.
+  its terms; do not invent alternatives. Artifacts and code use only the
+  English names, never German terms or abbreviations. The user may write
+  German training terms or their abbreviations (e.g. MAZ, MEZ, TE) in their
+  input; translate them to the English names using the glossary.
   Do not invent exercise lists; the exercise catalog is defined in its own spec.
   Entity relations: Read openspec/domain-model.md before writing any artifact.
   It shows the currently built domain model plus a draft of planned parts.
