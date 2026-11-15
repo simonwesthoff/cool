@@ -23,8 +23,9 @@ app gets a separate tab for it.
 - **English and German.** Exercise, group and comment texts exist in both
   languages; the English names are proposed in `translations.md` and
   reviewed by the user.
-- **Catalog tab.** A new "Exercises" page shows the catalog grouped by
-  exercise group, readable on phones and desktop.
+- **Catalog tab.** A new "Exercises" page lists all exercises with number,
+  name, exercise group and best value; selecting one shows all its
+  information on its own page.
 - **Navigation.** The app gets tabs: "Athletes" (coaches), "My training"
   (athletes) and "Exercises" (every signed-in user). On phones they form a
   bottom tab bar, on larger screens they sit in the header. This replaces
@@ -45,7 +46,7 @@ app gets a separate tab for it.
   catalog with the same training focus.
 - **Best value** (Bestwert): reference value of an exercise in % of the max
   of its reference lift.
-- **Reference lift** (Reiß-/Stoßübung): the competition lift (snatch or clean
+- **Reference lift** (Referenzübung): the competition lift (snatch or clean
   & jerk) an exercise's percentages refer to.
 - The group names and their German abbreviations (WKÜ, TWKÜ, SKF, MKF, AMKT)
   are added to the glossary with their English names.

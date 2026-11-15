@@ -1,8 +1,7 @@
 # Exercise catalog: English names (for review)
 
 German names come from `Trainingsmittelkatalog.csv` (with the agreed typo
-fixes). English names are proposals; entries marked **?** are the ones I am
-least sure about. The German UI shows the German names, the English UI the
+fixes). English names were reviewed and corrected by the user on 2026-11-15. The German UI shows the German names, the English UI the
 English names.
 
 ## Catalog columns
@@ -15,7 +14,7 @@ English names.
 | Bestwert (% vom Reiß-/Stoß Max.) | Best value (% of snatch / clean & jerk max) |
 | Max. Wochen Mittleres Hantelgewicht (MHG) | Max. weekly average weight (%) |
 | Minimale Wdh / Maximale Wdh | Min. / max. reps per set |
-| Reiß-/Stoßübung | Reference lift (snatch / clean & jerk) |
+| Referenzübung | Reference lift (snatch / clean & jerk) |
 | min Wochen Wdh / max Wochen Wdh | Min. / max. reps per week |
 | Kommentar | Comment |
 
@@ -28,7 +27,7 @@ English names.
 | K3 | Schnellkraftfähigkeit (SKF) | Speed strength |
 | K4 | Maximalkraftfähigkeit Beschleunigen (MKF) | Maximum strength: acceleration |
 | K5 | MKF Abbremsen | Maximum strength: deceleration |
-| K6 | MKF Umgruppieren | Maximum strength: turnover **?** |
+| K6 | MKF Umgruppieren | Maximum strength: turnover |
 | K7 | Übungskombinationen | Exercise combinations |
 | K8 | Allgemeines Muskelkrafttraining 1 (AMKT) | General strength training 1 |
 | K9 | AMKT 2 | General strength training 2 |
@@ -44,23 +43,23 @@ English names.
 | 5 | Ausstoßen | Jerk |
 | 6 | Reißen erhöhte Position | Snatch from elevated position |
 | 7 | Standreißen | Power snatch |
-| 8 | Umgruppieren breit | Snatch turnover **?** |
+| 8 | Umgruppieren breit | Snatch turnover |
 | 9 | Umsetzen erhöhte Position | Clean from elevated position |
 | 10 | Standumsetzen | Power clean |
-| 11 | Umgruppieren eng | Clean turnover **?** |
+| 11 | Umgruppieren eng | Clean turnover |
 | 12 | Standstoßen | Power jerk |
 | 13 | Zug breit | Snatch pull |
 | 14 | Zug eng | Clean pull |
 | 15 | Lastheben breit | Snatch deadlift |
 | 16 | Lastheben eng | Clean deadlift |
-| 17 | Anstoßkniebeuge | Jerk dip squat **?** |
+| 17 | Anstoßkniebeuge | Jerk dip squat |
 | 18 | Reißkniebeuge | Overhead squat |
 | 19 | Kniebeuge vorn | Front squat |
 | 20 | Kniebeuge hinten | Back squat |
 | 21 | Halbkniebeuge | Half squat |
-| 22 | Powerzug breit | Snatch high pull **?** |
+| 22 | Powerzug breit | Snatch pull from elevated position |
 | 23 | Kraftreißen | Muscle snatch |
-| 24 | Powerzug eng | Clean high pull **?** |
+| 24 | Powerzug eng | Clean pull from elevated position |
 | 25 | Kraftdrücken | Strict press |
 | 26 | Schwungdrücken | Push press |
 | 27 | Umsetzen + Kniebeuge vorne | Clean + front squat |
@@ -87,15 +86,15 @@ English names.
 
 | No. | German | English |
 |---|---|---|
-| 1 | Wettkampfübung, Variation: Komische 1 = ohne Füße setzen | Competition exercise. Variation: "Komische 1" = without moving the feet |
+| 1 | Wettkampfübung, Variation: Komische 1 = ohne Füße setzen | Competition exercise. Variation: No feet snatch |
 | 3 | Wettkampfübung | Competition exercise |
 | 6, 9 | Variationen: im Hang, vom Bock | Variations: from the hang, from blocks |
 | 8, 11 | Variationen: mit/ohne Dip | Variations: with/without dip |
 | 15, 16, 17 | Erst ab 18 Jahren | Only from age 18 |
-| 18 | Variationen: Reißkniebeuge, Hockesenken, Unterhocken | Variations: overhead squat, drop snatch **?**, sots press **?** |
+| 18 | Variationen: Reißkniebeuge, Hockesenken, Unterhocken | Variations: overhead squat, drop snatch with dip, drop snatch without dip |
 | 19, 20 | Bestwert für 3 Wdh | Best value for 3 reps |
 | 21 | Wird nicht mehr genutzt | No longer used |
-| 22, 24 | Variation: ohne Auftakt als Maximalkraftübung, Gut in Kombination 22 + 6 | Variation: without countermovement as a maximum strength exercise. Works well combined: 22 + 6 |
+| 22, 24 | Variation: ohne Auftakt als Maximalkraftübung, Gut in Kombination 22 + 6 | Variation: without dip as a maximum strength exercise. Works well combined: 22 + 6 |
 | 28 | Variation: Standumsetzen + Ausstoßen | Variation: power clean + jerk |
 | 29 | Bestwert >100 | Best value > 100 |
-| 30 | Variationen: eng, breit, breit in der Hocke | Variations: close grip, wide grip, wide grip in the squat |
+| 30 | Variationen: eng, breit, breit in der Hocke | Variations: close grip, wide grip, sots press (wide grip in the squat) |

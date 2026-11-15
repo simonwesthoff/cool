@@ -47,7 +47,8 @@ values like 87.5 % fit.
 
 ### Domain and API
 - `src/domain/exercises`: `getCatalog()` returns groups in order with their
-  exercises (both languages), `getExercise(number)`.
+  exercises (both languages), `getExercise(number)` (`EXERCISE_NOT_FOUND`
+  for unknown numbers).
 - `GET /api/exercises`: `{ groups: [{ number, code, name: { de, en },
   exercises: [{ number, name: { de, en }, referenceLift, bestValuePct,
   maxWeeklyAverageWeightPct, repsPerSet: { min, max }, repsPerWeek: { min,
@@ -55,17 +56,22 @@ values like 87.5 % fit.
   otherwise), `cache-control: private, max-age=3600` since it rarely
   changes.
 
-### Catalog page `/exercises`
-- Server component for every signed-in user (no role needed); texts in the
-  current locale.
-- One section per exercise group with a heading (`K1 · Competition
-  exercises`). Each exercise is a compact card: number and name, reference
-  lift as a small label, then a definition list of the values present
-  (best value, max. weekly average weight, reps per set, reps per week)
-  and the comment. Values that the catalog leaves empty are not shown, so
-  K8/K9 cards are just number, name and comment.
-- Cards stack on phones and form two columns on wide screens; no table, so
-  nothing scrolls sideways.
+### Catalog page `/exercises` and exercise page `/exercises/{number}`
+(Layout decided by the user after the first plan: list with number, name,
+group and best value; every exercise clickable for all information.)
+- `/exercises`: server component for every signed-in user (no role
+  needed); texts in the current locale. One list in catalog order, each
+  row a link with four parts: number, name, group and best value. The
+  group shows its code (`K3`) on phones and code plus name from `md` up;
+  the best value is right-aligned (`108 %`, `–` when empty). No table and
+  no fixed widths, so nothing scrolls sideways.
+- `/exercises/{number}`: all information as a definition list: number,
+  name, group (code and name), reference lift, best value, max. weekly
+  average weight, reps per set (`3–8`), reps per week (`18–48`) and
+  comment; empty values shown as "not defined". A link back to the
+  catalog. Unknown or malformed numbers → `notFound()`.
+- A separate page (not an expanding row or dialog) so later planning views
+  can link to an exercise directly, and the browser's back button works.
 - Percent and number formatting through next-intl (German decimal comma).
 
 ### Navigation

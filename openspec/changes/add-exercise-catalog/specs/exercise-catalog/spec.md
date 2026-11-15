@@ -49,23 +49,41 @@ English.
 
 ### Requirement: Catalog page
 Every signed-in user SHALL be able to open the catalog page from the app's
-navigation. It SHALL list the exercises grouped by exercise group in catalog
-order, each with number, name and reference lift, and show its reference
-values and comment. It SHALL be readable without horizontal scrolling on a
-phone.
+navigation. It SHALL list all exercises in catalog order, each with its
+number, name, exercise group and best value, readable on a phone without
+horizontal scrolling. Each exercise SHALL be selectable.
 
 #### Scenario: Open the catalog
 - **GIVEN** a signed-in coach or athlete
 - **WHEN** they choose "Exercises" in the navigation
-- **THEN** they see the groups K1 to K9 in order with their exercises
+- **THEN** they see the exercises 1 to 45 in order, each with number, name, group and best value
 
-#### Scenario: Reference values of an exercise
-- **WHEN** a user looks at exercise 13 "Zug breit" in the catalog
-- **THEN** they see best value 108 %, max. weekly average weight 94 %, 3 to 8 reps per set and 18 to 48 reps per week
+#### Scenario: Exercise without best value
+- **WHEN** a user looks at exercise 31 "Bankdrücken" in the list
+- **THEN** its best value is shown as empty, not as 0
 
 #### Scenario: Phone
 - **WHEN** a user opens the catalog on a phone
-- **THEN** all values are readable without scrolling sideways
+- **THEN** number, name, group and best value are readable without scrolling sideways
+
+### Requirement: Exercise details
+Selecting an exercise in the catalog SHALL show all its information: number,
+name, exercise group, reference lift, best value, max. weekly average
+weight, min./max. reps per set, min./max. reps per week and comment, with a
+way back to the catalog. Information the catalog does not define SHALL be
+marked as not defined.
+
+#### Scenario: Show all information
+- **WHEN** a user selects exercise 13 "Zug breit"
+- **THEN** they see group K3, reference lift snatch, best value 108 %, max. weekly average weight 94 %, 3 to 8 reps per set and 18 to 48 reps per week
+
+#### Scenario: Back to the catalog
+- **WHEN** a user is on an exercise's details
+- **THEN** they can go back to the catalog list
+
+#### Scenario: Unknown exercise
+- **WHEN** a user opens the details of an exercise number that does not exist
+- **THEN** they see the "not found" page
 
 ### Requirement: Catalog API
 The HTTP API SHALL return the catalog to signed-in users: the exercise groups
