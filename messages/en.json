@@ -3,11 +3,6 @@
     "name": "cool",
     "description": "Competitive Olympic Weightlifting – training plans for coaches and athletes."
   },
-  "Home": {
-    "signedInAs": "Signed in as",
-    "pictureAlt": "Profile picture of {name}",
-    "signOut": "Sign out"
-  },
   "LanguageSwitcher": {
     "label": "Language",
     "en": "English",
@@ -18,5 +13,48 @@
     "continueWithGoogle": "Continue with Google",
     "errorCancelled": "Sign-in was not completed. Please try again.",
     "errorFailed": "Sign-in failed. Please try again."
+  },
+  "UserMenu": {
+    "pictureAlt": "Profile picture of {name}",
+    "signOut": "Sign out"
+  },
+  "Athletes": {
+    "title": "Athletes",
+    "add": "Add athlete",
+    "empty": "No athletes yet. Add your first athlete."
+  },
+  "AthleteForm": {
+    "newTitle": "New athlete",
+    "editTitle": "Edit athlete",
+    "name": "Name",
+    "dateOfBirth": "Date of birth",
+    "gender": "Gender",
+    "careerStartDate": "Start of weightlifting career",
+    "heightCm": "Height (cm)",
+    "notSpecified": "Not specified",
+    "genders": {
+      "female": "Female",
+      "male": "Male",
+      "diverse": "Diverse"
+    },
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveFailed": "Could not save. Please try again.",
+    "notFound": "This athlete does not exist anymore.",
+    "errors": {
+      "REQUIRED": "Please enter a name.",
+      "TOO_LONG": "At most 100 characters.",
+      "IN_FUTURE": "Must not be in the future.",
+      "BEFORE_DATE_OF_BIRTH": "Must not be before the date of birth.",
+      "OUT_OF_RANGE": "Must be between 100 and 250 cm.",
+      "NOT_INTEGER": "Please enter whole centimetres.",
+      "INVALID_FORMAT": "Please enter a valid date.",
+      "INVALID": "Invalid value."
+    }
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "text": "This page does not exist or you do not have access to it.",
+    "home": "Back to the start page"
   }
 }

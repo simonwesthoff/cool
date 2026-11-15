@@ -18,12 +18,13 @@ vi.mock("next/navigation", () => ({
     throw new Redirect(url);
   },
 }));
+vi.mock("@/domain/athletes", () => ({ listAthletes: async () => [] }));
 vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string) => key,
 }));
 
 const { Home } = await import("./page");
-const { SignIn: SignInPage } = await import("./sign-in/page");
+const { SignIn: SignInPage } = await import("../sign-in/page");
 
 async function redirectOf(render: () => Promise<unknown>) {
   const error = await render().catch((e: unknown) => e);

@@ -1,2 +1,3 @@
 // Drizzle table definitions. One file per capability, re-exported here.
+export * from "./athletes";
 export * from "./auth";

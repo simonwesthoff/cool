@@ -35,3 +35,7 @@ Domain terms for the weightlifting coaching app.
 | German | Abbreviation | English | Definition |
 |---|---|---|---|
 | Benutzerkonto | - | User account | The identity of a person in the app, created by their first sign-in with Google. Has no role by itself. |
+| Team | - | Team | The group of athletes one coach trains. Has exactly one coach. |
+| Trainer | - | Coach | The user account that leads a Team and plans the training of its athletes. |
+| Athlet | - | Athlete | A person trained in a Team. Created by the coach; can later be linked to a user account through an invitation. |
+| Stammdaten | - | Basic data | An athlete's personal data that rarely changes: name, date of birth, gender, start date of the weightlifting career, height, email address and profile picture. |

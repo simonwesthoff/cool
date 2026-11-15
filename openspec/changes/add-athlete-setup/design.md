@@ -94,6 +94,12 @@ with `null` for empty values. All endpoints use `requireCurrentUser`
   `VALIDATION_FAILED` it shows the translated message for each field code
   next to the field. This keeps the web UI on the same HTTP API that native
   apps will use.
+- Next.js 16 keeps up to three visited pages alive (React `<Activity>`) and
+  restores their state. The form is keyed by `useRouter().bfcacheId`, so
+  every link or button navigation starts with a fresh form showing the
+  stored data, while browser back/forward restores what was typed. After a
+  successful save the form resets its busy state (and, for a new athlete,
+  its inputs) before navigating.
 - `/athletes/{id}` loads the athlete in a server component; for
   `ATHLETE_NOT_FOUND` it calls `notFound()`.
 - A translated `src/app/not-found.tsx` replaces Next.js' English default
