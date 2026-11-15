@@ -23,6 +23,8 @@
 - [x] 4.3 `/invite/{token}` page with all states (valid with Accept, already linked, expired, used, unknown) and acceptance leading to `/training`; add English and German texts; verify component tests for each state
 - [x] 4.4 `/training` athlete placeholder view and the "My Team" / "My training" switch in the header for users with both roles; add English and German texts; verify component and page tests
 
+- [x] 4.5 Layout: account (picture and first name) at the top right with a menu containing "Sign out", role switch on the left, language switcher in a footer at the bottom right of every page (root layout); add English and German texts; verify component tests (first name only, menu opens and closes, sign-out in the menu) and the browser check from 6.1
+
 ## 5. Project records
 
 - [x] 5.1 Add Invitation and Role to `openspec/glossary.md` (German: Einladung, Rolle)

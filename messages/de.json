@@ -16,7 +16,8 @@
   },
   "UserMenu": {
     "pictureAlt": "Profilbild von {name}",
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "accountLabel": "Konto von {name}"
   },
   "Athletes": {
     "title": "Athleten",

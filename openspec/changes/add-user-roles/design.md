@@ -134,7 +134,15 @@ Teams are removed.
   invitation; the panel replaces the form, with "Done" back to the list).
   The panel is keyed by `bfcacheId` like the form, so a revisited page does
   not show an old link.
-- Header: users with both roles see "My Team" and "My training" links.
+- Header (layout change requested during acceptance): the role switch for
+  users with both roles on the left; the account at the top right as a
+  button with the profile picture and the first name (first word of the
+  name; Google only provides the full name). It opens a small menu with
+  "Sign out" (closes on outside click and Escape, `aria-expanded`). The
+  language switcher moves out of the header into a footer at the bottom
+  right of every page, rendered by the root layout so the sign-in and
+  not-found pages get it too. A footer instead of a floating button, so it
+  never covers content on small screens.
 - Styling: unchanged minimalist black and white.
 
 ### Testing

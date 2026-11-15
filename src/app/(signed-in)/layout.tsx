@@ -6,16 +6,16 @@ import { RoleSwitch } from "@/components/roles/role-switch";
 import { getCurrentUser } from "@/domain/auth";
 import { getRoles } from "@/domain/roles";
 
-async function CurrentUserMenu() {
+async function SignedInHeader() {
   const user = await getCurrentUser(await headers());
   // Pages redirect signed-out visitors themselves.
-  if (!user) return null;
+  if (!user) return <PageHeader />;
   const roles = await getRoles(user);
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <UserMenu user={user} />
-      {roles.coach && roles.athlete && <RoleSwitch />}
-    </div>
+    <PageHeader
+      left={roles.coach && roles.athlete ? <RoleSwitch /> : null}
+      right={<UserMenu user={user} />}
+    />
   );
 }
 
@@ -23,11 +23,9 @@ async function CurrentUserMenu() {
 export default function SignedInLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader>
-        <Suspense>
-          <CurrentUserMenu />
-        </Suspense>
-      </PageHeader>
+      <Suspense fallback={<PageHeader />}>
+        <SignedInHeader />
+      </Suspense>
       {children}
     </div>
   );

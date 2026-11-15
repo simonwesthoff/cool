@@ -37,6 +37,10 @@ with a link, so athletes can sign in and later see and log their training.
   "My Team" and "My training" in the header.
 - **Existing data.** Teams without athletes are removed by the migration;
   their users see the start choice. Teams with athletes stay.
+- **Page layout** (requested during acceptance): the signed-in account
+  moves to the top right and shows only the profile picture and the first
+  name; signing out moves into a small menu that opens from it. The
+  language switcher moves to a footer at the bottom right of every page.
 - HTTP API for roles, starting as coach, creating and accepting
   invitations and "This is me". All new texts in English and German.
 
@@ -75,7 +79,8 @@ with a link, so athletes can sign in and later see and log their training.
   from their user account; the "Athlete perspective" requirement is
   replaced by the athlete role.
 - `authentication`: The home page depends on the user's role instead of
-  always showing the athlete list.
+  always showing the athlete list; the header shows the account with
+  picture and first name, and sign-out moves into the account menu.
 
 ## Impact
 
