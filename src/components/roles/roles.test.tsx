@@ -8,15 +8,10 @@ import {
   InvitationLinkForm,
   invitationPathFromLink,
 } from "./invitation-link-form";
-import { RoleSwitch } from "./role-switch";
 import { StartChoice } from "./start-choice";
 
 const router = { push: vi.fn(), refresh: vi.fn() };
-let pathname = "/";
-vi.mock("next/navigation", () => ({
-  useRouter: () => router,
-  usePathname: () => pathname,
-}));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
 const fetchMock = vi.fn();
 const token = "A".repeat(43);
 
@@ -87,25 +82,5 @@ describe("invitation link entry", () => {
     await userEvent.type(input, `${window.location.origin}/invite/${token}`);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(router.push).toHaveBeenCalledWith(`/invite/${token}`);
-  });
-});
-
-describe("RoleSwitch", () => {
-  it("marks My Team on the athlete list and My training on the athlete view", () => {
-    pathname = "/";
-    const view = renderWith(<RoleSwitch />);
-    expect(
-      screen
-        .getByRole("link", { name: "My Team" })
-        .getAttribute("aria-current"),
-    ).toBe("page");
-    view.unmount();
-    pathname = "/training";
-    renderWith(<RoleSwitch />);
-    expect(
-      screen
-        .getByRole("link", { name: "My training" })
-        .getAttribute("aria-current"),
-    ).toBe("page");
   });
 });

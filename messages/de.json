@@ -114,14 +114,34 @@
     "coach": "Trainer: {name}",
     "placeholder": "Hier erscheint bald dein Trainingsplan."
   },
-  "RoleSwitch": {
-    "label": "Rolle",
-    "team": "Mein Team",
-    "training": "Mein Training"
-  },
   "AthleteDetails": {
     "back": "Zurück zu den Athleten",
     "basicData": "Stammdaten",
     "pictureAlt": "Profilbild von {name}"
+  },
+  "Catalog": {
+    "title": "Trainingsmittelkatalog",
+    "number": "Nr.",
+    "exercise": "Übung",
+    "group": "Komplex",
+    "bestValue": "Bestwert",
+    "bestValueLong": "Bestwert (% vom Reiß-/Stoß-Max.)",
+    "referenceLift": "Referenzübung",
+    "maxWeeklyAverageWeight": "Max. Wochen-MHG",
+    "repsPerSet": "Wiederholungen pro Satz",
+    "repsPerWeek": "Wiederholungen pro Woche",
+    "comment": "Kommentar",
+    "notDefined": "Nicht festgelegt",
+    "back": "Zurück zum Katalog",
+    "lifts": {
+      "snatch": "Reißen",
+      "clean_and_jerk": "Stoßen"
+    }
+  },
+  "Navigation": {
+    "label": "Hauptnavigation",
+    "athletes": "Athleten",
+    "training": "Mein Training",
+    "exercises": "Übungen"
   }
 }

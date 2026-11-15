@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,9 +36,6 @@ async function LocaleRoot({ children }: { children: ReactNode }) {
       />
       <NextIntlClientProvider>
         <div className="flex flex-1 flex-col">{children}</div>
-        <footer className="flex justify-end px-4 py-3 sm:px-8">
-          <LanguageSwitcher />
-        </footer>
       </NextIntlClientProvider>
     </>
   );

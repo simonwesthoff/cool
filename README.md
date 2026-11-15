@@ -99,6 +99,19 @@ HTTPS is configured with `TLS_MODE` in `.env`:
   `src/server/db/migrations/`. Commit it.
 - `npm run db:migrate` applies pending migrations to `DATABASE_URL`.
 
+## Exercise catalog
+
+The exercise catalog (Trainingsmittelkatalog) is stored in
+`data/exercise-catalog/`: the German content in `Trainingsmittelkatalog.csv`
+and the English names and comments in `translations.en.json`. It is loaded
+into the database by a migration. To change it:
+
+1. Edit the CSV (and the translations for new or renamed exercises or
+   comments). Keep the catalog numbers stable.
+2. Run `npm run catalog:migration`. It checks both files and writes a new
+   migration that updates the catalog in the database.
+3. Run `npm run db:migrate` locally; containers apply it on start.
+
 ## Checks
 
 ```sh

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { LanguageFooter } from "@/components/language-footer";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { signInErrorKind } from "@/components/auth/sign-in-error";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
@@ -15,6 +16,7 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
       <Suspense fallback={<LoadingPlaceholder />}>
         <SignIn searchParams={searchParams} />
       </Suspense>
+      <LanguageFooter />
     </div>
   );
 }

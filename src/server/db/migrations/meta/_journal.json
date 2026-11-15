@@ -29,6 +29,20 @@
       "when": 1794763678306,
       "tag": "0003_remove_empty_teams",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794783346530,
+      "tag": "0004_exercise_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794783401463,
+      "tag": "0005_exercise_catalog_data",
+      "breakpoints": true
     }
   ]
 }

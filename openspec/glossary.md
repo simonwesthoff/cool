@@ -29,6 +29,23 @@ Domain terms for the weightlifting coaching app.
 | Trainingseinheit | TE | Training session | Unit of training. Can be up to 3 times a day. |
 | Trainingsübung | TÜ | Exercise | Training exercise from the exercise catalog. |
 | Mittleres Hantelgewicht | mHG | Average Weight | Average weight for a TÜ within a TE. Can also be calculated for all of the weights moved within a week. |
+| Komplex | K | Exercise group | Group of exercises in the exercise catalog with the same training focus, numbered K1–K9. |
+| Bestwert | - | Best value | Reference value of an exercise in % of the max of its reference lift. |
+| Referenzübung | - | Reference lift | The competition lift (snatch or clean & jerk) an exercise's percentages refer to. |
+
+### Exercise groups
+
+| German | Abbreviation | English | Definition |
+|---|---|---|---|
+| Wettkampfübungen | K1, WKÜ | Competition exercises | Snatch, clean and jerk and their parts. |
+| Teilwettkampfübungen | K2, TWKÜ | Partial competition exercises | Parts and variations of the competition exercises. |
+| Schnellkraftfähigkeit | K3, SKF | Speed strength | Pulls. |
+| Maximalkraftfähigkeit Beschleunigen | K4, MKF | Maximum strength: acceleration | Deadlifts and jerk dip squats. |
+| Maximalkraftfähigkeit Abbremsen | K5 | Maximum strength: deceleration | Squats. |
+| Maximalkraftfähigkeit Umgruppieren | K6 | Maximum strength: turnover | Pulls from elevated positions, muscle snatch, presses. |
+| Übungskombinationen | K7 | Exercise combinations | Combinations of exercises in one set. |
+| Allgemeines Muskelkrafttraining 1 | K8, AMKT | General strength training 1 | General strength exercises with free weights and body weight. |
+| Allgemeines Muskelkrafttraining 2 | K9 | General strength training 2 | General strength exercises on machines. |
 
 ## App
 
