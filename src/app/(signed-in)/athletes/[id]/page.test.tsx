@@ -3,47 +3,55 @@ import { DomainError } from "@/domain/errors";
 
 const getAthlete = vi.fn();
 vi.mock("@/domain/athletes", () => ({ getAthlete }));
-vi.mock("../../current-user", () => ({
-  requireCoachPage: async () => ({
-    user: { id: "u1", name: "A", email: "a@b.c", image: null },
-    roles: { coach: { teamId: "t1" }, athlete: null },
-  }),
-}));
+const requireCoachPage = vi.fn();
+vi.mock("../../current-user", () => ({ requireCoachPage }));
 class NotFound extends Error {}
+class Redirect extends Error {
+  constructor(readonly url: string) {
+    super(url);
+  }
+}
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new NotFound();
   },
+  redirect: (url: string) => {
+    throw new Redirect(url);
+  },
 }));
 
-const { EditAthlete } = await import("./page");
-const params = Promise.resolve({ id: "x" });
+const { AthleteDetails } = await import("./page");
+const params = Promise.resolve({ id: "a1" });
+const coach = {
+  user: { id: "u1", name: "Max", email: "m@x.invalid", image: null },
+  roles: { coach: { teamId: "t1" }, athlete: null },
+};
 
-describe("edit athlete page", () => {
-  it("shows the not-found page for an athlete of another Team", async () => {
+describe("athlete details page", () => {
+  it("renders the header for the coach's athlete", async () => {
+    requireCoachPage.mockResolvedValue(coach);
+    getAthlete.mockResolvedValue({
+      id: "a1",
+      name: "Anna Weber",
+      linkedAccount: null,
+    });
+    const element = await AthleteDetails({ params });
+    expect(element.props.athlete).toMatchObject({ name: "Anna Weber" });
+    expect(getAthlete).toHaveBeenCalledWith(coach.user, "a1");
+  });
+
+  it("shows not found for an athlete of another Team", async () => {
+    requireCoachPage.mockResolvedValue(coach);
     getAthlete.mockRejectedValue(
       new DomainError("not_found", "ATHLETE_NOT_FOUND"),
     );
-    await expect(EditAthlete({ params })).rejects.toBeInstanceOf(NotFound);
+    await expect(AthleteDetails({ params })).rejects.toBeInstanceOf(NotFound);
   });
 
-  it("passes other errors on", async () => {
-    getAthlete.mockRejectedValue(new Error("database down"));
-    await expect(EditAthlete({ params })).rejects.toThrow("database down");
-  });
-
-  it("renders the form for the coach's athlete", async () => {
-    getAthlete.mockResolvedValue({
-      id: "x",
-      name: "Anna",
-      linkedAccount: null,
-    });
-    const element = await EditAthlete({ params });
-    const children = element.props.children;
-    expect(children[0].props.athlete).toEqual({
-      id: "x",
-      name: "Anna",
-      linkedAccount: null,
+  it("sends users without a Team to the home page", async () => {
+    requireCoachPage.mockRejectedValue(new Redirect("/"));
+    await expect(AthleteDetails({ params })).rejects.toMatchObject({
+      url: "/",
     });
   });
 });

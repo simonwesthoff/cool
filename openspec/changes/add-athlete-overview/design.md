@@ -24,7 +24,9 @@ without a new dependency; a details page that feature 5 can extend.
   (`snap-x snap-mandatory`, cards `snap-start`). Swiping, trackpads and
   momentum work natively; no carousel library.
 - Card width: `w-[40%]` on phones (about two and a half cards visible),
-  fixed `w-44` from the `sm` breakpoint. Each card is a link with a 96 px
+  fixed `w-44` from the `sm` breakpoint. The coach's home page widens to `max-w-5xl` so
+  about five cards fit on large screens (found in the browser check: the
+  narrow column showed fewer than three). Each card is a link with a 96 px
   `Avatar` and the name (two lines at most, then truncated).
 - Previous/next buttons (hidden below `sm`) call `scrollBy` by the visible
   width with smooth scrolling (instant if the user prefers reduced motion).

@@ -110,7 +110,7 @@ describe("home page by role", () => {
   it("shows the athlete list to coaches", async () => {
     getRoles.mockResolvedValue(coachRole);
     const element = (await Home()) as { type: { name: string } };
-    expect(element.type.name).toBe("AthleteList");
+    expect(element.type.name).toBe("AthleteOverview");
   });
 
   it("sends users who are only athletes to their athlete view", async () => {

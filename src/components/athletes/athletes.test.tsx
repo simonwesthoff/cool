@@ -1,14 +1,27 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import { AthleteForm } from "./athlete-form";
-import { AthleteList } from "./athlete-list";
+import { AthleteOverview } from "./athlete-overview";
 
 const router = { push: vi.fn(), refresh: vi.fn(), bfcacheId: "visit-1" };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
+vi.mock("next/image", () => ({
+  default: (props: { src: string; alt: string }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={props.src} alt={props.alt} />
+  ),
+}));
 const fetchMock = vi.fn();
 
 function renderWith(node: React.ReactNode) {
@@ -50,28 +63,75 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("AthleteList", () => {
-  it("shows the athletes in the given order with links", () => {
-    renderWith(
-      <AthleteList
-        athletes={[anna, { ...anna, id: "a2", name: "Max Berg" }]}
-      />,
-    );
-    const links = screen.getAllByRole("listitem").map((li) => li.textContent);
-    expect(links).toEqual(["Anna Weber", "Max Berg"]);
-    expect(screen.getByRole("link", { name: "Anna Weber" })).toHaveProperty(
+describe("AthleteOverview", () => {
+  const erika = {
+    ...anna,
+    id: "a2",
+    name: "Erika Muster",
+    linkedAccount: {
+      email: "e@x.invalid",
+      image: "https://lh3.googleusercontent.com/e",
+    },
+  };
+
+  it("shows a card per athlete in the given order, with picture or initials", () => {
+    renderWith(<AthleteOverview athletes={[anna, erika]} />);
+    const list = screen.getByRole("list", { name: "Athletes" });
+    const cards = within(list).getAllByRole("link");
+    expect(cards.map((c) => c.textContent)).toEqual([
+      "AWAnna Weber",
+      "Erika Muster",
+    ]);
+    expect(cards[0]).toHaveProperty("pathname", "/athletes/a1");
+    expect(
+      within(cards[0]!).getByRole("img", {
+        name: "Profile picture of Anna Weber",
+      }).textContent,
+    ).toBe("AW");
+    expect(
+      within(cards[1]!)
+        .getByRole("img", { name: "Profile picture of Erika Muster" })
+        .getAttribute("src"),
+    ).toContain("googleusercontent");
+    expect(screen.getByRole("link", { name: "Add athlete" })).toHaveProperty(
       "pathname",
-      "/athletes/a1",
+      "/athletes/new",
     );
-    expect(screen.getByRole("link", { name: "Add athlete" })).toBeTruthy();
   });
 
   it("shows a note when there are no athletes", () => {
-    renderWith(<AthleteList athletes={[]} />);
+    renderWith(<AthleteOverview athletes={[]} />);
     expect(
       screen.getByText("No athletes yet. Add your first athlete."),
     ).toBeTruthy();
     expect(screen.queryByRole("list")).toBeNull();
+  });
+
+  it("enables previous/next only where there is something to scroll to", async () => {
+    renderWith(<AthleteOverview athletes={[anna, erika]} />);
+    const list = screen.getByRole("list", { name: "Athletes" });
+    const scrollBy = vi.fn();
+    Object.assign(list, { scrollBy });
+    Object.defineProperties(list, {
+      clientWidth: { value: 300, configurable: true },
+      scrollWidth: { value: 900, configurable: true },
+      scrollLeft: { value: 0, writable: true, configurable: true },
+    });
+    fireEvent.scroll(list);
+    const previous = screen.getByRole("button", { name: "Previous athletes" });
+    const next = screen.getByRole("button", { name: "Next athletes" });
+    expect(previous).toHaveProperty("disabled", true);
+    expect(next).toHaveProperty("disabled", false);
+
+    await userEvent.click(next);
+    expect(scrollBy).toHaveBeenCalledWith(
+      expect.objectContaining({ left: 270 }),
+    );
+
+    (list as unknown as { scrollLeft: number }).scrollLeft = 600;
+    fireEvent.scroll(list);
+    expect(previous).toHaveProperty("disabled", false);
+    expect(next).toHaveProperty("disabled", true);
   });
 });
 
@@ -140,6 +200,20 @@ describe("AthleteForm", () => {
     );
   });
 
+  it("cancels to the details page when editing and to the overview when adding", () => {
+    const view = renderWith(<AthleteForm athlete={anna} />);
+    expect(screen.getByRole("link", { name: "Cancel" })).toHaveProperty(
+      "pathname",
+      "/athletes/a1",
+    );
+    view.unmount();
+    renderWith(<AthleteForm />);
+    expect(screen.getByRole("link", { name: "Cancel" })).toHaveProperty(
+      "pathname",
+      "/",
+    );
+  });
+
   it("has no email or picture fields", () => {
     renderWith(<AthleteForm />);
     expect(screen.queryByLabelText(/mail/i)).toBeNull();
@@ -166,7 +240,9 @@ describe("AthleteForm", () => {
     await userEvent.type(height, "180");
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(JSON.parse(fetchMock.mock.calls[1]![1].body).heightCm).toBe(180);
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/"));
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith("/athletes/a1"),
+    );
   });
 
   it("is ready again after a successful save (restored page)", async () => {

@@ -22,7 +22,11 @@
   "Athletes": {
     "title": "Athletes",
     "add": "Add athlete",
-    "empty": "No athletes yet. Add your first athlete."
+    "empty": "No athletes yet. Add your first athlete.",
+    "carouselLabel": "Athletes",
+    "previous": "Previous athletes",
+    "next": "Next athletes",
+    "pictureAlt": "Profile picture of {name}"
   },
   "AthleteForm": {
     "newTitle": "New athlete",
@@ -114,5 +118,10 @@
     "label": "Role",
     "team": "My Team",
     "training": "My training"
+  },
+  "AthleteDetails": {
+    "back": "Back to athletes",
+    "basicData": "Basic data",
+    "pictureAlt": "Profile picture of {name}"
   }
 }

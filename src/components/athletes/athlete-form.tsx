@@ -110,11 +110,12 @@ function AthleteFormFields({ athlete }: Props) {
           const invitation = await requestInvitation(created.id);
           setPending(false);
           if (invitation) setInvited({ name: created.name, invitation });
-          else router.push(`/athletes/${created.id}`);
+          else router.push(`/athletes/${created.id}/basic-data`);
           return;
         }
         setPending(false);
-        router.push("/");
+        // Edits return to the athlete's details page, new athletes to the overview.
+        router.push(athlete ? `/athletes/${athlete.id}` : "/");
         router.refresh();
         return;
       }
@@ -277,7 +278,7 @@ function AthleteFormFields({ athlete }: Props) {
           </button>
         )}
         <Link
-          href="/"
+          href={athlete ? `/athletes/${athlete.id}` : "/"}
           className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
           {t("cancel")}
