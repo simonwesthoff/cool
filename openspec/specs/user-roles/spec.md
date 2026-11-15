@@ -83,22 +83,6 @@ the athlete details and basic data views exist.
 - **WHEN** they open their athlete view
 - **THEN** they see "Anna Weber", their profile picture and "Max Berg" as coach
 
-### Requirement: Switching between roles
-A user with both roles SHALL be able to switch between the athlete list of
-their Team ("My Team") and their athlete view ("My training") from the
-header of every signed-in page. Users with only one role SHALL NOT see the
-switch.
-
-#### Scenario: Switch to the athlete view
-- **GIVEN** a user with both roles on the athlete list
-- **WHEN** they choose "My training" in the header
-- **THEN** they see their athlete view
-
-#### Scenario: Single role
-- **GIVEN** a user who is only a coach
-- **WHEN** they open any page
-- **THEN** the header shows no role switch
-
 ### Requirement: Roles in the API
 The current user endpoint SHALL include the user's roles: the Team they
 lead (if any) and the Athlete and Team they are linked to (if any), with
@@ -129,3 +113,28 @@ their user as coach.
 - **GIVEN** a user whose Team has athletes
 - **WHEN** the change is deployed and they open the app
 - **THEN** they see their athlete list as before
+
+### Requirement: App navigation
+Every signed-in page SHALL offer tabs for the user's areas: "Athletes" for
+coaches, "My training" for athletes and "Exercises" for every signed-in
+user. On phones the tabs SHALL form a bar at the bottom of the screen; on
+larger screens they SHALL be in the header. The current tab SHALL be marked.
+
+#### Scenario: Coach
+- **GIVEN** a user who is only a coach
+- **WHEN** they open any signed-in page
+- **THEN** the tabs are "Athletes" and "Exercises"
+
+#### Scenario: Athlete
+- **GIVEN** a user who is only an athlete
+- **WHEN** they open any signed-in page
+- **THEN** the tabs are "My training" and "Exercises"
+
+#### Scenario: Both roles
+- **GIVEN** a user with both roles
+- **WHEN** they choose "My training" and then "Athletes"
+- **THEN** they see their athlete view and then the athlete list of their Team
+
+#### Scenario: Tab bar on a phone
+- **WHEN** a user opens a signed-in page on a phone
+- **THEN** the tabs are at the bottom of the screen and stay visible while scrolling
