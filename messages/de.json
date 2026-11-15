@@ -132,11 +132,11 @@
     "repsPerWeek": "Wiederholungen pro Woche",
     "comment": "Kommentar",
     "notDefined": "Nicht festgelegt",
-    "back": "Zurück zum Katalog",
     "lifts": {
       "snatch": "Reißen",
       "clean_and_jerk": "Stoßen"
-    }
+    },
+    "close": "Schließen"
   },
   "Navigation": {
     "label": "Hauptnavigation",

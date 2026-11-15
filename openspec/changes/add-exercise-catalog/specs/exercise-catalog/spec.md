@@ -68,23 +68,25 @@ horizontal scrolling. Each exercise SHALL be selectable.
 - **THEN** group headings, numbers, names and best values are readable without scrolling sideways
 
 ### Requirement: Exercise details
-Selecting an exercise in the catalog SHALL show all its information: number,
-name, exercise group, reference lift, best value, max. weekly average
-weight, min./max. reps per set, min./max. reps per week and comment, with a
-way back to the catalog. Information the catalog does not define SHALL be
-marked as not defined.
+Selecting an exercise in the catalog SHALL open a dialog over the list that
+shows all its information: number, name, exercise group, reference lift,
+best value, max. weekly average weight, min./max. reps per set, min./max.
+reps per week and comment. Information the catalog does not define SHALL be
+marked as not defined. The dialog SHALL close with a close button, the
+Escape key or a click outside it, and the list SHALL stay where it was.
 
 #### Scenario: Show all information
 - **WHEN** a user selects exercise 13 "Zug breit"
-- **THEN** they see group K3, reference lift snatch, best value 108 %, max. weekly average weight 94 %, 3 to 8 reps per set and 18 to 48 reps per week
+- **THEN** a dialog shows group K3, reference lift snatch, best value 108 %, max. weekly average weight 94 %, 3 to 8 reps per set and 18 to 48 reps per week
 
-#### Scenario: Back to the catalog
-- **WHEN** a user is on an exercise's details
-- **THEN** they can go back to the catalog list
+#### Scenario: Close the dialog
+- **GIVEN** the dialog of an exercise is open
+- **WHEN** the user chooses the close button, presses Escape or clicks outside the dialog
+- **THEN** the dialog closes and the catalog list is shown at the same position
 
-#### Scenario: Unknown exercise
-- **WHEN** a user opens the details of an exercise number that does not exist
-- **THEN** they see the "not found" page
+#### Scenario: Value not defined
+- **WHEN** a user selects exercise 31 "Bankdrücken"
+- **THEN** the dialog marks reference lift, best value, average weight and repetitions as not defined
 
 ### Requirement: Catalog API
 The HTTP API SHALL return the catalog to signed-in users: the exercise groups

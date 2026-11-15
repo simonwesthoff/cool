@@ -1,15 +1,35 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
 import type { ExerciseGroup } from "@/domain/exercises/catalog-types";
-import { ExerciseDetails } from "./exercise-details";
 import { ExerciseList } from "./exercise-list";
 import { formatRange } from "./format";
 
 afterEach(cleanup);
+
+// jsdom may lack the modal dialog API; emulate the parts the component uses.
+beforeAll(() => {
+  const proto = HTMLDialogElement.prototype;
+  if (!proto.showModal) {
+    proto.showModal = function (this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    };
+    proto.close = function (this: HTMLDialogElement) {
+      this.removeAttribute("open");
+      this.dispatchEvent(new Event("close"));
+    };
+  }
+});
 
 const k3: ExerciseGroup = {
   number: 3,
@@ -70,14 +90,14 @@ describe("ExerciseList", () => {
     ).toEqual(["K3 · Speed strength", "K8 · General strength training 1"]);
     const k3Rows = within(
       screen.getByRole("list", { name: "K3 · Speed strength" }),
-    ).getAllByRole("link");
+    ).getAllByRole("button");
     expect(k3Rows).toHaveLength(1);
-    expect(k3Rows[0]).toHaveProperty("pathname", "/exercises/13");
+    expect(k3Rows[0]!.getAttribute("aria-haspopup")).toBe("dialog");
     expect(k3Rows[0]!.textContent).toBe("13Snatch pullBest value 108%");
     expect(k3Rows[0]!.textContent).not.toContain("K3");
     const k8Rows = within(
       screen.getByRole("list", { name: "K8 · General strength training 1" }),
-    ).getAllByRole("link");
+    ).getAllByRole("button");
     expect(k8Rows[0]!.textContent).toContain("31Bench press");
     expect(within(k8Rows[0]!).getByLabelText("Not defined").textContent).toBe(
       "–",
@@ -92,25 +112,37 @@ describe("ExerciseList", () => {
     expect(
       screen.getByRole("heading", { name: "K3 · Schnellkraftfähigkeit (SKF)" }),
     ).toBeTruthy();
-    const row = screen.getByRole("link");
+    const row = screen.getByRole("button");
     expect(row.textContent).toContain("Zug breit");
     expect(row.textContent).toContain("108\u00a0%");
   });
 });
 
-describe("ExerciseDetails", () => {
-  const { exercises, ...group } = k3;
-
-  it("shows all information of an exercise", () => {
-    renderIn("en", <ExerciseDetails exercise={exercises[0]!} group={group} />);
-    expect(screen.getByRole("heading", { name: "Snatch pull" })).toBeTruthy();
-    const terms = screen.getAllByRole("term").map((dt) => dt.textContent);
-    const values = screen
+describe("exercise dialog", () => {
+  const openExercise = async (name: string) => {
+    await userEvent.click(
+      screen.getByRole("button", { name: new RegExp(name) }),
+    );
+    return screen.getByRole("dialog");
+  };
+  const valuesOf = (dialog: HTMLElement) => {
+    const terms = within(dialog)
+      .getAllByRole("term")
+      .map((dt) => dt.textContent);
+    const values = within(dialog)
       .getAllByRole("definition")
       .map((dd) => dd.textContent);
+    return Object.fromEntries(terms.map((term, i) => [term, values[i]]));
+  };
+
+  it("shows all information of the selected exercise", async () => {
+    renderIn("en", <ExerciseList groups={[k3, k8]} />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const dialog = await openExercise("Snatch pull");
     expect(
-      Object.fromEntries(terms.map((term, i) => [term, values[i]])),
-    ).toEqual({
+      within(dialog).getByRole("heading", { name: /^13\s*Snatch pull$/ }),
+    ).toBeTruthy();
+    expect(valuesOf(dialog)).toEqual({
       "Exercise group": "K3 · Speed strength",
       "Reference lift": "Snatch",
       "Best value (% of snatch / clean & jerk max)": "108%",
@@ -119,21 +151,36 @@ describe("ExerciseDetails", () => {
       "Reps per week": "18–48",
       Comment: "Not defined",
     });
-    expect(
-      screen.getByRole("link", { name: /Back to exercises/ }),
-    ).toHaveProperty("pathname", "/exercises");
   });
 
-  it("marks values the catalog does not define", () => {
-    const { exercises: k8Exercises, ...k8Group } = k8;
-    renderIn(
-      "de",
-      <ExerciseDetails exercise={k8Exercises[0]!} group={k8Group} />,
-    );
-    expect(screen.getAllByText("Nicht festgelegt")).toHaveLength(6);
+  it("marks values the catalog does not define", async () => {
+    renderIn("de", <ExerciseList groups={[k8]} />);
+    const dialog = await openExercise("Bankdrücken");
+    expect(within(dialog).getAllByText("Nicht festgelegt")).toHaveLength(6);
     expect(
-      screen.getByText("K8 · Allgemeines Muskelkrafttraining 1 (AMKT)"),
+      within(dialog).getByText("K8 · Allgemeines Muskelkrafttraining 1 (AMKT)"),
     ).toBeTruthy();
+  });
+
+  it("closes with the close button and by clicking outside", async () => {
+    renderIn("en", <ExerciseList groups={[k3]} />);
+    let dialog = await openExercise("Snatch pull");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Close" }),
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    dialog = await openExercise("Snatch pull");
+    fireEvent.click(dialog);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("closes on Escape (the dialog's close event)", async () => {
+    renderIn("en", <ExerciseList groups={[k3]} />);
+    const dialog = await openExercise("Snatch pull");
+    (dialog as HTMLDialogElement).close();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("button", { name: /Snatch pull/ })).toBeTruthy();
   });
 });
 

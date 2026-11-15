@@ -132,11 +132,11 @@
     "repsPerWeek": "Reps per week",
     "comment": "Comment",
     "notDefined": "Not defined",
-    "back": "Back to exercises",
     "lifts": {
       "snatch": "Snatch",
       "clean_and_jerk": "Clean & jerk"
-    }
+    },
+    "close": "Close"
   },
   "Navigation": {
     "label": "Main navigation",

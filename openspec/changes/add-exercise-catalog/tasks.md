@@ -18,6 +18,8 @@
 
 - [x] 3.3 Acceptance feedback: group the catalog list into one block per exercise group (heading with code and name) instead of a group column; verify component tests and the browser check (phone and desktop screenshots)
 
+- [x] 3.4 Acceptance feedback: show an exercise's information in a dialog over the list instead of a separate page (close button, Escape, outside click, focus handling) and remove the `/exercises/{number}` page; verify component tests and the browser check
+
 ## 4. Project records
 
 - [x] 4.1 Add Exercise group, Best value, Reference lift and the group names with abbreviations to `openspec/glossary.md`

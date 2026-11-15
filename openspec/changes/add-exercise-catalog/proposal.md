@@ -25,7 +25,7 @@ app gets a separate tab for it.
   reviewed by the user.
 - **Catalog tab.** A new "Exercises" page shows the exercises in one block
   per exercise group, each with number, name and best value; selecting one
-  shows all its information on its own page.
+  shows all its information in a dialog.
 - **Navigation.** The app gets tabs: "Athletes" (coaches), "My training"
   (athletes) and "Exercises" (every signed-in user). On phones they form a
   bottom tab bar, on larger screens they sit in the header. This replaces
