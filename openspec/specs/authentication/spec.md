@@ -78,7 +78,7 @@ and, after signing in, back to the page they opened.
 ### Requirement: Home page for signed-in users
 Every page for signed-in users SHALL show the signed-in user's profile
 picture and first name at the top right. Choosing them SHALL open a menu
-with a button to sign out. What the home page shows depends on the user's
+with a button to sign out and the language switcher. What the home page shows depends on the user's
 roles (see user-roles).
 
 #### Scenario: Home page content
@@ -95,6 +95,11 @@ roles (see user-roles).
 - **GIVEN** a signed-in person on any page
 - **WHEN** they choose their picture or first name
 - **THEN** a menu opens with a "Sign out" button
+
+#### Scenario: Language in the account menu
+- **GIVEN** a signed-in person on any page
+- **WHEN** they open the account menu and choose "Deutsch"
+- **THEN** the page is shown in German
 
 ### Requirement: Sign out
 The system SHALL let a signed-in user sign out. Signing out SHALL end the

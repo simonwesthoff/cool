@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { LanguageFooter } from "@/components/language-footer";
 
 export default async function NotFound() {
   const t = await getTranslations("NotFound");
@@ -12,6 +13,7 @@ export default async function NotFound() {
           {t("home")}
         </Link>
       </main>
+      <LanguageFooter />
     </div>
   );
 }

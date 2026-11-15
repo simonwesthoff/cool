@@ -6,7 +6,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import { firstName, UserMenu } from "./user-menu";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({}) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {} }),
+}));
 vi.mock("./auth-client", () => ({ authClient: {} }));
 afterEach(cleanup);
 
@@ -46,6 +48,7 @@ describe("UserMenu", () => {
     expect(account.getAttribute("aria-expanded")).toBe("true");
     expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
     expect(screen.getByText("ada@example.com")).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Language" })).toBeTruthy();
 
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();

@@ -114,14 +114,30 @@
     "coach": "Coach: {name}",
     "placeholder": "Your training plan will appear here."
   },
-  "RoleSwitch": {
-    "label": "Role",
-    "team": "My Team",
-    "training": "My training"
-  },
   "AthleteDetails": {
     "back": "Back to athletes",
     "basicData": "Basic data",
     "pictureAlt": "Profile picture of {name}"
+  },
+  "Catalog": {
+    "title": "Exercises",
+    "bestValue": "Best value",
+    "bestValueLong": "Best value (% of snatch / clean & jerk max)",
+    "maxWeeklyAverageWeight": "Max. weekly average weight",
+    "repsPerSet": "Reps per set",
+    "repsPerWeek": "Reps per week",
+    "comment": "Comment",
+    "notDefined": "Not defined",
+    "close": "Close",
+    "liftExercise": {
+      "snatch": "Snatch exercise",
+      "clean_and_jerk": "C&J exercise"
+    }
+  },
+  "Navigation": {
+    "label": "Main navigation",
+    "athletes": "Athletes",
+    "training": "My training",
+    "exercises": "Exercises"
   }
 }

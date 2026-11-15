@@ -38,8 +38,25 @@ erDiagram
         datetime acceptedAt
         datetime revokedAt
     }
+    ExerciseGroup ||--o{ Exercise : "contains"
+    Exercise {
+        int number
+        string name
+        string referenceLift
+        decimal bestValuePct
+        decimal maxWeeklyAverageWeightPct
+        int minRepsPerSet
+        int maxRepsPerSet
+        int minRepsPerWeek
+        int maxRepsPerWeek
+    }
 ```
 
+- The exercise catalog consists of exercise groups (K1–K9), each with its
+  exercises. Exercises are identified by their catalog number. The catalog
+  is shared by all Teams and read-only; later changes reference exercises
+  from mesocycles and weekly plans and add per-athlete adjustments of the
+  values.
 - A user account is created by the first sign-in with Google and is
   identified by that Google account. Name and picture follow the Google
   profile on every sign-in.

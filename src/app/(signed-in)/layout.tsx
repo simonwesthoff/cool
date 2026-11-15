@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { Suspense, type ReactNode } from "react";
 import { UserMenu } from "@/components/auth/user-menu";
 import { PageHeader } from "@/components/page-header";
-import { RoleSwitch } from "@/components/roles/role-switch";
+import { AppNavigation } from "@/components/navigation/app-navigation";
 import { getCurrentUser } from "@/domain/auth";
 import { getRoles } from "@/domain/roles";
 
@@ -11,11 +11,18 @@ async function SignedInHeader() {
   // Pages redirect signed-out visitors themselves.
   if (!user) return <PageHeader />;
   const roles = await getRoles(user);
+  const navigationRoles = {
+    coach: roles.coach !== null,
+    athlete: roles.athlete !== null,
+  };
   return (
-    <PageHeader
-      left={roles.coach && roles.athlete ? <RoleSwitch /> : null}
-      right={<UserMenu user={user} />}
-    />
+    <>
+      <PageHeader
+        left={<AppNavigation roles={navigationRoles} placement="header" />}
+        right={<UserMenu user={user} />}
+      />
+      <AppNavigation roles={navigationRoles} placement="bottom" />
+    </>
   );
 }
 

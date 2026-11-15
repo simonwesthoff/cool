@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CurrentUser } from "@/domain/auth";
 import { Avatar } from "../avatar";
+import { LanguageSwitcher } from "../language-switcher";
 import { SignOutButton } from "./sign-out-button";
 
 /** First name: the first word of the full name (Google gives only the full name). */
@@ -62,6 +63,7 @@ export function UserMenu({ user }: { user: CurrentUser }) {
           <p className="truncate text-sm text-zinc-600 dark:text-zinc-400">
             {user.email}
           </p>
+          <LanguageSwitcher />
           <SignOutButton />
         </div>
       )}
