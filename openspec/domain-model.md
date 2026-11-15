@@ -19,6 +19,8 @@ keys, columns) belong in each change's `design.md` and in the code.
 erDiagram
     UserAccount ||--o| Team : "leads as coach"
     Team ||--o{ Athlete : "has"
+    UserAccount |o--o| Athlete : "is linked to"
+    Athlete ||--o{ Invitation : "is invited via"
     UserAccount {
         string name
         string email
@@ -31,37 +33,37 @@ erDiagram
         date careerStartDate
         int heightCm
     }
+    Invitation {
+        datetime expiresAt
+        datetime acceptedAt
+        datetime revokedAt
+    }
 ```
 
 - A user account is created by the first sign-in with Google and is
   identified by that Google account. Name and picture follow the Google
   profile on every sign-in.
-- A user account has no role by itself. Until user roles exist, every user
-  account leads exactly one Team, created automatically.
-- A Team has exactly one coach.
-- An Athlete belongs to exactly one Team and is created by its coach.
+- Roles are per Team and derived from the data: a user account is the coach
+  of the Team it leads (created with "Start as Coach") and an athlete of the
+  Team whose Athlete it is linked to. It leads at most one Team and is
+  linked to at most one Athlete; it can hold both roles, in the same Team or
+  in different Teams. A user account without either role chooses one on the
+  start page.
+- A Team has exactly one coach. An Athlete belongs to exactly one Team and is
+  created by its coach.
 - Email address and profile picture are part of an athlete's basic data but
   come from the linked user account; they are not stored on the Athlete.
+- An Invitation belongs to one Athlete, can be accepted once, expires after
+  7 days and is replaced by a newer Invitation for the same Athlete.
+  Accepting it links the accepting user account to the Athlete.
+- A coach can link themselves to an Athlete of their own Team without an
+  Invitation ("This is me").
 
 ## Draft (not yet built)
 
-Starting point from `feature_list.txt`. Changes that build these parts move
-them into "Current model" above.
-
-```mermaid
-erDiagram
-    UserAccount |o--o| Athlete : "is linked to"
-    Athlete ||--o{ Invitation : "is invited via"
-```
-
-- User account, Team and Athlete are built (see "Current model"); the
-  relations below are not. A coach is a user account in the coach role of a
-  Team. Roles are per Team, not global. Signing in with Apple will lead to
-  the same kind of user account.
-- An Invitation belongs to one Athlete. When someone signs in through it,
-  their user account is linked to that Athlete.
-- A coach can train themselves: their user account is then also linked to
-  an Athlete in their own Team.
+Nothing is drafted at the moment. Changes for training planning
+(macrocycles, mesocycles, weekly plans) add their parts here or directly in
+their `design.md`.
 
 ### Decisions (answered by the user on 2026-11-15)
 
@@ -69,3 +71,10 @@ erDiagram
 - A user account is linked to at most one Athlete, in one Team.
 - An Invitation can be used once and expires after 7 days. The coach can
   create a new one at any time; the previous one then stops working.
+- A coach trains themselves by linking their own user account to an
+  Athlete in their own Team ("This is me"), without an invitation.
+- A user account can be the coach of one Team and at the same time be
+  linked to an Athlete in another Team; it is still linked to at most one
+  Athlete overall.
+- Users whose automatically created Team has no athletes lose it when user
+  roles are introduced and choose their role again.

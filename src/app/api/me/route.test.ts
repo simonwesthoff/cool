@@ -5,6 +5,10 @@ vi.mock("@/server/auth", () => ({
   getAuth: () => ({ api: { getSession } }),
 }));
 
+vi.mock("@/domain/roles", () => ({
+  getRoles: async () => ({ coach: { teamId: "t1" }, athlete: null }),
+}));
+
 const { GET } = await import("./route");
 
 describe("GET /api/me", () => {
@@ -28,6 +32,7 @@ describe("GET /api/me", () => {
       name: "Ada Lovelace",
       email: "ada@example.com",
       image: "https://lh3.googleusercontent.com/a/ada",
+      roles: { coach: { teamId: "t1" }, athlete: null },
     });
   });
 

@@ -4,11 +4,9 @@ import { DomainError } from "@/domain/errors";
 const getAthlete = vi.fn();
 vi.mock("@/domain/athletes", () => ({ getAthlete }));
 vi.mock("../../current-user", () => ({
-  requirePageUser: async () => ({
-    id: "u1",
-    name: "A",
-    email: "a@b.c",
-    image: null,
+  requireCoachPage: async () => ({
+    user: { id: "u1", name: "A", email: "a@b.c", image: null },
+    roles: { coach: { teamId: "t1" }, athlete: null },
   }),
 }));
 class NotFound extends Error {}
@@ -35,8 +33,17 @@ describe("edit athlete page", () => {
   });
 
   it("renders the form for the coach's athlete", async () => {
-    getAthlete.mockResolvedValue({ id: "x", name: "Anna" });
+    getAthlete.mockResolvedValue({
+      id: "x",
+      name: "Anna",
+      linkedAccount: null,
+    });
     const element = await EditAthlete({ params });
-    expect(element.props.athlete).toEqual({ id: "x", name: "Anna" });
+    const children = element.props.children;
+    expect(children[0].props.athlete).toEqual({
+      id: "x",
+      name: "Anna",
+      linkedAccount: null,
+    });
   });
 });

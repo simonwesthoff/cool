@@ -16,7 +16,8 @@
   },
   "UserMenu": {
     "pictureAlt": "Profile picture of {name}",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "accountLabel": "Account of {name}"
   },
   "Athletes": {
     "title": "Athletes",
@@ -50,11 +51,68 @@
       "NOT_INTEGER": "Please enter whole centimetres.",
       "INVALID_FORMAT": "Please enter a valid date.",
       "INVALID": "Invalid value."
-    }
+    },
+    "saveAndInvite": "Save and invite",
+    "invitedTitle": "{name} was added",
+    "invitedText": "Send this link to the athlete. It can be used once.",
+    "done": "Done"
   },
   "NotFound": {
     "title": "Page not found",
     "text": "This page does not exist or you do not have access to it.",
     "home": "Back to the start page"
+  },
+  "Start": {
+    "title": "Welcome",
+    "text": "How do you want to use the app?",
+    "asCoach": "Start as Coach",
+    "asAthlete": "Start as Athlete",
+    "failed": "Something went wrong. Please try again."
+  },
+  "StartAthlete": {
+    "title": "Start as Athlete",
+    "text": "Your coach sends you an invitation link. Paste it here.",
+    "label": "Invitation link",
+    "invalid": "This is not a valid invitation link.",
+    "continue": "Continue"
+  },
+  "Invitation": {
+    "title": "Invitation",
+    "text": "Create a link and send it to the athlete. When they open it and sign in, their account is linked to this athlete.",
+    "invite": "Invite",
+    "newLink": "Create new link",
+    "linkLabel": "Invitation link",
+    "expires": "Valid until {date}. Can be used once.",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "failed": "Something went wrong. Please try again.",
+    "linkedTitle": "Linked account",
+    "linkedPictureAlt": "Profile picture of {name}",
+    "thisIsMe": "This is me",
+    "thisIsMeText": "Are you training yourself? Link this athlete to your own account.",
+    "copyFailed": "Copying did not work. The link is selected, please copy it yourself."
+  },
+  "InvitationPage": {
+    "title": "Invitation",
+    "invites": "{coach} invites you as {athlete}.",
+    "accept": "Accept",
+    "home": "Go to the start page",
+    "problems": {
+      "unknown": "This invitation link is not valid. Please ask your coach for a new link.",
+      "expired": "This invitation has expired. Please ask your coach for a new link.",
+      "used": "This invitation is no longer valid. Please ask your coach for a new link.",
+      "alreadyLinked": "Your account is already linked to an athlete, so you cannot accept this invitation.",
+      "failed": "Something went wrong. Please try again."
+    }
+  },
+  "Training": {
+    "pictureAlt": "Profile picture of {name}",
+    "coach": "Coach: {name}",
+    "placeholder": "Your training plan will appear here."
+  },
+  "RoleSwitch": {
+    "label": "Role",
+    "team": "My Team",
+    "training": "My training"
   }
 }

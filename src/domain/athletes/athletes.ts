@@ -3,7 +3,8 @@ import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
 import { parseInput } from "@/domain/validation";
 import { getDb } from "@/server/db";
-import { athlete, team } from "@/server/db/schema";
+import { requireCoachTeam } from "@/domain/roles";
+import { athlete, userAccount } from "@/server/db/schema";
 import {
   completeBasicDataSchema,
   createBasicDataSchema,
@@ -11,8 +12,6 @@ import {
   type Athlete,
   type BasicData,
 } from "./basic-data";
-
-export type Team = { id: string; coachId: string };
 
 const notFound = () => new DomainError("not_found", "ATHLETE_NOT_FOUND");
 
@@ -25,43 +24,57 @@ const columns = {
   gender: athlete.gender,
   careerStartDate: athlete.careerStartDate,
   heightCm: athlete.heightCm,
+  accountEmail: userAccount.email,
+  accountImage: userAccount.image,
 };
 
-/**
- * The Team the user leads as coach. Until user roles exist, every user leads
- * exactly one Team, created on first use. Safe against parallel first calls.
- */
-export async function getOrCreateTeam(coach: CurrentUser): Promise<Team> {
-  const db = getDb();
-  await db
-    .insert(team)
-    .values({ coachId: coach.id })
-    .onConflictDoNothing({ target: team.coachId });
-  const [row] = await db
-    .select({ id: team.id, coachId: team.coachId })
-    .from(team)
-    .where(eq(team.coachId, coach.id));
-  if (!row) throw new Error("Team could not be created");
-  return row;
+type Row = {
+  id: string;
+  name: string;
+  dateOfBirth: string | null;
+  gender: Athlete["gender"];
+  careerStartDate: string | null;
+  heightCm: number | null;
+  accountEmail: string | null;
+  accountImage: string | null;
+};
+
+function toAthlete({ accountEmail, accountImage, ...data }: Row): Athlete {
+  return {
+    ...data,
+    linkedAccount:
+      accountEmail === null
+        ? null
+        : { email: accountEmail, image: accountImage },
+  };
+}
+
+function selectAthletes() {
+  return getDb()
+    .select(columns)
+    .from(athlete)
+    .leftJoin(userAccount, eq(userAccount.id, athlete.userAccountId));
 }
 
 /** Athletes of the coach's Team, sorted by name. */
 export async function listAthletes(coach: CurrentUser): Promise<Athlete[]> {
-  const { id: teamId } = await getOrCreateTeam(coach);
-  return getDb()
-    .select(columns)
-    .from(athlete)
+  const { id: teamId } = await requireCoachTeam(coach);
+  const rows = await selectAthletes()
     .where(eq(athlete.teamId, teamId))
     .orderBy(asc(athlete.name), asc(athlete.id));
+  return rows.map(toAthlete);
 }
 
-async function findInTeam(teamId: string, id: string) {
+/** An athlete of the given Team, or undefined (also for malformed ids). */
+export async function findAthleteInTeam(
+  teamId: string,
+  id: string,
+): Promise<Athlete | undefined> {
   if (!UUID.test(id)) return undefined;
-  const [row] = await getDb()
-    .select(columns)
-    .from(athlete)
-    .where(and(eq(athlete.id, id), eq(athlete.teamId, teamId)));
-  return row;
+  const [row] = await selectAthletes().where(
+    and(eq(athlete.id, id), eq(athlete.teamId, teamId)),
+  );
+  return row ? toAthlete(row) : undefined;
 }
 
 /** One athlete of the coach's Team; `ATHLETE_NOT_FOUND` otherwise. */
@@ -69,8 +82,8 @@ export async function getAthlete(
   coach: CurrentUser,
   id: string,
 ): Promise<Athlete> {
-  const { id: teamId } = await getOrCreateTeam(coach);
-  const row = await findInTeam(teamId, id);
+  const { id: teamId } = await requireCoachTeam(coach);
+  const row = await findAthleteInTeam(teamId, id);
   if (!row) throw notFound();
   return row;
 }
@@ -89,13 +102,14 @@ export async function createAthlete(
     heightCm: data.heightCm ?? null,
   };
   parseInput(completeBasicDataSchema, values);
-  const { id: teamId } = await getOrCreateTeam(coach);
+  const { id: teamId } = await requireCoachTeam(coach);
   const [row] = await getDb()
     .insert(athlete)
     .values({ ...values, teamId })
-    .returning(columns);
-  if (!row) throw new Error("Athlete could not be created");
-  return row;
+    .returning({ id: athlete.id });
+  const created = row && (await findAthleteInTeam(teamId, row.id));
+  if (!created) throw new Error("Athlete could not be created");
+  return created;
 }
 
 /** Changes basic data of an athlete of the coach's Team. */
@@ -105,8 +119,8 @@ export async function updateAthlete(
   input: unknown,
 ): Promise<Athlete> {
   const patch = parseInput(updateBasicDataSchema, input);
-  const { id: teamId } = await getOrCreateTeam(coach);
-  const current = await findInTeam(teamId, id);
+  const { id: teamId } = await requireCoachTeam(coach);
+  const current = await findAthleteInTeam(teamId, id);
   if (!current) throw notFound();
 
   const next: Athlete = { ...current };
@@ -125,7 +139,8 @@ export async function updateAthlete(
       heightCm: next.heightCm,
     })
     .where(and(eq(athlete.id, id), eq(athlete.teamId, teamId)))
-    .returning(columns);
-  if (!row) throw notFound();
-  return row;
+    .returning({ id: athlete.id });
+  const updated = row && (await findAthleteInTeam(teamId, row.id));
+  if (!updated) throw notFound();
+  return updated;
 }

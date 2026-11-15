@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { signInErrorKind } from "@/components/auth/sign-in-error";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
-import { PageHeader } from "@/components/page-header";
 import { getCurrentUser, safeReturnPath, signInUrl } from "@/domain/auth";
 
 type SearchParams = PageProps<"/sign-in">["searchParams"];
@@ -13,7 +12,6 @@ type SearchParams = PageProps<"/sign-in">["searchParams"];
 export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader />
       <Suspense fallback={<LoadingPlaceholder />}>
         <SignIn searchParams={searchParams} />
       </Suspense>

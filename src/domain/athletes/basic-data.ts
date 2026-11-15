@@ -48,8 +48,14 @@ export type BasicData = {
   heightCm: number | null;
 };
 
+/** User account an athlete is linked to; source of email and picture. */
+export type LinkedAccount = { email: string; image: string | null };
+
 /** An athlete as the app and the API see it. */
-export type Athlete = BasicData & { id: string };
+export type Athlete = BasicData & {
+  id: string;
+  linkedAccount: LinkedAccount | null;
+};
 
 /** Input to add an athlete: only the name is required. */
 export const createBasicDataSchema = z.strictObject({

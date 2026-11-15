@@ -35,6 +35,7 @@ const anna = {
   gender: "female" as const,
   careerStartDate: "2015-09-01",
   heightCm: 165,
+  linkedAccount: null,
 };
 
 beforeEach(() => {

@@ -39,3 +39,5 @@ Domain terms for the weightlifting coaching app.
 | Trainer | - | Coach | The user account that leads a Team and plans the training of its athletes. |
 | Athlet | - | Athlete | A person trained in a Team. Created by the coach; can later be linked to a user account through an invitation. |
 | Stammdaten | - | Basic data | An athlete's personal data that rarely changes: name, date of birth, gender, start date of the weightlifting career, height, email address and profile picture. |
+| Rolle | - | Role | Coach or athlete. A user account holds roles per Team: coach of the Team it leads, athlete of the Team whose Athlete it is linked to. |
+| Einladung | - | Invitation | A link a coach creates for one Athlete of their Team. Accepting it links the user account to that Athlete. Usable once, valid for 7 days, replaced by a newer one. |

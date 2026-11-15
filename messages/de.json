@@ -16,7 +16,8 @@
   },
   "UserMenu": {
     "pictureAlt": "Profilbild von {name}",
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "accountLabel": "Konto von {name}"
   },
   "Athletes": {
     "title": "Athleten",
@@ -50,11 +51,68 @@
       "NOT_INTEGER": "Bitte ganze Zentimeter eingeben.",
       "INVALID_FORMAT": "Bitte ein gültiges Datum eingeben.",
       "INVALID": "Ungültiger Wert."
-    }
+    },
+    "saveAndInvite": "Speichern und einladen",
+    "invitedTitle": "{name} wurde hinzugefügt",
+    "invitedText": "Schicke diesen Link an den Athleten. Er kann einmal verwendet werden.",
+    "done": "Fertig"
   },
   "NotFound": {
     "title": "Seite nicht gefunden",
     "text": "Diese Seite gibt es nicht oder du hast keinen Zugriff darauf.",
     "home": "Zurück zur Startseite"
+  },
+  "Start": {
+    "title": "Willkommen",
+    "text": "Wie möchtest du die App nutzen?",
+    "asCoach": "Als Trainer starten",
+    "asAthlete": "Als Athlet starten",
+    "failed": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+  },
+  "StartAthlete": {
+    "title": "Als Athlet starten",
+    "text": "Dein Trainer schickt dir einen Einladungslink. Füge ihn hier ein.",
+    "label": "Einladungslink",
+    "invalid": "Das ist kein gültiger Einladungslink.",
+    "continue": "Weiter"
+  },
+  "Invitation": {
+    "title": "Einladung",
+    "text": "Erstelle einen Link und schicke ihn dem Athleten. Wenn er ihn öffnet und sich anmeldet, wird sein Konto mit diesem Athleten verknüpft.",
+    "invite": "Einladen",
+    "newLink": "Neuen Link erstellen",
+    "linkLabel": "Einladungslink",
+    "expires": "Gültig bis {date}. Kann einmal verwendet werden.",
+    "copy": "Link kopieren",
+    "copied": "Kopiert",
+    "failed": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "linkedTitle": "Verknüpftes Konto",
+    "linkedPictureAlt": "Profilbild von {name}",
+    "thisIsMe": "Das bin ich",
+    "thisIsMeText": "Trainierst du selbst? Verknüpfe diesen Athleten mit deinem eigenen Konto.",
+    "copyFailed": "Kopieren hat nicht geklappt. Der Link ist markiert, bitte kopiere ihn selbst."
+  },
+  "InvitationPage": {
+    "title": "Einladung",
+    "invites": "{coach} lädt dich als {athlete} ein.",
+    "accept": "Annehmen",
+    "home": "Zur Startseite",
+    "problems": {
+      "unknown": "Dieser Einladungslink ist ungültig. Bitte deinen Trainer um einen neuen Link.",
+      "expired": "Diese Einladung ist abgelaufen. Bitte deinen Trainer um einen neuen Link.",
+      "used": "Diese Einladung ist nicht mehr gültig. Bitte deinen Trainer um einen neuen Link.",
+      "alreadyLinked": "Dein Konto ist bereits mit einem Athleten verknüpft, daher kannst du diese Einladung nicht annehmen.",
+      "failed": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+    }
+  },
+  "Training": {
+    "pictureAlt": "Profilbild von {name}",
+    "coach": "Trainer: {name}",
+    "placeholder": "Hier erscheint bald dein Trainingsplan."
+  },
+  "RoleSwitch": {
+    "label": "Rolle",
+    "team": "Mein Team",
+    "training": "Mein Training"
   }
 }

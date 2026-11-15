@@ -1,21 +1,21 @@
-import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { DomainError } from "@/domain/errors";
 import { DomainValidationError } from "@/domain/validation";
-import { team } from "@/server/db/schema";
 import { createTestDb, createUser } from "@/test/db";
 
 const testDb = await createTestDb();
 vi.mock("@/server/db", () => ({ getDb: () => testDb.db }));
 afterAll(() => testDb.close());
 
-const {
-  createAthlete,
-  getAthlete,
-  getOrCreateTeam,
-  listAthletes,
-  updateAthlete,
-} = await import("./athletes");
+const { createAthlete, getAthlete, listAthletes, updateAthlete } =
+  await import("./athletes");
+const { startAsCoach } = await import("@/domain/roles");
+
+async function createCoach() {
+  const user = await createUser(testDb.db);
+  await startAsCoach(user);
+  return user;
+}
 
 async function errorOf(promise: Promise<unknown>) {
   return promise.then(
@@ -24,36 +24,9 @@ async function errorOf(promise: Promise<unknown>) {
   );
 }
 
-describe("Team", () => {
-  it("is created once per coach", async () => {
-    const coach = await createUser(testDb.db);
-    const first = await getOrCreateTeam(coach);
-    const second = await getOrCreateTeam(coach);
-    expect(second.id).toBe(first.id);
-  });
-
-  it("is created once even with parallel first calls", async () => {
-    const coach = await createUser(testDb.db);
-    const teams = await Promise.all(
-      Array.from({ length: 5 }, () => getOrCreateTeam(coach)),
-    );
-    expect(new Set(teams.map((t) => t.id)).size).toBe(1);
-    const rows = await testDb.db
-      .select()
-      .from(team)
-      .where(eq(team.coachId, coach.id));
-    expect(rows).toHaveLength(1);
-  });
-
-  it("starts without athletes", async () => {
-    const coach = await createUser(testDb.db);
-    await expect(listAthletes(coach)).resolves.toEqual([]);
-  });
-});
-
 describe("athletes", () => {
   it("are created with only a name and listed", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     const created = await createAthlete(coach, { name: "Max Berg" });
     expect(created).toEqual({
       id: expect.any(String),
@@ -62,12 +35,13 @@ describe("athletes", () => {
       gender: null,
       careerStartDate: null,
       heightCm: null,
+      linkedAccount: null,
     });
     await expect(listAthletes(coach)).resolves.toEqual([created]);
   });
 
   it("are created with all basic data", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     const input = {
       name: "Anna Weber",
       dateOfBirth: "2005-03-01",
@@ -76,12 +50,16 @@ describe("athletes", () => {
       heightCm: 165,
     };
     const created = await createAthlete(coach, input);
-    expect(created).toEqual({ id: expect.any(String), ...input });
+    expect(created).toEqual({
+      id: expect.any(String),
+      ...input,
+      linkedAccount: null,
+    });
     await expect(getAthlete(coach, created.id)).resolves.toEqual(created);
   });
 
   it("are listed sorted by name", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     for (const name of ["Max Berg", "Anna Weber", "Lena Hoff"]) {
       await createAthlete(coach, { name });
     }
@@ -90,7 +68,7 @@ describe("athletes", () => {
   });
 
   it("are not created with invalid data", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     const error = await errorOf(
       createAthlete(coach, {
         name: "A",
@@ -106,7 +84,7 @@ describe("athletes", () => {
   });
 
   it("are updated, keeping other values", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     const created = await createAthlete(coach, {
       name: "Anna",
       dateOfBirth: "2005-03-01",
@@ -117,7 +95,7 @@ describe("athletes", () => {
   });
 
   it("can have optional values cleared", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     const created = await createAthlete(coach, {
       name: "Anna",
       dateOfBirth: "2005-03-01",
@@ -129,7 +107,7 @@ describe("athletes", () => {
   });
 
   it("check the career start against the stored date of birth", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     const created = await createAthlete(coach, {
       name: "Anna",
       dateOfBirth: "2005-03-01",
@@ -145,8 +123,8 @@ describe("athletes", () => {
 
 describe("access to another Team", () => {
   it("is answered with ATHLETE_NOT_FOUND and changes nothing", async () => {
-    const coachA = await createUser(testDb.db);
-    const coachB = await createUser(testDb.db);
+    const coachA = await createCoach();
+    const coachB = await createCoach();
     const athleteOfA = await createAthlete(coachA, { name: "Anna" });
 
     for (const attempt of [
@@ -164,11 +142,31 @@ describe("access to another Team", () => {
   });
 
   it("is ATHLETE_NOT_FOUND for a malformed or unknown id", async () => {
-    const coach = await createUser(testDb.db);
+    const coach = await createCoach();
     for (const id of ["not-a-uuid", "00000000-0000-4000-8000-000000000000"]) {
       await expect(errorOf(getAthlete(coach, id))).resolves.toMatchObject({
         code: "ATHLETE_NOT_FOUND",
       });
     }
+  });
+});
+
+describe("users without a Team", () => {
+  it("get NOT_A_COACH and no Team is created", async () => {
+    const user = await createUser(testDb.db);
+    for (const attempt of [
+      listAthletes(user),
+      createAthlete(user, { name: "Anna" }),
+      getAthlete(user, "00000000-0000-4000-8000-000000000000"),
+    ]) {
+      await expect(errorOf(attempt)).resolves.toMatchObject({
+        code: "NOT_A_COACH",
+        kind: "forbidden",
+      });
+    }
+    const { requireCoachTeam } = await import("@/domain/roles");
+    await expect(errorOf(requireCoachTeam(user))).resolves.toMatchObject({
+      code: "NOT_A_COACH",
+    });
   });
 });
