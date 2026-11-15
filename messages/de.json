@@ -1,0 +1,14 @@
+{
+  "App": {
+    "name": "cool",
+    "description": "Competitive Olympic Weightlifting – Trainingspläne für Trainer und Athleten."
+  },
+  "Home": {
+    "tagline": "Plane das Training deiner Athleten und setze es im Kraftraum um."
+  },
+  "LanguageSwitcher": {
+    "label": "Sprache",
+    "en": "English",
+    "de": "Deutsch"
+  }
+}

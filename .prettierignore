@@ -1,0 +1,10 @@
+.next
+node_modules
+package-lock.json
+openspec
+src/server/db/migrations
+next-env.d.ts
+.agents
+.claude
+feature_list.txt
+certs

@@ -1,0 +1,14 @@
+{
+  "App": {
+    "name": "cool",
+    "description": "Competitive Olympic Weightlifting – training plans for coaches and athletes."
+  },
+  "Home": {
+    "tagline": "Plan training for your athletes and follow it at the gym."
+  },
+  "LanguageSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "de": "Deutsch"
+  }
+}
