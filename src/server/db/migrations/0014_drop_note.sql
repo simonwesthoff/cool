@@ -1,0 +1,1 @@
+ALTER TABLE "mesocycle_exercise" DROP COLUMN "note";

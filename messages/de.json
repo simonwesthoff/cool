@@ -117,7 +117,15 @@
   "AthleteDetails": {
     "back": "Zurück zu den Athleten",
     "basicData": "Stammdaten",
-    "pictureAlt": "Profilbild von {name}"
+    "pictureAlt": "Profilbild von {name}",
+    "macrocycle": {
+      "title": "Makrozyklus",
+      "none": "Noch kein Makrozyklus geplant.",
+      "plan": "Makrozyklus planen",
+      "period": "{start} – {end} ({weeks} Wochen)",
+      "competition": "Hauptwettkampf: {type} am {date}",
+      "change": "Planung ändern"
+    }
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",
@@ -132,12 +140,154 @@
     "liftExercise": {
       "snatch": "Reißübung",
       "clean_and_jerk": "Stoßübung"
-    }
+    },
+    "addresses": "Adressiert"
   },
   "Navigation": {
     "label": "Hauptnavigation",
     "athletes": "Athleten",
     "training": "Mein Training",
     "exercises": "Übungen"
+  },
+  "Macrocycle": {
+    "title": "Makrozyklusplanung",
+    "steps": {
+      "label": "Planungsschritte",
+      "base-data": "Stammdaten",
+      "swot": "SWOT",
+      "intensity": "Intensität",
+      "exercises": "Übungen"
+    },
+    "baseData": {
+      "sections": {
+        "history": "Historische Daten",
+        "plan": "Neue Makrozyklusplanung",
+        "deficits": "Defizite"
+      },
+      "fields": {
+        "startDate": "Beginn",
+        "durationWeeks": "Dauer (Wochen)",
+        "competitionDate": "Datum des Hauptwettkampfs",
+        "competitionType": "Art des Hauptwettkampfs",
+        "entryValuePct": "Einstiegswert (%)",
+        "snatchBestKg": "Bestleistung Reißen (kg)",
+        "cleanAndJerkBestKg": "Bestleistung Stoßen (kg)",
+        "snatchGoalKg": "Zielleistung Reißen (kg)",
+        "cleanAndJerkGoalKg": "Zielleistung Stoßen (kg)",
+        "bodyWeightKg": "Körpergewicht (kg)",
+        "targetBodyWeightKg": "Zielkörpergewicht (kg)",
+        "bodyFatPct": "Körperfett (%)",
+        "muscleMassPct": "Muskelmasse (%)",
+        "snatchDeficits": "Defizite im Reißen",
+        "cleanDeficits": "Defizite im Umsetzen",
+        "jerkDeficits": "Defizite im Ausstoßen",
+        "otherDeficits": "Sonstige Defizite",
+        "injuriesAndIllnesses": "Aktuelle und chronische Verletzungen und Krankheiten",
+        "trainingFrequency": "Trainingseinheiten pro Woche",
+        "strengths": "Stärken",
+        "experience": "Erfahrung im Gewichtheben"
+      },
+      "optional": "(optional)",
+      "mondayHint": "Makrozyklen beginnen an einem Montag.",
+      "durationHint": "7 bis 52 Wochen.",
+      "entryValueHint": "Anteil der Maximalwerte zu Beginn des Zyklus, meist 60 %.",
+      "continue": "Speichern und weiter",
+      "checkFields": "Bitte prüfe die markierten Felder.",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
+      "errors": {
+        "REQUIRED": "Pflichtfeld.",
+        "OUT_OF_RANGE": "Außerhalb des erlaubten Bereichs.",
+        "NOT_INTEGER": "Bitte eine ganze Zahl eingeben.",
+        "NOT_MONDAY": "Bitte einen Montag wählen.",
+        "BEFORE_START": "Darf nicht vor dem Beginn liegen.",
+        "INVALID_FORMAT": "Bitte ein gültiges Datum eingeben.",
+        "TOO_LONG": "Zu lang.",
+        "INVALID": "Ungültiger Wert.",
+        "TOO_MANY": "Höchstens 3 Schwerpunkte."
+      },
+      "trainingFrequencyHint": "1 bis 14 Einheiten.",
+      "focusPoints": {
+        "title": "Schwerpunkte",
+        "help": "1 bis 3 Schwerpunkte für diesen Makrozyklus, den wichtigsten zuerst.",
+        "position": "{position}.",
+        "entry": "Schwerpunkt {position}",
+        "up": "Schwerpunkt {position} nach oben",
+        "down": "Schwerpunkt {position} nach unten",
+        "remove": "Schwerpunkt {position} entfernen",
+        "add": "Schwerpunkt hinzufügen"
+      },
+      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen."
+    },
+    "mesocycles": {
+      "general_preparation": "Grundlagenphase (GLP)",
+      "special_preparation": "Aufbauphase (ABP)",
+      "competition_preparation": "Leistungsausprägungsphase (LAP)",
+      "abbr": {
+        "general_preparation": "GLP",
+        "special_preparation": "ABP",
+        "competition_preparation": "LAP"
+      }
+    },
+    "chart": {
+      "caption": "Makrozyklus-Diagramm: Intensität und Umfang pro Woche",
+      "legend": "Legende",
+      "legendLevels": "Hohe / niedrige Woche",
+      "intensity": "Intensität pro Woche",
+      "weekValue": "Woche {week}, {level}, {intensity}",
+      "levels": {
+        "high": "Hohe Woche",
+        "medium": "Mittlere Woche",
+        "low": "Niedrige Woche"
+      },
+      "tooltipWeek": "Woche {week} ab {date}",
+      "borderValue": "{block} ab Woche {week}",
+      "axisIntensity": "Intensität",
+      "axisWeek": "Woche",
+      "legendCompetition": "Hauptwettkampf",
+      "competitionValue": "Hauptwettkampf: {type}, {date}",
+      "competitionLabel": "{type} · {date}",
+      "levelsShort": {
+        "high": "hoch",
+        "medium": "mittel",
+        "low": "niedrig"
+      },
+      "tooltipValue": "{intensity} ({level})"
+    },
+    "intensity": {
+      "help": "Ziehe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche, oder tippe darüber oder darunter. Ziehe die Griffe an den Grenzen, um die Länge der Mesozyklen zu ändern. Jede Änderung wird gespeichert.",
+      "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+      "continue": "Weiter zu den Übungen",
+      "back": "Zurück zur SWOT"
+    },
+    "exercises": {
+      "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+      "finish": "Planung abschließen",
+      "back": "Zurück zur Intensität",
+      "tableCaption": "Übungen des Trainingsmittelkatalogs je Mesozyklus",
+      "exercise": "Übung",
+      "weeksShort": "Wo. {first}–{last}",
+      "cellChoose": "{exercise}, {block}: wählen",
+      "cellChosen": "{exercise}, {block}: gewählt, {variation}",
+      "standard": "Standard",
+      "reasonMissing": "Begründung fehlt",
+      "variation": "Variation",
+      "optional": "(optional)",
+      "variationPlaceholder": "z. B. im Hang",
+      "catalogHint": "Katalog: {comment}",
+      "reason": "Begründung",
+      "reasonRequired": "Wähle mindestens einen Punkt oder ergänze eine eigene Begründung.",
+      "save": "Speichern",
+      "choose": "Übung wählen",
+      "remove": "Entfernen",
+      "cancel": "Abbrechen",
+      "notEntered": "Noch nicht eingetragen",
+      "ownReason": "Eigene Begründung",
+      "ownReasonPlaceholder": "Deine Begründung",
+      "ownReasonAdd": "Eigene Begründung hinzufügen",
+      "total": "Summe",
+      "deficitsLabel": "Defizite des Athleten",
+      "ownReasonRemove": "Eigene Begründung entfernen: {reason}",
+      "ownReasonCancel": "Eigene Begründung verwerfen"
+    }
   }
 }

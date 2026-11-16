@@ -39,6 +39,45 @@ erDiagram
         datetime revokedAt
     }
     ExerciseGroup ||--o{ Exercise : "contains"
+    Exercise }o--o{ ExerciseTag : "addresses"
+    Athlete ||--o| Macrocycle : "is planned in"
+    Macrocycle ||--|{ MacrocycleWeek : "consists of"
+    Macrocycle ||--|{ Mesocycle : "is divided into"
+    Mesocycle ||--o{ MesocycleExercise : "uses"
+    MesocycleExercise }o--|| Exercise : "is"
+    Macrocycle {
+        date startDate
+        int durationWeeks
+        decimal entryValuePct
+        decimal snatchGoalKg
+        decimal cleanAndJerkGoalKg
+        int trainingFrequency
+        date competitionDate
+        string strengths
+        string snatchDeficits
+        string cleanDeficits
+        string jerkDeficits
+        string otherDeficits
+        string experience
+        string[] focusPoints
+    }
+    MacrocycleWeek {
+        int weekNumber
+        string level
+    }
+    Mesocycle {
+        string type
+        int firstWeek
+        int lastWeek
+    }
+    MesocycleExercise {
+        string variation
+        string[] tags
+        string[] ownReasons
+    }
+    ExerciseTag {
+        string name
+    }
     Exercise {
         int number
         string name
@@ -57,6 +96,21 @@ erDiagram
   is shared by all Teams and read-only; later changes reference exercises
   from mesocycles and weekly plans and add per-athlete adjustments of the
   values.
+- An Athlete has at most one Macrocycle, planned by the coach of the
+  athlete's Team. It consists of its weeks (each high, medium or low) and is
+  divided into three Mesocycles (general preparation, special preparation
+  and competition preparation block, by default 15 % / 50 % / rest of the
+  weeks; the coach can move the borders, and a duration change scales the
+  block lengths). Its base data is planned in two steps: the base data
+  itself and the SWOT (strengths, deficits per lift and other deficits,
+  experience, 1 to 3 ordered focus points, injuries and illnesses). A
+  Mesocycle uses exercises from the exercise catalog, each with a reason
+  (tags the exercise addresses and/or own reasons) and optionally a
+  variation; the same exercise can be used in several mesocycles.
+  Intensity, planned weights, reps and volume are calculated, not stored.
+- Each exercise of the catalog addresses an ordered list of points (exercise
+  tags, e.g. "High pull"); the same tag can be addressed by several
+  exercises.
 - A user account is created by the first sign-in with Google and is
   identified by that Google account. Name and picture follow the Google
   profile on every sign-in.

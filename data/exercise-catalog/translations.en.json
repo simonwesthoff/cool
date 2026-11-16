@@ -76,5 +76,33 @@
     "28": "Variation: power clean + jerk",
     "29": "Best value > 100",
     "30": "Variations: close grip, wide grip, sots press (wide grip in the squat)"
+  },
+  "tags": {
+    "WKÜ": "Competition exercise",
+    "Umsatz": "Clean technique",
+    "Beschleunigung im 2. Zug": "Acceleration in the second pull",
+    "Abbremsen": "Deceleration",
+    "Schnelles Abtauchen": "Fast drop under the bar",
+    "Ausstoß": "Jerk technique",
+    "Rhythmus im Auftakt": "Rhythm in the dip",
+    "Umgruppieren": "Turnover",
+    "Hoher Zug": "High pull",
+    "Gerader Hantelweg": "Straight bar path",
+    "SKF": "Speed strength",
+    "MKF": "Maximum strength",
+    "Position halten im 1. Zug": "Holding the position in the first pull",
+    "Gefühl für höhere Lasten": "Feel for heavier loads",
+    "Mobility": "Mobility",
+    "Stabilität über Kopf": "Overhead stability",
+    "Bremsphase im Reißen": "Braking phase in the snatch",
+    "Schnelles Abbremsen (beim Unterhocken)": "Fast deceleration (drop snatch)",
+    "MKF für obere Extremitäten": "Upper-body maximum strength",
+    "Gerader 2. Zug": "Straight second pull",
+    "Gefühl für Hantelbeschleunigung aus der Hüfte": "Feel for accelerating the bar from the hips",
+    "Konstante Beschleunigung 1. + 2. Zug (Technikschulung)": "Constant acceleration in the first and second pull (technique)",
+    "Maximal- und Schnellkraft beim Ausstoß": "Maximum and speed strength in the jerk",
+    "Beschleunigung aus Auftakt": "Acceleration out of the dip",
+    "Wettkampfvorbereitung": "Competition preparation",
+    "Ausstoßen unter Vorbelastung": "Jerk under pre-fatigue"
   }
 }

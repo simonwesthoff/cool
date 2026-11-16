@@ -46,6 +46,7 @@ const k3: ExerciseGroup = {
       repsPerSet: { min: 3, max: 8 },
       repsPerWeek: { min: 18, max: 48 },
       comment: null,
+      addresses: [{ key: "SKF", name: { de: "SKF", en: "Speed strength" } }],
     },
   ],
 };
@@ -67,6 +68,7 @@ const k8: ExerciseGroup = {
       repsPerSet: { min: null, max: null },
       repsPerWeek: { min: null, max: null },
       comment: null,
+      addresses: [],
     },
   ],
 };
@@ -151,6 +153,7 @@ describe("exercise dialog", () => {
       "Reps per set": "3–8",
       "Reps per week": "18–48",
       Comment: "Not defined",
+      Addresses: "Speed strength",
     });
   });
 
@@ -182,7 +185,7 @@ describe("exercise dialog", () => {
   it("marks values the catalog does not define", async () => {
     renderIn("de", <ExerciseList groups={[k8]} />);
     const dialog = await openExercise("Bankdrücken");
-    expect(within(dialog).getAllByText("Nicht festgelegt")).toHaveLength(5);
+    expect(within(dialog).getAllByText("Nicht festgelegt")).toHaveLength(6);
     expect(
       within(dialog).getByText("K8 · Allgemeines Muskelkrafttraining 1 (AMKT)"),
     ).toBeTruthy();

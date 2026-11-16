@@ -27,15 +27,26 @@ export type CatalogExercise = {
   maxRepsPerWeek: number | null;
   commentDe: string | null;
   commentEn: string | null;
+  /** German names of the addressed points (tags), in catalog order. */
+  addresses: string[];
 };
+
+/** A point an exercise addresses; the German name is its key. */
+export type CatalogTag = { nameDe: string; nameEn: string };
 
 export type Translations = {
   groups: Record<string, string>;
   exercises: Record<string, string>;
   comments: Record<string, string>;
+  /** English names of the tags, keyed by German name. */
+  tags: Record<string, string>;
 };
 
-export type Catalog = { groups: CatalogGroup[]; exercises: CatalogExercise[] };
+export type Catalog = {
+  groups: CatalogGroup[];
+  exercises: CatalogExercise[];
+  tags: CatalogTag[];
+};
 
 /** Parses CSV text (comma separated, double-quoted fields, "" escapes). */
 export function parseCsv(text: string): string[][] {
@@ -90,6 +101,7 @@ const COLUMNS = [
   "min Wochen Wdh",
   "max Wochen Wdh",
   "Kommentar",
+  "Addresses",
 ];
 
 function numberOrNull(value: string, where: string): number | null {
@@ -142,6 +154,7 @@ export function buildCatalog(csv: string, translations: Translations): Catalog {
       minWeek,
       maxWeek,
       comment,
+      addressed,
     ] = cells.map((c) => c.trim()) as [string, ...string[]];
     const match = /^K(\d+)\s+(.+)$/.exec(komplex);
     if (!match)
@@ -203,7 +216,19 @@ export function buildCatalog(csv: string, translations: Translations): Catalog {
       ...values,
       commentDe: comment || null,
       commentEn: comment ? commentEn : null,
+      addresses: tagsOf(addressed!, `${where} Addresses`),
     });
+  }
+
+  const tagNames = [...new Set(exercises.flatMap((e) => e.addresses))];
+  const tags = tagNames.map((nameDe) => {
+    const nameEn = translations.tags[nameDe];
+    if (!nameEn) throw new Error(`No English name for tag "${nameDe}"`);
+    return { nameDe, nameEn };
+  });
+  for (const key of Object.keys(translations.tags)) {
+    if (!tagNames.includes(key))
+      throw new Error(`Translation for unknown tag "${key}"`);
   }
 
   const numbers = exercises.map((e) => e.number);
@@ -216,7 +241,20 @@ export function buildCatalog(csv: string, translations: Translations): Catalog {
   return {
     groups: [...groups.values()].sort((a, b) => a.number - b.number),
     exercises: exercises.sort((a, b) => a.number - b.number),
+    tags,
   };
+}
+
+/** Splits the comma-separated "Addresses" cell; empty or "-" means none. */
+function tagsOf(value: string, where: string): string[] {
+  const trimmed = value.trim();
+  if (trimmed === "" || trimmed === "-") return [];
+  const tags = trimmed.split(",").map((t) => t.trim());
+  if (tags.some((t) => t === ""))
+    throw new Error(`${where}: empty entry in "${value}"`);
+  if (new Set(tags).size !== tags.length)
+    throw new Error(`${where}: duplicate entry in "${value}"`);
+  return tags;
 }
 
 function sql(value: string | number | null): string {
@@ -270,5 +308,26 @@ ON CONFLICT ("number") DO UPDATE SET
   "min_reps_per_set" = EXCLUDED."min_reps_per_set", "max_reps_per_set" = EXCLUDED."max_reps_per_set",
   "min_reps_per_week" = EXCLUDED."min_reps_per_week", "max_reps_per_week" = EXCLUDED."max_reps_per_week",
   "comment_de" = EXCLUDED."comment_de", "comment_en" = EXCLUDED."comment_en";
-`;
+--> statement-breakpoint
+${tagSql(catalog)}`;
+}
+
+/** SQL that replaces the tags and which exercise addresses which tag. */
+function tagSql(catalog: Catalog): string {
+  const addresses = catalog.exercises.flatMap((e) =>
+    e.addresses.map(
+      (tag, position) => `(${[e.number, tag, position].map(sql).join(", ")})`,
+    ),
+  );
+  const statements = ['DELETE FROM "exercise_addresses";'];
+  if (catalog.tags.length > 0) {
+    statements.push(`INSERT INTO "exercise_tag" ("name_de", "name_en") VALUES
+  ${catalog.tags.map((t) => `(${sql(t.nameDe)}, ${sql(t.nameEn)})`).join(",\n  ")}
+ON CONFLICT ("name_de") DO UPDATE SET "name_en" = EXCLUDED."name_en";`);
+  }
+  if (addresses.length > 0) {
+    statements.push(`INSERT INTO "exercise_addresses" ("exercise_number", "tag", "position") VALUES
+  ${addresses.join(",\n  ")};`);
+  }
+  return statements.join("\n--> statement-breakpoint\n") + "\n";
 }

@@ -43,6 +43,69 @@
       "when": 1794783401463,
       "tag": "0005_exercise_catalog_data",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794822854002,
+      "tag": "0006_macrocycles",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794826147789,
+      "tag": "0007_macrocycle_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794830422144,
+      "tag": "0008_mesocycle_exercise_reason",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794835210513,
+      "tag": "0009_deficits_per_lift_and_reason_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794835210860,
+      "tag": "0010_drop_old_deficits_and_reason",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794835224358,
+      "tag": "0011_exercise_catalog_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794862186736,
+      "tag": "0012_exercise_catalog_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794866860310,
+      "tag": "0013_own_reasons",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794866860676,
+      "tag": "0014_drop_note",
+      "breakpoints": true
     }
   ]
 }

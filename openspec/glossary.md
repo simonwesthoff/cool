@@ -33,6 +33,18 @@ Domain terms for the weightlifting coaching app.
 | Bestwert | - | Best value | Reference value of an exercise in % of the max of its reference lift. |
 | Referenzübung | - | Reference lift | The competition lift (snatch or clean & jerk) an exercise's percentages refer to. |
 
+| Einstiegswert | - | Entry value | Share of the max values (in %) a macrocycle starts with, usually 60 %. |
+| Intensität | - | Intensity | Planned share of the max values for a week, following the macrocycle's curve. |
+| Wochenintensität (hoch, mittel, niedrig) | - | Week level (high, medium, low) | A high week adds 5 percentage points to the intensity, a low week subtracts 5. |
+| Satzgröße | - | Set size | Repetitions per set. |
+| Wochenwiederholungen | - | Weekly reps | Repetitions of an exercise per week. |
+| Umfang | - | Volume | Sum of the weekly reps of all exercises of a week. |
+| Bestleistung | - | Personal best | An athlete's best result in snatch or clean & jerk. |
+| Zielleistung | - | Goal | The result in snatch or clean & jerk the macrocycle aims at. |
+| Hauptwettkampf | - | Main competition | The competition a macrocycle leads to. |
+| Trainingshäufigkeit | TE/Woche | Training frequency | Training sessions per week (1–14). |
+| Schwerpunkt | - | Focus point | One of the 1 to 3 ordered priorities of a macrocycle. |
+
 ### Exercise groups
 
 | German | Abbreviation | English | Definition |

@@ -3,6 +3,8 @@ import { DomainError } from "@/domain/errors";
 
 const getAthlete = vi.fn();
 vi.mock("@/domain/athletes", () => ({ getAthlete }));
+const findMacrocycle = vi.fn();
+vi.mock("@/domain/macrocycles", () => ({ findMacrocycle }));
 const requireCoachPage = vi.fn();
 vi.mock("../../current-user", () => ({ requireCoachPage }));
 class NotFound extends Error {}
@@ -35,9 +37,13 @@ describe("athlete details page", () => {
       name: "Anna Weber",
       linkedAccount: null,
     });
+    findMacrocycle.mockResolvedValue(null);
     const element = await AthleteDetails({ params });
-    expect(element.props.athlete).toMatchObject({ name: "Anna Weber" });
+    const [header, section] = element.props.children;
+    expect(header.props.athlete).toMatchObject({ name: "Anna Weber" });
+    expect(section.props).toEqual({ athleteId: "a1", macrocycle: null });
     expect(getAthlete).toHaveBeenCalledWith(coach.user, "a1");
+    expect(findMacrocycle).toHaveBeenCalledWith(coach.user, "a1");
   });
 
   it("shows not found for an athlete of another Team", async () => {

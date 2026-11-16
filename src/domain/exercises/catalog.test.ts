@@ -44,6 +44,9 @@ describe("getCatalog", () => {
         de: "Wettkampfübung, Variation: Komische 1 = ohne Füße setzen",
         en: "Competition exercise. Variation: No feet snatch",
       },
+      addresses: [
+        { key: "WKÜ", name: { de: "WKÜ", en: "Competition exercise" } },
+      ],
     });
     expect(exercises[30]).toMatchObject({
       number: 31,
@@ -51,7 +54,19 @@ describe("getCatalog", () => {
       bestValuePct: null,
       repsPerSet: { min: null, max: null },
       comment: null,
+      addresses: [],
     });
+  });
+});
+
+describe("addressed points", () => {
+  it("keeps the catalog order and shares points between exercises", async () => {
+    const exercises = (await getCatalog()).flatMap((g) => g.exercises);
+    expect(exercises[6]!.addresses.map((a) => a.key)).toEqual([
+      "Beschleunigung im 2. Zug",
+      "Hoher Zug",
+    ]);
+    expect(exercises[9]!.addresses).toEqual(exercises[6]!.addresses);
   });
 });
 
@@ -59,6 +74,9 @@ describe("getExercise", () => {
   it("returns an exercise with its group", async () => {
     const { exercise, group } = await getExercise(13);
     expect(exercise.name).toEqual({ de: "Zug breit", en: "Snatch pull" });
+    expect(exercise.addresses.map((a) => a.name.en)).toEqual([
+      "Speed strength",
+    ]);
     expect(group).toEqual({
       number: 3,
       code: "K3",

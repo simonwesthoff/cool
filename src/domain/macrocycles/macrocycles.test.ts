@@ -1,0 +1,658 @@
+import { afterAll, describe, expect, it, vi } from "vitest";
+import { DomainValidationError } from "@/domain/validation";
+import { createTestDb, createUser } from "@/test/db";
+
+const testDb = await createTestDb();
+vi.mock("@/server/db", () => ({ getDb: () => testDb.db }));
+afterAll(() => testDb.close());
+
+const { startAsCoach } = await import("@/domain/roles");
+const { createAthlete } = await import("@/domain/athletes");
+const {
+  createMacrocycle,
+  findMacrocycle,
+  getMacrocycle,
+  setMesocycleBorders,
+  removeMesocycleExercise,
+  setMesocycleExercise,
+  setSwot,
+  setWeekLevel,
+  updateBaseData,
+} = await import("./index");
+
+/** 21 weeks from Monday 2026-11-30, entry 60 %, snatch goal 100 kg, C&J goal 130 kg. */
+const baseData = {
+  startDate: "2026-11-30",
+  durationWeeks: 21,
+  entryValuePct: 60,
+  snatchBestKg: 90,
+  cleanAndJerkBestKg: 115,
+  snatchGoalKg: 100,
+  cleanAndJerkGoalKg: 130,
+  bodyWeightKg: 81,
+  targetBodyWeightKg: 80.5,
+  competitionDate: "2027-04-24",
+  competitionType: "German Championships",
+  trainingFrequency: 8,
+};
+
+/** Step 2 of the planning. */
+const swot = {
+  strengths: "Fast under the bar",
+  snatchDeficits: "Weak turnover in the snatch",
+  cleanDeficits: "Slow catch",
+  jerkDeficits: "Short dip",
+  otherDeficits: "Ankle mobility",
+  experience: "6 years, 2 national championships",
+  focusPoints: ["Turnover", "Squat strength"],
+  injuriesAndIllnesses: "None",
+};
+
+async function setup() {
+  const coach = await createUser(testDb.db);
+  await startAsCoach(coach);
+  const athlete = await createAthlete(coach, { name: "Anna Weber" });
+  return { coach, athlete };
+}
+
+const errorOf = (p: Promise<unknown>) =>
+  p.then(
+    () => null,
+    (e: unknown) => e,
+  );
+
+const fieldsOf = async (p: Promise<unknown>) => {
+  const error = await errorOf(p);
+  if (!(error instanceof DomainValidationError))
+    throw new Error(`expected validation error, got ${String(error)}`);
+  return error.fields;
+};
+
+describe("createMacrocycle", () => {
+  it("creates base data, default mesocycles and only medium weeks", async () => {
+    const { coach, athlete } = await setup();
+    const created = await createMacrocycle(coach, athlete.id, baseData);
+    expect(created).toMatchObject({
+      ...baseData,
+      bodyFatPct: null,
+      muscleMassPct: null,
+      // The SWOT is filled in step 2.
+      strengths: "",
+      snatchDeficits: "",
+      focusPoints: [],
+      injuriesAndIllnesses: "",
+    });
+    expect(created.mesocycles).toEqual([
+      {
+        type: "general_preparation",
+        firstWeek: 1,
+        lastWeek: 3,
+        exerciseNumbers: [],
+        exercises: [],
+      },
+      {
+        type: "special_preparation",
+        firstWeek: 4,
+        lastWeek: 13,
+        exerciseNumbers: [],
+        exercises: [],
+      },
+      {
+        type: "competition_preparation",
+        firstWeek: 14,
+        lastWeek: 21,
+        exerciseNumbers: [],
+        exercises: [],
+      },
+    ]);
+    expect(created.weeks).toHaveLength(21);
+    expect(created.weeks.every((w) => w.level === "medium")).toBe(true);
+    expect(
+      created.weeks.map((w) => w.intensityPct).filter((_, i) => i % 5 === 0),
+    ).toEqual([60, 65.9, 80, 94.1, 100]);
+    expect(created.weeks[1]!.startDate).toBe("2026-12-07");
+    expect(created.weeks[20]!.startDate).toBe("2027-04-19");
+    expect(created.weeks[0]!.volume).toBeNull();
+  });
+
+  it("accepts body fat and muscle mass as optional values", async () => {
+    const { coach, athlete } = await setup();
+    const created = await createMacrocycle(coach, athlete.id, {
+      ...baseData,
+      bodyFatPct: 12.5,
+      muscleMassPct: 45,
+    });
+    expect(created).toMatchObject({ bodyFatPct: 12.5, muscleMassPct: 45 });
+  });
+
+  it("requires all other base data", async () => {
+    const { coach, athlete } = await setup();
+    const incomplete: Record<string, unknown> = { ...baseData };
+    delete incomplete.snatchGoalKg;
+    delete incomplete.trainingFrequency;
+    expect(
+      await fieldsOf(createMacrocycle(coach, athlete.id, incomplete)),
+    ).toEqual({
+      snatchGoalKg: ["REQUIRED"],
+      trainingFrequency: ["REQUIRED"],
+    });
+    // SWOT fields belong to step 2.
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, { ...baseData, strengths: "x" }),
+      ),
+    ).toEqual({ strengths: ["UNKNOWN_FIELD"] });
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, {
+          ...baseData,
+          competitionType: " ",
+        }),
+      ),
+    ).toEqual({
+      competitionType: ["REQUIRED"],
+    });
+  });
+
+  it("checks the Monday rule, ranges and the competition date", async () => {
+    const { coach, athlete } = await setup();
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, {
+          ...baseData,
+          startDate: "2026-12-02",
+          durationWeeks: 6,
+          entryValuePct: 20,
+          bodyFatPct: 90,
+        }),
+      ),
+    ).toEqual({
+      startDate: ["NOT_MONDAY"],
+      durationWeeks: ["OUT_OF_RANGE"],
+      entryValuePct: ["OUT_OF_RANGE"],
+      bodyFatPct: ["OUT_OF_RANGE"],
+    });
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, {
+          ...baseData,
+          competitionDate: "2026-11-01",
+        }),
+      ),
+    ).toEqual({ competitionDate: ["BEFORE_START"] });
+  });
+
+  it("rejects a wrong training frequency", async () => {
+    const { coach, athlete } = await setup();
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, {
+          ...baseData,
+          trainingFrequency: 15,
+        }),
+      ),
+    ).toEqual({ trainingFrequency: ["OUT_OF_RANGE"] });
+  });
+
+  it("allows only one macrocycle per athlete", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await expect(
+      errorOf(createMacrocycle(coach, athlete.id, baseData)),
+    ).resolves.toMatchObject({
+      code: "MACROCYCLE_EXISTS",
+      kind: "conflict",
+    });
+  });
+
+  it("is refused for another Team's athlete", async () => {
+    const { athlete } = await setup();
+    const other = await createUser(testDb.db);
+    await startAsCoach(other);
+    for (const attempt of [
+      createMacrocycle(other, athlete.id, baseData),
+      findMacrocycle(other, athlete.id),
+    ]) {
+      await expect(errorOf(attempt)).resolves.toMatchObject({
+        code: "ATHLETE_NOT_FOUND",
+      });
+    }
+  });
+});
+
+describe("setSwot", () => {
+  it("saves all SWOT fields and keeps the base data", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setSwot(coach, athlete.id, swot);
+    expect(m).toMatchObject({ ...baseData, ...swot });
+  });
+
+  it("requires every SWOT field", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const incomplete: Record<string, unknown> = { ...swot, cleanDeficits: " " };
+    delete incomplete.strengths;
+    delete incomplete.jerkDeficits;
+    expect(await fieldsOf(setSwot(coach, athlete.id, incomplete))).toEqual({
+      strengths: ["REQUIRED"],
+      cleanDeficits: ["REQUIRED"],
+      jerkDeficits: ["REQUIRED"],
+    });
+    expect(
+      await fieldsOf(
+        setSwot(coach, athlete.id, { ...swot, snatchGoalKg: 100 }),
+      ),
+    ).toEqual({ snatchGoalKg: ["UNKNOWN_FIELD"] });
+  });
+
+  it("keeps 1 to 3 focus points in order", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setSwot(coach, athlete.id, {
+      ...swot,
+      focusPoints: ["Jerk stability", "Turnover", "Squat strength"],
+    });
+    expect(m.focusPoints).toEqual([
+      "Jerk stability",
+      "Turnover",
+      "Squat strength",
+    ]);
+    for (const [focusPoints, expected] of [
+      [[], { focusPoints: ["REQUIRED"] }],
+      [["a", "b", "c", "d"], { focusPoints: ["TOO_MANY"] }],
+      [["a", " "], { "focusPoints.1": ["REQUIRED"] }],
+    ] as const) {
+      expect(
+        await fieldsOf(setSwot(coach, athlete.id, { ...swot, focusPoints })),
+      ).toEqual(expected);
+    }
+  });
+
+  it("needs an existing macrocycle of the coach's athlete", async () => {
+    const { coach, athlete } = await setup();
+    await expect(
+      errorOf(setSwot(coach, athlete.id, swot)),
+    ).resolves.toMatchObject({
+      code: "MACROCYCLE_NOT_FOUND",
+    });
+  });
+});
+
+describe("getMacrocycle", () => {
+  it("reports MACROCYCLE_NOT_FOUND, and findMacrocycle null, without one", async () => {
+    const { coach, athlete } = await setup();
+    await expect(
+      errorOf(getMacrocycle(coach, athlete.id)),
+    ).resolves.toMatchObject({
+      code: "MACROCYCLE_NOT_FOUND",
+    });
+    await expect(findMacrocycle(coach, athlete.id)).resolves.toBeNull();
+  });
+
+  it("calculates week 11 for exercise 13 as in the spec", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    for (const n of ["13", "19"])
+      await setMesocycleExercise(coach, athlete.id, "special_preparation", n, {
+        ownReasons: ["Strength"],
+      });
+    const week11 = (await getMacrocycle(coach, athlete.id)).weeks[10]!;
+    expect(week11).toMatchObject({
+      number: 11,
+      mesocycle: "special_preparation",
+      level: "medium",
+      intensityPct: 80,
+    });
+    expect(week11.exercises).toEqual([
+      {
+        exerciseNumber: 13,
+        bestKg: 86,
+        averageKg: 75,
+        setSize: 6,
+        weeklyReps: 33,
+      },
+      {
+        exerciseNumber: 19,
+        bestKg: 109,
+        averageKg: 98,
+        setSize: 6,
+        weeklyReps: 33,
+      },
+    ]);
+    expect(week11.volume).toBe(66);
+  });
+});
+
+describe("setWeekLevel", () => {
+  it("makes a week high and back to medium", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    let m = await setWeekLevel(coach, athlete.id, 11, { level: "high" });
+    expect(m.weeks[10]).toMatchObject({ level: "high", intensityPct: 85 });
+    m = await setWeekLevel(coach, athlete.id, 11, { level: "medium" });
+    expect(m.weeks[10]).toMatchObject({ level: "medium", intensityPct: 80 });
+  });
+
+  it("rejects unknown weeks and levels", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await expect(
+      errorOf(setWeekLevel(coach, athlete.id, 22, { level: "high" })),
+    ).resolves.toMatchObject({
+      code: "WEEK_NOT_FOUND",
+    });
+    expect(
+      await fieldsOf(setWeekLevel(coach, athlete.id, 1, { level: "extreme" })),
+    ).toEqual({
+      level: ["INVALID_VALUE"],
+    });
+  });
+});
+
+describe("setMesocycleExercise", () => {
+  const set = (
+    coach: Awaited<ReturnType<typeof setup>>["coach"],
+    athleteId: string,
+    type: string,
+    number: string,
+    input: unknown,
+  ) => setMesocycleExercise(coach, athleteId, type, number, input);
+
+  it("chooses exercises with tags, own reasons and variation, and changes them", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await set(coach, athlete.id, "special_preparation", "19", {
+      tags: ["MKF"],
+    });
+    await set(coach, athlete.id, "special_preparation", "7", {
+      tags: ["Beschleunigung im 2. Zug", "Hoher Zug"],
+    });
+    const m = await set(coach, athlete.id, "special_preparation", "1", {
+      variation: "  No feet snatch ",
+      ownReasons: [" Footwork in the turnover ", "Balance"],
+    });
+    expect(m.mesocycles[1]!.exerciseNumbers).toEqual([1, 7, 19]);
+    expect(m.mesocycles[1]!.exercises).toEqual([
+      {
+        exerciseNumber: 1,
+        variation: "No feet snatch",
+        tags: [],
+        ownReasons: ["Footwork in the turnover", "Balance"],
+      },
+      {
+        exerciseNumber: 7,
+        variation: null,
+        tags: ["Beschleunigung im 2. Zug", "Hoher Zug"],
+        ownReasons: [],
+      },
+      { exerciseNumber: 19, variation: null, tags: ["MKF"], ownReasons: [] },
+    ]);
+    expect(m.mesocycles[0]!.exercises).toEqual([]);
+
+    const changed = await set(coach, athlete.id, "special_preparation", "1", {
+      tags: ["WKÜ"],
+      variation: "",
+      ownReasons: [],
+    });
+    expect(changed.mesocycles[1]!.exercises[0]).toEqual({
+      exerciseNumber: 1,
+      variation: null,
+      tags: ["WKÜ"],
+      ownReasons: [],
+    });
+  });
+
+  it("does not change the calculated values with a variation", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const plain = await set(coach, athlete.id, "special_preparation", "13", {
+      tags: ["SKF"],
+    });
+    const varied = await set(coach, athlete.id, "special_preparation", "13", {
+      tags: ["SKF"],
+      variation: "From blocks",
+    });
+    expect(varied.weeks[10]!.exercises).toEqual(plain.weeks[10]!.exercises);
+  });
+
+  it("allows the same exercise in several mesocycles", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await set(coach, athlete.id, "general_preparation", "13", {
+      ownReasons: ["Basics"],
+    });
+    const m = await set(coach, athlete.id, "competition_preparation", "13", {
+      tags: ["SKF"],
+      variation: "Light",
+    });
+    expect(m.mesocycles.map((x) => x.exerciseNumbers)).toEqual([
+      [13],
+      [],
+      [13],
+    ]);
+  });
+
+  it("requires a tag or an own reason, only the exercise's tags, and limits the own reasons", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const seven = (input: unknown) =>
+      set(coach, athlete.id, "special_preparation", "7", input);
+    expect(await fieldsOf(seven({ ownReasons: [] }))).toEqual({
+      reason: ["REQUIRED"],
+    });
+    expect(await fieldsOf(seven({ ownReasons: ["a", " "] }))).toEqual({
+      "ownReasons.1": ["REQUIRED"],
+    });
+    expect(await fieldsOf(seven({ ownReasons: ["a", "a"] }))).toEqual({
+      ownReasons: ["DUPLICATE"],
+    });
+    expect(
+      await fieldsOf(
+        seven({ ownReasons: Array.from({ length: 11 }, (_, i) => `r${i}`) }),
+      ),
+    ).toEqual({ ownReasons: ["TOO_BIG"] });
+    expect(await fieldsOf(seven({}))).toEqual({ reason: ["REQUIRED"] });
+    expect(await fieldsOf(seven({ tags: ["SKF"] }))).toEqual({
+      tags: ["UNKNOWN_TAG"],
+    });
+    expect(await fieldsOf(seven({ tags: ["Hoher Zug", "Hoher Zug"] }))).toEqual(
+      {
+        tags: ["DUPLICATE"],
+      },
+    );
+    expect(
+      await fieldsOf(
+        seven({ ownReasons: ["x".repeat(201)], variation: "v".repeat(201) }),
+      ),
+    ).toEqual({ "ownReasons.0": ["TOO_LONG"], variation: ["TOO_LONG"] });
+    // Exercises without addressed points are chosen with own reasons.
+    const m = await set(coach, athlete.id, "general_preparation", "33", {
+      ownReasons: ["Back"],
+    });
+    expect(m.mesocycles[0]!.exerciseNumbers).toEqual([33]);
+  });
+
+  it("rejects unknown exercises and unknown mesocycles", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    for (const n of ["99", "abc", "0"])
+      await expect(
+        errorOf(
+          set(coach, athlete.id, "special_preparation", n, {
+            ownReasons: ["x"],
+          }),
+        ),
+      ).resolves.toMatchObject({ code: "EXERCISE_NOT_FOUND" });
+    await expect(
+      errorOf(set(coach, athlete.id, "taper", "1", { ownReasons: ["x"] })),
+    ).resolves.toMatchObject({ code: "MESOCYCLE_NOT_FOUND" });
+  });
+});
+
+describe("removeMesocycleExercise", () => {
+  it("removes one exercise of one mesocycle only", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    for (const type of ["general_preparation", "special_preparation"])
+      for (const n of ["1", "13"])
+        await setMesocycleExercise(coach, athlete.id, type, n, {
+          ownReasons: ["x"],
+        });
+    await removeMesocycleExercise(
+      coach,
+      athlete.id,
+      "special_preparation",
+      "13",
+    );
+    await removeMesocycleExercise(
+      coach,
+      athlete.id,
+      "special_preparation",
+      "19",
+    );
+    const m = await getMacrocycle(coach, athlete.id);
+    expect(m.mesocycles.map((x) => x.exerciseNumbers)).toEqual([
+      [1, 13],
+      [1],
+      [],
+    ]);
+  });
+});
+
+describe("updateBaseData", () => {
+  it("changes values and clears optional ones", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, { ...baseData, bodyFatPct: 12 });
+    const m = await updateBaseData(coach, athlete.id, {
+      snatchGoalKg: 105,
+      bodyFatPct: null,
+    });
+    expect(m).toMatchObject({
+      snatchGoalKg: 105,
+      bodyFatPct: null,
+      durationWeeks: 21,
+    });
+  });
+
+  it("keeps levels and exercises when the duration changes", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await setWeekLevel(coach, athlete.id, 11, { level: "high" });
+    await setWeekLevel(coach, athlete.id, 21, { level: "low" });
+    await setMesocycleExercise(coach, athlete.id, "special_preparation", "13", {
+      tags: ["SKF"],
+    });
+
+    const longer = await updateBaseData(coach, athlete.id, {
+      durationWeeks: 24,
+    });
+    expect(longer.weeks).toHaveLength(24);
+    expect(longer.weeks.map((w) => w.level).slice(10, 24)).toEqual([
+      "high",
+      "medium",
+      "medium",
+      "medium",
+      "medium",
+      "medium",
+      "medium",
+      "medium",
+      "medium",
+      "medium",
+      "low",
+      "medium",
+      "medium",
+      "medium",
+    ]);
+    expect(
+      longer.mesocycles.map((x) => [
+        x.firstWeek,
+        x.lastWeek,
+        x.exerciseNumbers,
+      ]),
+    ).toEqual([
+      [1, 3, []],
+      [4, 14, [13]],
+      [15, 24, []],
+    ]);
+
+    const shorter = await updateBaseData(coach, athlete.id, {
+      durationWeeks: 10,
+    });
+    expect(shorter.weeks).toHaveLength(10);
+    expect(shorter.mesocycles.map((x) => [x.firstWeek, x.lastWeek])).toEqual([
+      [1, 1],
+      [2, 6],
+      [7, 10],
+    ]);
+  });
+
+  it("validates the merged data", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    expect(
+      await fieldsOf(
+        updateBaseData(coach, athlete.id, { startDate: "2027-05-03" }),
+      ),
+    ).toEqual({
+      competitionDate: ["BEFORE_START"],
+    });
+    expect(
+      await fieldsOf(updateBaseData(coach, athlete.id, { otherDeficits: "x" })),
+    ).toEqual({
+      otherDeficits: ["UNKNOWN_FIELD"],
+    });
+  });
+});
+
+describe("setMesocycleBorders", () => {
+  it("moves the borders and the weeks follow", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setMesocycleBorders(coach, athlete.id, {
+      specialPreparationStart: 6,
+      competitionPreparationStart: 14,
+    });
+    expect(m.mesocycles.map((x) => [x.firstWeek, x.lastWeek])).toEqual([
+      [1, 5],
+      [6, 13],
+      [14, 21],
+    ]);
+    expect(m.weeks[4]!.mesocycle).toBe("general_preparation");
+    expect(m.weeks[5]!.mesocycle).toBe("special_preparation");
+  });
+
+  it("keeps the adjusted proportions when the duration changes (21 → 42)", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await setMesocycleBorders(coach, athlete.id, {
+      specialPreparationStart: 6,
+      competitionPreparationStart: 14,
+    });
+    const m = await updateBaseData(coach, athlete.id, {
+      durationWeeks: 42,
+      competitionDate: "2027-09-30",
+    });
+    expect(m.mesocycles.map((x) => [x.firstWeek, x.lastWeek])).toEqual([
+      [1, 10],
+      [11, 26],
+      [27, 42],
+    ]);
+  });
+
+  it("rejects borders that leave a block without weeks", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    for (const borders of [
+      { specialPreparationStart: 1, competitionPreparationStart: 10 },
+      { specialPreparationStart: 8, competitionPreparationStart: 8 },
+      { specialPreparationStart: 4, competitionPreparationStart: 22 },
+    ]) {
+      expect(
+        await fieldsOf(setMesocycleBorders(coach, athlete.id, borders)),
+      ).toEqual({
+        _root: ["INVALID_BORDERS"],
+      });
+    }
+  });
+});
