@@ -21,7 +21,7 @@
   - **Labels and tooltip:** week labels and tooltip placement.
 
   Verify: all existing chart tests pass unchanged.
-- [ ] 2.2 Build `ExerciseChart`:
+- [x] 2.2 Build `ExerciseChart`:
   - **Curves and axes:** four curves in the value colours on a kg axis (left) and a reps axis (right); distinct line styles and point shapes; gaps for null values.
   - **Legend:** each curve with colour, line style and unit, plus "Current week".
   - **Context:** mesocycle bands, competition marker and week-number x-axis.
@@ -32,7 +32,7 @@
 
 ## 3. View and pages
 
-- [ ] 3.1 Build `MacrocycleView`:
+- [x] 3.1 Build `MacrocycleView`:
   - **Order:** exercise selector (the only control above the chart), chart, focus points, base data summary, deficits with injuries and illnesses.
   - **Coach only:** "Change planning" when `editHref` is given.
   - **Back link:** depends on the role.
@@ -43,19 +43,19 @@
   - A failed fetch shows an alert and keeps the previous exercise.
   - No "Change planning" for the athlete; optional values left out; "Not entered yet" texts.
   - The spec examples, in English and German.
-- [ ] 3.2 Coach page `/athletes/{id}/macrocycle`: server-loaded macrocycle, snatch values, selector list (exercises with reference values) and `today`; redirect to step 1 without a macrocycle; "not found" for other users. Verify with page tests.
-- [ ] 3.3 Athlete page `/training/macrocycle`:
+- [x] 3.2 Coach page `/athletes/{id}/macrocycle`: server-loaded macrocycle, snatch values, selector list (exercises with reference values) and `today`; redirect to step 1 without a macrocycle; "not found" for other users. Verify with page tests.
+- [x] 3.3 Athlete page `/training/macrocycle`:
   - **Own macrocycle:** loaded from `roles.athlete`.
   - **Not planned yet:** "not planned yet" text.
   - **No athlete role:** redirect to `/`.
 
   Verify with page tests.
-- [ ] 3.4 Entry points:
+- [x] 3.4 Entry points:
   - **Athlete details:** the section links to the view and keeps "Change planning".
   - **"My training":** a "Macrocycle" link card when a macrocycle exists.
 
   Verify with component and page tests.
-- [ ] 3.5 Add English and German texts for all new strings:
+- [x] 3.5 Add English and German texts for all new strings:
   - **Chart:** selector label, axis titles, legend entries (incl. "Current week"), tooltip value lines.
   - **Sections:** focus points title and empty text, section titles, links, empty states.
 
@@ -63,7 +63,7 @@
 
 ## 4. Project records
 
-- [ ] 4.1 Add "Macrocycle view", "Exercise chart" and "Current week" to `openspec/glossary.md`, keeping the user's uncommitted glossary edits. Verify the entries are in the table.
+- [x] 4.1 Add "Macrocycle view", "Exercise chart" and "Current week" to `openspec/glossary.md`, keeping the user's uncommitted glossary edits. Verify the entries are in the table.
 
 ## 5. Integration check
 

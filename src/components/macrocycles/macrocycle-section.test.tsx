@@ -56,4 +56,24 @@ describe("MacrocycleSection", () => {
       screen.getByRole("link", { name: "Makrozyklus planen" }),
     ).toBeTruthy();
   });
+
+  it("opens the macrocycle view from a planned macrocycle and keeps Change planning", () => {
+    renderIn(
+      <MacrocycleSection
+        athleteId="a1"
+        macrocycle={{
+          startDate: "2026-11-30",
+          durationWeeks: 21,
+          competitionDate: "2027-04-24",
+          competitionType: "German Championships",
+        }}
+      />,
+    );
+    const open = screen.getByRole("link", { name: "Open macrocycle" });
+    expect(open).toHaveProperty("pathname", "/athletes/a1/macrocycle");
+    expect(open.textContent).toContain("German Championships");
+    expect(
+      screen.getByRole("link", { name: "Change planning" }),
+    ).toHaveProperty("pathname", "/athletes/a1/macrocycle/base-data");
+  });
 });

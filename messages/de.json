@@ -112,7 +112,9 @@
   "Training": {
     "pictureAlt": "Profilbild von {name}",
     "coach": "Trainer: {name}",
-    "placeholder": "Hier erscheint bald dein Trainingsplan."
+    "placeholder": "Hier erscheint bald dein Trainingsplan.",
+    "macrocycle": "Makrozyklus",
+    "macrocycleOpen": "Deinen Makrozyklus öffnen"
   },
   "AthleteDetails": {
     "back": "Zurück zu den Athleten",
@@ -124,7 +126,8 @@
       "plan": "Makrozyklus planen",
       "period": "{start} – {end} ({weeks} Wochen)",
       "competition": "Hauptwettkampf: {type} am {date}",
-      "change": "Planung ändern"
+      "change": "Planung ändern",
+      "open": "Makrozyklus öffnen"
     }
   },
   "Catalog": {
@@ -288,6 +291,66 @@
       "deficitsLabel": "Defizite des Athleten",
       "ownReasonRemove": "Eigene Begründung entfernen: {reason}",
       "ownReasonCancel": "Eigene Begründung verwerfen"
+    }
+  },
+  "MacrocycleView": {
+    "chart": {
+      "caption": "Geplante Werte der Übung je Woche",
+      "legend": "Legende",
+      "series": {
+        "bestKg": "Bestwert (kg)",
+        "averageKg": "Mittleres Hantelgewicht (kg)",
+        "setSize": "Seriengröße (Wdh.)",
+        "weeklyReps": "Wochenwiederholungen (Wdh.)"
+      },
+      "competition": "Hauptwettkampf",
+      "currentWeek": "Aktuelle Woche",
+      "axisKg": "kg",
+      "axisReps": "Wdh.",
+      "none": "–",
+      "kg": "{value} kg",
+      "tooltipWeek": "Woche {week} ab {date}",
+      "tooltip": {
+        "bestKg": "Bestwert: {value}",
+        "averageKg": "MHG: {value}",
+        "setSize": "Seriengröße: {value}",
+        "weeklyReps": "Wochenwdh.: {value}"
+      }
+    },
+    "title": "Makrozyklus",
+    "chartTitle": "Geplante Werte",
+    "exercise": "Übung",
+    "exerciseOption": "{number} {name}",
+    "loadFailed": "Die Werte konnten nicht geladen werden. Bitte versuche es erneut.",
+    "change": "Planung ändern",
+    "backAthlete": "Zurück zum Athleten",
+    "backTraining": "Zurück zu Mein Training",
+    "notPlanned": "Dein Trainer hat noch keinen Makrozyklus geplant.",
+    "summary": {
+      "focusPoints": "Schwerpunkte",
+      "noFocusPoints": "Noch keine Schwerpunkte eingetragen.",
+      "position": "{position}.",
+      "history": "Historische Daten",
+      "plan": "Neue Makrozyklusplanung",
+      "deficits": "Defizite, Verletzungen und Erkrankungen",
+      "notEntered": "Noch nicht eingetragen",
+      "kg": "{value} kg",
+      "snatchBest": "Bestleistung Reißen",
+      "cleanAndJerkBest": "Bestleistung Stoßen",
+      "bodyWeight": "Körpergewicht",
+      "bodyFat": "Körperfett",
+      "muscleMass": "Muskelmasse",
+      "period": "Zeitraum",
+      "periodValue": "{start} – {end}",
+      "duration": "Dauer",
+      "weeks": "{count, plural, one {# Woche} other {# Wochen}}",
+      "competition": "Hauptwettkampf",
+      "competitionValue": "{type}, {date}",
+      "entryValue": "Einstiegswert",
+      "snatchGoal": "Zielleistung Reißen",
+      "cleanAndJerkGoal": "Zielleistung Stoßen",
+      "targetBodyWeight": "Zielkörpergewicht",
+      "trainingFrequency": "Trainingseinheiten pro Woche"
     }
   }
 }

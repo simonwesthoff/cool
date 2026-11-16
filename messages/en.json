@@ -112,7 +112,9 @@
   "Training": {
     "pictureAlt": "Profile picture of {name}",
     "coach": "Coach: {name}",
-    "placeholder": "Your training plan will appear here."
+    "placeholder": "Your training plan will appear here.",
+    "macrocycle": "Macrocycle",
+    "macrocycleOpen": "Open your macrocycle"
   },
   "AthleteDetails": {
     "back": "Back to athletes",
@@ -124,7 +126,8 @@
       "plan": "Plan macrocycle",
       "period": "{start} – {end} ({weeks} weeks)",
       "competition": "Main competition: {type} on {date}",
-      "change": "Change planning"
+      "change": "Change planning",
+      "open": "Open macrocycle"
     }
   },
   "Catalog": {
@@ -288,6 +291,66 @@
       "deficitsLabel": "Athlete's deficits",
       "ownReasonRemove": "Remove own reason: {reason}",
       "ownReasonCancel": "Cancel own reason"
+    }
+  },
+  "MacrocycleView": {
+    "chart": {
+      "caption": "Planned values of the exercise per week",
+      "legend": "Legend",
+      "series": {
+        "bestKg": "Best value (kg)",
+        "averageKg": "Average weight (kg)",
+        "setSize": "Set size (reps)",
+        "weeklyReps": "Weekly reps (reps)"
+      },
+      "competition": "Main competition",
+      "currentWeek": "Current week",
+      "axisKg": "kg",
+      "axisReps": "Reps",
+      "none": "–",
+      "kg": "{value} kg",
+      "tooltipWeek": "Week {week} from {date}",
+      "tooltip": {
+        "bestKg": "Best value: {value}",
+        "averageKg": "Average weight: {value}",
+        "setSize": "Set size: {value}",
+        "weeklyReps": "Weekly reps: {value}"
+      }
+    },
+    "title": "Macrocycle",
+    "chartTitle": "Planned values",
+    "exercise": "Exercise",
+    "exerciseOption": "{number} {name}",
+    "loadFailed": "The values could not be loaded. Please try again.",
+    "change": "Change planning",
+    "backAthlete": "Back to the athlete",
+    "backTraining": "Back to My training",
+    "notPlanned": "Your coach has not planned a macrocycle yet.",
+    "summary": {
+      "focusPoints": "Focus points",
+      "noFocusPoints": "No focus points entered yet.",
+      "position": "{position}.",
+      "history": "Historical data",
+      "plan": "New macrocycle plan",
+      "deficits": "Deficits, injuries and illnesses",
+      "notEntered": "Not entered yet",
+      "kg": "{value} kg",
+      "snatchBest": "Personal best snatch",
+      "cleanAndJerkBest": "Personal best clean & jerk",
+      "bodyWeight": "Body weight",
+      "bodyFat": "Body fat",
+      "muscleMass": "Muscle mass",
+      "period": "Period",
+      "periodValue": "{start} – {end}",
+      "duration": "Duration",
+      "weeks": "{count, plural, one {# week} other {# weeks}}",
+      "competition": "Main competition",
+      "competitionValue": "{type}, {date}",
+      "entryValue": "Entry value",
+      "snatchGoal": "Goal snatch",
+      "cleanAndJerkGoal": "Goal clean & jerk",
+      "targetBodyWeight": "Target body weight",
+      "trainingFrequency": "Training sessions per week"
     }
   }
 }

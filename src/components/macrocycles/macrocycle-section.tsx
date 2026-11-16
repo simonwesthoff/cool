@@ -13,7 +13,8 @@ const button =
 
 /**
  * Macrocycle section of the athlete details page (placeholder until the
- * macrocycle chart section of the details page exists).
+ * macrocycle chart section of the details page exists). A planned
+ * macrocycle opens the macrocycle view.
  */
 export function MacrocycleSection({
   athleteId,
@@ -41,21 +42,36 @@ export function MacrocycleSection({
       </h2>
       {macrocycle ? (
         <>
-          <p>
-            {t("period", {
-              start: date(addDays(macrocycle.startDate, 0)),
-              end: date(
-                addDays(macrocycle.startDate, 7 * macrocycle.durationWeeks - 1),
-              ),
-              weeks: macrocycle.durationWeeks,
-            })}
-          </p>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            {t("competition", {
-              type: macrocycle.competitionType,
-              date: date(addDays(macrocycle.competitionDate, 0)),
-            })}
-          </p>
+          {/* The planned macrocycle opens the macrocycle view. */}
+          <Link
+            href={`/athletes/${athleteId}/macrocycle`}
+            aria-label={t("open")}
+            className="-mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+          >
+            <span className="flex flex-col gap-1">
+              <p>
+                {t("period", {
+                  start: date(addDays(macrocycle.startDate, 0)),
+                  end: date(
+                    addDays(
+                      macrocycle.startDate,
+                      7 * macrocycle.durationWeeks - 1,
+                    ),
+                  ),
+                  weeks: macrocycle.durationWeeks,
+                })}
+              </p>
+              <p className="text-zinc-600 dark:text-zinc-400">
+                {t("competition", {
+                  type: macrocycle.competitionType,
+                  date: date(addDays(macrocycle.competitionDate, 0)),
+                })}
+              </p>
+            </span>
+            <span aria-hidden="true" className="text-2xl text-zinc-400">
+              ›
+            </span>
+          </Link>
           <Link
             href={planning}
             className={`${button} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`}

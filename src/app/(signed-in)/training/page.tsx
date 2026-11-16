@@ -1,8 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Avatar } from "@/components/avatar";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
+import { findMacrocycle } from "@/domain/macrocycles";
 import { requirePageRoles } from "../current-user";
 
 /** Athlete view (placeholder until athlete details and basic data exist). */
@@ -20,6 +22,7 @@ export async function Training() {
   const { user, roles } = await requirePageRoles("/training");
   if (!roles.athlete) redirect("/");
   const t = await getTranslations("Training");
+  const macrocycle = await findMacrocycle(user, roles.athlete.athleteId);
   return (
     <section className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 pt-12 text-center">
       <Avatar
@@ -35,6 +38,18 @@ export async function Training() {
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         {t("placeholder")}
       </p>
+      {macrocycle && (
+        <Link
+          href="/training/macrocycle"
+          aria-label={t("macrocycleOpen")}
+          className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-zinc-200 p-4 text-left hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+        >
+          <span className="font-semibold">{t("macrocycle")}</span>
+          <span aria-hidden="true" className="text-2xl text-zinc-400">
+            ›
+          </span>
+        </Link>
+      )}
     </section>
   );
 }
