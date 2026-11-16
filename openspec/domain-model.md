@@ -39,6 +39,27 @@ erDiagram
         datetime revokedAt
     }
     ExerciseGroup ||--o{ Exercise : "contains"
+    Athlete ||--o| Macrocycle : "is planned in"
+    Macrocycle ||--|{ MacrocycleWeek : "consists of"
+    Macrocycle ||--|{ Mesocycle : "is divided into"
+    Mesocycle }o--o{ Exercise : "uses"
+    Macrocycle {
+        date startDate
+        int durationWeeks
+        decimal entryValuePct
+        decimal snatchGoalKg
+        decimal cleanAndJerkGoalKg
+        date competitionDate
+    }
+    MacrocycleWeek {
+        int weekNumber
+        string level
+    }
+    Mesocycle {
+        string type
+        int firstWeek
+        int lastWeek
+    }
     Exercise {
         int number
         string name
@@ -57,6 +78,13 @@ erDiagram
   is shared by all Teams and read-only; later changes reference exercises
   from mesocycles and weekly plans and add per-athlete adjustments of the
   values.
+- An Athlete has at most one Macrocycle, planned by the coach of the
+  athlete's Team. It consists of its weeks (each high, medium or low) and is
+  divided into three Mesocycles (general preparation, special preparation
+  and competition preparation block, by default 15 % / 50 % / rest of the
+  weeks). A Mesocycle uses exercises from the exercise catalog; the same
+  exercise can be used in several mesocycles. Intensity, planned weights,
+  reps and volume are calculated, not stored.
 - A user account is created by the first sign-in with Google and is
   identified by that Google account. Name and picture follow the Google
   profile on every sign-in.

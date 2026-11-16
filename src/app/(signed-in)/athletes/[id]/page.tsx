@@ -4,6 +4,8 @@ import { AthleteDetailsHeader } from "@/components/athletes/athlete-details-head
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
+import { findMacrocycle } from "@/domain/macrocycles";
+import { MacrocycleSection } from "@/components/macrocycles/macrocycle-section";
 import { requireCoachPage } from "../../current-user";
 
 type Params = PageProps<"/athletes/[id]">["params"];
@@ -28,5 +30,11 @@ export async function AthleteDetails({ params }: { params: Params }) {
     if (error instanceof DomainError && error.kind === "not_found") notFound();
     throw error;
   });
-  return <AthleteDetailsHeader athlete={athlete} />;
+  const macrocycle = await findMacrocycle(user, id);
+  return (
+    <div className="flex flex-col gap-6">
+      <AthleteDetailsHeader athlete={athlete} />
+      <MacrocycleSection athleteId={athlete.id} macrocycle={macrocycle} />
+    </div>
+  );
 }

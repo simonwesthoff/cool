@@ -117,7 +117,15 @@
   "AthleteDetails": {
     "back": "Zurück zu den Athleten",
     "basicData": "Stammdaten",
-    "pictureAlt": "Profilbild von {name}"
+    "pictureAlt": "Profilbild von {name}",
+    "macrocycle": {
+      "title": "Makrozyklus",
+      "none": "Noch kein Makrozyklus geplant.",
+      "plan": "Makrozyklus planen",
+      "period": "{start} – {end} ({weeks} Wochen)",
+      "competition": "Hauptwettkampf: {type} am {date}",
+      "change": "Planung ändern"
+    }
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",
@@ -230,6 +238,15 @@
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "continue": "Weiter zu den Übungen",
       "back": "Zurück zu den Stammdaten"
+    },
+    "exercises": {
+      "help": "Wähle die Übungen jedes Mesozyklus aus dem Trainingsmittelkatalog. Jede Änderung wird gespeichert.",
+      "tabsLabel": "Mesozyklen",
+      "tab": "{name} ({count})",
+      "weeks": "{name}: Wochen {first}–{last}",
+      "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+      "finish": "Planung abschließen",
+      "back": "Zurück zur Intensität"
     }
   }
 }

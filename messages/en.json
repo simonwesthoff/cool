@@ -117,7 +117,15 @@
   "AthleteDetails": {
     "back": "Back to athletes",
     "basicData": "Basic data",
-    "pictureAlt": "Profile picture of {name}"
+    "pictureAlt": "Profile picture of {name}",
+    "macrocycle": {
+      "title": "Macrocycle",
+      "none": "No macrocycle planned yet.",
+      "plan": "Plan macrocycle",
+      "period": "{start} – {end} ({weeks} weeks)",
+      "competition": "Main competition: {type} on {date}",
+      "change": "Change planning"
+    }
   },
   "Catalog": {
     "title": "Exercises",
@@ -230,6 +238,15 @@
       "saveFailed": "The change could not be saved. Please try again.",
       "continue": "Continue to exercises",
       "back": "Back to base data"
+    },
+    "exercises": {
+      "help": "Choose the exercises of each mesocycle from the exercise catalog. Every change is saved.",
+      "tabsLabel": "Mesocycles",
+      "tab": "{name} ({count})",
+      "weeks": "{name}: weeks {first}–{last}",
+      "saveFailed": "The change could not be saved. Please try again.",
+      "finish": "Finish planning",
+      "back": "Back to intensity"
     }
   }
 }
