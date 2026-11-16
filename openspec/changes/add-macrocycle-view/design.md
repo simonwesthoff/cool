@@ -96,9 +96,10 @@
   - **Dark mode:** #27272a, #3f3f46, #52525b.
   - This also changes the planning chart, its legend swatches and the
     exercise table header swatches, which already use these tokens.
-- **Planning chart marks:** the intensity curve and handles stay white with
-  the dark halo. They are not one of the four values and remain readable on
-  every grey. The `dataviz` validator checks this during implementation.
+- **Planning chart marks:** the intensity is the best value in %, so the
+  intensity curve and its week points use `--value-best` (#6f3ab1), with
+  the same outline as the value curves. The dashed base curve stays a thin
+  neutral line, and the ▲/▼ markers stay in the text colour.
 - **Value curves on grey bands:** each curve gets a 1 px outline in the
   surface's opposite (dark in light mode, light in dark mode). Lime and
   cyan need it on light greys, purple on dark greys. The validator decides

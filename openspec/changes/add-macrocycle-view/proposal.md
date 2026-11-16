@@ -38,8 +38,8 @@ athlete cannot see it at all.
       goals, target body weight, sessions per week.
   - **Deficits** (snatch, clean, jerk, other) and injuries and illnesses.
 - **App-wide colours** (user decision):
-  - **Values:** best value #6f3ab1, average weight #ba2db3, set size
-    #3bc8c8, weekly reps #d7f212.
+  - **Values:** best value #6f3ab1 (also the intensity in the planning
+    chart), average weight #ba2db3, set size #3bc8c8, weekly reps #d7f212.
   - **Mesocycles:** three shades of grey everywhere, replacing the palette
     colours in the planning chart, its legend and the exercise table
     headers.
@@ -69,7 +69,8 @@ Out of scope:
 - `macrocycle-planning`:
   - "One macrocycle per athlete" and "Macrocycle API" now let the linked
     athlete read the macrocycle (writes stay coach-only).
-  - "Intensity chart with week handles" uses grey mesocycles.
+  - "Intensity chart with week handles" uses grey mesocycles and a purple
+    intensity curve.
   - A new requirement fixes the colours of values and mesocycles app-wide.
 - `athlete-details`: "Macrocycle entry point" links a planned macrocycle to
   the new view.

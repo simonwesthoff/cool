@@ -4,8 +4,8 @@
 
 ### Requirement: Colours of values and mesocycles
 Wherever the app shows them, the planned values SHALL have fixed colours:
-best value #6f3ab1, average weight #ba2db3, set size #3bc8c8, weekly reps
-#d7f212. The mesocycles SHALL be shown in three shades of grey, from light
+best value #6f3ab1 (also the intensity, which is the best value in %),
+average weight #ba2db3, set size #3bc8c8, weekly reps #d7f212. The mesocycles SHALL be shown in three shades of grey, from light
 (general preparation) to dark (competition preparation) in light mode and
 correspondingly in dark mode; they SHALL NOT use the value colours.
 
@@ -16,6 +16,10 @@ correspondingly in dark mode; they SHALL NOT use the value colours.
 #### Scenario: Values in their colours
 - **WHEN** a chart shows the best value, average weight, set size or weekly reps of an exercise
 - **THEN** they are drawn in #6f3ab1, #ba2db3, #3bc8c8 and #d7f212
+
+#### Scenario: Intensity in the best value colour
+- **WHEN** the coach looks at the intensity chart in step 3
+- **THEN** the intensity curve and its week handles are drawn in #6f3ab1
 
 ## MODIFIED Requirements
 
