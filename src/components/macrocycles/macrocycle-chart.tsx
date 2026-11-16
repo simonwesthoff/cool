@@ -1,14 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-} from "react";
+import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
 import type {
   MacrocycleWeekView,
   MesocycleView,
@@ -39,18 +32,17 @@ type Props = {
 };
 
 /** Width and height of the tooltip box, used to place it next to a point. */
-const TOOLTIP = { width: 184, height: 104, gap: 12 };
-
-const MARGIN = { left: 44, right: 12 };
-const INTENSITY = { top: 28, height: 220, axis: 28 };
-const VOLUME = { top: 12, height: 96, axis: 24 };
-const MIN_COLUMN = 28;
+const TOOLTIP = { width: 184, height: 104, gap: 10 };
+const PLOT = { top: 28, height: 220 };
+/** Space below the plot for the week numbers and the axis title. */
+const X_AXIS = 44;
 const BAND_FILL = ["var(--band-1)", "var(--band-2)", "var(--band-3)"];
+/** Width used before the container has been measured. */
+const DEFAULT_WIDTH = 640;
 
 /**
- * The macrocycle chart: intensity per week (one handle per week) and, as a
- * separate chart on the same week axis, the volume per week. Mesocycles are
- * shown as background bands.
+ * The macrocycle chart: intensity per week with one handle per week on the
+ * mesocycle bands. It always fits its container's width.
  */
 export function MacrocycleChart({
   weeks,
@@ -64,7 +56,6 @@ export function MacrocycleChart({
   const container = useRef<HTMLDivElement>(null);
   const [available, setAvailable] = useState(0);
   const [hovered, setHovered] = useState<number | null>(null);
-  const [scrollLeft, setScrollLeft] = useState(0);
   const [dragging, setDragging] = useState<{
     week: number;
     level: WeekLevel;
@@ -87,6 +78,13 @@ export function MacrocycleChart({
   }, []);
 
   const n = weeks.length;
+  const width = available || DEFAULT_WIDTH;
+  const narrow = width < 500;
+  const margin = narrow ? { left: 44, right: 10 } : { left: 56, right: 16 };
+  // The whole cycle always fits: no horizontal scrolling.
+  const column = (width - margin.left - margin.right) / Math.max(n, 1);
+  const height = PLOT.top + PLOT.height + X_AXIS;
+
   // Borders = first weeks of the special and competition preparation blocks.
   const savedBorders: [number, number] = [
     savedMesocycles[1]!.firstWeek,
@@ -106,23 +104,22 @@ export function MacrocycleChart({
     },
     { type: savedMesocycles[2]!.type, firstWeek: borders[1], lastWeek: n },
   ];
-  const column = Math.max(
-    MIN_COLUMN,
-    (available - MARGIN.left - MARGIN.right) / Math.max(n, 1),
-  );
-  const width = MARGIN.left + MARGIN.right + column * n;
+
   const bases = weeks.map((w) => baseIntensity(w.intensityPct, w.level));
   const domain = intensityDomain(bases);
   const y = (pct: number) =>
-    INTENSITY.top +
-    INTENSITY.height * (1 - (pct - domain.min) / (domain.max - domain.min));
+    PLOT.top +
+    PLOT.height * (1 - (pct - domain.min) / (domain.max - domain.min));
   const valueAt = (svgY: number) =>
     domain.min +
-    (1 - (svgY - INTENSITY.top) / INTENSITY.height) * (domain.max - domain.min);
+    (1 - (svgY - PLOT.top) / PLOT.height) * (domain.max - domain.min);
   // A week's point sits at the start (left edge) of its column, so a
   // mesocycle border is exactly at the point of the block's first week.
-  const x = (index: number) => MARGIN.left + column * index;
+  const x = (index: number) => margin.left + column * index;
+  const plotRight = margin.left + column * n;
   const every = labelEvery(column);
+  // Points shrink with narrow columns, so many weeks still fit side by side.
+  const radius = Math.min(4.5, Math.max(2.5, column * 0.3));
 
   const levelOf = (w: ChartWeek) =>
     dragging?.week === w.number ? dragging.level : w.level;
@@ -140,31 +137,25 @@ export function MacrocycleChart({
     )
     .join(" ");
 
-  const volumes = weeks.map((w) => w.volume);
-  const hasVolume = volumes.some((v) => v !== null);
-  const maxVolume = Math.max(1, ...volumes.map((v) => v ?? 0));
-  const barWidth = Math.min(24, column - 4);
-
   const pct = (value: number) =>
     format.number(value / 100, { style: "percent", maximumFractionDigits: 1 });
   const levelName = (level: WeekLevel) => t(`levels.${level}`);
+  const intensityOf = (w: ChartWeek) =>
+    intensityAt(baseIntensity(w.intensityPct, w.level), levelOf(w));
   const describe = (w: ChartWeek) =>
     t("weekValue", {
       week: w.number,
       level: levelName(levelOf(w)),
-      intensity: pct(
-        intensityAt(baseIntensity(w.intensityPct, w.level), levelOf(w)),
-      ),
+      intensity: pct(intensityOf(w)),
     });
 
-  function svgY(event: PointerEvent<SVGElement>) {
-    const svg =
-      event.currentTarget.ownerSVGElement ??
-      (event.currentTarget as unknown as SVGSVGElement);
+  function svgPoint(event: PointerEvent<SVGElement>) {
+    const svg = event.currentTarget.ownerSVGElement!;
     const rect = svg.getBoundingClientRect();
-    return event.clientY - rect.top;
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
+  // --- Week handles: drag up/down, or tap above/below the point -------------
   function onPointerDown(event: PointerEvent<SVGRectElement>, w: ChartWeek) {
     if (!onLevelChange) return;
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -177,7 +168,7 @@ export function MacrocycleChart({
     base: number,
   ) {
     if (!dragging || dragging.week !== w.number) return;
-    const level = levelForValue(base, valueAt(svgY(event)));
+    const level = levelForValue(base, valueAt(svgPoint(event).y));
     if (level !== dragging.level)
       setDragging({ ...dragging, level, moved: true });
   }
@@ -191,37 +182,26 @@ export function MacrocycleChart({
     let level = dragging.level;
     if (!dragging.moved) {
       // A tap above the week's point moves it one step up, below one step down.
-      const tapped = valueAt(svgY(event));
-      const current = intensityAt(base, w.level);
-      level = tapped > current ? stepLevel(w.level, 1) : stepLevel(w.level, -1);
+      const tapped = valueAt(svgPoint(event).y);
+      level =
+        tapped > intensityAt(base, w.level)
+          ? stepLevel(w.level, 1)
+          : stepLevel(w.level, -1);
     }
     setDragging(null);
     if (level !== w.level) onLevelChange(w.number, level);
   }
 
-  function onKeyDown(event: KeyboardEvent<SVGGElement>, w: ChartWeek) {
-    if (!onLevelChange) return;
-    const direction =
-      event.key === "ArrowUp" ? 1 : event.key === "ArrowDown" ? -1 : 0;
-    if (!direction) return;
-    event.preventDefault();
-    const level = stepLevel(w.level, direction);
-    if (level !== w.level) onLevelChange(w.number, level);
-  }
-
+  // --- Mesocycle borders: drag left/right ------------------------------------
   /** Allowed weeks for a border: every block keeps at least one week. */
   function borderRange(border: 0 | 1): [number, number] {
     return border === 0 ? [2, savedBorders[1] - 1] : [savedBorders[0] + 1, n];
   }
 
   function borderWeekAt(event: PointerEvent<SVGElement>, border: 0 | 1) {
-    const svg = event.currentTarget.ownerSVGElement!;
-    const px = event.clientX - svg.getBoundingClientRect().left;
     const [min, max] = borderRange(border);
-    return Math.min(
-      max,
-      Math.max(min, Math.round((px - MARGIN.left) / column) + 1),
-    );
+    const week = Math.round((svgPoint(event).x - margin.left) / column) + 1;
+    return Math.min(max, Math.max(min, week));
   }
 
   function commitBorders(next: [number, number]) {
@@ -230,18 +210,7 @@ export function MacrocycleChart({
     }
   }
 
-  function onBorderKeyDown(event: KeyboardEvent<SVGGElement>, border: 0 | 1) {
-    const direction =
-      event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
-    if (!direction) return;
-    event.preventDefault();
-    const [min, max] = borderRange(border);
-    const week = Math.min(max, Math.max(min, savedBorders[border] + direction));
-    commitBorders(
-      border === 0 ? [week, savedBorders[1]] : [savedBorders[0], week],
-    );
-  }
-
+  // --- Week labels and tooltip -------------------------------------------------
   // The first week of every block is always numbered; the other numbers
   // follow the regular spacing and give way when they come too close.
   const blockStarts = mesocycles.map((m) => m.firstWeek);
@@ -258,20 +227,18 @@ export function MacrocycleChart({
     if (!shown) return null;
     const index = weeks.indexOf(shown);
     const px = x(index);
-    const py = y(intensityAt(bases[index]!, levelOf(shown)));
-    const visibleRight = scrollLeft + Math.max(available, TOOLTIP.width);
+    const py = y(intensityOf(shown));
     const rightOfColumn = px + column / 2 + TOOLTIP.gap;
     const leftOfColumn = px - column / 2 - TOOLTIP.gap - TOOLTIP.width;
-    const fitsRight = rightOfColumn + TOOLTIP.width <= visibleRight;
-    const fitsLeft = leftOfColumn >= scrollLeft;
-    const preferLeft = px - scrollLeft > Math.max(available, 1) / 2;
-    const left =
+    const fitsRight = rightOfColumn + TOOLTIP.width <= width;
+    const fitsLeft = leftOfColumn >= 0;
+    const preferLeft = px > width / 2;
+    let left =
       (preferLeft && fitsLeft) || !fitsRight ? leftOfColumn : rightOfColumn;
-    const upperHalf = py < INTENSITY.top + INTENSITY.height / 2;
-    const top = upperHalf
-      ? INTENSITY.top + INTENSITY.height - TOOLTIP.height
-      : INTENSITY.top;
-    return { left: Math.max(scrollLeft, left), top };
+    if (left < 0) left = 0;
+    const upperHalf = py < PLOT.top + PLOT.height / 2;
+    const top = upperHalf ? PLOT.top + PLOT.height - TOOLTIP.height : PLOT.top;
+    return { left, top };
   })();
 
   return (
@@ -290,7 +257,7 @@ export function MacrocycleChart({
           <li key={m.type} className="flex items-center gap-2">
             <span
               aria-hidden="true"
-              className="inline-block size-3 rounded-sm border border-zinc-300 dark:border-zinc-700"
+              className="inline-block size-3 rounded-sm"
               style={{ background: BAND_FILL[i] }}
             />
             {tm(m.type)}
@@ -303,13 +270,12 @@ export function MacrocycleChart({
       </ul>
       <div
         ref={container}
-        className="relative overflow-x-auto"
+        className="relative w-full"
         onPointerLeave={() => setHovered(null)}
-        onScroll={(event) => setScrollLeft(event.currentTarget.scrollLeft)}
       >
         <svg
           width={width}
-          height={INTENSITY.top + INTENSITY.height + INTENSITY.axis}
+          height={height}
           role="group"
           aria-label={t("intensity")}
           className="block touch-none select-none"
@@ -317,10 +283,10 @@ export function MacrocycleChart({
           {mesocycles.map((m, i) => (
             <g key={m.type}>
               <rect
-                x={MARGIN.left + column * (m.firstWeek - 1)}
-                y={INTENSITY.top}
+                x={x(m.firstWeek - 1)}
+                y={PLOT.top}
                 width={column * (m.lastWeek - m.firstWeek + 1)}
-                height={INTENSITY.height}
+                height={PLOT.height}
                 fill={BAND_FILL[i]}
               />
               {/* Only label a band when the name fits; the legend names it otherwise. */}
@@ -329,8 +295,8 @@ export function MacrocycleChart({
                 column * (m.lastWeek - m.firstWeek + 1),
               ) && (
                 <text
-                  x={MARGIN.left + column * (m.firstWeek - 1) + 4}
-                  y={INTENSITY.top - 8}
+                  x={x(m.firstWeek - 1) + 4}
+                  y={PLOT.top - 8}
                   className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
                 >
                   {tm(`short.${m.type}`)}
@@ -341,15 +307,15 @@ export function MacrocycleChart({
           {domain.ticks.map((tick) => (
             <g key={tick}>
               <line
-                x1={MARGIN.left}
-                x2={width - MARGIN.right}
+                x1={margin.left}
+                x2={plotRight}
                 y1={y(tick)}
                 y2={y(tick)}
                 className="stroke-black/20"
                 strokeWidth={1}
               />
               <text
-                x={MARGIN.left - 6}
+                x={margin.left - 6}
                 y={y(tick)}
                 textAnchor="end"
                 dominantBaseline="middle"
@@ -359,6 +325,22 @@ export function MacrocycleChart({
               </text>
             </g>
           ))}
+          {/* Axis titles. */}
+          <text
+            transform={`translate(12 ${PLOT.top + PLOT.height / 2}) rotate(-90)`}
+            textAnchor="middle"
+            className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
+          >
+            {t("axisIntensity")}
+          </text>
+          <text
+            x={margin.left + (plotRight - margin.left) / 2}
+            y={PLOT.top + PLOT.height + 38}
+            textAnchor="middle"
+            className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
+          >
+            {t("axisWeek")}
+          </text>
           {/* White marks with a dark halo stay readable on every band colour. */}
           <path
             d={curvePath}
@@ -399,7 +381,7 @@ export function MacrocycleChart({
                 {showWeekLabel(w.number) && (
                   <text
                     x={x(i)}
-                    y={INTENSITY.top + INTENSITY.height + 18}
+                    y={PLOT.top + PLOT.height + 18}
                     textAnchor="middle"
                     className="fill-zinc-500 text-[11px] tabular-nums"
                   >
@@ -409,9 +391,13 @@ export function MacrocycleChart({
                 {level !== "medium" && (
                   <text
                     x={p.x}
-                    y={level === "high" ? p.y - 12 : p.y + 20}
+                    y={level === "high" ? p.y - radius - 6 : p.y + radius + 14}
                     textAnchor="middle"
-                    className="fill-white text-[11px]"
+                    className={
+                      column < 12
+                        ? "fill-white text-[9px]"
+                        : "fill-white text-[11px]"
+                    }
                     stroke="var(--chart-halo)"
                     strokeWidth={3}
                     paintOrder="stroke"
@@ -421,49 +407,30 @@ export function MacrocycleChart({
                   </text>
                 )}
                 <g
-                  role={onLevelChange ? "slider" : "img"}
-                  tabIndex={onLevelChange ? 0 : -1}
+                  data-week-point={w.number}
+                  role="img"
                   aria-label={describe(w)}
-                  aria-valuetext={onLevelChange ? describe(w) : undefined}
-                  aria-valuemin={onLevelChange ? -1 : undefined}
-                  aria-valuemax={onLevelChange ? 1 : undefined}
-                  aria-valuenow={
-                    onLevelChange
-                      ? level === "high"
-                        ? 1
-                        : level === "low"
-                          ? -1
-                          : 0
-                      : undefined
-                  }
-                  aria-orientation={onLevelChange ? "vertical" : undefined}
-                  onKeyDown={(event) => onKeyDown(event, w)}
-                  onFocus={() => setHovered(w.number)}
-                  onBlur={() => setHovered(null)}
-                  className="outline-none [&:focus-visible>circle.ring]:stroke-white"
                 >
                   <circle
-                    className="ring"
                     cx={p.x}
                     cy={p.y}
-                    r={active ? 9.5 : 7.5}
+                    r={(active ? radius + 1.5 : radius) + 2.5}
                     fill="var(--chart-halo)"
-                    stroke="transparent"
-                    strokeWidth={2}
                   />
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={active ? 6 : 4.5}
+                    r={active ? radius + 1.5 : radius}
                     className="fill-white"
                   />
                 </g>
+                {/* The week's hit area: its whole column, centred on the point. */}
                 <rect
                   data-week={w.number}
                   x={x(i) - column / 2}
-                  y={INTENSITY.top}
+                  y={PLOT.top}
                   width={column}
-                  height={INTENSITY.height}
+                  height={PLOT.height}
                   fill="transparent"
                   className={onLevelChange ? "cursor-ns-resize" : undefined}
                   onPointerEnter={() => setHovered(w.number)}
@@ -477,38 +444,26 @@ export function MacrocycleChart({
           })}
           {mesocycles.slice(1).map((m, index) => {
             const border = index as 0 | 1;
-            const bx = MARGIN.left + column * (m.firstWeek - 1);
-            const [min, max] = borderRange(border);
-            const label = t("borderValue", {
-              block: tm(m.type),
-              week: m.firstWeek,
-            });
+            const bx = x(m.firstWeek - 1);
             return (
               <g key={m.type}>
                 <line
                   x1={bx}
                   x2={bx}
-                  y1={INTENSITY.top}
-                  y2={INTENSITY.top + INTENSITY.height}
-                  className="pointer-events-none stroke-zinc-500"
+                  y1={PLOT.top}
+                  y2={PLOT.top + PLOT.height}
+                  className="pointer-events-none stroke-white/80"
                   strokeWidth={borderDrag?.border === border ? 2 : 1}
                 />
                 {onBordersChange && (
                   <g
-                    role="slider"
-                    tabIndex={0}
-                    aria-label={t(
-                      border === 0
-                        ? "borderLabels.special_preparation"
-                        : "borderLabels.competition_preparation",
-                    )}
-                    aria-valuetext={label}
-                    aria-valuenow={m.firstWeek}
-                    aria-valuemin={min}
-                    aria-valuemax={max}
-                    aria-orientation="horizontal"
-                    onKeyDown={(event) => onBorderKeyDown(event, border)}
-                    className="cursor-ew-resize outline-none [&:focus-visible>rect.grip]:stroke-zinc-900 dark:[&:focus-visible>rect.grip]:stroke-zinc-100"
+                    data-border={border}
+                    role="img"
+                    aria-label={t("borderValue", {
+                      block: tm(m.type),
+                      week: m.firstWeek,
+                    })}
+                    className="cursor-ew-resize"
                     onPointerDown={(event) => {
                       event.currentTarget.setPointerCapture?.(event.pointerId);
                       setBorderDrag({ border, week: savedBorders[border] });
@@ -534,15 +489,15 @@ export function MacrocycleChart({
                     {/* Large transparent hit area around the grip. */}
                     <rect
                       x={bx - 14}
-                      y={INTENSITY.top}
+                      y={PLOT.top}
                       width={28}
                       height={36}
                       fill="transparent"
                     />
                     <rect
-                      className="grip fill-white stroke-zinc-500 dark:fill-zinc-950"
+                      className="fill-white stroke-zinc-500 dark:fill-zinc-950"
                       x={bx - 6}
-                      y={INTENSITY.top + 6}
+                      y={PLOT.top + 6}
                       width={12}
                       height={24}
                       rx={4}
@@ -551,16 +506,16 @@ export function MacrocycleChart({
                     <line
                       x1={bx - 2}
                       x2={bx - 2}
-                      y1={INTENSITY.top + 12}
-                      y2={INTENSITY.top + 24}
+                      y1={PLOT.top + 12}
+                      y2={PLOT.top + 24}
                       className="stroke-zinc-500"
                       strokeWidth={1}
                     />
                     <line
                       x1={bx + 2}
                       x2={bx + 2}
-                      y1={INTENSITY.top + 12}
-                      y2={INTENSITY.top + 24}
+                      y1={PLOT.top + 12}
+                      y2={PLOT.top + 24}
                       className="stroke-zinc-500"
                       strokeWidth={1}
                     />
@@ -573,102 +528,37 @@ export function MacrocycleChart({
             <line
               x1={x(weeks.findIndex((w) => w.number === hovered))}
               x2={x(weeks.findIndex((w) => w.number === hovered))}
-              y1={INTENSITY.top}
-              y2={INTENSITY.top + INTENSITY.height}
+              y1={PLOT.top}
+              y2={PLOT.top + PLOT.height}
               className="pointer-events-none stroke-white/80"
               strokeWidth={1}
             />
           )}
         </svg>
-        <svg
-          width={width}
-          height={VOLUME.top + VOLUME.height + VOLUME.axis}
-          role="group"
-          aria-label={t("volume")}
-          className="block"
-        >
-          <text
-            x={MARGIN.left}
-            y={VOLUME.top - 2}
-            className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
-          >
-            {t("volume")}
-          </text>
-          <line
-            x1={MARGIN.left}
-            x2={width - MARGIN.right}
-            y1={VOLUME.top + VOLUME.height}
-            y2={VOLUME.top + VOLUME.height}
-            className="stroke-zinc-300 dark:stroke-zinc-700"
-            strokeWidth={1}
-          />
-          {!hasVolume && (
-            <text
-              x={MARGIN.left + 4}
-              y={VOLUME.top + VOLUME.height / 2 + 4}
-              className="fill-zinc-500 text-[12px]"
-            >
-              {t("noVolume")}
-            </text>
-          )}
-          {hasVolume && (
-            <text
-              x={MARGIN.left - 6}
-              y={VOLUME.top + 8}
-              textAnchor="end"
-              className="fill-zinc-500 text-[11px] tabular-nums"
-            >
-              {format.number(maxVolume)}
-            </text>
-          )}
-          {weeks.map((w, i) => {
-            if (w.volume === null || w.volume === 0) return null;
-            const h = (VOLUME.height - 8) * (w.volume / maxVolume);
-            // Bars start at the week's position, like the points above.
-            const left = x(i) + 1;
-            const top = VOLUME.top + VOLUME.height - h;
-            const r = Math.min(4, h, barWidth / 2);
-            return (
-              <path
-                key={w.number}
-                d={`M${left},${top + h}V${top + r}Q${left},${top} ${left + r},${top}H${left + barWidth - r}Q${left + barWidth},${top} ${left + barWidth},${top + r}V${top + h}Z`}
-                className={
-                  hovered === w.number
-                    ? "fill-zinc-700 dark:fill-zinc-300"
-                    : "fill-zinc-500"
-                }
-                onPointerEnter={() => setHovered(w.number)}
-              />
-            );
-          })}
-        </svg>
-        {shown && (
+        {shown && tooltipPosition && (
           <div
             role="status"
             data-testid="week-tooltip"
             className="pointer-events-none absolute z-10 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-md dark:border-zinc-800 dark:bg-zinc-950"
             style={{
-              // Content coordinates: the tooltip scrolls with the chart.
-              left: tooltipPosition!.left,
-              top: tooltipPosition!.top,
+              left: tooltipPosition.left,
+              top: tooltipPosition.top,
               width: TOOLTIP.width,
               minHeight: TOOLTIP.height,
             }}
           >
             <p className="font-semibold tabular-nums">
-              {pct(
-                intensityAt(
-                  baseIntensity(shown.intensityPct, shown.level),
-                  levelOf(shown),
-                ),
-              )}
+              {pct(intensityOf(shown))}
             </p>
             <p className="text-zinc-600 dark:text-zinc-400">
               {t("tooltipWeek", {
                 week: shown.number,
                 date: format.dateTime(
                   new Date(`${shown.startDate}T00:00:00Z`),
-                  { dateStyle: "medium", timeZone: "UTC" },
+                  {
+                    dateStyle: "medium",
+                    timeZone: "UTC",
+                  },
                 ),
               })}
             </p>
@@ -684,60 +574,6 @@ export function MacrocycleChart({
           </div>
         )}
       </div>
-      <details className="text-sm">
-        <summary className="cursor-pointer text-zinc-600 dark:text-zinc-400">
-          {t("showTable")}
-        </summary>
-        <div className="mt-2 overflow-x-auto">
-          <table className="w-full text-left tabular-nums">
-            <thead className="text-zinc-500">
-              <tr>
-                <th className="py-1 pr-3 font-medium">{t("table.week")}</th>
-                <th className="py-1 pr-3 font-medium">{t("table.start")}</th>
-                <th className="py-1 pr-3 font-medium">
-                  {t("table.mesocycle")}
-                </th>
-                <th className="py-1 pr-3 font-medium">{t("table.level")}</th>
-                <th className="py-1 pr-3 text-right font-medium">
-                  {t("table.intensity")}
-                </th>
-                <th className="py-1 text-right font-medium">
-                  {t("table.volume")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {weeks.map((w) => (
-                <tr
-                  key={w.number}
-                  className="border-t border-zinc-200 dark:border-zinc-800"
-                >
-                  <td className="py-1 pr-3">{w.number}</td>
-                  <td className="py-1 pr-3">
-                    {format.dateTime(new Date(`${w.startDate}T00:00:00Z`), {
-                      dateStyle: "medium",
-                      timeZone: "UTC",
-                    })}
-                  </td>
-                  <td className="py-1 pr-3">{tm(`short.${w.mesocycle}`)}</td>
-                  <td className="py-1 pr-3">{levelName(levelOf(w))}</td>
-                  <td className="py-1 pr-3 text-right">
-                    {pct(
-                      intensityAt(
-                        baseIntensity(w.intensityPct, w.level),
-                        levelOf(w),
-                      ),
-                    )}
-                  </td>
-                  <td className="py-1 text-right">
-                    {w.volume === null ? "–" : format.number(w.volume)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
     </figure>
   );
 }

@@ -230,8 +230,6 @@
       "legend": "Legend",
       "legendLevels": "High / low week",
       "intensity": "Intensity per week",
-      "volume": "Volume (weekly reps)",
-      "noVolume": "The volume appears once exercises are chosen.",
       "weekValue": "Week {week}, {level}, {intensity}",
       "levels": {
         "high": "High week",
@@ -240,23 +238,12 @@
       },
       "tooltipWeek": "Week {week} · from {date}",
       "tooltipVolume": "Volume: {volume}",
-      "showTable": "Show as table",
-      "table": {
-        "week": "Week",
-        "start": "From",
-        "mesocycle": "Mesocycle",
-        "level": "Level",
-        "intensity": "Intensity",
-        "volume": "Volume"
-      },
       "borderValue": "{block} from week {week}",
-      "borderLabels": {
-        "special_preparation": "Border between general and special preparation",
-        "competition_preparation": "Border between special and competition preparation"
-      }
+      "axisIntensity": "Intensity",
+      "axisWeek": "Week"
     },
     "intensity": {
-      "help": "Move a week's point up for a high week or down for a low week (drag, tap above or below, or use the arrow keys). Each change is saved.",
+      "help": "Drag a week's point up for a high week or down for a low week, or tap above or below it. Drag the handles on the borders to change the length of the mesocycles. Each change is saved.",
       "saveFailed": "The change could not be saved. Please try again.",
       "continue": "Continue to exercises",
       "back": "Back to base data"

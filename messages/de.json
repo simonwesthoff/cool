@@ -230,8 +230,6 @@
       "legend": "Legende",
       "legendLevels": "Hohe / niedrige Woche",
       "intensity": "Intensität pro Woche",
-      "volume": "Umfang (Wochenwiederholungen)",
-      "noVolume": "Der Umfang erscheint, sobald Übungen ausgewählt sind.",
       "weekValue": "Woche {week}, {level}, {intensity}",
       "levels": {
         "high": "Hohe Woche",
@@ -240,23 +238,12 @@
       },
       "tooltipWeek": "Woche {week} · ab {date}",
       "tooltipVolume": "Umfang: {volume}",
-      "showTable": "Als Tabelle anzeigen",
-      "table": {
-        "week": "Woche",
-        "start": "Ab",
-        "mesocycle": "Mesozyklus",
-        "level": "Stufe",
-        "intensity": "Intensität",
-        "volume": "Umfang"
-      },
       "borderValue": "{block} ab Woche {week}",
-      "borderLabels": {
-        "special_preparation": "Grenze zwischen Grundlagen- und Aufbauphase",
-        "competition_preparation": "Grenze zwischen Aufbau- und Leistungsausprägungsphase"
-      }
+      "axisIntensity": "Intensität",
+      "axisWeek": "Woche"
     },
     "intensity": {
-      "help": "Schiebe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche (ziehen, darüber oder darunter tippen oder Pfeiltasten). Jede Änderung wird gespeichert.",
+      "help": "Ziehe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche, oder tippe darüber oder darunter. Ziehe die Griffe an den Grenzen, um die Länge der Mesozyklen zu ändern. Jede Änderung wird gespeichert.",
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "continue": "Weiter zu den Übungen",
       "back": "Zurück zu den Stammdaten"

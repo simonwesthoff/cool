@@ -6,7 +6,6 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import {
   afterEach,
@@ -40,6 +39,8 @@ import {
 import { IntensityPlanner } from "./intensity-planner";
 import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 
+// jsdom has no layout: the chart is measured at this width.
+let containerWidth = 800;
 beforeAll(() => {
   vi.stubGlobal(
     "ResizeObserver",
@@ -48,33 +49,40 @@ beforeAll(() => {
         private cb: (entries: { contentRect: { width: number } }[]) => void,
       ) {}
       observe() {
-        this.cb([{ contentRect: { width: 800 } }]);
+        this.cb([{ contentRect: { width: containerWidth } }]);
       }
       disconnect() {}
     },
   );
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  containerWidth = 800;
+});
 
-const mesocycles = splitMesocycles(21);
-function makeWeeks(levels: Record<number, WeekLevel> = {}): ChartWeek[] {
-  return Array.from({ length: 21 }, (_, i) => {
+function makeWeeks(
+  count = 21,
+  levels: Record<number, WeekLevel> = {},
+): ChartWeek[] {
+  const spans = splitMesocycles(count);
+  return Array.from({ length: count }, (_, i) => {
     const level = levels[i + 1] ?? "medium";
     return {
       number: i + 1,
       startDate: new Date(Date.UTC(2026, 10, 30 + 7 * i))
         .toISOString()
         .slice(0, 10),
-      mesocycle: mesocycles.find(
-        (m) => i + 1 >= m.firstWeek && i + 1 <= m.lastWeek,
-      )!.type,
+      mesocycle: spans.find((m) => i + 1 >= m.firstWeek && i + 1 <= m.lastWeek)!
+        .type,
       level,
       intensityPct:
-        Math.round(intensity(0.6, cycleProgress(i + 1, 21), level) * 1000) / 10,
-      volume: null,
+        Math.round(intensity(0.6, cycleProgress(i + 1, count), level) * 1000) /
+        10,
+      volume: i === 10 ? 66 : null,
     };
   });
 }
+const mesocycles = splitMesocycles(21);
 
 function renderIn(node: React.ReactNode, locale: "en" | "de" = "en") {
   return render(
@@ -87,6 +95,13 @@ function renderIn(node: React.ReactNode, locale: "en" | "de" = "en") {
     </NextIntlClientProvider>,
   );
 }
+
+const pointOf = (container: HTMLElement, week: number) =>
+  container.querySelector(`[data-week-point="${week}"]`)!;
+const dotX = (container: HTMLElement, week: number) =>
+  Number(
+    pointOf(container, week).querySelectorAll("circle")[1]!.getAttribute("cx"),
+  );
 
 describe("chart geometry", () => {
   it("separates the curve from the week's step", () => {
@@ -112,7 +127,6 @@ describe("chart geometry", () => {
   it("labels a band only when the name fits", () => {
     expect(fitsLabel("General preparation", 84)).toBe(false);
     expect(fitsLabel("General preparation", 130)).toBe(true);
-    expect(fitsLabel("GLP", 28)).toBe(true);
   });
 
   it("chooses an axis covering low weeks and clean ticks", () => {
@@ -121,62 +135,56 @@ describe("chart geometry", () => {
       max: 110,
       ticks: [50, 60, 70, 80, 90, 100, 110],
     });
-    expect(intensityDomain([30, 100]).min).toBe(20);
     expect(labelEvery(40)).toBe(1);
-    expect(labelEvery(28)).toBe(2);
+    expect(labelEvery(7)).toBe(6);
   });
 });
 
 describe("MacrocycleChart", () => {
-  it("has a handle per week with its level and intensity as text", () => {
-    renderIn(
+  it("describes every week's level and intensity", () => {
+    const { container } = renderIn(
       <MacrocycleChart
-        weeks={makeWeeks({ 11: "high" })}
+        weeks={makeWeeks(21, { 11: "high" })}
         mesocycles={mesocycles}
         onLevelChange={() => {}}
       />,
     );
-    const sliders = screen.getAllByRole("slider");
-    expect(sliders).toHaveLength(21);
-    expect(sliders[10]!.getAttribute("aria-valuetext")).toBe(
+    expect(pointOf(container, 11).getAttribute("aria-label")).toBe(
       "Week 11, High week, 85%",
     );
-    expect(sliders[0]!.getAttribute("aria-valuetext")).toBe(
+    expect(pointOf(container, 1).getAttribute("aria-label")).toBe(
       "Week 1, Medium week, 60%",
     );
   });
 
-  it("names the mesocycles in the legend and the bands", () => {
+  it("has axis titles and no volume chart, no table and no keyboard handles", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        onLevelChange={() => {}}
+        onBordersChange={() => {}}
+      />,
+    );
+    const texts = [...container.querySelectorAll("text")].map(
+      (t) => t.textContent,
+    );
+    expect(texts).toContain("Intensity");
+    expect(texts).toContain("Week");
+    expect(container.querySelectorAll("svg")).toHaveLength(1);
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.queryAllByRole("slider")).toHaveLength(0);
+    expect(container.querySelectorAll("[tabindex]")).toHaveLength(0);
+  });
+
+  it("names the mesocycles in German in the legend", () => {
     renderIn(
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
       "de",
     );
     const legend = screen.getByRole("list", { name: "Legende" });
     expect(legend.textContent).toContain("Grundlagenphase (GLP)");
-    expect(legend.textContent).toContain("Aufbauphase (ABP)");
     expect(legend.textContent).toContain("Leistungsausprägungsphase (LAP)");
-    expect(screen.queryAllByRole("slider")).toHaveLength(0);
-  });
-
-  it("changes the level with the arrow keys, one step at a time", async () => {
-    const onLevelChange = vi.fn();
-    renderIn(
-      <MacrocycleChart
-        weeks={makeWeeks({ 12: "high" })}
-        mesocycles={mesocycles}
-        onLevelChange={onLevelChange}
-      />,
-    );
-    const sliders = screen.getAllByRole("slider");
-    sliders[10]!.focus();
-    await userEvent.keyboard("{ArrowUp}");
-    expect(onLevelChange).toHaveBeenLastCalledWith(11, "high");
-    await userEvent.keyboard("{ArrowDown}");
-    expect(onLevelChange).toHaveBeenLastCalledWith(11, "low");
-    onLevelChange.mockReset();
-    sliders[11]!.focus();
-    await userEvent.keyboard("{ArrowUp}");
-    expect(onLevelChange).not.toHaveBeenCalled();
   });
 
   it("snaps a dragged handle to high and reports it on release", () => {
@@ -192,14 +200,14 @@ describe("MacrocycleChart", () => {
     // y-axis 50–110 % over 220 px from y = 28: 100 % is at y ≈ 64.7.
     fireEvent.pointerDown(column, { clientY: 101, pointerId: 1 });
     fireEvent.pointerMove(column, { clientY: 64, pointerId: 1 });
-    expect(
-      screen.getAllByRole("slider")[10]!.getAttribute("aria-valuetext"),
-    ).toBe("Week 11, High week, 85%");
+    expect(pointOf(container, 11).getAttribute("aria-label")).toBe(
+      "Week 11, High week, 85%",
+    );
     fireEvent.pointerUp(column, { clientY: 64, pointerId: 1 });
     expect(onLevelChange).toHaveBeenCalledWith(11, "high");
   });
 
-  it("moves one step on a tap above or below the point", () => {
+  it("moves one step on a tap below the point", () => {
     const onLevelChange = vi.fn();
     const { container } = renderIn(
       <MacrocycleChart
@@ -213,22 +221,32 @@ describe("MacrocycleChart", () => {
     fireEvent.pointerUp(column, { clientY: 240, pointerId: 1 });
     expect(onLevelChange).toHaveBeenCalledWith(11, "low");
   });
+});
 
-  it("offers the values as a table", () => {
-    renderIn(
-      <MacrocycleChart
-        weeks={makeWeeks({ 11: "low" })}
-        mesocycles={mesocycles}
-      />,
+describe("fit to the width", () => {
+  it.each([
+    [390, 21],
+    [390, 52],
+    [1280, 52],
+  ])("at %s px all %s weeks fit without scrolling", (widthPx, count) => {
+    containerWidth = widthPx;
+    const weeks = makeWeeks(count);
+    const { container } = renderIn(
+      <MacrocycleChart weeks={weeks} mesocycles={splitMesocycles(count)} />,
     );
-    const rows = screen.getAllByRole("row");
-    expect(rows).toHaveLength(22);
-    expect(rows[11]!.textContent).toContain("Low week");
-    expect(rows[11]!.textContent).toContain("75%");
+    const svg = container.querySelector("svg")!;
+    expect(Number(svg.getAttribute("width"))).toBe(widthPx);
+    expect(dotX(container, count)).toBeLessThan(widthPx);
+    expect(dotX(container, 1)).toBeGreaterThan(0);
+    // Points never get smaller than a 2.5 px radius.
+    const r = Number(
+      pointOf(container, 1).querySelectorAll("circle")[1]!.getAttribute("r"),
+    );
+    expect(r).toBeGreaterThanOrEqual(2.5);
   });
 });
 
-describe("week positions", () => {
+describe("week positions and colours", () => {
   it("puts a week's point and number at the start of its area (on the block border)", () => {
     const { container } = renderIn(
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
@@ -237,15 +255,14 @@ describe("week positions", () => {
       'svg[aria-label="Intensity per week"] > g > rect',
     );
     const specialStart = Number(bands[1]!.getAttribute("x"));
-    const point4 = screen
-      .getAllByRole("img")
-      .find((el) => el.getAttribute("aria-label")?.startsWith("Week 4,"))!;
-    const dot = point4.querySelectorAll("circle")[1]!;
-    expect(Number(dot.getAttribute("cx"))).toBeCloseTo(specialStart, 5);
-    const label4 = [...container.querySelectorAll("text")].find(
-      (t) => t.textContent === "4",
-    )!;
+    expect(dotX(container, 4)).toBeCloseTo(specialStart, 5);
+    const labels = [...container.querySelectorAll("text")].filter((t) =>
+      /^\d+$/.test(t.textContent ?? ""),
+    );
+    const label4 = labels.find((t) => t.textContent === "4")!;
     expect(Number(label4.getAttribute("x"))).toBeCloseTo(specialStart, 5);
+    const numbers = labels.map((t) => Number(t.textContent));
+    expect(numbers).toEqual(expect.arrayContaining([1, 4, 14]));
   });
 
   it("colours the bands with the app palette", () => {
@@ -264,85 +281,57 @@ describe("week positions", () => {
 });
 
 describe("mesocycle borders", () => {
-  const borderSliders = () =>
-    screen
-      .getAllByRole("slider")
-      .filter((el) => el.getAttribute("aria-orientation") === "horizontal");
+  const border = (container: HTMLElement, index: 0 | 1) =>
+    container.querySelector(`[data-border="${index}"]`)!;
 
-  it("has two border handles with their position as text", () => {
-    renderIn(
+  it("names the position of both borders", () => {
+    const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
         mesocycles={mesocycles}
-        onLevelChange={() => {}}
         onBordersChange={() => {}}
       />,
     );
-    expect(
-      borderSliders().map((el) => el.getAttribute("aria-valuetext")),
-    ).toEqual([
+    expect(border(container, 0).getAttribute("aria-label")).toBe(
       "Special preparation block from week 4",
+    );
+    expect(border(container, 1).getAttribute("aria-label")).toBe(
       "Competition preparation block from week 14",
-    ]);
-    expect(
-      borderSliders().map((el) => [
-        el.getAttribute("aria-valuemin"),
-        el.getAttribute("aria-valuemax"),
-      ]),
-    ).toEqual([
-      ["2", "13"],
-      ["5", "21"],
-    ]);
-  });
-
-  it("moves a border one week with the arrow keys and stops at one week per block", async () => {
-    const onBordersChange = vi.fn();
-    const tight = splitMesocycles(21).map((m, i) =>
-      i === 0
-        ? { ...m, lastWeek: 3 }
-        : i === 1
-          ? { ...m, firstWeek: 4, lastWeek: 4 }
-          : { ...m, firstWeek: 5 },
     );
-    renderIn(
-      <MacrocycleChart
-        weeks={makeWeeks()}
-        mesocycles={tight}
-        onBordersChange={onBordersChange}
-      />,
-    );
-    const [first, second] = borderSliders();
-    first!.focus();
-    await userEvent.keyboard("{ArrowLeft}");
-    expect(onBordersChange).toHaveBeenLastCalledWith(3, 5);
-    onBordersChange.mockReset();
-    await userEvent.keyboard("{ArrowRight}");
-    expect(onBordersChange).not.toHaveBeenCalled();
-    second!.focus();
-    await userEvent.keyboard("{ArrowLeft}");
-    expect(onBordersChange).not.toHaveBeenCalled();
-    await userEvent.keyboard("{ArrowRight}");
-    expect(onBordersChange).toHaveBeenLastCalledWith(4, 6);
   });
 
   it("drags a border to a week boundary and reports it on release", () => {
     const onBordersChange = vi.fn();
-    renderIn(
+    const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
         mesocycles={mesocycles}
         onBordersChange={onBordersChange}
       />,
     );
-    const [first] = borderSliders();
-    // Column width (800 − 56) / 21 ≈ 35.4 px from x = 44: week 6 starts at ≈ 221 px.
-    fireEvent.pointerDown(first!, { clientX: 150, pointerId: 1 });
-    fireEvent.pointerMove(first!, { clientX: 224, pointerId: 1 });
-    expect(first!.getAttribute("aria-valuetext")).toBe(
+    // Width 800, margins 56/16: column ≈ 34.86 px; week 6 starts at ≈ 230 px.
+    fireEvent.pointerDown(border(container, 0), { clientX: 160, pointerId: 1 });
+    fireEvent.pointerMove(border(container, 0), { clientX: 232, pointerId: 1 });
+    expect(border(container, 0).getAttribute("aria-label")).toBe(
       "Special preparation block from week 6",
     );
-    fireEvent.pointerUp(first!, { clientX: 224, pointerId: 1 });
+    fireEvent.pointerUp(border(container, 0), { clientX: 232, pointerId: 1 });
     expect(onBordersChange).toHaveBeenCalledWith(6, 14);
+  });
+
+  it("stops so that every block keeps at least one week", () => {
+    const onBordersChange = vi.fn();
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        onBordersChange={onBordersChange}
+      />,
+    );
+    fireEvent.pointerDown(border(container, 1), { clientX: 500, pointerId: 1 });
+    fireEvent.pointerMove(border(container, 1), { clientX: 0, pointerId: 1 });
+    fireEvent.pointerUp(border(container, 1), { clientX: 0, pointerId: 1 });
+    expect(onBordersChange).toHaveBeenCalledWith(4, 5);
   });
 });
 
@@ -357,33 +346,44 @@ describe("week tooltip", () => {
       bottom: top + parseFloat(el.style.minHeight),
     };
   }
-  const column = (800 - 56) / 21;
-  const centerX = (week: number) => 44 + column * (week - 1);
 
-  it("appears left of and below a point at the top right", () => {
+  it("appears left of and below a point at the top right, and shows the volume", () => {
     const { container } = renderIn(
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
     );
     fireEvent.pointerEnter(container.querySelector('rect[data-week="21"]')!);
-    const tip = box(screen.getByTestId("week-tooltip"));
-    // The tooltip stays clear of week 21's whole column (where the pointer is).
-    expect(tip.right).toBeLessThanOrEqual(centerX(21) - column / 2);
-    // 100 % is near the top of the plot (y ≈ 64), the tooltip is below it.
+    const tooltip = screen.getByTestId("week-tooltip");
+    const tip = box(tooltip);
+    const hit = container.querySelector('rect[data-week="21"]')!;
+    expect(tip.right).toBeLessThanOrEqual(Number(hit.getAttribute("x")));
     expect(tip.top).toBeGreaterThan(64 + 10);
+    expect(tooltip.textContent).toContain("Volume: –");
   });
 
   it("appears right of and above a point at the bottom left", () => {
     const { container } = renderIn(
       <MacrocycleChart
-        weeks={makeWeeks({ 1: "low" })}
+        weeks={makeWeeks(21, { 1: "low" })}
         mesocycles={mesocycles}
       />,
     );
     fireEvent.pointerEnter(container.querySelector('rect[data-week="1"]')!);
     const tip = box(screen.getByTestId("week-tooltip"));
-    expect(tip.left).toBeGreaterThanOrEqual(centerX(1) + column / 2);
-    // 55 % is near the bottom of the plot (y ≈ 230), the tooltip is above it.
+    const hit = container.querySelector('rect[data-week="1"]')!;
+    expect(tip.left).toBeGreaterThanOrEqual(
+      Number(hit.getAttribute("x")) + Number(hit.getAttribute("width")),
+    );
     expect(tip.bottom).toBeLessThan(230 - 10);
+  });
+
+  it("shows a week's volume", () => {
+    const { container } = renderIn(
+      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+    );
+    fireEvent.pointerEnter(container.querySelector('rect[data-week="11"]')!);
+    expect(screen.getByTestId("week-tooltip").textContent).toContain(
+      "Volume: 66",
+    );
   });
 });
 
@@ -399,37 +399,41 @@ describe("IntensityPlanner", () => {
     vi.stubGlobal("fetch", fetchMock);
   });
 
-  it("saves a changed week level", async () => {
-    const saved = { ...macrocycle, weeks: makeWeeks({ 11: "high" }) };
+  it("saves a dragged week level", async () => {
+    const saved = { ...macrocycle, weeks: makeWeeks(21, { 11: "high" }) };
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify(saved), { status: 200 }),
     );
-    renderIn(<IntensityPlanner macrocycle={macrocycle} />);
-    screen.getAllByRole("slider")[10]!.focus();
-    await userEvent.keyboard("{ArrowUp}");
+    const { container } = renderIn(
+      <IntensityPlanner macrocycle={macrocycle} />,
+    );
+    const column = container.querySelector('rect[data-week="11"]')!;
+    fireEvent.pointerDown(column, { clientY: 101, pointerId: 1 });
+    fireEvent.pointerMove(column, { clientY: 64, pointerId: 1 });
+    fireEvent.pointerUp(column, { clientY: 64, pointerId: 1 });
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe("/api/athletes/a1/macrocycle/weeks/11");
     expect(JSON.parse(init.body)).toEqual({ level: "high" });
     await waitFor(() =>
-      expect(
-        screen.getAllByRole("slider")[10]!.getAttribute("aria-valuetext"),
-      ).toBe("Week 11, High week, 85%"),
+      expect(pointOf(container, 11).getAttribute("aria-label")).toBe(
+        "Week 11, High week, 85%",
+      ),
     );
   });
 
-  it("saves moved borders and shows the new blocks", async () => {
+  it("saves dragged borders", async () => {
     const moved = {
       ...macrocycle,
       mesocycles: [
         {
           type: "general_preparation",
           firstWeek: 1,
-          lastWeek: 4,
+          lastWeek: 5,
           exerciseNumbers: [],
         },
         {
           type: "special_preparation",
-          firstWeek: 5,
+          firstWeek: 6,
           lastWeek: 13,
           exerciseNumbers: [],
         },
@@ -444,33 +448,39 @@ describe("IntensityPlanner", () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify(moved), { status: 200 }),
     );
-    renderIn(<IntensityPlanner macrocycle={macrocycle} />);
-    const border = screen
-      .getAllByRole("slider")
-      .find((el) => el.getAttribute("aria-orientation") === "horizontal")!;
-    border.focus();
-    await userEvent.keyboard("{ArrowRight}");
+    const { container } = renderIn(
+      <IntensityPlanner macrocycle={macrocycle} />,
+    );
+    const first = container.querySelector('[data-border="0"]')!;
+    fireEvent.pointerDown(first, { clientX: 160, pointerId: 1 });
+    fireEvent.pointerMove(first, { clientX: 232, pointerId: 1 });
+    fireEvent.pointerUp(first, { clientX: 232, pointerId: 1 });
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe("/api/athletes/a1/macrocycle/mesocycles/borders");
     expect(JSON.parse(init.body)).toEqual({
-      specialPreparationStart: 5,
+      specialPreparationStart: 6,
       competitionPreparationStart: 14,
     });
     await waitFor(() =>
-      expect(border.getAttribute("aria-valuetext")).toBe(
-        "Special preparation block from week 5",
-      ),
+      expect(
+        container
+          .querySelector('[data-border="0"]')!
+          .getAttribute("aria-label"),
+      ).toBe("Special preparation block from week 6"),
     );
   });
 
   it("reverts and shows a message when saving fails", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
-    renderIn(<IntensityPlanner macrocycle={macrocycle} />);
-    screen.getAllByRole("slider")[10]!.focus();
-    await userEvent.keyboard("{ArrowUp}");
+    const { container } = renderIn(
+      <IntensityPlanner macrocycle={macrocycle} />,
+    );
+    const column = container.querySelector('rect[data-week="11"]')!;
+    fireEvent.pointerDown(column, { clientY: 240, pointerId: 1 });
+    fireEvent.pointerUp(column, { clientY: 240, pointerId: 1 });
     expect(await screen.findByRole("alert")).toBeTruthy();
-    expect(
-      screen.getAllByRole("slider")[10]!.getAttribute("aria-valuetext"),
-    ).toBe("Week 11, Medium week, 80%");
+    expect(pointOf(container, 11).getAttribute("aria-label")).toBe(
+      "Week 11, Medium week, 80%",
+    );
   });
 });
