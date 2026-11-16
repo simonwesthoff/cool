@@ -251,7 +251,7 @@
       "axisWeek": "Week",
       "legendCompetition": "Main competition",
       "competitionValue": "Main competition: {type}, {date}",
-      "competitionAfter": "{date}, after the cycle"
+      "competitionLabel": "{type} · {date}"
     },
     "intensity": {
       "help": "Drag a week's point up for a high week or down for a low week, or tap above or below it. Drag the handles on the borders to change the length of the mesocycles. Each change is saved.",

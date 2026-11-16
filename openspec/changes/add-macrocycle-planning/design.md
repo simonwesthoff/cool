@@ -141,12 +141,14 @@ colours:
 ### Main competition marker (added during acceptance)
 - x = plot start + column × (days since the start date / 7), so the line is
   at the exact day (the week's point is its Monday). After the last week:
-  clamped to the right edge, with "after the cycle" in the annotation.
-- Dashed white line (2 px) with the dark chart halo, not interactive; the
-  annotation (type, date; type truncated to the available width) is white
-  text with a halo, on the side of the line with more room and in the
-  vertical half away from the curve at that date. `role="img"` with an
-  aria-label; legend entry "Main competition" with a dashed swatch.
+  clamped to the right edge.
+- Dashed white line (2 px) with the dark chart halo, not interactive. The
+  label "{type} · {date}" sits above the plot in the row and style of the
+  mesocycle labels (11 px, secondary grey), ending at the line in the right
+  half of the chart and starting at it in the left half; the type is
+  shortened to the plot width. Mesocycle labels it would overlap are hidden
+  (the legend names them). `role="img"` with an aria-label; legend entry
+  "Main competition" with a dashed swatch.
 
 ### Base data and SWOT steps (changed during acceptance)
 - Planning has four steps: `/base-data`, `/swot`, `/intensity`,

@@ -39,6 +39,8 @@ const PLOT = { top: 28, height: 220 };
 /** Space below the plot for the week numbers and the axis title. */
 const X_AXIS = 44;
 const BAND_FILL = ["var(--band-1)", "var(--band-2)", "var(--band-3)"];
+/** Estimated width of one character of an 11 px label. */
+const LABEL_CHAR = 6.2;
 /** Width used before the container has been measured. */
 const DEFAULT_WIDTH = 640;
 
@@ -230,35 +232,41 @@ export function MacrocycleChart({
         Date.parse(`${weeks[0]!.startDate}T00:00:00Z`)) /
       86_400_000;
     if (Number.isNaN(days)) return null;
-    const after = days >= 7 * n;
-    const mx = after
-      ? plotRight
-      : margin.left + column * (Math.max(0, days) / 7);
-    // Curve height at the competition's week decides the annotation's half.
-    const index = Math.min(n - 1, Math.max(0, Math.floor(days / 7)));
-    const curveY = points[index]!.y;
-    const below = curveY < PLOT.top + PLOT.height / 2;
-    const toLeft = mx > margin.left + (plotRight - margin.left) / 2;
-    const room = toLeft ? mx - margin.left - 8 : plotRight - mx - 8;
-    // About 6.5 px per character at 11 px.
-    const maxChars = Math.max(4, Math.floor(room / 6.5));
-    const type =
-      competition.type.length > maxChars
-        ? `${competition.type.slice(0, maxChars - 1).trimEnd()}…`
-        : competition.type;
+    const mx = Math.min(
+      plotRight,
+      margin.left + column * (Math.max(0, days) / 7),
+    );
     const date = format.dateTime(new Date(`${competition.date}T00:00:00Z`), {
       dateStyle: "medium",
       timeZone: "UTC",
     });
+    // The label sits above the plot like the mesocycle labels: ending at
+    // the line in the right half, starting at it in the left half.
+    const toLeft = mx > margin.left + (plotRight - margin.left) / 2;
+    const room = toLeft ? mx - 4 - margin.left : plotRight - mx - 4;
+    const fixed = t("competitionLabel", { type: "", date }).length;
+    const maxType = Math.max(4, Math.floor(room / LABEL_CHAR) - fixed);
+    const type =
+      competition.type.length > maxType
+        ? `${competition.type.slice(0, maxType - 1).trimEnd()}…`
+        : competition.type;
+    const text = t("competitionLabel", { type, date });
+    const textX = toLeft ? mx - 4 : mx + 4;
+    const textWidth = text.length * LABEL_CHAR;
     return {
       x: mx,
-      lines: [type, after ? t("competitionAfter", { date }) : date],
+      text,
       label: t("competitionValue", { type: competition.type, date }),
       anchor: toLeft ? ("end" as const) : ("start" as const),
-      textX: toLeft ? mx - 6 : mx + 6,
-      textY: below ? PLOT.top + PLOT.height - 26 : PLOT.top + 50,
+      textX,
+      extent: toLeft ? [textX - textWidth, textX] : [textX, textX + textWidth],
     };
   })();
+  /** Mesocycle labels give way to the competition's label. */
+  const clearOfMarker = (start: number, label: string) =>
+    !marker ||
+    start + label.length * LABEL_CHAR + 8 < marker.extent[0]! ||
+    start > marker.extent[1]! + 8;
 
   const shown =
     hovered === null ? null : weeks.find((w) => w.number === hovered);
@@ -350,15 +358,19 @@ export function MacrocycleChart({
               {fitsLabel(
                 tm(`short.${m.type}`),
                 column * (m.lastWeek - m.firstWeek + 1),
-              ) && (
-                <text
-                  x={x(m.firstWeek - 1) + 4}
-                  y={PLOT.top - 8}
-                  className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
-                >
-                  {tm(`short.${m.type}`)}
-                </text>
-              )}
+              ) &&
+                clearOfMarker(
+                  x(m.firstWeek - 1) + 4,
+                  tm(`short.${m.type}`),
+                ) && (
+                  <text
+                    x={x(m.firstWeek - 1) + 4}
+                    y={PLOT.top - 8}
+                    className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
+                  >
+                    {tm(`short.${m.type}`)}
+                  </text>
+                )}
             </g>
           ))}
           {domain.ticks.map((tick) => (
@@ -608,25 +620,12 @@ export function MacrocycleChart({
               />
               <text
                 x={marker.textX}
-                y={marker.textY}
+                y={PLOT.top - 8}
                 textAnchor={marker.anchor}
-                className="fill-white text-[11px]"
-                stroke="var(--chart-halo)"
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                paintOrder="stroke"
+                className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
                 aria-hidden="true"
               >
-                {marker.lines.map((line, i) => (
-                  <tspan
-                    key={i}
-                    x={marker.textX}
-                    dy={i === 0 ? 0 : 14}
-                    className={i === 0 ? "font-semibold" : undefined}
-                  >
-                    {line}
-                  </tspan>
-                ))}
+                {marker.text}
               </text>
             </g>
           )}

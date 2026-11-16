@@ -50,6 +50,8 @@
 
 - [x] 7.11 Acceptance feedback: mark the main competition in the intensity chart (vertical line at its date, annotation with type and date, legend entry, after-the-cycle case); English and German texts; verify component tests, browser check and screenshots
 
+- [x] 7.12 Acceptance feedback: competition label above the chart like the mesocycle labels, only type and date; hide overlapped mesocycle labels; verify tests, browser check and screenshots
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

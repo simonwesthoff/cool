@@ -142,18 +142,19 @@ dragging or tapping; in between it is medium.
 
 ### Requirement: Main competition in the chart
 The chart in step 3 SHALL mark the main competition with a vertical line
-at its date and an annotation with its type and date, and name it in the
-legend. A competition after the last week SHALL be marked at the end of the
-chart with the note that it is after the cycle.
+at its date and a label with only its type and date, above the chart in
+the row and style of the mesocycle labels, and name it in the legend. A
+mesocycle label overlapping it SHALL be hidden. A competition after the
+last week SHALL be marked at the end of the chart.
 
 #### Scenario: Competition in the last week
 - **GIVEN** a 21-week macrocycle from Monday 2026-11-30 with the German Championships on Saturday 2027-04-24
 - **WHEN** the coach opens step 3
-- **THEN** a vertical line marks Saturday of week 21, annotated "German Championships" and "Apr 24, 2027"
+- **THEN** a vertical line marks Saturday of week 21, labelled "German Championships · Apr 24, 2027" above the chart
 
-#### Scenario: Annotation beside the curve
-- **WHEN** the curve is high at the competition date
-- **THEN** the annotation is in the lower half of the chart, so it covers no week point
+#### Scenario: Label above the chart
+- **WHEN** the coach looks at the chart
+- **THEN** the competition's label is in the row of the mesocycle labels, so it covers no week point
 
 ### Requirement: Week tooltip
 Pointing at or focusing a week in the chart SHALL show a tooltip with the

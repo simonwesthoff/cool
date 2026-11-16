@@ -493,8 +493,12 @@ describe("main competition marker", () => {
     container.querySelector("[data-competition]")!;
   // Width 800, margins 56/16: 21 columns of 728/21 px; day 0 = Monday 2026-11-30.
   const xOfDay = (day: number) => 56 + (728 / 21) * (day / 7);
+  const bandLabels = (container: HTMLElement) =>
+    [...container.querySelectorAll("svg text")]
+      .map((t) => t.textContent)
+      .filter((t) => t!.endsWith("preparation"));
 
-  it("draws a line at the competition day with type and date", () => {
+  it("draws a line at the competition day, labelled with type and date above the chart", () => {
     const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -509,15 +513,21 @@ describe("main competition marker", () => {
     // Saturday of week 21 = day 145.
     const line = marker.querySelectorAll("line")[1]!;
     expect(Number(line.getAttribute("x1"))).toBeCloseTo(xOfDay(145), 5);
-    expect(
-      [...marker.querySelectorAll("tspan")].map((t) => t.textContent),
-    ).toEqual(["German Championships", "Apr 24, 2027"]);
+    const text = marker.querySelector("text")!;
+    expect(text.textContent).toBe("German Championships · Apr 24, 2027");
+    // Same row and style as the mesocycle labels (y = plot top − 8).
+    expect(text.getAttribute("y")).toBe("20");
+    expect(text.getAttribute("class")).toBe(
+      "fill-zinc-600 text-[11px] dark:fill-zinc-400",
+    );
+    expect(text.getAttribute("text-anchor")).toBe("end");
+    expect(Number(text.getAttribute("x"))).toBeCloseTo(xOfDay(145) - 4, 5);
     expect(screen.getByRole("list", { name: "Legend" }).textContent).toContain(
       "Main competition",
     );
   });
 
-  it("puts the annotation left of the line and below a high curve", () => {
+  it("hides a mesocycle label it overlaps and keeps the others", () => {
     const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -525,13 +535,19 @@ describe("main competition marker", () => {
         competition={competition}
       />,
     );
-    const text = markerOf(container).querySelector("text")!;
-    expect(text.getAttribute("text-anchor")).toBe("end");
-    // Plot from y = 28, 220 px high: lower half below y = 138.
-    expect(Number(text.getAttribute("y"))).toBeGreaterThan(138);
+    // The competition preparation label (from week 14) would overlap.
+    expect(bandLabels(container)).toEqual(["Special preparation"]);
+    cleanup();
+    const view = renderIn(
+      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+    );
+    expect(bandLabels(view.container)).toEqual([
+      "Special preparation",
+      "Competition preparation",
+    ]);
   });
 
-  it("puts the annotation right of the line and above a low curve early in the cycle", () => {
+  it("starts at the line early in the cycle", () => {
     const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -541,10 +557,10 @@ describe("main competition marker", () => {
     );
     const text = markerOf(container).querySelector("text")!;
     expect(text.getAttribute("text-anchor")).toBe("start");
-    expect(Number(text.getAttribute("y"))).toBeLessThan(138);
+    expect(Number(text.getAttribute("x"))).toBeCloseTo(xOfDay(12) + 4, 5);
   });
 
-  it("marks a competition after the cycle at the end", () => {
+  it("marks a competition after the cycle at the end, with type and date only", () => {
     const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -556,7 +572,9 @@ describe("main competition marker", () => {
     expect(
       Number(marker.querySelector("line")!.getAttribute("x1")),
     ).toBeCloseTo(784, 5);
-    expect(marker.textContent).toContain("May 8, 2027, after the cycle");
+    expect(marker.querySelector("text")!.textContent).toBe(
+      "European Championships · May 8, 2027",
+    );
   });
 
   it("shortens a long type to the available width and keeps it in the label", () => {
@@ -571,9 +589,12 @@ describe("main competition marker", () => {
       />,
     );
     const marker = markerOf(container);
-    const first = marker.querySelector("tspan")!.textContent!;
-    expect(first.endsWith("…")).toBe(true);
-    expect(first.length).toBeLessThan(type.length);
+    const text = marker.querySelector("text")!.textContent!;
+    expect(text).toMatch(/… · Apr 24, 2027$/);
+    // Fits between the y-axis and the line.
+    expect(text.length * 6.2).toBeLessThanOrEqual(
+      Number(marker.querySelector("text")!.getAttribute("x")) - 44,
+    );
     expect(marker.getAttribute("aria-label")).toContain(type);
   });
 
@@ -603,9 +624,7 @@ describe("main competition marker", () => {
       "de",
     );
     expect(
-      view.container
-        .querySelector("[data-competition]")!
-        .getAttribute("aria-label"),
-    ).toBe("Hauptwettkampf: German Championships, 24.04.2027");
+      view.container.querySelector("[data-competition] text")!.textContent,
+    ).toBe("German Championships · 24.04.2027");
   });
 });
