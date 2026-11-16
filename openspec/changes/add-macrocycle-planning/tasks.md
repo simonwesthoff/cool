@@ -28,7 +28,7 @@
 ## 6. Integration check
 
 - [x] 6.1 Browser check on the dev server at phone and desktop width: plan a 21-week macrocycle end to end, drag/tap/keyboard week levels, check intensity values in the chart against the spec, choose exercises and see the volume, change the duration; screenshots reviewed; both languages
-- [ ] 6.2 Docker stack: rebuild (verify the image is new), migration runs on start, repeat the main flow of 6.1
+- [x] 6.2 Docker stack: rebuild (verify the image is new), migration runs on start, repeat the main flow of 6.1
 
 ## Workflow follow-up
 
