@@ -2,51 +2,60 @@
 
 ## Why
 
-Once a macrocycle is planned, the coach and the athlete need to see it at a
-glance: the athlete's starting point, the plan towards the main competition,
-and how intensity and volume develop week by week. Today the macrocycle can
-only be seen inside the planning steps, and the athlete cannot see it at all.
+Once a macrocycle is planned, the coach and the athlete need to see what it
+means for the training: how the planned weights and reps of an exercise
+develop week by week, what the cycle focuses on, and where it starts from.
+Today the macrocycle can only be seen inside the planning steps, and the
+athlete cannot see it at all.
 
 ## What Changes
 
-- New read-only macrocycle view for the coach, at the athlete's macrocycle
-  (`/athletes/{id}/macrocycle`), with "Change planning" (to step 1) and back
-  to the athlete details page.
-- The same view, read-only, for the athlete linked to the Athlete, reached
-  from "My training".
-- Content of the view:
-  - Base data, in the planning step 1 sections:
-    - Historical data: personal bests, body weight, body fat and muscle mass
-      if entered.
+- **Coach access:** a new read-only macrocycle view at the athlete's
+  macrocycle (`/athletes/{id}/macrocycle`), with "Change planning" (to
+  step 1) and a way back to the athlete details page.
+- **Athlete access:** the same view, read-only, for the athlete linked to
+  the Athlete, reached from "My training".
+- **Content, top to bottom:**
+  - **Exercise chart:** for one exercise, the planned best value
+    ("Bestwert") and average weight ("mHG") in kg and the set size and
+    weekly reps.
+    - **Axes:** one plot with a kg axis on the left and a reps axis on the
+      right; the x-axis shows week numbers only.
+    - **Legend:** names each curve with its unit.
+    - **Exercise:** snatch by default; any catalog exercise 1–29 can be
+      chosen, and the choice is not saved.
+    - **Values:** calculated for every week, also where the exercise is not
+      planned in the block.
+    - **Markers:** mesocycle bands, the main competition marker, and a
+      current-week marker with "Week n of N".
+  - **Focus points** in their order.
+  - **Base data:**
+    - Historical data: personal bests, body weight, body fat and muscle
+      mass if entered.
     - New macrocycle plan: period, duration, main competition, entry value,
       goals, target body weight, sessions per week.
-  - Deficits (snatch, clean, jerk, other) and injuries and illnesses, as
-    listed in feature 7.
-  - The macrocycle chart, not editable:
-    - Intensity curve with week levels (▲/▼) on the mesocycle bands, with the
-      main competition marker and tooltips as in planning.
-    - The volume per week as bars below the intensity, on the same week axis
-      (two parts of one chart, each with its own scale; no second y-axis in
-      one plot).
-    - A marker for the current week, with "Week n of N" above the chart.
-- The athlete details page links the planned macrocycle to the view; "Plan
+  - **Deficits** (snatch, clean, jerk, other) and injuries and illnesses.
+- **Athlete details page:** the planned macrocycle links to the view; "Plan
   macrocycle" and "Change planning" stay.
-- Reading the macrocycle (page and `GET` API) is allowed for the linked
-  athlete too; creating and changing it stays coach-only.
+- **Read access:** the linked athlete may read the macrocycle (page and
+  `GET` API); creating and changing it stays coach-only.
+- **API:** a new endpoint returns an exercise's planned values for every
+  week, for the exercise chart and future apps.
 
 Out of scope:
-- The macrocycle chart section on the athlete details page (feature 5).
-- Strengths, experience, focus points and the chosen exercises in the view
-  (not requested for now).
-- Any editing in the view.
+- The intensity and volume chart on the athlete details page (feature 5).
+- Intensity curve, volume and high/low markers in this view.
+- Strengths, experience and the chosen exercises in the view.
+- Any editing in the view, and remembering the chosen exercise.
 - Weekly plans (features 9 and 10).
 
 ## Capabilities
 
 ### New Capabilities
-- `macrocycle-view`: read-only view of a planned macrocycle (base data,
-  deficits, injuries, chart with intensity, volume and current-week marker)
-  for the coach and the linked athlete.
+- `macrocycle-view`: read-only view of a planned macrocycle for the coach and
+  the linked athlete: the exercise chart with exercise selection and
+  current-week marker, focus points, base data, deficits and injuries, and
+  the API for an exercise's weekly values.
 
 ### Modified Capabilities
 - `macrocycle-planning`: "One macrocycle per athlete" and "Macrocycle API" now
@@ -57,21 +66,25 @@ Out of scope:
 
 ## Impact
 
-- **Domain:** read access for the linked athlete (`getMacrocycle` accepts
-  the coach of the Team or the athlete linked to the Athlete).
-- **API:** `GET /api/athletes/{id}/macrocycle` also answers the linked athlete;
-  write endpoints are unchanged.
+- **Domain:**
+  - Read access for the linked athlete.
+  - A new function returning an exercise's planned values per week, using
+    the existing calculation module.
+- **API:**
+  - `GET /api/athletes/{id}/macrocycle` also answers the linked athlete.
+  - New: `GET /api/athletes/{id}/macrocycle/exercises/{number}`.
+  - The write endpoints are unchanged.
 - **Pages:**
   - New: `/athletes/{id}/macrocycle` (coach) and `/training/macrocycle`
     (athlete).
   - Changed: the athlete details macrocycle section and the "My training"
     page.
 - **Components:**
-  - Macrocycle chart: optional volume part and current-week marker; reused
-    read-only.
-  - New: base data summary.
+  - New: exercise chart (reusing the mesocycle bands, competition marker
+    and width fitting of the macrocycle chart) and a base data summary.
   - Texts in English and German.
 - **Data:** no schema change.
 - **New domain terms:**
   - Macrocycle view: the read-only page.
+  - Exercise chart: the chart of one exercise's planned values per week.
   - Current week: the week of the macrocycle that contains today.

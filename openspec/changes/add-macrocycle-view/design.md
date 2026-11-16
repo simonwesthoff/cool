@@ -3,129 +3,147 @@
 ## Context
 
 - **Planning pages:** they live under `/athletes/{id}/macrocycle/{step}`.
-  `loadPlanning` requires the coach (`requireCoachPage`) and turns
-  `not_found` into the "not found" page. There is no page at
-  `/athletes/{id}/macrocycle` itself yet.
-- **Domain access:** `getMacrocycle` / `findMacrocycle` call
-  `requireOwnAthlete`, so only the coach of the athlete's Team gets
-  through. Everyone else gets `ATHLETE_NOT_FOUND`.
-- **Athlete role:** `getRoles` returns the linked Athlete (`athleteId`,
-  names) for the athlete role. The athlete's page `/training` is a
-  placeholder. A user can be the coach of a Team and the athlete of an
-  Athlete at the same time.
-- **Chart:** `MacrocycleChart` already works read-only when
-  `onLevelChange` and `onBordersChange` are left out. It has the mesocycle
-  bands and labels, the main competition marker, the week tooltip and the
-  fit to the container width.
-- **Data:** the week view already carries `volume` (sum of the weekly
-  reps; `null` without exercises).
+  `loadPlanning` requires the coach and turns `not_found` into the "not
+  found" page. There is no page at `/athletes/{id}/macrocycle` itself.
+- **Domain access:** `getMacrocycle` / `findMacrocycle` use
+  `requireOwnAthlete` (coach only; everyone else gets
+  `ATHLETE_NOT_FOUND`).
+- **Athlete role:** `getRoles` returns the linked Athlete (`athleteId`).
+  `/training` is a placeholder. A user can be the coach of a Team and the
+  athlete of an Athlete at the same time.
+- **Calculation:** the pure module already computes an exercise's planned
+  best value, average weight, set size and weekly reps per week
+  (`plannedExercise` with goals, entry value, cycle progress and week
+  level). `getMacrocycle` uses it only for the exercises of each week's
+  mesocycle.
+- **Planning chart:** `MacrocycleChart` has the mesocycle bands and labels
+  with collision handling, the competition marker, the tooltip placement
+  and the fit to the container width.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- One view component, used by the coach and the athlete pages.
-- Read access through the domain layer, so the API and future native apps
-  get the same rule.
+- One view component for both the coach and the athlete page.
+- All values come from the domain layer; the client only displays them.
 
 **Non-Goals:**
-- No caching or real-time updates; the page reads the macrocycle per
-  request like the planning pages.
 - No new chart library.
+- No caching beyond the page's own state.
+- The planning chart's behaviour stays unchanged.
 
 ## Decisions
 
 ### Read access in the domain layer
-- `getMacrocycle(user, athleteId)` and `findMacrocycle` use a new
-  `requireViewableAthlete`. It lets the user through if they are the coach
-  of the athlete's Team or linked to that Athlete; otherwise
-  `ATHLETE_NOT_FOUND`, as today.
-- All write functions keep `requireOwnAthlete` (coach only). A linked
-  athlete calling them therefore gets `ATHLETE_NOT_FOUND`, the same answer
-  as any other user. This is consistent with the existing "not found for
-  others" rule and reveals nothing.
-- Alternative considered: a separate `getOwnMacrocycle(user)` for athletes.
-  Rejected: two read paths for the same data, and the API would need a
-  second endpoint.
+- A new `requireViewableAthlete` lets the user through if they are the
+  coach of the athlete's Team or linked to that Athlete; otherwise
+  `ATHLETE_NOT_FOUND`.
+- `getMacrocycle`, `findMacrocycle` and the new exercise values function
+  use it. All write functions keep `requireOwnAthlete`.
+- A linked athlete therefore gets `ATHLETE_NOT_FOUND` on writes, the same
+  answer as any other user.
+- Alternative considered: separate athlete-only read functions. Rejected:
+  two read paths for the same data.
 
-### Pages and routes
-- **Coach:** `/athletes/{id}/macrocycle` (new `page.tsx` next to the step
-  folders). It loads through a `loadView` helper: `requireCurrentUser`
-  page variant plus `getAthlete` for the coach header data. Without a
-  macrocycle it redirects to `/base-data`.
-- **Athlete:** `/training/macrocycle`. It uses `roles.athlete.athleteId`
-  and `findMacrocycle`. Without a macrocycle it shows "Your coach has not
-  planned a macrocycle yet"; without the athlete role it redirects to `/`.
-- **Shared component:** both pages render `MacrocycleView` (client
-  component). The coach page passes `editHref`, which shows "Change
-  planning"; the athlete page does not pass it. Back links: the coach gets
-  "Back to the athlete", the athlete gets "Back to My training".
-- **Athlete details:** the planned-state section becomes a link card to
-  the view (period and competition as now). "Change planning" stays as a
-  separate link.
-- **"My training":** gets a "Macrocycle" link card when a macrocycle
-  exists.
-- Alternative considered: one route `/athletes/{id}/macrocycle` for both
-  roles. Rejected: athletes navigate under `/training` (bottom tab "My
-  training"), and coaches would see athlete navigation in their tab bar.
+### Exercise values per week
+- New `getExerciseWeeks(user, athleteId, exerciseNumber)` returns
+  `{ exerciseNumber, weeks: [{ number, bestKg, averageKg, setSize, weeklyReps }] }`
+  for all weeks of the cycle. It calls `plannedExercise` with the week's
+  level, independent of the mesocycle's chosen exercises.
+- Unknown numbers give `EXERCISE_NOT_FOUND`. Exercises without catalog
+  values give `null` values, as in the calculation spec.
+- API: `GET /api/athletes/{id}/macrocycle/exercises/{number}`. Under
+  `…/macrocycle/` it is nested next to the planning endpoints, but it is
+  read-only and not tied to a mesocycle.
+- **Selector list:** the catalog exercises that have a best value and
+  reps-per-week values. Today that is exactly 1–29, and filtering by
+  values keeps the rule right if the catalog changes.
 
-### Base data summary
-- `MacrocycleSummary`: definition lists (`dl`) with the same section titles
-  as planning step 1: "Historical data" and "New macrocycle plan".
-- A third box holds the deficits and the injuries and illnesses, styled
-  like the deficits above the exercise table (bold title, text).
-- Optional values (body fat, muscle mass) are left out when empty. Empty
-  SWOT texts read "Not entered yet".
-- **Formatting:** dates use `dateStyle: "medium"`. Weights and the entry
-  value use the existing number and percent formatting.
-- **End date:** start + 7 × weeks − 1 (the Sunday of the last week).
+### Pages and data flow
+- **Coach page:** `/athletes/{id}/macrocycle`. **Athlete page:**
+  `/training/macrocycle`, using `roles.athlete.athleteId`.
+- Both pages load, on the server, the macrocycle, the snatch values
+  (exercise 1), the selector list and `today`. They render the client
+  component `MacrocycleView`. Only the coach page passes `editHref` (shows
+  "Change planning").
+- **Without a macrocycle:** the coach page redirects to step 1; the
+  athlete page shows "Your coach has not planned a macrocycle yet".
+- **Changing the exercise:** fetches the values from the API and keeps
+  them per exercise in state, so switching back is instant. While loading,
+  the previous curves stay dimmed. On failure an alert appears and the
+  previous exercise stays selected.
+- **Entry points:**
+  - The athlete details section becomes a link card to the view;
+    "Change planning" stays as a separate link.
+  - "My training" gets a "Macrocycle" link card when a macrocycle exists.
 
-### Volume part of the chart
-- `MacrocycleChart` gets an optional `showVolume` prop. With it, the same
-  SVG gets a second plot below the x-axis week numbers:
-  - **Size and scale:** 96 px high, with its own y-scale (0 to the largest
-    weekly volume, rounded up to a clean step) and the axis title
-    "Volume".
-  - **Bars:** one bar per week starting at the week's x (like the points),
-    `column − 2` px wide (2 px surface gap), with 4 px rounded tops.
-  - **Colour:** neutral zinc (as the old planning bars). The palette
-    colours stay reserved for the mesocycles.
-  - **Gridlines:** the same recessive gridlines as the intensity plot.
-- Weeks with `volume === null` get no bar. If no week has a volume, the
-  plot shows the text "No exercises chosen yet" instead of bars.
-- **Tooltip:** the week hit areas cover both plots. The tooltip stays the
-  three-line planning tooltip (the user removed the volume from it). The
-  volume can be read from the bar and the axis.
-- This follows the `dataviz` rule "no dual axis": two stacked plots on one
-  week axis, each with its own scale. The planning chart keeps
-  `showVolume` off.
+### Shared chart frame
+- The parts both charts need move from `MacrocycleChart` into a shared
+  module, so the exercise chart does not copy them:
+  - **Geometry:** container width measurement, margins, columns and `x()`.
+  - **Bands and labels:** mesocycle bands with label collision rules.
+  - **Competition:** the competition marker and its label.
+  - **Labels and tooltip:** week labels and the tooltip placement.
+- `MacrocycleChart` keeps its behaviour; its tests must stay green
+  unchanged.
 
-### Current week marker
-- **Today:** the server passes `today` (YYYY-MM-DD, UTC, from the existing
-  `today()`) to the view, so tests can fix the date.
-- **Week number:** week n = floor(days since start / 7) + 1, valid for
-  1 ≤ n ≤ N.
-- **Chart marker:** a light column highlight (white at 20 % over the band)
-  for that week's column across both plots, plus a small "Now" label in the
-  label row above the plot. Mesocycle labels it would overlap give way, as
-  for the competition label. When the competition label and "Now" would
-  overlap, "Now" moves to the other side of its column.
-- **Text above the chart:** "Week n of N". Before the start: "Starts on
-  <date>". After the end: "Ended on <date>". In both cases the chart has no
-  marker.
-- Alternative considered: a solid vertical line. Rejected: it competes
-  with the dashed competition line and the white mesocycle borders, and a
-  column highlight reads as "this week".
+### Exercise chart
+- **Axes:** one plot with two y-scales, as the user decided.
+  - **Left axis "kg":** from a clean step below the lowest weight to a
+    clean step above the highest.
+  - **Right axis "Reps":** from 0 to a clean step above the highest weekly
+    reps.
+  - Gridlines follow the left axis only.
+  - The x-axis shows week numbers (as in planning, block starts always
+    numbered) and has no title.
+- **Dual-axis mitigation:** the `dataviz` guidance advises against two
+  y-axes; the user chose them. To keep the units apart:
+  - All curves are white with the dark halo, as in planning, so they read
+    on every band colour.
+  - kg curves are solid: best value 2.5 px with round points, average
+    weight 1.5 px with square points.
+  - Reps curves are dashed: set size with triangle points, weekly reps
+    with diamond points.
+  - The legend shows each line style with its marker and unit, e.g.
+    "Best value (kg)".
+  - Axis titles name the unit.
+- **Missing values:** weeks with `null` values leave a gap in that curve.
+- **Tooltip:** hovering a week shows its three planning-style lines (week
+  from date, block abbreviation) plus the four values, e.g. "Best value:
+  80 kg". The week hit areas are full columns, as in planning.
+- **Current week:** a column highlight (white at 20 %) on that week, plus
+  a "Now" label in the label row above the plot.
+  - Mesocycle labels give way to it, as for the competition label.
+  - "Now" moves to the other side of its column if it would overlap the
+    competition label.
+  - `today` (YYYY-MM-DD, UTC, from `today()`) is passed in from the
+    server, so tests can fix the date.
+- **Above the chart:** the exercise selector (native `select` with
+  "1 Snatch" style entries) and "Week n of N" / "Starts on …" / "Ended
+  on …".
+
+### Summary sections below the chart
+- **Focus points:** an ordered list; "No focus points entered yet" if the
+  list is empty.
+- **Base data:** definition lists with the planning step 1 section titles
+  ("Historical data", "New macrocycle plan"). Body fat and muscle mass are
+  left out when empty. The end date is start + 7 × weeks − 1.
+- **Deficits:** a box like the deficits above the exercise table, followed
+  by injuries and illnesses. Empty texts read "Not entered yet".
 
 ## Risks / Trade-offs
 
-- [Linked athletes now read the full macrocycle, including the coach's
-  reasons for the exercises] → Wanted for transparency, and it is the
-  athlete's own plan. The view itself does not show exercises yet.
+- [Two y-axes invite misreading kg against reps] → Distinct line styles
+  and markers per unit, unit names in the legend and axis titles, and
+  values in the tooltip. The user chose this layout over stacked plots.
+- [Values in weeks where the exercise is not planned could be taken as
+  planned] → The mesocycle bands show the blocks. This matches the user's
+  decision that the chart shows the exercise across the whole cycle.
+- [Refactoring the planning chart into a shared frame could change its
+  behaviour] → The existing chart tests run unchanged, plus the planning
+  browser check.
 - [`today` in UTC can be one day off around midnight in Central Europe] →
-  It only matters on Mondays around midnight for the marker; acceptable.
-  This is a known limitation until user time zones exist.
-- [The chart gets taller on phones] → The volume plot is 96 px; the whole
-  chart stays within one phone screen height.
+  It only affects the marker on Mondays around midnight; acceptable until
+  user time zones exist.
 
 ## Migration Plan
 
