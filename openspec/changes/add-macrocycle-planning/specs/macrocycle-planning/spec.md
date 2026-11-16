@@ -9,13 +9,13 @@ mesocycle.
 ## ADDED Requirements
 
 ### Requirement: Macrocycle base data
-A macrocycle SHALL have: personal bests and goals in snatch and clean &
-jerk (kg), current and target body weight (kg), body fat and muscle mass
-(%, optional), deficits (see below), texts for injuries and illnesses,
-strengths and weightlifting experience, training sessions per week (1–14), focus points,
-a start date (a Monday), a duration (7–52 weeks), date and type of the main
-competition, and the entry value (30–95 %, default 60 %). All except body
-fat and muscle mass SHALL be required.
+Step 1 (base data) SHALL have two sections. "Historical data": personal
+bests in snatch and clean & jerk (kg), current body weight (kg), body fat
+and muscle mass (%, optional). "New macrocycle plan": start date (a
+Monday), duration (7–52 weeks), date and type of the main competition,
+entry value (30–95 %, default 60 %), goals in snatch and clean & jerk (kg),
+target body weight (kg) and training sessions per week (1–14). All except
+body fat and muscle mass SHALL be required.
 
 #### Scenario: Required values missing
 - **WHEN** the coach saves the base data without a snatch goal
@@ -33,25 +33,40 @@ fat and muscle mass SHALL be required.
 - **WHEN** the coach opens the base data form of a new macrocycle
 - **THEN** the entry value is 60 %
 
+### Requirement: SWOT
+Step 2 (SWOT) SHALL contain, in this order: strengths, the deficits,
+weightlifting experience, focus points, and injuries and illnesses, all
+required. The macrocycle SHALL be created in step 1 without them; the SWOT
+step saves them together.
+
+#### Scenario: SWOT after the base data
+- **GIVEN** a new macrocycle saved in step 1
+- **WHEN** the coach fills in the SWOT step and saves
+- **THEN** the macrocycle has these values and the coach continues to the intensity step
+
+#### Scenario: SWOT values missing
+- **WHEN** the coach saves the SWOT step without strengths
+- **THEN** nothing is saved and the form shows that the strengths are required
+
 ### Requirement: Deficits per lift
-The base data SHALL contain the athlete's deficits as four required texts:
+The SWOT SHALL contain the athlete's deficits as four required texts:
 snatch, clean, jerk and other deficits.
 
 #### Scenario: Deficits per lift
-- **WHEN** the coach saves the base data without jerk deficits
-- **THEN** the macrocycle is not saved and the form shows that the jerk deficits are required
+- **WHEN** the coach saves the SWOT step without jerk deficits
+- **THEN** nothing is saved and the form shows that the jerk deficits are required
 
 ### Requirement: Focus points
 A macrocycle SHALL have an ordered list of 1 to 3 focus points (texts of up
 to 200 characters each). The coach SHALL be able to add, remove and reorder
-them in step 1.
+them in the SWOT step.
 
 #### Scenario: Focus points
 - **WHEN** the coach enters the focus points "Turnover", "Squat strength" and "Jerk stability" in this order and saves
 - **THEN** the macrocycle has these three focus points in this order
 
 #### Scenario: Number of focus points
-- **WHEN** the coach saves the base data without a focus point, or tries to add a fourth one
+- **WHEN** the coach saves the SWOT step without a focus point, or tries to add a fourth one
 - **THEN** the form shows that 1 to 3 focus points are needed, and no fourth field can be added
 
 ### Requirement: One macrocycle per athlete
@@ -61,21 +76,21 @@ athlete's Team SHALL create, see or change it.
 #### Scenario: Plan an athlete without a macrocycle
 - **GIVEN** an athlete of the coach's Team without a macrocycle
 - **WHEN** the coach completes step 1 of the planning
-- **THEN** the athlete has a macrocycle with the entered base data, default mesocycles and only medium weeks
+- **THEN** the athlete has a macrocycle with the entered base data, an empty SWOT, default mesocycles and only medium weeks
 
 #### Scenario: Another coach
 - **WHEN** a coach opens the planning of an athlete of another Team
 - **THEN** they see the "not found" page
 
-### Requirement: Planning in three steps
-The planning SHALL consist of three steps the coach goes through in order
-and can revisit at any time: 1. base data, 2. intensity chart with week
-levels, 3. exercises per mesocycle. After step 3 the macrocycle SHALL be
-planned and the coach returns to the athlete's details page.
+### Requirement: Planning in four steps
+The planning SHALL consist of four steps the coach goes through in order
+and can revisit at any time: 1. base data, 2. SWOT, 3. intensity chart with
+week levels, 4. exercises per mesocycle. After step 4 the macrocycle SHALL
+be planned and the coach returns to the athlete's details page.
 
 #### Scenario: Complete planning
 - **GIVEN** a coach on the athlete's details page of an athlete without a macrocycle
-- **WHEN** they choose "Plan macrocycle", fill in the base data, continue through the chart and choose exercises
+- **WHEN** they choose "Plan macrocycle", fill in the base data and the SWOT, continue through the chart and choose exercises
 - **THEN** the macrocycle is saved after each step and they end on the athlete's details page
 
 #### Scenario: Change the duration later
@@ -84,7 +99,7 @@ planned and the coach returns to the athlete's details page.
 - **THEN** the mesocycle lengths keep their proportions (each at least one week), the levels of weeks 1–21 stay, weeks 22–24 are medium, and the chosen exercises of each mesocycle stay
 
 ### Requirement: Intensity chart with week handles
-Step 2 SHALL show the macrocycle chart fitting the screen width: weeks on
+Step 3 SHALL show the macrocycle chart fitting the screen width: weeks on
 the x-axis ("Week"), each week's number and point at the start of its
 area, the intensity ("Intensity") as a curve with one handle per week, and
 mesocycle backgrounds in the app palette (#6f3ab1, #ba2db3, #3bc8c8). Each
@@ -108,12 +123,12 @@ dragging or tapping; in between it is medium.
 
 #### Scenario: Whole cycle on a phone
 - **GIVEN** a 52-week macrocycle
-- **WHEN** the coach opens step 2 on a phone
+- **WHEN** the coach opens step 3 on a phone
 - **THEN** all 52 weeks are visible without scrolling sideways
 
 #### Scenario: No volume in the planning chart
 - **GIVEN** exercises are chosen for the mesocycles
-- **WHEN** the coach looks at the chart in step 2
+- **WHEN** the coach looks at the chart in step 3
 - **THEN** the chart shows the intensity only; a week's volume is shown in its tooltip
 
 #### Scenario: Mesocycle colours
@@ -136,7 +151,7 @@ tooltip SHALL never cover the pointer or the week's point.
 - **THEN** its tooltip appears where it covers neither the pointer nor the point
 
 ### Requirement: Adjustable mesocycle borders
-In step 2, the coach SHALL be able to move the two borders between the
+In step 3, the coach SHALL be able to move the two borders between the
 mesocycles left and right by whole weeks by dragging a handle on each
 border. Each mesocycle SHALL keep at least one week.
 Every change SHALL be saved.
@@ -151,7 +166,7 @@ Every change SHALL be saved.
 - **THEN** it stops one week after the first border
 
 ### Requirement: Exercises per mesocycle
-Step 3 SHALL show one table of the exercise catalog, grouped by exercise
+Step 4 SHALL show one table of the exercise catalog, grouped by exercise
 group, with one row per exercise and one column per mesocycle (GLP, ABP,
 LAP). In each cell the coach SHALL be able to choose the exercise for that
 mesocycle with a reason and an optional variation (free text, the catalog

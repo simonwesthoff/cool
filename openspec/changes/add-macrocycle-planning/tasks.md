@@ -46,6 +46,8 @@
 
 - [x] 7.9 Acceptance feedback: split deficits into snatch, clean, jerk and other (base data form, schema, migration); catalog "Addresses" tags (source column, translations, tag tables, generated data migration, catalog details); reason as tags + optional note per choice (migration, domain, API); dialog shows the deficits of the reference lift and tag buttons; English and German texts; verify tests, browser check and screenshots
 
+- [ ] 7.10 Acceptance feedback: split step 1 into "Base data" (sections Historical data and New macrocycle plan) and a new step 2 "SWOT" (strengths, deficits, experience, focus points, injuries and illnesses); create without SWOT, `PUT …/swot`; four-step indicator and links; English and German texts; verify tests, browser check and screenshots
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

@@ -78,7 +78,8 @@ ranges and `MACROCYCLE_EXISTS`.
 |---|---|
 | `GET /api/athletes/{id}/macrocycle` | macrocycle with calculated weeks (404 `MACROCYCLE_NOT_FOUND`) |
 | `POST /api/athletes/{id}/macrocycle` | step 1, create (201; 409 `MACROCYCLE_EXISTS`) |
-| `PATCH /api/athletes/{id}/macrocycle` | step 1, change base data |
+| `PATCH /api/athletes/{id}/macrocycle` | step 1, change base data (not the SWOT) |
+| `PUT /api/athletes/{id}/macrocycle/swot` | step 2, all SWOT fields (strengths, deficits, experience, focus points, injuries and illnesses) |
 | `PUT /api/athletes/{id}/macrocycle/weeks/{week}` | `{ level }` |
 | `PUT /api/athletes/{id}/macrocycle/mesocycles/{type}/exercises/{number}` | choose or change one exercise: `{ reason, variation? }` (reason 1–500, variation ≤ 200 characters) |
 | `DELETE /api/athletes/{id}/macrocycle/mesocycles/{type}/exercises/{number}` | remove one exercise (204) |
@@ -136,6 +137,21 @@ colours:
   Accepted as the user's palette because identity never relies on colour:
   band labels, the border lines with handles and the legend name the
   blocks; purple is not used as text colour on dark backgrounds.
+
+### Base data and SWOT steps (changed during acceptance)
+- Planning has four steps: `/base-data`, `/swot`, `/intensity`,
+  `/exercises`. Step 1 has the sections "Historical data" (personal bests,
+  body weight, body fat, muscle mass) and "New macrocycle plan" (period,
+  main competition, entry value, goals, target body weight, sessions per
+  week). Step 2 (SWOT): strengths, deficits, experience, focus points,
+  injuries and illnesses (placed last: the user listed the first four; the
+  injuries field followed the training frequency before).
+- Creating a macrocycle (POST) takes only the step 1 fields; the SWOT
+  columns start empty ('' and no focus points) and are set as a whole with
+  `PUT …/swot` (all required). PATCH no longer accepts SWOT fields. No
+  migration needed: existing rows keep their values.
+- One form component with a `part` ("base" | "swot") shares the field
+  rendering and error handling.
 
 ### Deficits and reason tags (changed during acceptance)
 - Base data: `deficits` is split into snatch, clean, jerk and other
