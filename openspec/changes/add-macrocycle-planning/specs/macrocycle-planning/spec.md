@@ -11,8 +11,8 @@ mesocycle.
 ### Requirement: Macrocycle base data
 A macrocycle SHALL have: personal bests and goals in snatch and clean &
 jerk (kg), current and target body weight (kg), body fat and muscle mass
-(%, optional), texts for deficits, injuries and illnesses, strengths and
-weightlifting experience, training sessions per week (1–14), focus points,
+(%, optional), deficits (see below), texts for injuries and illnesses,
+strengths and weightlifting experience, training sessions per week (1–14), focus points,
 a start date (a Monday), a duration (7–52 weeks), date and type of the main
 competition, and the entry value (30–95 %, default 60 %). All except body
 fat and muscle mass SHALL be required.
@@ -32,6 +32,14 @@ fat and muscle mass SHALL be required.
 #### Scenario: Default entry value
 - **WHEN** the coach opens the base data form of a new macrocycle
 - **THEN** the entry value is 60 %
+
+### Requirement: Deficits per lift
+The base data SHALL contain the athlete's deficits as four required texts:
+snatch, clean, jerk and other deficits.
+
+#### Scenario: Deficits per lift
+- **WHEN** the coach saves the base data without jerk deficits
+- **THEN** the macrocycle is not saved and the form shows that the jerk deficits are required
 
 ### Requirement: Focus points
 A macrocycle SHALL have an ordered list of 1 to 3 focus points (texts of up
@@ -146,27 +154,54 @@ Every change SHALL be saved.
 Step 3 SHALL show one table of the exercise catalog, grouped by exercise
 group, with one row per exercise and one column per mesocycle (GLP, ABP,
 LAP). In each cell the coach SHALL be able to choose the exercise for that
-mesocycle with a required reason and an optional variation (free text, the
-catalog comment as a hint), change both later, or remove the choice. The
-same exercise MAY be chosen for several mesocycles. The variation SHALL NOT
+mesocycle with a reason and an optional variation (free text, the catalog
+comment as a hint), change both later, or remove the choice. The same
+exercise MAY be chosen for several mesocycles. The variation SHALL NOT
 change the calculated values.
 
 #### Scenario: Choose exercises
 - **WHEN** the coach chooses exercises 1, 13 and 19 in the special preparation column, each with a reason
 - **THEN** these three exercises belong to that mesocycle with their reasons
 
-#### Scenario: Variation and reason
-- **WHEN** the coach chooses exercise 1 for the general preparation block with the variation "No feet snatch" and the reason "Footwork in the turnover"
-- **THEN** the cell shows the variation, and the choice keeps the variation and the reason
-
-#### Scenario: Reason required
-- **WHEN** the coach tries to choose an exercise without a reason
-- **THEN** it is not chosen and the dialog shows that the reason is required
+#### Scenario: Variation and note
+- **WHEN** the coach chooses exercise 1 for the general preparation block with the variation "No feet snatch" and the note "Footwork in the turnover"
+- **THEN** the cell shows the variation, and the choice keeps the variation and the note
 
 #### Scenario: Remove an exercise
 - **GIVEN** exercise 13 chosen for a mesocycle
 - **WHEN** the coach removes it in its cell
 - **THEN** it no longer belongs to that mesocycle
+
+### Requirement: Reason of a chosen exercise
+The reason of a chosen exercise SHALL consist of one or more of the points
+the exercise addresses (tags to tap) and/or a free-text note; at least one
+of them is required.
+
+#### Scenario: Reason as tags
+- **WHEN** the coach chooses exercise 7 and taps the tags "Beschleunigung im 2. Zug" and "Hoher Zug"
+- **THEN** the choice has these two tags as its reason
+
+#### Scenario: Reason required
+- **WHEN** the coach tries to choose an exercise without a tag and without a note
+- **THEN** it is not chosen and the dialog shows that a reason is required
+
+#### Scenario: Only the exercise's tags
+- **WHEN** a choice of exercise 7 is saved with a tag exercise 7 does not address
+- **THEN** it is rejected
+
+### Requirement: Deficits in the exercise dialog
+The dialog of a cell SHALL show the athlete's deficits for the exercise's
+reference lift: the snatch deficits for a snatch exercise, the clean and the
+jerk deficits for a clean & jerk exercise, and the other deficits for every
+exercise.
+
+#### Scenario: Snatch exercise
+- **WHEN** the coach taps "+" for exercise 7 (power snatch)
+- **THEN** the dialog shows the snatch deficits and the other deficits, but not the clean and jerk deficits
+
+#### Scenario: Exercise without reference lift
+- **WHEN** the coach taps "+" for exercise 33 (pull-up)
+- **THEN** the dialog shows only the other deficits
 
 ### Requirement: Macrocycle API
 The HTTP API SHALL let the coach of an athlete create and change the

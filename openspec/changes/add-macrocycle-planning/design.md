@@ -137,6 +137,27 @@ colours:
   band labels, the border lines with handles and the legend name the
   blocks; purple is not used as text colour on dark backgrounds.
 
+### Deficits and reason tags (changed during acceptance)
+- Base data: `deficits` is split into snatch, clean, jerk and other
+  deficits (all required, 2000 characters each). Migration: the old text
+  becomes the other deficits; the three new fields start empty and must be
+  filled in at the next save of step 1.
+- Catalog: a new "Addresses" column (merged from the user's
+  `Trainingsmittelkatalog_mit_tags.csv` into the cleaned catalog source;
+  names normalised: first letter upper case, duplicates by case merged,
+  "Extrimitäten" corrected, "-" = none) with English names in
+  `translations.en.json` (`tags`). Tables `exercise_tag` (German name as
+  key, English name) and `exercise_addresses` (exercise, tag, position),
+  filled by the generated catalog data migration.
+- A choice's reason = `tags` (text[] of tag keys, each one the exercise
+  addresses) plus an optional `note` (≤ 500); at least one is required
+  (field code `reason: REQUIRED`, unknown tags `tags: UNKNOWN_TAG`).
+  Migration: the old reason becomes the note.
+- Dialog order for a fast flow: deficits for the reference lift (snatch →
+  snatch; clean & jerk → clean and jerk; always other), then tag toggle
+  buttons (`aria-pressed`), note, variation. The catalog's exercise details
+  list the addressed points.
+
 ### Exercise table (changed during acceptance)
 - Step 3 is one table instead of three tabs: rows = catalog exercises under
   group header rows, columns = exercise, GLP, ABP, LAP (column headers with
