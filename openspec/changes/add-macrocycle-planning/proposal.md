@@ -14,7 +14,7 @@ as described by the user on 2026-11-16.
 
 - **Macrocycle base data** (entered in step 1 of the planning): current
   personal bests and goals in snatch and clean & jerk, current and target
-  body weight, optional body fat and muscle mass, free texts for current
+  body weight, optional body fat and muscle mass, texts for current
   deficits and for injuries and illnesses, start date and duration in
   weeks, date and type of the main competition, and the entry value (% of
   the max values the cycle starts with; usually 60 %).
@@ -53,8 +53,11 @@ as described by the user on 2026-11-16.
 ### Assumptions (to confirm in review)
 
 - High/low changes weekly reps by ±5 % of the value (×1.05 / ×0.95).
-- Weights are rounded to 0.5 kg, repetitions to whole numbers; percentages
-  are shown with one decimal.
+- Weights are rounded to whole kilograms and repetitions to whole numbers
+  (halves rounded up); percentages are shown with one decimal (user
+  decision 2026-11-16).
+- All base data are required except body fat and muscle mass (user
+  decision 2026-11-16).
 - The start date is a Monday (weeks are calendar weeks); duration 7 to 52
   weeks (each mesocycle has at least one week).
 - One macrocycle per athlete for now; a new cycle after the competition is

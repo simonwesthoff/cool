@@ -14,12 +14,16 @@ snatch and in clean & jerk (kg), current and target body weight (kg),
 optional body fat and muscle mass (%), free texts for current deficits and
 for injuries and illnesses, start date (a Monday), duration in weeks (7 to
 52), date and type of the main competition, and the entry value (30 % to
-95 %, default 60 %). Personal bests, goals, start date, duration and entry
-value SHALL be required.
+95 %, default 60 %). All base data except body fat and muscle mass SHALL be
+required.
 
 #### Scenario: Required values missing
 - **WHEN** the coach saves the base data without a snatch goal
 - **THEN** the macrocycle is not saved and the form shows that the snatch goal is required
+
+#### Scenario: Optional values
+- **WHEN** the coach saves the base data without body fat and muscle mass
+- **THEN** the macrocycle is saved
 
 #### Scenario: Start date not a Monday
 - **WHEN** the coach enters a Wednesday as start date
@@ -116,7 +120,7 @@ reading a missing one with 404 `MACROCYCLE_NOT_FOUND`.
 #### Scenario: Read with calculated values
 - **GIVEN** a planned macrocycle of 21 weeks with exercise 13 in the special preparation block
 - **WHEN** the coach requests it
-- **THEN** week 11 contains intensity 80 %, and for exercise 13 best value 86.5 kg, average weight 75 kg, set size 6 and 33 weekly reps
+- **THEN** week 11 contains intensity 80 %, and for exercise 13 best value 86 kg, average weight 75 kg, set size 6 and 33 weekly reps
 
 #### Scenario: Second macrocycle
 - **GIVEN** an athlete with a macrocycle

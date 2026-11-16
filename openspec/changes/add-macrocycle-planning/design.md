@@ -28,7 +28,7 @@ adjustable mesocycle borders, taper/transition blocks.
 ### Tables
 | Table | Columns |
 |---|---|
-| `macrocycle` | `id` uuid PK; `athlete_id` uuid FK → `athlete` (cascade), **unique**; `start_date` date; `duration_weeks` smallint; `entry_value_pct` numeric(4,1); `snatch_best_kg`, `clean_and_jerk_best_kg`, `snatch_goal_kg`, `clean_and_jerk_goal_kg` numeric(5,1); `body_weight_kg`, `target_body_weight_kg`, `body_fat_pct`, `muscle_mass_pct` numeric(5,1) null; `deficits`, `injuries_and_illnesses`, `competition_type` text null; `competition_date` date null; `created_at`, `updated_at` |
+| `macrocycle` | `id` uuid PK; `athlete_id` uuid FK → `athlete` (cascade), **unique**; `start_date` date; `duration_weeks` smallint; `entry_value_pct` numeric(4,1); `snatch_best_kg`, `clean_and_jerk_best_kg`, `snatch_goal_kg`, `clean_and_jerk_goal_kg` numeric(5,1); `body_weight_kg`, `target_body_weight_kg` numeric(5,1); `body_fat_pct`, `muscle_mass_pct` numeric(4,1) null; `deficits`, `injuries_and_illnesses`, `competition_type` text; `competition_date` date; `created_at`, `updated_at` |
 | `macrocycle_week` | PK (`macrocycle_id`, `week_number`); `level` enum `week_level` (`high`, `medium`, `low`) |
 | `mesocycle` | `id` uuid PK; `macrocycle_id` FK (cascade); `type` enum `mesocycle_type` (`general_preparation`, `special_preparation`, `competition_preparation`); `first_week`, `last_week` smallint; unique (`macrocycle_id`, `type`) |
 | `mesocycle_exercise` | PK (`mesocycle_id`, `exercise_number`); `exercise_number` FK → `exercise.number` |
@@ -47,7 +47,7 @@ adjustable mesocycle borders, taper/transition blocks.
 - `curveShape(t) = (sin(t·π − π/2) + 1) / 2` (0 → 1).
 - `intensity(E, t, level) = E + (1 − E)·curveShape(t) + {high: +0.05, low:
   −0.05, medium: 0}` — algebraically identical to the user's formula.
-- `plannedBestKg = round05(intensity × bestValuePct/100 × goal)`,
+- `plannedBestKg = roundKg(intensity × bestValuePct/100 × goal)`,
   `plannedAverageKg` likewise with `maxWeeklyAverageWeightPct`; null when a
   value or the reference lift is missing.
 - `plannedSetSize = round(max − (max − min)·curveShape(t))`;
@@ -57,8 +57,8 @@ adjustable mesocycle borders, taper/transition blocks.
   (null when the mesocycle has none, exercises without reps count 0).
 - `splitMesocycles(N)`: general `floor(0.15N)`, special `floor(0.5N)`,
   competition the rest.
-- Rounding: weights to 0.5 kg (`Math.round(x·2)/2`), reps half up,
-  intensity shown with one decimal. Floating-point results are rounded
+- Rounding: weights to whole kilograms and reps to whole numbers, halves
+  up (user decision), intensity shown with one decimal. Floating-point results are rounded
   before comparison in tests.
 - Exhaustive unit tests with the spec's example values.
 
@@ -161,7 +161,7 @@ erDiagram
   calculation module and the validation schema; tests name them.
 - [Changing the duration re-divides mesocycles] → Exercises stay with their
   mesocycle type; week levels stay by week number.
-- [Floating-point rounding (e.g. 5.5 → 6, 86.4 → 86.5)] → Explicit rounding
+- [Floating-point rounding (e.g. 5.5 → 6, 136.5 → 137)] → Explicit rounding
   helpers with tests at the spec's example values.
 
 ## Migration Plan

@@ -39,13 +39,13 @@ For an exercise with a reference lift, the planned best value of a week
 SHALL be intensity × the exercise's best value (%) × the macrocycle's goal
 in the reference lift, and the planned average weight (mHG) SHALL be
 intensity × the exercise's max. weekly average weight (%) × that goal. Both
-SHALL be rounded to 0.5 kg. Exercises without the respective catalog value
+SHALL be rounded to whole kilograms (halves rounded up). Exercises without the respective catalog value
 or without a reference lift SHALL have no planned value.
 
 #### Scenario: Snatch pull in the middle of the cycle
 - **GIVEN** a macrocycle of 21 weeks, entry value 60 %, snatch goal 100 kg, and exercise 13 "Zug breit" (snatch, best value 108 %, max. weekly average weight 94 %)
 - **WHEN** the values of week 11 (medium) are calculated
-- **THEN** the planned best value is 86.5 kg (86.4 rounded) and the planned average weight is 75 kg (75.2 rounded)
+- **THEN** the planned best value is 86 kg (86.4 rounded) and the planned average weight is 75 kg (75.2 rounded)
 
 #### Scenario: High week
 - **GIVEN** the same macrocycle where week 11 is a high week
@@ -55,7 +55,7 @@ or without a reference lift SHALL have no planned value.
 #### Scenario: Clean & jerk exercise
 - **GIVEN** a clean & jerk goal of 130 kg and exercise 19 "Kniebeuge vorn" (clean & jerk, best value 105 %)
 - **WHEN** the planned best value of the last week is calculated
-- **THEN** it is 136.5 kg
+- **THEN** it is 137 kg (136.5 rounded up)
 
 #### Scenario: Exercise without values
 - **WHEN** the values of exercise 31 "Bankdrücken" are calculated
