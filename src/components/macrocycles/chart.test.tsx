@@ -228,6 +228,41 @@ describe("MacrocycleChart", () => {
   });
 });
 
+describe("week positions", () => {
+  it("puts a week's point and number at the start of its area (on the block border)", () => {
+    const { container } = renderIn(
+      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+    );
+    const bands = container.querySelectorAll(
+      'svg[aria-label="Intensity per week"] > g > rect',
+    );
+    const specialStart = Number(bands[1]!.getAttribute("x"));
+    const point4 = screen
+      .getAllByRole("img")
+      .find((el) => el.getAttribute("aria-label")?.startsWith("Week 4,"))!;
+    const dot = point4.querySelectorAll("circle")[1]!;
+    expect(Number(dot.getAttribute("cx"))).toBeCloseTo(specialStart, 5);
+    const label4 = [...container.querySelectorAll("text")].find(
+      (t) => t.textContent === "4",
+    )!;
+    expect(Number(label4.getAttribute("x"))).toBeCloseTo(specialStart, 5);
+  });
+
+  it("colours the bands with the app palette", () => {
+    const { container } = renderIn(
+      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+    );
+    const bands = container.querySelectorAll(
+      'svg[aria-label="Intensity per week"] > g > rect',
+    );
+    expect([0, 1, 2].map((i) => bands[i]!.getAttribute("fill"))).toEqual([
+      "var(--band-1)",
+      "var(--band-2)",
+      "var(--band-3)",
+    ]);
+  });
+});
+
 describe("mesocycle borders", () => {
   const borderSliders = () =>
     screen
@@ -323,7 +358,7 @@ describe("week tooltip", () => {
     };
   }
   const column = (800 - 56) / 21;
-  const centerX = (week: number) => 44 + column * (week - 0.5);
+  const centerX = (week: number) => 44 + column * (week - 1);
 
   it("appears left of and below a point at the top right", () => {
     const { container } = renderIn(

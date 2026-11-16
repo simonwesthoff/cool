@@ -119,7 +119,9 @@ export function MacrocycleChart({
   const valueAt = (svgY: number) =>
     domain.min +
     (1 - (svgY - INTENSITY.top) / INTENSITY.height) * (domain.max - domain.min);
-  const x = (index: number) => MARGIN.left + column * (index + 0.5);
+  // A week's point sits at the start (left edge) of its column, so a
+  // mesocycle border is exactly at the point of the block's first week.
+  const x = (index: number) => MARGIN.left + column * index;
   const every = labelEvery(column);
 
   const levelOf = (w: ChartWeek) =>
@@ -240,6 +242,14 @@ export function MacrocycleChart({
     );
   }
 
+  // The first week of every block is always numbered; the other numbers
+  // follow the regular spacing and give way when they come too close.
+  const blockStarts = mesocycles.map((m) => m.firstWeek);
+  const showWeekLabel = (week: number) =>
+    blockStarts.includes(week) ||
+    ((week - 1) % every === 0 &&
+      blockStarts.every((start) => Math.abs(start - week) >= every));
+
   const shown =
     hovered === null ? null : weeks.find((w) => w.number === hovered);
   // Place the tooltip beside the point's column (never over the pointer,
@@ -335,7 +345,7 @@ export function MacrocycleChart({
                 x2={width - MARGIN.right}
                 y1={y(tick)}
                 y2={y(tick)}
-                className="stroke-zinc-200 dark:stroke-zinc-800"
+                className="stroke-black/20"
                 strokeWidth={1}
               />
               <text
@@ -349,16 +359,33 @@ export function MacrocycleChart({
               </text>
             </g>
           ))}
+          {/* White marks with a dark halo stay readable on every band colour. */}
           <path
             d={curvePath}
             fill="none"
-            className="stroke-zinc-400 dark:stroke-zinc-600"
+            stroke="var(--chart-halo)"
+            strokeOpacity={0.5}
+            strokeWidth={3}
+          />
+          <path
+            d={curvePath}
+            fill="none"
+            className="stroke-white/70"
             strokeWidth={1}
           />
           <path
             d={linePath}
             fill="none"
-            className="stroke-zinc-900 dark:stroke-zinc-100"
+            stroke="var(--chart-halo)"
+            strokeWidth={5}
+            strokeOpacity={0.85}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          <path
+            d={linePath}
+            fill="none"
+            className="stroke-white"
             strokeWidth={2}
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -369,7 +396,7 @@ export function MacrocycleChart({
             const active = hovered === w.number || dragging?.week === w.number;
             return (
               <g key={w.number}>
-                {i % every === 0 && (
+                {showWeekLabel(w.number) && (
                   <text
                     x={x(i)}
                     y={INTENSITY.top + INTENSITY.height + 18}
@@ -384,7 +411,10 @@ export function MacrocycleChart({
                     x={p.x}
                     y={level === "high" ? p.y - 12 : p.y + 20}
                     textAnchor="middle"
-                    className="fill-zinc-900 text-[10px] dark:fill-zinc-100"
+                    className="fill-white text-[11px]"
+                    stroke="var(--chart-halo)"
+                    strokeWidth={3}
+                    paintOrder="stroke"
                     aria-hidden="true"
                   >
                     {level === "high" ? "▲" : "▼"}
@@ -410,14 +440,14 @@ export function MacrocycleChart({
                   onKeyDown={(event) => onKeyDown(event, w)}
                   onFocus={() => setHovered(w.number)}
                   onBlur={() => setHovered(null)}
-                  className="outline-none [&:focus-visible>circle.ring]:stroke-zinc-900 dark:[&:focus-visible>circle.ring]:stroke-zinc-100"
+                  className="outline-none [&:focus-visible>circle.ring]:stroke-white"
                 >
                   <circle
                     className="ring"
                     cx={p.x}
                     cy={p.y}
-                    r={active ? 9 : 7}
-                    fill="var(--surface)"
+                    r={active ? 9.5 : 7.5}
+                    fill="var(--chart-halo)"
                     stroke="transparent"
                     strokeWidth={2}
                   />
@@ -425,12 +455,12 @@ export function MacrocycleChart({
                     cx={p.x}
                     cy={p.y}
                     r={active ? 6 : 4.5}
-                    className="fill-zinc-900 dark:fill-zinc-100"
+                    className="fill-white"
                   />
                 </g>
                 <rect
                   data-week={w.number}
-                  x={MARGIN.left + column * i}
+                  x={x(i) - column / 2}
                   y={INTENSITY.top}
                   width={column}
                   height={INTENSITY.height}
@@ -545,7 +575,7 @@ export function MacrocycleChart({
               x2={x(weeks.findIndex((w) => w.number === hovered))}
               y1={INTENSITY.top}
               y2={INTENSITY.top + INTENSITY.height}
-              className="pointer-events-none stroke-zinc-400"
+              className="pointer-events-none stroke-white/80"
               strokeWidth={1}
             />
           )}
@@ -594,7 +624,8 @@ export function MacrocycleChart({
           {weeks.map((w, i) => {
             if (w.volume === null || w.volume === 0) return null;
             const h = (VOLUME.height - 8) * (w.volume / maxVolume);
-            const left = x(i) - barWidth / 2;
+            // Bars start at the week's position, like the points above.
+            const left = x(i) + 1;
             const top = VOLUME.top + VOLUME.height - h;
             const r = Math.min(4, h, barWidth / 2);
             return (

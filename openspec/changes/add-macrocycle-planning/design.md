@@ -116,13 +116,32 @@ plus a tooltip per week and a table view.)
 - Width: at least 28 px per week; wider cycles scroll horizontally inside
   the chart container on phones (the page itself does not scroll sideways).
 
-### Styling
-Minimalist black and white, except the mesocycle bands, which the user
-asked to be muted red (general preparation), yellow (special preparation)
-and green (competition preparation), with light and dark variants as CSS
-variables. They are background tints with low chroma, so the black/white
-curve, handles and labels keep their contrast; the legend and the band
-labels name the blocks, so identity never relies on colour alone.
+### Styling and palette
+Minimalist black and white. Wherever colour is needed, the app uses the
+user's 90s/vintage palette (decided 2026-11-16 during acceptance; it
+replaced a first set of muted red/yellow/green tints), defined once as
+tokens in `globals.css` (`--color-palette-purple` #6f3ab1, `-magenta`
+#ba2db3, `-cyan` #3bc8c8, `-lime` #d7f212) and available as Tailwind
+colours:
+- mesocycle bands in full colour: general preparation purple, special
+  preparation magenta, competition preparation cyan; lime is reserved for
+  the next use of colour.
+- The palette mixes dark (purple, magenta) and light (cyan, lime) colours,
+  so the curve, points, ▲/▼ markers and the hover line are white with a
+  dark outline (halo) and readable on every band; gridlines are a
+  translucent black hairline.
+- The `dataviz` validator reports purple vs magenta as hard to tell apart
+  (normal ΔE 14.5, protan 3.3) and purple below 3:1 on the dark surface.
+  Accepted as the user's palette because identity never relies on colour:
+  band labels, the border lines with handles and the legend name the
+  blocks; purple is not used as text colour on dark backgrounds.
+
+### Week positions (changed during acceptance)
+Each week's point, handle and x-axis number sit at the start (left edge) of
+the week's column instead of its centre, so a mesocycle border is exactly at
+the point of the block's first week. The week's hit area is still its whole
+column; volume bars start at the column's left edge; the tooltip is placed
+beyond the column on the right or left.
 
 ### Border handles and tooltip placement (added during acceptance)
 - Each of the two borders is a vertical hairline across the intensity chart

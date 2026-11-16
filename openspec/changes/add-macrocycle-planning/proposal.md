@@ -41,7 +41,8 @@ as described by the user on 2026-11-16.
   1. base data form;
   2. macrocycle chart: intensity per week with a handle each that can be
      moved up or down by 5 %: up = high week, unchanged = medium, down =
-     low; weeks coloured by mesocycle (muted red, yellow, green); the two
+     low; weeks coloured by mesocycle (app palette: purple, magenta,
+     cyan; points and week numbers at the start of each week); the two
      borders between the mesocycles can be dragged to change their lengths;
      volume shown once exercises are chosen;
   3. exercise selection per mesocycle from the exercise catalog.

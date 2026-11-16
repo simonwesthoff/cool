@@ -5,24 +5,34 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * App palette (90s/vintage, chosen by the user). Use these wherever colour is
+ * needed in the UI, e.g. bg-palette-purple. Purple and magenta are close for
+ * colour-vision deficiencies: never rely on colour alone.
+ */
+@theme {
+  --color-palette-purple: #6f3ab1;
+  --color-palette-magenta: #ba2db3;
+  --color-palette-cyan: #3bc8c8;
+  --color-palette-lime: #d7f212;
+}
+
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Macrocycle chart: neutral mesocycle bands and the chart surface. */
+/* Macrocycle chart: mesocycle bands (same colours in light and dark mode). */
 :root {
   --surface: #ffffff;
-  /* Mesocycles: muted red, yellow and green (user decision). */
-  --band-1: #f3dcd8;
-  --band-2: #f3ead0;
-  --band-3: #dbe9d6;
+  --band-1: var(--color-palette-purple);
+  --band-2: var(--color-palette-magenta);
+  --band-3: var(--color-palette-cyan);
+  /* Dark outline that keeps white marks readable on every palette colour. */
+  --chart-halo: #09090b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --surface: #09090b;
-    --band-1: #3b2523;
-    --band-2: #39321d;
-    --band-3: #233426;
   }
 }

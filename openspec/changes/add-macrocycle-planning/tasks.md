@@ -38,6 +38,8 @@
 - [x] 7.4 Repeat the browser checks of 6.1 and 6.2 including focus points, border dragging, colours and the tooltip at the top right
 - [x] 7.5 Add Training frequency and Focus point to `openspec/glossary.md` and the new attributes to `openspec/domain-model.md`
 
+- [x] 7.6 Acceptance feedback: app palette tokens (#6f3ab1, #ba2db3, #3bc8c8, #d7f212) for the mesocycle bands and legend, white haloed curve/points/markers, week points and numbers at the start of each week; verify component tests, the browser check and screenshots in light and dark mode
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

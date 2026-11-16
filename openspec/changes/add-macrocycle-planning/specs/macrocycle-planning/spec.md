@@ -76,10 +76,11 @@ planned and the coach returns to the athlete's details page.
 - **THEN** the mesocycle lengths keep their proportions (each at least one week), the levels of weeks 1–21 stay, weeks 22–24 are medium, and the chosen exercises of each mesocycle stay
 
 ### Requirement: Intensity chart with week handles
-Step 2 SHALL show the macrocycle chart: weeks on the x-axis, the intensity
-as a curve with one handle per week, mesocycle backgrounds in muted tones
-(general preparation red, special preparation yellow, competition
-preparation green) and the volume once exercises are chosen. Each handle
+Step 2 SHALL show the macrocycle chart: weeks on the x-axis with each
+week's number and point at the start of its area, the intensity as a curve
+with one handle per week, mesocycle backgrounds in the app palette (general
+preparation #6f3ab1, special preparation #ba2db3, competition preparation
+#3bc8c8) and the volume once exercises are chosen. Each handle
 SHALL move one 5 % step up (high week) or down (low week) from the curve by
 dragging, tapping or keyboard; in between the week is medium.
 
@@ -105,7 +106,12 @@ dragging, tapping or keyboard; in between the week is medium.
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
-- **THEN** weeks 1–3 have a muted red, weeks 4–13 a muted yellow and weeks 14–21 a muted green background, with a legend naming the three mesocycles
+- **THEN** weeks 1–3 have a #6f3ab1, weeks 4–13 a #ba2db3 and weeks 14–21 a #3bc8c8 background, with a legend and labels naming the three mesocycles
+
+#### Scenario: Points at the start of a week
+- **GIVEN** the special preparation block starts in week 4
+- **WHEN** the coach looks at the chart
+- **THEN** the point and the number of week 4 are exactly on the border where the special preparation background begins
 
 ### Requirement: Week tooltip
 Pointing at or focusing a week in the chart SHALL show a tooltip with the
