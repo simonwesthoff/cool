@@ -280,7 +280,12 @@ erDiagram
     }
     MesocycleExercise {
         string variation
-        string reason
+        string[] tags
+        string[] ownReasons
+    }
+    Exercise }o--o{ ExerciseTag : "addresses"
+    ExerciseTag {
+        string name
     }
 ```
 
@@ -290,8 +295,12 @@ erDiagram
   divided into three Mesocycles: general preparation, special preparation
   and competition preparation block.
 - A Mesocycle uses exercises from the exercise catalog, each with a reason
-  and optionally a variation; the same exercise can be used in several
-  mesocycles with different variations and reasons.
+  (tags the exercise addresses and/or own reasons) and optionally a
+  variation; the same exercise can be used in several mesocycles with
+  different variations and reasons.
+- Each catalog exercise addresses an ordered list of tags; a tag can be
+  addressed by several exercises.
+- The macrocycle's base data is split into the base data and the SWOT.
 - Intensity, planned weights, reps and volume are calculated, not stored.
 
 ## Risks / Trade-offs
