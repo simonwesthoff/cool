@@ -30,6 +30,7 @@ import type {
 } from "@/domain/macrocycles/macrocycle-types";
 import {
   baseIntensity,
+  fitsLabel,
   intensityAt,
   intensityDomain,
   labelEvery,
@@ -106,6 +107,12 @@ describe("chart geometry", () => {
     expect(levelForValue(80, 82.4)).toBe("medium");
     expect(levelForValue(80, 82.6)).toBe("high");
     expect(levelForValue(80, 70)).toBe("low");
+  });
+
+  it("labels a band only when the name fits", () => {
+    expect(fitsLabel("General preparation", 84)).toBe(false);
+    expect(fitsLabel("General preparation", 130)).toBe(true);
+    expect(fitsLabel("GLP", 28)).toBe(true);
   });
 
   it("chooses an axis covering low weeks and clean ticks", () => {

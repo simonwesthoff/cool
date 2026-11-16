@@ -51,3 +51,11 @@ export function intensityDomain(basePcts: number[]): {
 export function labelEvery(columnWidth: number): number {
   return Math.max(1, Math.ceil(36 / columnWidth));
 }
+
+/**
+ * Whether an 11 px label fits into a band of the given width (estimated at
+ * 6.2 px per character plus padding; generous for the app's sans-serif font).
+ */
+export function fitsLabel(label: string, bandWidth: number): boolean {
+  return label.length * 6.2 + 8 <= bandWidth;
+}

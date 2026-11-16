@@ -16,6 +16,7 @@ import type {
 } from "@/domain/macrocycles/macrocycle-types";
 import {
   baseIntensity,
+  fitsLabel,
   intensityAt,
   intensityDomain,
   labelEvery,
@@ -225,13 +226,19 @@ export function MacrocycleChart({ weeks, mesocycles, onLevelChange }: Props) {
                 height={INTENSITY.height}
                 fill={BAND_FILL[i]}
               />
-              <text
-                x={MARGIN.left + column * (m.firstWeek - 1) + 4}
-                y={INTENSITY.top - 8}
-                className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
-              >
-                {tm(`short.${m.type}`)}
-              </text>
+              {/* Only label a band when the name fits; the legend names it otherwise. */}
+              {fitsLabel(
+                tm(`short.${m.type}`),
+                column * (m.lastWeek - m.firstWeek + 1),
+              ) && (
+                <text
+                  x={MARGIN.left + column * (m.firstWeek - 1) + 4}
+                  y={INTENSITY.top - 8}
+                  className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
+                >
+                  {tm(`short.${m.type}`)}
+                </text>
+              )}
             </g>
           ))}
           {domain.ticks.map((tick) => (
