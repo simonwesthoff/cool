@@ -178,16 +178,25 @@ colours:
   key, English name) and `exercise_addresses` (exercise, tag, position),
   filled by the generated catalog data migration.
 - A choice's reason = `tags` (text[] of tag keys, each one the exercise
-  addresses) plus an optional `note` (≤ 500); at least one is required
+  addresses) plus own reasons (first a single `note`, later
+  `own_reasons`, see below); at least one is required
   (field code `reason: REQUIRED`, unknown tags `tags: UNKNOWN_TAG`).
   Migration: the old reason becomes the note.
 - Dialog order for a fast flow: deficits for the reference lift (snatch →
   snatch; clean & jerk → clean and jerk; none without a reference lift;
   each under its own small bold title, no section title), then tag toggle
   buttons (`aria-pressed`) ending with a "+" tag that opens an inline text
-  field for an own reason (stored as `note`; shown afterwards as a selected
-  tag that opens the field again; clearing the text removes it), then the
-  variation. The catalog's exercise details
+  field for own reasons, then the variation. No hint text under "Reason".
+- Own reasons (changed again): any number, stored as `own_reasons text[]`
+  (≤ 10, each ≤ 200 characters, no duplicates), replacing `note`
+  (migrations 0013 copy note → [note], 0014 drop note). In the field,
+  Enter adds the text and closes the field (a new "+" follows), a comma
+  adds the text and keeps the field open for the next one (also for pasted
+  text), X discards the text. Own reasons are selected tags with an ×
+  button. Pending text in the field counts when the dialog is saved.
+- A "+" for an exercise already chosen in another block prefills the
+  dialog from the first such block (GPB, SPB, CPB order): tags, own
+  reasons, variation. The catalog's exercise details
   list the addressed points.
 
 ### Exercise table (changed during acceptance)

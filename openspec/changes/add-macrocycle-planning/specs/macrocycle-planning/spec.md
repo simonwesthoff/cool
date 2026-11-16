@@ -219,6 +219,11 @@ change the calculated values.
 - **WHEN** the coach chooses an exercise without a variation
 - **THEN** its cell shows only the check mark, no text
 
+#### Scenario: Prefill from another block
+- **GIVEN** exercise 7 chosen for the general preparation block with the tag "Hoher Zug", the own reason "Technique" and the variation "From blocks"
+- **WHEN** the coach taps "+" for exercise 7 in the special preparation column
+- **THEN** the dialog starts with the same tag, own reason and variation, and nothing is saved until the coach chooses the exercise
+
 #### Scenario: Remove an exercise
 - **GIVEN** exercise 13 chosen for a mesocycle
 - **WHEN** the coach removes it in its cell
@@ -239,8 +244,8 @@ table, a total row SHALL show the number of chosen exercises per mesocycle.
 - **THEN** the total row shows 0, 3 and 0, and it changes as soon as an exercise is chosen or removed
 
 ### Requirement: Reason of a chosen exercise
-The reason of a chosen exercise SHALL consist of one or more of the points
-the exercise addresses (tags to tap) and/or an own reason (free text),
+The reason of a chosen exercise SHALL consist of points the exercise
+addresses (tags to tap) and/or any number of own reasons (free texts),
 added with a "+" tag after the exercise's tags; at least one is required.
 
 #### Scenario: Reason as tags
@@ -248,12 +253,16 @@ added with a "+" tag after the exercise's tags; at least one is required.
 - **THEN** the choice has these two tags as its reason
 
 #### Scenario: Reason required
-- **WHEN** the coach tries to choose an exercise without a tag and without an own reason
+- **WHEN** the coach tries to choose an exercise without a tag and without own reasons
 - **THEN** it is not chosen and the dialog shows that a reason is required
 
-#### Scenario: Own reason
-- **WHEN** the coach taps "+", writes "Back strength" and saves
-- **THEN** the choice has "Back strength" as its own reason, shown as a selected tag when the dialog is opened again
+#### Scenario: Own reasons
+- **WHEN** the coach taps "+", types "Back strength, Grip" and Enter, taps "+" again, types "Core" and Enter, and saves
+- **THEN** the choice has the own reasons "Back strength", "Grip" and "Core", each shown as a selected tag with a remove button, and a new "+" after them
+
+#### Scenario: Cancel an own reason
+- **WHEN** the coach taps "+", types a text and taps the X next to the field
+- **THEN** the text is discarded and the "+" is shown again
 
 #### Scenario: Only the exercise's tags
 - **WHEN** a choice of exercise 7 is saved with a tag exercise 7 does not address
