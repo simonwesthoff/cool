@@ -248,6 +248,11 @@
         "level": "Stufe",
         "intensity": "Intensität",
         "volume": "Umfang"
+      },
+      "borderValue": "{block} ab Woche {week}",
+      "borderLabels": {
+        "special_preparation": "Grenze zwischen Grundlagen- und Aufbauphase",
+        "competition_preparation": "Grenze zwischen Aufbau- und Leistungsausprägungsphase"
       }
     },
     "intensity": {

@@ -33,10 +33,10 @@
 ## 7. Acceptance feedback
 
 - [x] 7.1 Extend the base data by training frequency (1–14), strengths, weightlifting experience and an ordered list of 1–3 focus points (schema, migration, validation, API, form with add/remove/reorder of focus points); add English and German texts; verify PGlite, route and component tests
-- [ ] 7.2 Adjustable mesocycle borders: borders endpoint, domain rule (each block ≥ 1 week), duration change scaling the block lengths, border handles in the chart (drag, keyboard); add English and German texts; verify calculation, PGlite, route and component tests
-- [ ] 7.3 Muted red/yellow/green mesocycle bands (light and dark) and tooltip placement that never covers the pointer or the point; verify component tests and screenshots
+- [x] 7.2 Adjustable mesocycle borders: borders endpoint, domain rule (each block ≥ 1 week), duration change scaling the block lengths, border handles in the chart (drag, keyboard); add English and German texts; verify calculation, PGlite, route and component tests
+- [x] 7.3 Muted red/yellow/green mesocycle bands (light and dark) and tooltip placement that never covers the pointer or the point; verify component tests and screenshots
 - [ ] 7.4 Repeat the browser checks of 6.1 and 6.2 including focus points, border dragging, colours and the tooltip at the top right
-- [ ] 7.5 Add Training frequency and Focus point to `openspec/glossary.md` and the new attributes to `openspec/domain-model.md`
+- [x] 7.5 Add Training frequency and Focus point to `openspec/glossary.md` and the new attributes to `openspec/domain-model.md`
 
 ## Workflow follow-up
 

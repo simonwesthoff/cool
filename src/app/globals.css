@@ -12,16 +12,17 @@ body {
 /* Macrocycle chart: neutral mesocycle bands and the chart surface. */
 :root {
   --surface: #ffffff;
-  --band-1: #f4f4f5;
-  --band-2: #e4e4e7;
-  --band-3: #d4d4d8;
+  /* Mesocycles: muted red, yellow and green (user decision). */
+  --band-1: #f3dcd8;
+  --band-2: #f3ead0;
+  --band-3: #dbe9d6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --surface: #09090b;
-    --band-1: #18181b;
-    --band-2: #27272a;
-    --band-3: #3f3f46;
+    --band-1: #3b2523;
+    --band-2: #39321d;
+    --band-3: #233426;
   }
 }

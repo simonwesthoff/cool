@@ -14,6 +14,7 @@ import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
   const t = useTranslations("Macrocycle.intensity");
   const [weeks, setWeeks] = useState<ChartWeek[]>(macrocycle.weeks);
+  const [mesocycles, setMesocycles] = useState(macrocycle.mesocycles);
   const [failed, setFailed] = useState(false);
 
   async function changeLevel(week: number, level: WeekLevel) {
@@ -51,6 +52,39 @@ export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
     }
   }
 
+  async function changeBorders(specialStart: number, competitionStart: number) {
+    const previous = mesocycles;
+    setFailed(false);
+    setMesocycles((current) => [
+      { ...current[0]!, firstWeek: 1, lastWeek: specialStart - 1 },
+      {
+        ...current[1]!,
+        firstWeek: specialStart,
+        lastWeek: competitionStart - 1,
+      },
+      { ...current[2]!, firstWeek: competitionStart },
+    ]);
+    const response = await fetch(
+      `/api/athletes/${macrocycle.athleteId}/macrocycle/mesocycles/borders`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          specialPreparationStart: specialStart,
+          competitionPreparationStart: competitionStart,
+        }),
+      },
+    ).catch(() => null);
+    if (response?.ok) {
+      const saved = (await response.json()) as Macrocycle;
+      setMesocycles(saved.mesocycles);
+      setWeeks(saved.weeks);
+    } else {
+      setMesocycles(previous);
+      setFailed(true);
+    }
+  }
+
   const base = `/athletes/${macrocycle.athleteId}/macrocycle`;
   return (
     <div className="flex flex-col gap-6">
@@ -65,8 +99,9 @@ export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
       )}
       <MacrocycleChart
         weeks={weeks}
-        mesocycles={macrocycle.mesocycles}
+        mesocycles={mesocycles}
         onLevelChange={changeLevel}
+        onBordersChange={changeBorders}
       />
       <div className="flex flex-wrap gap-3">
         <Link

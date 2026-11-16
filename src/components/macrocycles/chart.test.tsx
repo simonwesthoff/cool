@@ -228,6 +228,130 @@ describe("MacrocycleChart", () => {
   });
 });
 
+describe("mesocycle borders", () => {
+  const borderSliders = () =>
+    screen
+      .getAllByRole("slider")
+      .filter((el) => el.getAttribute("aria-orientation") === "horizontal");
+
+  it("has two border handles with their position as text", () => {
+    renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        onLevelChange={() => {}}
+        onBordersChange={() => {}}
+      />,
+    );
+    expect(
+      borderSliders().map((el) => el.getAttribute("aria-valuetext")),
+    ).toEqual([
+      "Special preparation block from week 4",
+      "Competition preparation block from week 14",
+    ]);
+    expect(
+      borderSliders().map((el) => [
+        el.getAttribute("aria-valuemin"),
+        el.getAttribute("aria-valuemax"),
+      ]),
+    ).toEqual([
+      ["2", "13"],
+      ["5", "21"],
+    ]);
+  });
+
+  it("moves a border one week with the arrow keys and stops at one week per block", async () => {
+    const onBordersChange = vi.fn();
+    const tight = splitMesocycles(21).map((m, i) =>
+      i === 0
+        ? { ...m, lastWeek: 3 }
+        : i === 1
+          ? { ...m, firstWeek: 4, lastWeek: 4 }
+          : { ...m, firstWeek: 5 },
+    );
+    renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={tight}
+        onBordersChange={onBordersChange}
+      />,
+    );
+    const [first, second] = borderSliders();
+    first!.focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(onBordersChange).toHaveBeenLastCalledWith(3, 5);
+    onBordersChange.mockReset();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(onBordersChange).not.toHaveBeenCalled();
+    second!.focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(onBordersChange).not.toHaveBeenCalled();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(onBordersChange).toHaveBeenLastCalledWith(4, 6);
+  });
+
+  it("drags a border to a week boundary and reports it on release", () => {
+    const onBordersChange = vi.fn();
+    renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        onBordersChange={onBordersChange}
+      />,
+    );
+    const [first] = borderSliders();
+    // Column width (800 − 56) / 21 ≈ 35.4 px from x = 44: week 6 starts at ≈ 221 px.
+    fireEvent.pointerDown(first!, { clientX: 150, pointerId: 1 });
+    fireEvent.pointerMove(first!, { clientX: 224, pointerId: 1 });
+    expect(first!.getAttribute("aria-valuetext")).toBe(
+      "Special preparation block from week 6",
+    );
+    fireEvent.pointerUp(first!, { clientX: 224, pointerId: 1 });
+    expect(onBordersChange).toHaveBeenCalledWith(6, 14);
+  });
+});
+
+describe("week tooltip", () => {
+  function box(el: HTMLElement) {
+    const left = parseFloat(el.style.left);
+    const top = parseFloat(el.style.top);
+    return {
+      left,
+      right: left + parseFloat(el.style.width),
+      top,
+      bottom: top + parseFloat(el.style.minHeight),
+    };
+  }
+  const column = (800 - 56) / 21;
+  const centerX = (week: number) => 44 + column * (week - 0.5);
+
+  it("appears left of and below a point at the top right", () => {
+    const { container } = renderIn(
+      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+    );
+    fireEvent.pointerEnter(container.querySelector('rect[data-week="21"]')!);
+    const tip = box(screen.getByTestId("week-tooltip"));
+    // The tooltip stays clear of week 21's whole column (where the pointer is).
+    expect(tip.right).toBeLessThanOrEqual(centerX(21) - column / 2);
+    // 100 % is near the top of the plot (y ≈ 64), the tooltip is below it.
+    expect(tip.top).toBeGreaterThan(64 + 10);
+  });
+
+  it("appears right of and above a point at the bottom left", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks({ 1: "low" })}
+        mesocycles={mesocycles}
+      />,
+    );
+    fireEvent.pointerEnter(container.querySelector('rect[data-week="1"]')!);
+    const tip = box(screen.getByTestId("week-tooltip"));
+    expect(tip.left).toBeGreaterThanOrEqual(centerX(1) + column / 2);
+    // 55 % is near the bottom of the plot (y ≈ 230), the tooltip is above it.
+    expect(tip.bottom).toBeLessThan(230 - 10);
+  });
+});
+
 describe("IntensityPlanner", () => {
   const fetchMock = vi.fn();
   const macrocycle = {
@@ -255,6 +379,52 @@ describe("IntensityPlanner", () => {
       expect(
         screen.getAllByRole("slider")[10]!.getAttribute("aria-valuetext"),
       ).toBe("Week 11, High week, 85%"),
+    );
+  });
+
+  it("saves moved borders and shows the new blocks", async () => {
+    const moved = {
+      ...macrocycle,
+      mesocycles: [
+        {
+          type: "general_preparation",
+          firstWeek: 1,
+          lastWeek: 4,
+          exerciseNumbers: [],
+        },
+        {
+          type: "special_preparation",
+          firstWeek: 5,
+          lastWeek: 13,
+          exerciseNumbers: [],
+        },
+        {
+          type: "competition_preparation",
+          firstWeek: 14,
+          lastWeek: 21,
+          exerciseNumbers: [],
+        },
+      ],
+    };
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(moved), { status: 200 }),
+    );
+    renderIn(<IntensityPlanner macrocycle={macrocycle} />);
+    const border = screen
+      .getAllByRole("slider")
+      .find((el) => el.getAttribute("aria-orientation") === "horizontal")!;
+    border.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("/api/athletes/a1/macrocycle/mesocycles/borders");
+    expect(JSON.parse(init.body)).toEqual({
+      specialPreparationStart: 5,
+      competitionPreparationStart: 14,
+    });
+    await waitFor(() =>
+      expect(border.getAttribute("aria-valuetext")).toBe(
+        "Special preparation block from week 5",
+      ),
     );
   });
 

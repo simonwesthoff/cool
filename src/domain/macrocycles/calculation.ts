@@ -161,3 +161,64 @@ export function mesocycleOf(
   if (!span) throw new Error(`Week ${week} belongs to no mesocycle`);
   return span.type;
 }
+
+/** Blocks from the first weeks of the special and competition preparation. */
+export function spansFromBorders(
+  weeks: number,
+  specialStart: number,
+  competitionStart: number,
+): MesocycleSpan[] {
+  return [
+    { type: "general_preparation", firstWeek: 1, lastWeek: specialStart - 1 },
+    {
+      type: "special_preparation",
+      firstWeek: specialStart,
+      lastWeek: competitionStart - 1,
+    },
+    {
+      type: "competition_preparation",
+      firstWeek: competitionStart,
+      lastWeek: weeks,
+    },
+  ];
+}
+
+/** Whether borders leave every block at least one week. */
+export function bordersAreValid(
+  weeks: number,
+  specialStart: number,
+  competitionStart: number,
+): boolean {
+  return (
+    Number.isInteger(specialStart) &&
+    Number.isInteger(competitionStart) &&
+    specialStart >= 2 &&
+    competitionStart >= specialStart + 1 &&
+    competitionStart <= weeks
+  );
+}
+
+/**
+ * Scales the current block lengths to a new duration (rounded, each block at
+ * least one week, the competition preparation block takes the rest).
+ */
+export function scaleMesocycles(
+  spans: MesocycleSpan[],
+  weeks: number,
+): MesocycleSpan[] {
+  const oldWeeks = spans[2]!.lastWeek;
+  const length = (s: MesocycleSpan) => s.lastWeek - s.firstWeek + 1;
+  let general = Math.max(
+    1,
+    roundHalfUp((length(spans[0]!) * weeks) / oldWeeks),
+  );
+  let special = Math.max(
+    1,
+    roundHalfUp((length(spans[1]!) * weeks) / oldWeeks),
+  );
+  while (general + special > weeks - 1) {
+    if (special > 1) special -= 1;
+    else general -= 1;
+  }
+  return spansFromBorders(weeks, general + 1, general + special + 1);
+}

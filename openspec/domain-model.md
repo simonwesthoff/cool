@@ -49,6 +49,8 @@ erDiagram
         decimal entryValuePct
         decimal snatchGoalKg
         decimal cleanAndJerkGoalKg
+        int trainingFrequency
+        string[] focusPoints
         date competitionDate
     }
     MacrocycleWeek {
@@ -82,7 +84,8 @@ erDiagram
   athlete's Team. It consists of its weeks (each high, medium or low) and is
   divided into three Mesocycles (general preparation, special preparation
   and competition preparation block, by default 15 % / 50 % / rest of the
-  weeks). A Mesocycle uses exercises from the exercise catalog; the same
+  weeks; the coach can move the borders, and a duration change scales the
+  block lengths). It has 1 to 3 ordered focus points. A Mesocycle uses exercises from the exercise catalog; the same
   exercise can be used in several mesocycles. Intensity, planned weights,
   reps and volume are calculated, not stored.
 - A user account is created by the first sign-in with Google and is

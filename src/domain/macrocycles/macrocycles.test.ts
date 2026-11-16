@@ -12,6 +12,7 @@ const {
   createMacrocycle,
   findMacrocycle,
   getMacrocycle,
+  setMesocycleBorders,
   setMesocycleExercises,
   setWeekLevel,
   updateBaseData,
@@ -419,8 +420,8 @@ describe("updateBaseData", () => {
       ]),
     ).toEqual([
       [1, 3, []],
-      [4, 15, [13]],
-      [16, 24, []],
+      [4, 14, [13]],
+      [15, 24, []],
     ]);
 
     const shorter = await updateBaseData(coach, athlete.id, {
@@ -449,5 +450,57 @@ describe("updateBaseData", () => {
     ).toEqual({
       deficits: ["INVALID_TYPE"],
     });
+  });
+});
+
+describe("setMesocycleBorders", () => {
+  it("moves the borders and the weeks follow", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setMesocycleBorders(coach, athlete.id, {
+      specialPreparationStart: 6,
+      competitionPreparationStart: 14,
+    });
+    expect(m.mesocycles.map((x) => [x.firstWeek, x.lastWeek])).toEqual([
+      [1, 5],
+      [6, 13],
+      [14, 21],
+    ]);
+    expect(m.weeks[4]!.mesocycle).toBe("general_preparation");
+    expect(m.weeks[5]!.mesocycle).toBe("special_preparation");
+  });
+
+  it("keeps the adjusted proportions when the duration changes (21 → 42)", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await setMesocycleBorders(coach, athlete.id, {
+      specialPreparationStart: 6,
+      competitionPreparationStart: 14,
+    });
+    const m = await updateBaseData(coach, athlete.id, {
+      durationWeeks: 42,
+      competitionDate: "2027-09-30",
+    });
+    expect(m.mesocycles.map((x) => [x.firstWeek, x.lastWeek])).toEqual([
+      [1, 10],
+      [11, 26],
+      [27, 42],
+    ]);
+  });
+
+  it("rejects borders that leave a block without weeks", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    for (const borders of [
+      { specialPreparationStart: 1, competitionPreparationStart: 10 },
+      { specialPreparationStart: 8, competitionPreparationStart: 8 },
+      { specialPreparationStart: 4, competitionPreparationStart: 22 },
+    ]) {
+      expect(
+        await fieldsOf(setMesocycleBorders(coach, athlete.id, borders)),
+      ).toEqual({
+        _root: ["INVALID_BORDERS"],
+      });
+    }
   });
 });

@@ -3,8 +3,11 @@ import {
   curveShape,
   cycleProgress,
   intensity,
+  bordersAreValid,
   mesocycleOf,
   plannedExercise,
+  scaleMesocycles,
+  spansFromBorders,
   roundHalfUp,
   splitMesocycles,
   volume,
@@ -199,5 +202,38 @@ describe("default mesocycles", () => {
       "special_preparation",
       "competition_preparation",
     ]);
+  });
+});
+
+describe("adjustable mesocycle borders", () => {
+  it("builds blocks from the two borders", () => {
+    expect(spansFromBorders(21, 6, 14)).toEqual([
+      { type: "general_preparation", firstWeek: 1, lastWeek: 5 },
+      { type: "special_preparation", firstWeek: 6, lastWeek: 13 },
+      { type: "competition_preparation", firstWeek: 14, lastWeek: 21 },
+    ]);
+  });
+
+  it("requires at least one week per block", () => {
+    expect(bordersAreValid(21, 2, 3)).toBe(true);
+    expect(bordersAreValid(21, 1, 3)).toBe(false);
+    expect(bordersAreValid(21, 5, 5)).toBe(false);
+    expect(bordersAreValid(21, 5, 22)).toBe(false);
+    expect(bordersAreValid(21, 2, 21)).toBe(true);
+    expect(bordersAreValid(21, 2.5, 10)).toBe(false);
+  });
+
+  it("scales the block lengths to a new duration (spec example 21 → 42)", () => {
+    expect(scaleMesocycles(spansFromBorders(21, 6, 14), 42)).toEqual(
+      spansFromBorders(42, 11, 27),
+    );
+  });
+
+  it("keeps every block at least one week when shrinking", () => {
+    for (let weeks = 7; weeks <= 52; weeks++) {
+      const scaled = scaleMesocycles(spansFromBorders(52, 40, 51), weeks);
+      expect(scaled.every((s) => s.lastWeek >= s.firstWeek)).toBe(true);
+      expect(scaled[2]!.lastWeek).toBe(weeks);
+    }
   });
 });

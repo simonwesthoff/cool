@@ -248,6 +248,11 @@
         "level": "Level",
         "intensity": "Intensity",
         "volume": "Volume"
+      },
+      "borderValue": "{block} from week {week}",
+      "borderLabels": {
+        "special_preparation": "Border between general and special preparation",
+        "competition_preparation": "Border between special and competition preparation"
       }
     },
     "intensity": {

@@ -42,6 +42,8 @@ Domain terms for the weightlifting coaching app.
 | Bestleistung | - | Personal best | An athlete's best result in snatch or clean & jerk. |
 | Zielleistung | - | Goal | The result in snatch or clean & jerk the macrocycle aims at. |
 | Hauptwettkampf | - | Main competition | The competition a macrocycle leads to. |
+| Trainingshäufigkeit | TE/Woche | Training frequency | Training sessions per week (1–14). |
+| Schwerpunkt | - | Focus point | One of the 1 to 3 ordered priorities of a macrocycle. |
 
 ### Exercise groups
 

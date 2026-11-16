@@ -34,7 +34,12 @@ type Props = {
   mesocycles: Pick<MesocycleView, "type" | "firstWeek" | "lastWeek">[];
   /** When set, the week handles can be moved (planning step 2). */
   onLevelChange?: (week: number, level: WeekLevel) => void;
+  /** When set, the two mesocycle borders can be moved (planning step 2). */
+  onBordersChange?: (specialStart: number, competitionStart: number) => void;
 };
+
+/** Width and height of the tooltip box, used to place it next to a point. */
+const TOOLTIP = { width: 184, height: 104, gap: 12 };
 
 const MARGIN = { left: 44, right: 12 };
 const INTENSITY = { top: 28, height: 220, axis: 28 };
@@ -47,7 +52,12 @@ const BAND_FILL = ["var(--band-1)", "var(--band-2)", "var(--band-3)"];
  * separate chart on the same week axis, the volume per week. Mesocycles are
  * shown as background bands.
  */
-export function MacrocycleChart({ weeks, mesocycles, onLevelChange }: Props) {
+export function MacrocycleChart({
+  weeks,
+  mesocycles: savedMesocycles,
+  onLevelChange,
+  onBordersChange,
+}: Props) {
   const t = useTranslations("Macrocycle.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
   const format = useFormatter();
@@ -59,6 +69,10 @@ export function MacrocycleChart({ weeks, mesocycles, onLevelChange }: Props) {
     week: number;
     level: WeekLevel;
     moved: boolean;
+  } | null>(null);
+  const [borderDrag, setBorderDrag] = useState<{
+    border: 0 | 1;
+    week: number;
   } | null>(null);
   const titleId = useId();
 
@@ -73,6 +87,25 @@ export function MacrocycleChart({ weeks, mesocycles, onLevelChange }: Props) {
   }, []);
 
   const n = weeks.length;
+  // Borders = first weeks of the special and competition preparation blocks.
+  const savedBorders: [number, number] = [
+    savedMesocycles[1]!.firstWeek,
+    savedMesocycles[2]!.firstWeek,
+  ];
+  const borders: [number, number] = borderDrag
+    ? borderDrag.border === 0
+      ? [borderDrag.week, savedBorders[1]]
+      : [savedBorders[0], borderDrag.week]
+    : savedBorders;
+  const mesocycles = [
+    { type: savedMesocycles[0]!.type, firstWeek: 1, lastWeek: borders[0] - 1 },
+    {
+      type: savedMesocycles[1]!.type,
+      firstWeek: borders[0],
+      lastWeek: borders[1] - 1,
+    },
+    { type: savedMesocycles[2]!.type, firstWeek: borders[1], lastWeek: n },
+  ];
   const column = Math.max(
     MIN_COLUMN,
     (available - MARGIN.left - MARGIN.right) / Math.max(n, 1),
@@ -174,8 +207,62 @@ export function MacrocycleChart({ weeks, mesocycles, onLevelChange }: Props) {
     if (level !== w.level) onLevelChange(w.number, level);
   }
 
+  /** Allowed weeks for a border: every block keeps at least one week. */
+  function borderRange(border: 0 | 1): [number, number] {
+    return border === 0 ? [2, savedBorders[1] - 1] : [savedBorders[0] + 1, n];
+  }
+
+  function borderWeekAt(event: PointerEvent<SVGElement>, border: 0 | 1) {
+    const svg = event.currentTarget.ownerSVGElement!;
+    const px = event.clientX - svg.getBoundingClientRect().left;
+    const [min, max] = borderRange(border);
+    return Math.min(
+      max,
+      Math.max(min, Math.round((px - MARGIN.left) / column) + 1),
+    );
+  }
+
+  function commitBorders(next: [number, number]) {
+    if (next[0] !== savedBorders[0] || next[1] !== savedBorders[1]) {
+      onBordersChange?.(next[0], next[1]);
+    }
+  }
+
+  function onBorderKeyDown(event: KeyboardEvent<SVGGElement>, border: 0 | 1) {
+    const direction =
+      event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+    if (!direction) return;
+    event.preventDefault();
+    const [min, max] = borderRange(border);
+    const week = Math.min(max, Math.max(min, savedBorders[border] + direction));
+    commitBorders(
+      border === 0 ? [week, savedBorders[1]] : [savedBorders[0], week],
+    );
+  }
+
   const shown =
     hovered === null ? null : weeks.find((w) => w.number === hovered);
+  // Place the tooltip beside the point's column (never over the pointer,
+  // which is in that column) and in the vertical half the point is not in.
+  const tooltipPosition = (() => {
+    if (!shown) return null;
+    const index = weeks.indexOf(shown);
+    const px = x(index);
+    const py = y(intensityAt(bases[index]!, levelOf(shown)));
+    const visibleRight = scrollLeft + Math.max(available, TOOLTIP.width);
+    const rightOfColumn = px + column / 2 + TOOLTIP.gap;
+    const leftOfColumn = px - column / 2 - TOOLTIP.gap - TOOLTIP.width;
+    const fitsRight = rightOfColumn + TOOLTIP.width <= visibleRight;
+    const fitsLeft = leftOfColumn >= scrollLeft;
+    const preferLeft = px - scrollLeft > Math.max(available, 1) / 2;
+    const left =
+      (preferLeft && fitsLeft) || !fitsRight ? leftOfColumn : rightOfColumn;
+    const upperHalf = py < INTENSITY.top + INTENSITY.height / 2;
+    const top = upperHalf
+      ? INTENSITY.top + INTENSITY.height - TOOLTIP.height
+      : INTENSITY.top;
+    return { left: Math.max(scrollLeft, left), top };
+  })();
 
   return (
     <figure
@@ -358,6 +445,100 @@ export function MacrocycleChart({ weeks, mesocycles, onLevelChange }: Props) {
               </g>
             );
           })}
+          {mesocycles.slice(1).map((m, index) => {
+            const border = index as 0 | 1;
+            const bx = MARGIN.left + column * (m.firstWeek - 1);
+            const [min, max] = borderRange(border);
+            const label = t("borderValue", {
+              block: tm(m.type),
+              week: m.firstWeek,
+            });
+            return (
+              <g key={m.type}>
+                <line
+                  x1={bx}
+                  x2={bx}
+                  y1={INTENSITY.top}
+                  y2={INTENSITY.top + INTENSITY.height}
+                  className="pointer-events-none stroke-zinc-500"
+                  strokeWidth={borderDrag?.border === border ? 2 : 1}
+                />
+                {onBordersChange && (
+                  <g
+                    role="slider"
+                    tabIndex={0}
+                    aria-label={t(
+                      border === 0
+                        ? "borderLabels.special_preparation"
+                        : "borderLabels.competition_preparation",
+                    )}
+                    aria-valuetext={label}
+                    aria-valuenow={m.firstWeek}
+                    aria-valuemin={min}
+                    aria-valuemax={max}
+                    aria-orientation="horizontal"
+                    onKeyDown={(event) => onBorderKeyDown(event, border)}
+                    className="cursor-ew-resize outline-none [&:focus-visible>rect.grip]:stroke-zinc-900 dark:[&:focus-visible>rect.grip]:stroke-zinc-100"
+                    onPointerDown={(event) => {
+                      event.currentTarget.setPointerCapture?.(event.pointerId);
+                      setBorderDrag({ border, week: savedBorders[border] });
+                    }}
+                    onPointerMove={(event) => {
+                      if (borderDrag?.border !== border) return;
+                      const week = borderWeekAt(event, border);
+                      if (week !== borderDrag.week)
+                        setBorderDrag({ border, week });
+                    }}
+                    onPointerUp={() => {
+                      if (borderDrag?.border !== border) return;
+                      const week = borderDrag.week;
+                      setBorderDrag(null);
+                      commitBorders(
+                        border === 0
+                          ? [week, savedBorders[1]]
+                          : [savedBorders[0], week],
+                      );
+                    }}
+                    onPointerCancel={() => setBorderDrag(null)}
+                  >
+                    {/* Large transparent hit area around the grip. */}
+                    <rect
+                      x={bx - 14}
+                      y={INTENSITY.top}
+                      width={28}
+                      height={36}
+                      fill="transparent"
+                    />
+                    <rect
+                      className="grip fill-white stroke-zinc-500 dark:fill-zinc-950"
+                      x={bx - 6}
+                      y={INTENSITY.top + 6}
+                      width={12}
+                      height={24}
+                      rx={4}
+                      strokeWidth={2}
+                    />
+                    <line
+                      x1={bx - 2}
+                      x2={bx - 2}
+                      y1={INTENSITY.top + 12}
+                      y2={INTENSITY.top + 24}
+                      className="stroke-zinc-500"
+                      strokeWidth={1}
+                    />
+                    <line
+                      x1={bx + 2}
+                      x2={bx + 2}
+                      y1={INTENSITY.top + 12}
+                      y2={INTENSITY.top + 24}
+                      className="stroke-zinc-500"
+                      strokeWidth={1}
+                    />
+                  </g>
+                )}
+              </g>
+            );
+          })}
           {hovered !== null && (
             <line
               x1={x(weeks.findIndex((w) => w.number === hovered))}
@@ -433,14 +614,14 @@ export function MacrocycleChart({ weeks, mesocycles, onLevelChange }: Props) {
         {shown && (
           <div
             role="status"
-            className="pointer-events-none absolute top-0 z-10 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-md dark:border-zinc-800 dark:bg-zinc-950"
+            data-testid="week-tooltip"
+            className="pointer-events-none absolute z-10 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-md dark:border-zinc-800 dark:bg-zinc-950"
             style={{
-              // Content coordinates (the tooltip scrolls with the chart),
-              // kept inside the visible part of the container.
-              left: Math.min(
-                Math.max(scrollLeft, x(weeks.indexOf(shown)) + 12),
-                scrollLeft + Math.max(0, available - 180),
-              ),
+              // Content coordinates: the tooltip scrolls with the chart.
+              left: tooltipPosition!.left,
+              top: tooltipPosition!.top,
+              width: TOOLTIP.width,
+              minHeight: TOOLTIP.height,
             }}
           >
             <p className="font-semibold tabular-nums">

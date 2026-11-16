@@ -9,6 +9,7 @@ vi.mock("@/server/auth", () => ({ getAuth: () => ({ api: { getSession } }) }));
 const main = await import("./route");
 const weeks = await import("./weeks/[week]/route");
 const exercises = await import("./mesocycles/[type]/exercises/route");
+const borders = await import("./mesocycles/borders/route");
 const { startAsCoach } = await import("@/domain/roles");
 const { createAthlete } = await import("@/domain/athletes");
 
@@ -118,6 +119,38 @@ describe("macrocycle API", () => {
     );
     expect(unknown.status).toBe(404);
     expect(await unknown.json()).toEqual({ error: { code: "WEEK_NOT_FOUND" } });
+  });
+
+  it("sets the mesocycle borders (200) and rejects invalid ones (400)", async () => {
+    const { athlete } = await coachWithAthlete();
+    const id = { id: athlete.id };
+    await main.POST(json("POST", baseData), ctx(id));
+    const ok = await borders.PUT(
+      json("PUT", {
+        specialPreparationStart: 6,
+        competitionPreparationStart: 14,
+      }),
+      ctx(id),
+    );
+    expect(ok.status).toBe(200);
+    expect((await ok.json()).mesocycles[0]).toMatchObject({
+      firstWeek: 1,
+      lastWeek: 5,
+    });
+    const bad = await borders.PUT(
+      json("PUT", {
+        specialPreparationStart: 6,
+        competitionPreparationStart: 6,
+      }),
+      ctx(id),
+    );
+    expect(bad.status).toBe(400);
+    expect(await bad.json()).toEqual({
+      error: {
+        code: "VALIDATION_FAILED",
+        fields: { _root: ["INVALID_BORDERS"] },
+      },
+    });
   });
 
   it("answers invalid base data with 400 and field codes", async () => {

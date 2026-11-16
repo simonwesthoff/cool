@@ -3,7 +3,7 @@ import { findAthleteInTeam } from "@/domain/athletes";
 import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
 import { requireCoachTeam } from "@/domain/roles";
-import { parseInput } from "@/domain/validation";
+import { DomainValidationError, parseInput } from "@/domain/validation";
 import { z } from "zod";
 import { getDb } from "@/server/db";
 import {
@@ -19,11 +19,14 @@ import {
   updateBaseDataSchema,
 } from "./base-data";
 import {
+  bordersAreValid,
   cycleProgress,
   intensity,
   MESOCYCLE_TYPES,
   mesocycleOf,
   plannedExercise,
+  scaleMesocycles,
+  spansFromBorders,
   splitMesocycles,
   volume,
   type ExerciseValues,
@@ -262,8 +265,8 @@ export async function createMacrocycle(
 
 /**
  * Step 1 for an existing macrocycle. A new duration keeps the levels of the
- * remaining weeks, adds medium weeks, and divides the mesocycles again by
- * default while keeping each mesocycle's exercises.
+ * remaining weeks, adds medium weeks, and scales the mesocycle lengths to
+ * the new duration while keeping each mesocycle's exercises.
  */
 export async function updateBaseData(
   coach: CurrentUser,
@@ -302,7 +305,16 @@ export async function updateBaseData(
           ),
         );
       }
-      for (const span of splitMesocycles(next.durationWeeks)) {
+      const current = await tx
+        .select({
+          type: mesocycle.type,
+          firstWeek: mesocycle.firstWeek,
+          lastWeek: mesocycle.lastWeek,
+        })
+        .from(mesocycle)
+        .where(eq(mesocycle.macrocycleId, row.id))
+        .orderBy(asc(mesocycle.firstWeek));
+      for (const span of scaleMesocycles(current, next.durationWeeks)) {
         await tx
           .update(mesocycle)
           .set({ firstWeek: span.firstWeek, lastWeek: span.lastWeek })
@@ -398,6 +410,53 @@ export async function setMesocycleExercises(
           exerciseNumber,
         })),
       );
+    }
+  });
+  return getMacrocycle(coach, athleteId);
+}
+
+const bordersSchema = z.strictObject({
+  specialPreparationStart: z.number(),
+  competitionPreparationStart: z.number(),
+});
+
+/** Step 2: the first weeks of the special and competition preparation blocks. */
+export async function setMesocycleBorders(
+  coach: CurrentUser,
+  athleteId: string,
+  input: unknown,
+): Promise<Macrocycle> {
+  await requireOwnAthlete(coach, athleteId);
+  const { specialPreparationStart, competitionPreparationStart } = parseInput(
+    bordersSchema,
+    input,
+  );
+  const row = await findMacrocycleRow(athleteId);
+  if (!row) throw notFound();
+  if (
+    !bordersAreValid(
+      row.durationWeeks,
+      specialPreparationStart,
+      competitionPreparationStart,
+    )
+  ) {
+    throw new DomainValidationError({ _root: ["INVALID_BORDERS"] });
+  }
+  await getDb().transaction(async (tx) => {
+    for (const span of spansFromBorders(
+      row.durationWeeks,
+      specialPreparationStart,
+      competitionPreparationStart,
+    )) {
+      await tx
+        .update(mesocycle)
+        .set({ firstWeek: span.firstWeek, lastWeek: span.lastWeek })
+        .where(
+          and(
+            eq(mesocycle.macrocycleId, row.id),
+            eq(mesocycle.type, span.type),
+          ),
+        );
     }
   });
   return getMacrocycle(coach, athleteId);
