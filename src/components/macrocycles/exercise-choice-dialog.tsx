@@ -263,7 +263,7 @@ function ChoiceForm({
           className="flex flex-col gap-2"
           aria-describedby={reasonError ? reasonErrorId : undefined}
         >
-          <legend className="text-sm font-medium">{t("reason")}</legend>
+          <legend className="mb-1 text-sm font-medium">{t("reason")}</legend>
           <div className="flex flex-wrap items-center gap-2">
             {exercise.addresses.map((tag) => {
               const pressed = tags.includes(tag.key);
