@@ -34,7 +34,7 @@ type Props = {
 };
 
 /** Width and height of the tooltip box, used to place it next to a point. */
-const TOOLTIP = { width: 184, height: 104, gap: 10 };
+const TOOLTIP = { width: 208, height: 84, gap: 10 };
 const PLOT = { top: 28, height: 220 };
 /** Space below the plot for the week numbers and the axis title. */
 const X_AXIS = 44;
@@ -356,19 +356,16 @@ export function MacrocycleChart({
               />
               {/* Only label a band when the name fits; the legend names it otherwise. */}
               {fitsLabel(
-                tm(`short.${m.type}`),
+                tm(`abbr.${m.type}`),
                 column * (m.lastWeek - m.firstWeek + 1),
               ) &&
-                clearOfMarker(
-                  x(m.firstWeek - 1) + 4,
-                  tm(`short.${m.type}`),
-                ) && (
+                clearOfMarker(x(m.firstWeek - 1) + 4, tm(`abbr.${m.type}`)) && (
                   <text
                     x={x(m.firstWeek - 1) + 4}
                     y={PLOT.top - 8}
                     className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
                   >
-                    {tm(`short.${m.type}`)}
+                    {tm(`abbr.${m.type}`)}
                   </text>
                 )}
             </g>
@@ -653,7 +650,10 @@ export function MacrocycleChart({
             }}
           >
             <p className="font-semibold tabular-nums">
-              {pct(intensityOf(shown))}
+              {t("tooltipValue", {
+                intensity: pct(intensityOf(shown)),
+                level: t(`levelsShort.${levelOf(shown)}`),
+              })}
             </p>
             <p className="text-zinc-600 dark:text-zinc-400">
               {t("tooltipWeek", {
@@ -668,13 +668,7 @@ export function MacrocycleChart({
               })}
             </p>
             <p className="text-zinc-600 dark:text-zinc-400">
-              {levelName(levelOf(shown))} · {tm(shown.mesocycle)}
-            </p>
-            <p className="text-zinc-600 dark:text-zinc-400">
-              {t("tooltipVolume", {
-                volume:
-                  shown.volume === null ? "–" : format.number(shown.volume),
-              })}
+              {tm(`abbr.${shown.mesocycle}`)}
             </p>
           </div>
         )}

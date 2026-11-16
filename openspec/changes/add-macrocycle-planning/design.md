@@ -203,7 +203,8 @@ colours:
 ### Chart simplification (changed during acceptance)
 - No keyboard control of week handles and borders, no table view, and no
   volume bar chart in step 2 (user decisions): dragging and tapping change
-  the chart; the tooltip shows every week's values including the volume.
+  the chart; the tooltip shows every week's values. (Later: the tooltip
+  shows no volume either; see the tooltip content in the spec.)
   Trade-off accepted by the user: the planning chart cannot be operated
   with the keyboard alone, deviating from the `dataviz` guidance of a
   table view.

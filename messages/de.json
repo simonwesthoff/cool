@@ -222,11 +222,6 @@
       "general_preparation": "Grundlagenphase (GLP)",
       "special_preparation": "Aufbauphase (ABP)",
       "competition_preparation": "Leistungsausprägungsphase (LAP)",
-      "short": {
-        "general_preparation": "GLP",
-        "special_preparation": "ABP",
-        "competition_preparation": "LAP"
-      },
       "abbr": {
         "general_preparation": "GLP",
         "special_preparation": "ABP",
@@ -244,14 +239,19 @@
         "medium": "Mittlere Woche",
         "low": "Niedrige Woche"
       },
-      "tooltipWeek": "Woche {week} · ab {date}",
-      "tooltipVolume": "Umfang: {volume}",
+      "tooltipWeek": "Woche {week} ab {date}",
       "borderValue": "{block} ab Woche {week}",
       "axisIntensity": "Intensität",
       "axisWeek": "Woche",
       "legendCompetition": "Hauptwettkampf",
       "competitionValue": "Hauptwettkampf: {type}, {date}",
-      "competitionLabel": "{type} · {date}"
+      "competitionLabel": "{type} · {date}",
+      "levelsShort": {
+        "high": "hoch",
+        "medium": "mittel",
+        "low": "niedrig"
+      },
+      "tooltipValue": "{intensity} ({level})"
     },
     "intensity": {
       "help": "Ziehe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche, oder tippe darüber oder darunter. Ziehe die Griffe an den Grenzen, um die Länge der Mesozyklen zu ändern. Jede Änderung wird gespeichert.",

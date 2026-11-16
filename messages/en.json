@@ -222,15 +222,10 @@
       "general_preparation": "General preparation block",
       "special_preparation": "Special preparation block",
       "competition_preparation": "Competition preparation block",
-      "short": {
-        "general_preparation": "General preparation",
-        "special_preparation": "Special preparation",
-        "competition_preparation": "Competition preparation"
-      },
       "abbr": {
-        "general_preparation": "GP",
-        "special_preparation": "SP",
-        "competition_preparation": "CP"
+        "general_preparation": "GPB",
+        "special_preparation": "SPB",
+        "competition_preparation": "CPB"
       }
     },
     "chart": {
@@ -244,14 +239,19 @@
         "medium": "Medium week",
         "low": "Low week"
       },
-      "tooltipWeek": "Week {week} · from {date}",
-      "tooltipVolume": "Volume: {volume}",
+      "tooltipWeek": "Week {week} from {date}",
       "borderValue": "{block} from week {week}",
       "axisIntensity": "Intensity",
       "axisWeek": "Week",
       "legendCompetition": "Main competition",
       "competitionValue": "Main competition: {type}, {date}",
-      "competitionLabel": "{type} · {date}"
+      "competitionLabel": "{type} · {date}",
+      "levelsShort": {
+        "high": "high",
+        "medium": "medium",
+        "low": "low"
+      },
+      "tooltipValue": "{intensity} ({level})"
     },
     "intensity": {
       "help": "Drag a week's point up for a high week or down for a low week, or tap above or below it. Drag the handles on the borders to change the length of the mesocycles. Each change is saved.",

@@ -347,7 +347,7 @@ describe("week tooltip", () => {
     };
   }
 
-  it("appears left of and below a point at the top right, and shows the volume", () => {
+  it("appears left of and below a point at the top right", () => {
     const { container } = renderIn(
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
     );
@@ -357,7 +357,7 @@ describe("week tooltip", () => {
     const hit = container.querySelector('rect[data-week="21"]')!;
     expect(tip.right).toBeLessThanOrEqual(Number(hit.getAttribute("x")));
     expect(tip.top).toBeGreaterThan(64 + 10);
-    expect(tooltip.textContent).toContain("Volume: –");
+    expect(tooltip.textContent).not.toContain("Volume");
   });
 
   it("appears right of and above a point at the bottom left", () => {
@@ -376,14 +376,35 @@ describe("week tooltip", () => {
     expect(tip.bottom).toBeLessThan(230 - 10);
   });
 
-  it("shows a week's volume", () => {
+  it("shows intensity (level), week with start date and block abbreviation, no volume", () => {
+    // Week 11 has a volume of 66 in these test weeks; it is not shown.
     const { container } = renderIn(
-      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+      <MacrocycleChart
+        weeks={makeWeeks(21, { 11: "high" })}
+        mesocycles={mesocycles}
+      />,
     );
     fireEvent.pointerEnter(container.querySelector('rect[data-week="11"]')!);
-    expect(screen.getByTestId("week-tooltip").textContent).toContain(
-      "Volume: 66",
+    const lines = [
+      ...screen.getByTestId("week-tooltip").querySelectorAll("p"),
+    ].map((p) => p.textContent);
+    expect(lines).toEqual(["85% (high)", "Week 11 from Feb 8, 2027", "SPB"]);
+  });
+
+  it("uses the German texts and abbreviations", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks(21, { 2: "low" })}
+        mesocycles={mesocycles}
+      />,
+      "de",
     );
+    fireEvent.pointerEnter(container.querySelector('rect[data-week="2"]')!);
+    const lines = [
+      ...screen.getByTestId("week-tooltip").querySelectorAll("p"),
+    ].map((p) => p.textContent);
+    expect(lines[0]).toMatch(/^\d+(,\d)?\s% \(niedrig\)$/);
+    expect(lines.slice(1)).toEqual(["Woche 2 ab 07.12.2026", "GLP"]);
   });
 });
 
@@ -493,10 +514,6 @@ describe("main competition marker", () => {
     container.querySelector("[data-competition]")!;
   // Width 800, margins 56/16: 21 columns of 728/21 px; day 0 = Monday 2026-11-30.
   const xOfDay = (day: number) => 56 + (728 / 21) * (day / 7);
-  const bandLabels = (container: HTMLElement) =>
-    [...container.querySelectorAll("svg text")]
-      .map((t) => t.textContent)
-      .filter((t) => t!.endsWith("preparation"));
 
   it("draws a line at the competition day, labelled with type and date above the chart", () => {
     const { container } = renderIn(
@@ -527,7 +544,11 @@ describe("main competition marker", () => {
     );
   });
 
-  it("hides a mesocycle label it overlaps and keeps the others", () => {
+  it("labels the blocks with their abbreviations and hides one the competition label overlaps", () => {
+    const blockLabels = (container: HTMLElement) =>
+      [...container.querySelectorAll("svg text")]
+        .map((t) => t.textContent)
+        .filter((t) => ["GPB", "SPB", "CPB"].includes(t!));
     const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -535,16 +556,18 @@ describe("main competition marker", () => {
         competition={competition}
       />,
     );
-    // The competition preparation label (from week 14) would overlap.
-    expect(bandLabels(container)).toEqual(["Special preparation"]);
+    expect(blockLabels(container)).toEqual(["GPB", "SPB", "CPB"]);
     cleanup();
+    // On a phone the competition label reaches into the CPB label.
+    containerWidth = 390;
     const view = renderIn(
-      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={competition}
+      />,
     );
-    expect(bandLabels(view.container)).toEqual([
-      "Special preparation",
-      "Competition preparation",
-    ]);
+    expect(blockLabels(view.container)).toEqual(["GPB", "SPB"]);
   });
 
   it("starts at the line early in the cycle", () => {

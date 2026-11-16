@@ -129,7 +129,7 @@ dragging or tapping; in between it is medium.
 #### Scenario: No volume in the planning chart
 - **GIVEN** exercises are chosen for the mesocycles
 - **WHEN** the coach looks at the chart in step 3
-- **THEN** the chart shows the intensity only; a week's volume is shown in its tooltip
+- **THEN** the chart and its tooltips show the intensity only, no volume
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
@@ -139,6 +139,17 @@ dragging or tapping; in between it is medium.
 - **GIVEN** the special preparation block starts in week 4
 - **WHEN** the coach looks at the chart
 - **THEN** the point and the number of week 4 are exactly on the border where the special preparation background begins
+
+### Requirement: Mesocycle abbreviations
+The mesocycles SHALL have abbreviations: GLP, ABP and LAP in German; GPB
+(general preparation block), SPB (special preparation block) and CPB
+(competition preparation block) in English. The labels above the chart,
+the tooltips and the exercise table's column headers SHALL use them; the
+legend SHALL use the full names.
+
+#### Scenario: English labels
+- **WHEN** the coach looks at the chart in English
+- **THEN** the mesocycle labels above the chart read "GPB", "SPB" and "CPB"
 
 ### Requirement: Main competition in the chart
 The chart in step 3 SHALL mark the main competition with a vertical line
@@ -157,9 +168,15 @@ last week SHALL be marked at the end of the chart.
 - **THEN** the competition's label is in the row of the mesocycle labels, so it covers no week point
 
 ### Requirement: Week tooltip
-Pointing at or focusing a week in the chart SHALL show a tooltip with the
-week's number, start date, mesocycle, level, intensity and volume. The
-tooltip SHALL never cover the pointer or the week's point.
+Pointing at a week in the chart SHALL show a tooltip of three lines: the
+intensity with the week level in parentheses, "Week n from <start date>",
+and the abbreviation of the week's mesocycle. It SHALL NOT show the volume
+and SHALL never cover the pointer or the week's point.
+
+#### Scenario: Tooltip content
+- **GIVEN** week 11 of a macrocycle starting Monday 2026-11-23 is a high week at 85 % in the special preparation block
+- **WHEN** the coach points at it in English
+- **THEN** the tooltip reads "85% (high)", "Week 11 from Feb 1, 2027" and "SPB"
 
 #### Scenario: Tooltip near the top right
 - **GIVEN** a week whose point is at the top right of the chart
