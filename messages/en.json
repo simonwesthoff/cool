@@ -223,6 +223,11 @@
         "general_preparation": "General preparation",
         "special_preparation": "Special preparation",
         "competition_preparation": "Competition preparation"
+      },
+      "abbr": {
+        "general_preparation": "GP",
+        "special_preparation": "SP",
+        "competition_preparation": "CP"
       }
     },
     "chart": {
@@ -249,13 +254,27 @@
       "back": "Back to base data"
     },
     "exercises": {
-      "help": "Choose the exercises of each mesocycle from the exercise catalog. Every change is saved.",
-      "tabsLabel": "Mesocycles",
-      "tab": "{name} ({count})",
-      "weeks": "{name}: weeks {first}–{last}",
+      "help": "Choose the exercises of each mesocycle: tap a cell, enter why the exercise is chosen and, if needed, its variation. Every change is saved.",
       "saveFailed": "The change could not be saved. Please try again.",
       "finish": "Finish planning",
-      "back": "Back to intensity"
+      "back": "Back to intensity",
+      "tableCaption": "Exercises of the catalog per mesocycle",
+      "exercise": "Exercise",
+      "weeksShort": "Wk {first}–{last}",
+      "cellChoose": "{exercise}, {block}: choose",
+      "cellChosen": "{exercise}, {block}: chosen, {variation}",
+      "standard": "Standard",
+      "reasonMissing": "Reason missing",
+      "variation": "Variation",
+      "optional": "(optional)",
+      "variationPlaceholder": "e.g. from the hang",
+      "catalogHint": "Catalog: {comment}",
+      "reason": "Reason",
+      "reasonRequired": "Please enter why the exercise is chosen.",
+      "save": "Save",
+      "choose": "Choose exercise",
+      "remove": "Remove",
+      "cancel": "Cancel"
     }
   }
 }

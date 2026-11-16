@@ -47,11 +47,23 @@ export type MacrocycleWeekView = {
   exercises: PlannedWeekExercise[];
 };
 
+/** An exercise chosen for a mesocycle. */
+export type MesocycleExercise = {
+  exerciseNumber: number;
+  /** Free-text variation; null for the standard exercise. */
+  variation: string | null;
+  /** Why it is chosen; empty only for choices made before reasons existed. */
+  reason: string;
+};
+
 export type MesocycleView = {
   type: MesocycleType;
   firstWeek: number;
   lastWeek: number;
+  /** Numbers of the chosen exercises, ascending. */
   exerciseNumbers: number[];
+  /** The chosen exercises with variation and reason, ascending by number. */
+  exercises: MesocycleExercise[];
 };
 
 export type Macrocycle = MacrocycleBaseData & {

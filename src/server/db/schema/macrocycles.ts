@@ -95,7 +95,7 @@ export const mesocycle = pgTable(
   ],
 );
 
-/** Exercises chosen for a mesocycle. */
+/** Exercises chosen for a mesocycle, each with a reason and a variation. */
 export const mesocycleExercise = pgTable(
   "mesocycle_exercise",
   {
@@ -105,6 +105,10 @@ export const mesocycleExercise = pgTable(
     exerciseNumber: smallint("exercise_number")
       .notNull()
       .references(() => exercise.number),
+    /** Free-text variation of the exercise (information only). */
+    variation: text("variation"),
+    /** Why the exercise is chosen for this mesocycle (empty for old rows). */
+    reason: text("reason").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.mesocycleId, table.exerciseNumber] }),

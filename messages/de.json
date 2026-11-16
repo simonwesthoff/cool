@@ -223,6 +223,11 @@
         "general_preparation": "GLP",
         "special_preparation": "ABP",
         "competition_preparation": "LAP"
+      },
+      "abbr": {
+        "general_preparation": "GLP",
+        "special_preparation": "ABP",
+        "competition_preparation": "LAP"
       }
     },
     "chart": {
@@ -249,13 +254,27 @@
       "back": "Zurück zu den Stammdaten"
     },
     "exercises": {
-      "help": "Wähle die Übungen jedes Mesozyklus aus dem Trainingsmittelkatalog. Jede Änderung wird gespeichert.",
-      "tabsLabel": "Mesozyklen",
-      "tab": "{name} ({count})",
-      "weeks": "{name}: Wochen {first}–{last}",
+      "help": "Wähle die Übungen jedes Mesozyklus: Tippe auf eine Zelle, gib an, warum die Übung gewählt wird, und bei Bedarf ihre Variation. Jede Änderung wird gespeichert.",
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "finish": "Planung abschließen",
-      "back": "Zurück zur Intensität"
+      "back": "Zurück zur Intensität",
+      "tableCaption": "Übungen des Trainingsmittelkatalogs je Mesozyklus",
+      "exercise": "Übung",
+      "weeksShort": "Wo. {first}–{last}",
+      "cellChoose": "{exercise}, {block}: wählen",
+      "cellChosen": "{exercise}, {block}: gewählt, {variation}",
+      "standard": "Standard",
+      "reasonMissing": "Begründung fehlt",
+      "variation": "Variation",
+      "optional": "(optional)",
+      "variationPlaceholder": "z. B. im Hang",
+      "catalogHint": "Katalog: {comment}",
+      "reason": "Begründung",
+      "reasonRequired": "Bitte gib an, warum die Übung gewählt wird.",
+      "save": "Speichern",
+      "choose": "Übung wählen",
+      "remove": "Entfernen",
+      "cancel": "Abbrechen"
     }
   }
 }

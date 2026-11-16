@@ -8,7 +8,7 @@ vi.mock("@/server/auth", () => ({ getAuth: () => ({ api: { getSession } }) }));
 
 const main = await import("./route");
 const weeks = await import("./weeks/[week]/route");
-const exercises = await import("./mesocycles/[type]/exercises/route");
+const exercises = await import("./mesocycles/[type]/exercises/[number]/route");
 const borders = await import("./mesocycles/borders/route");
 const { startAsCoach } = await import("@/domain/roles");
 const { createAthlete } = await import("@/domain/athletes");
@@ -70,10 +70,21 @@ describe("macrocycle API", () => {
     const created = await main.POST(json("POST", baseData), ctx(id));
     expect(created.status).toBe(201);
     const put = await exercises.PUT(
-      json("PUT", { exerciseNumbers: [13] }),
-      ctx({ ...id, type: "special_preparation" }),
+      json("PUT", { reason: "Pull strength", variation: "From blocks" }),
+      ctx({ ...id, type: "special_preparation", number: "13" }),
     );
     expect(put.status).toBe(200);
+    expect((await put.json()).mesocycles[1].exercises).toEqual([
+      { exerciseNumber: 13, variation: "From blocks", reason: "Pull strength" },
+    ]);
+    const invalid = await exercises.PUT(
+      json("PUT", { reason: "" }),
+      ctx({ ...id, type: "special_preparation", number: "14" }),
+    );
+    expect(invalid.status).toBe(400);
+    expect(await invalid.json()).toMatchObject({
+      error: { code: "VALIDATION_FAILED", fields: { reason: ["REQUIRED"] } },
+    });
 
     const read = await (
       await main.GET(new Request("https://localhost/api"), ctx(id))
@@ -94,6 +105,16 @@ describe("macrocycle API", () => {
     expect(await again.json()).toEqual({
       error: { code: "MACROCYCLE_EXISTS" },
     });
+
+    const removed = await exercises.DELETE(
+      new Request("https://localhost/api", { method: "DELETE" }),
+      ctx({ ...id, type: "special_preparation", number: "13" }),
+    );
+    expect(removed.status).toBe(204);
+    const after = await (
+      await main.GET(new Request("https://localhost/api"), ctx(id))
+    ).json();
+    expect(after.mesocycles[1].exercises).toEqual([]);
   });
 
   it("changes base data and week levels", async () => {
@@ -195,8 +216,12 @@ describe("macrocycle API", () => {
         ctx({ ...id, week: "1" }),
       ),
       await exercises.PUT(
-        json("PUT", { exerciseNumbers: [] }),
-        ctx({ ...id, type: "special_preparation" }),
+        json("PUT", { reason: "x" }),
+        ctx({ ...id, type: "special_preparation", number: "13" }),
+      ),
+      await exercises.DELETE(
+        new Request("https://localhost/api", { method: "DELETE" }),
+        ctx({ ...id, type: "special_preparation", number: "13" }),
       ),
     ]) {
       expect(response.status).toBe(401);

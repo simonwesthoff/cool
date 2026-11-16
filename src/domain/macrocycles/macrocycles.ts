@@ -138,6 +138,8 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
         .select({
           mesocycleId: mesocycleExercise.mesocycleId,
           number: mesocycleExercise.exerciseNumber,
+          variation: mesocycleExercise.variation,
+          reason: mesocycleExercise.reason,
         })
         .from(mesocycleExercise)
         .where(
@@ -168,13 +170,17 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
   const mesocycleViews = MESOCYCLE_TYPES.map((type) => {
     const m = mesocycles.find((x) => x.type === type);
     if (!m) throw new Error(`Macrocycle ${row.id} has no ${type} block`);
+    const own = chosen.filter((c) => c.mesocycleId === m.id);
     return {
       type,
       firstWeek: m.firstWeek,
       lastWeek: m.lastWeek,
-      exerciseNumbers: chosen
-        .filter((c) => c.mesocycleId === m.id)
-        .map((c) => c.number),
+      exerciseNumbers: own.map((c) => c.number),
+      exercises: own.map((c) => ({
+        exerciseNumber: c.number,
+        variation: c.variation,
+        reason: c.reason,
+      })),
     };
   });
 
@@ -360,59 +366,96 @@ export async function setWeekLevel(
   return getMacrocycle(coach, athleteId);
 }
 
-const exercisesSchema = z.strictObject({
-  exerciseNumbers: z
-    .array(z.number().int().positive())
-    .max(45)
-    .refine((list) => new Set(list).size === list.length, {
-      params: { code: "DUPLICATE" },
-    }),
+const choiceCode = (value: string) => ({ params: { code: value } });
+const choiceSchema = z.strictObject({
+  reason: z
+    .string()
+    .trim()
+    .refine((v) => v.length > 0, choiceCode("REQUIRED"))
+    .refine((v) => v.length <= 500, choiceCode("TOO_LONG")),
+  variation: z
+    .string()
+    .trim()
+    .refine((v) => v.length <= 200, choiceCode("TOO_LONG"))
+    .nullish(),
 });
 
 export function isMesocycleType(value: string): value is MesocycleType {
   return (MESOCYCLE_TYPES as readonly string[]).includes(value);
 }
 
-/** Step 3: the exercises of one mesocycle (replaces the previous choice). */
-export async function setMesocycleExercises(
+/** The macrocycle row and the id of one of its mesocycles. */
+async function findMesocycle(
   coach: CurrentUser,
   athleteId: string,
   type: string,
-  input: unknown,
-): Promise<Macrocycle> {
+): Promise<string> {
   await requireOwnAthlete(coach, athleteId);
   if (!isMesocycleType(type))
     throw new DomainError("not_found", "MESOCYCLE_NOT_FOUND");
-  const { exerciseNumbers } = parseInput(exercisesSchema, input);
   const row = await findMacrocycleRow(athleteId);
   if (!row) throw notFound();
-  if (exerciseNumbers.length > 0) {
-    const known = await getDb()
-      .select({ number: exercise.number })
-      .from(exercise)
-      .where(inArray(exercise.number, exerciseNumbers));
-    if (known.length !== exerciseNumbers.length) {
-      throw new DomainError("invalid", "UNKNOWN_EXERCISE");
-    }
-  }
-  await getDb().transaction(async (tx) => {
-    const [m] = await tx
-      .select({ id: mesocycle.id })
-      .from(mesocycle)
-      .where(and(eq(mesocycle.macrocycleId, row.id), eq(mesocycle.type, type)));
-    await tx
-      .delete(mesocycleExercise)
-      .where(eq(mesocycleExercise.mesocycleId, m!.id));
-    if (exerciseNumbers.length > 0) {
-      await tx.insert(mesocycleExercise).values(
-        exerciseNumbers.map((exerciseNumber) => ({
-          mesocycleId: m!.id,
-          exerciseNumber,
-        })),
-      );
-    }
-  });
+  const [m] = await getDb()
+    .select({ id: mesocycle.id })
+    .from(mesocycle)
+    .where(and(eq(mesocycle.macrocycleId, row.id), eq(mesocycle.type, type)));
+  return m!.id;
+}
+
+function exerciseNumberOf(value: string): number {
+  const number = Number(value);
+  if (!Number.isInteger(number) || number <= 0)
+    throw new DomainError("not_found", "EXERCISE_NOT_FOUND");
+  return number;
+}
+
+/**
+ * Step 3: choose one exercise for a mesocycle, or change its variation and
+ * reason. The reason is required; the variation is information only.
+ */
+export async function setMesocycleExercise(
+  coach: CurrentUser,
+  athleteId: string,
+  type: string,
+  exerciseNumberParam: string,
+  input: unknown,
+): Promise<Macrocycle> {
+  const mesocycleId = await findMesocycle(coach, athleteId, type);
+  const exerciseNumber = exerciseNumberOf(exerciseNumberParam);
+  const { reason, variation } = parseInput(choiceSchema, input);
+  const [known] = await getDb()
+    .select({ number: exercise.number })
+    .from(exercise)
+    .where(eq(exercise.number, exerciseNumber));
+  if (!known) throw new DomainError("not_found", "EXERCISE_NOT_FOUND");
+  const values = { reason, variation: variation ? variation : null };
+  await getDb()
+    .insert(mesocycleExercise)
+    .values({ mesocycleId, exerciseNumber, ...values })
+    .onConflictDoUpdate({
+      target: [mesocycleExercise.mesocycleId, mesocycleExercise.exerciseNumber],
+      set: values,
+    });
   return getMacrocycle(coach, athleteId);
+}
+
+/** Step 3: remove one exercise from a mesocycle (no error if not chosen). */
+export async function removeMesocycleExercise(
+  coach: CurrentUser,
+  athleteId: string,
+  type: string,
+  exerciseNumberParam: string,
+): Promise<void> {
+  const mesocycleId = await findMesocycle(coach, athleteId, type);
+  const exerciseNumber = exerciseNumberOf(exerciseNumberParam);
+  await getDb()
+    .delete(mesocycleExercise)
+    .where(
+      and(
+        eq(mesocycleExercise.mesocycleId, mesocycleId),
+        eq(mesocycleExercise.exerciseNumber, exerciseNumber),
+      ),
+    );
 }
 
 const bordersSchema = z.strictObject({
