@@ -67,7 +67,7 @@
 
 ## 5. Integration check
 
-- [ ] 5.1 Browser check on the dev server and on the Docker build, at phone and desktop width, in light and dark mode:
+- [x] 5.1 Browser check on the dev server and on the Docker build, at phone and desktop width, in light and dark mode:
   - **Coach:** opens the view from athlete details, then "Change planning" and back.
   - **Linked athlete:** opens it from "My training", read-only; their API write attempts get 404.
   - **Chart:** snatch is shown by default and switching to exercise 13 changes the curves; the current-week line is in the right week; colours match the value colours.

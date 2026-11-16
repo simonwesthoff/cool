@@ -406,7 +406,7 @@ export function ExerciseChart({
                   d={pathOf(s)}
                   fill="none"
                   stroke="var(--curve-outline)"
-                  strokeWidth={4}
+                  strokeWidth={3.5}
                   strokeDasharray={s.dash}
                   strokeLinejoin="round"
                 />
