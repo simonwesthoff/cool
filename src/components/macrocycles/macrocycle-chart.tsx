@@ -306,7 +306,7 @@ export function MacrocycleChart({
           <li key={m.type} className="flex items-center gap-2">
             <span
               aria-hidden="true"
-              className="inline-block size-3 rounded-sm"
+              className="inline-block size-3 rounded-sm ring-1 ring-zinc-400/70 ring-inset"
               style={{ background: BAND_FILL[i] }}
             />
             {tm(m.type)}
@@ -377,7 +377,8 @@ export function MacrocycleChart({
                 x2={plotRight}
                 y1={y(tick)}
                 y2={y(tick)}
-                className="stroke-black/20"
+                stroke="var(--chart-ink)"
+                strokeOpacity={0.12}
                 strokeWidth={1}
               />
               <text
@@ -407,34 +408,30 @@ export function MacrocycleChart({
           >
             {t("axisWeek")}
           </text>
-          {/* White marks with a dark halo stay readable on every band colour. */}
+          {/* The base curve is a thin neutral line. */}
           <path
             d={curvePath}
             fill="none"
-            stroke="var(--chart-halo)"
-            strokeOpacity={0.5}
-            strokeWidth={3}
-          />
-          <path
-            d={curvePath}
-            fill="none"
-            className="stroke-white/70"
+            stroke="var(--chart-ink)"
+            strokeOpacity={0.45}
             strokeWidth={1}
           />
+          {/* Intensity = best value in %: best value colour with an outline
+              that stays readable on every grey band. */}
           <path
             d={linePath}
             fill="none"
-            stroke="var(--chart-halo)"
-            strokeWidth={5}
-            strokeOpacity={0.85}
+            stroke="var(--curve-outline)"
+            strokeWidth={4.5}
             strokeLinejoin="round"
             strokeLinecap="round"
           />
           <path
+            data-intensity-line
             d={linePath}
             fill="none"
-            className="stroke-white"
-            strokeWidth={2}
+            stroke="var(--value-best)"
+            strokeWidth={2.5}
             strokeLinejoin="round"
             strokeLinecap="round"
           />
@@ -459,12 +456,9 @@ export function MacrocycleChart({
                     x={p.x}
                     y={level === "high" ? p.y - radius - 6 : p.y + radius + 14}
                     textAnchor="middle"
-                    className={
-                      column < 12
-                        ? "fill-white text-[9px]"
-                        : "fill-white text-[11px]"
-                    }
-                    stroke="var(--chart-halo)"
+                    className={column < 12 ? "text-[9px]" : "text-[11px]"}
+                    fill="var(--chart-ink)"
+                    stroke="var(--surface)"
                     strokeWidth={3}
                     paintOrder="stroke"
                     aria-hidden="true"
@@ -480,14 +474,14 @@ export function MacrocycleChart({
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={(active ? radius + 1.5 : radius) + 2.5}
-                    fill="var(--chart-halo)"
+                    r={(active ? radius + 1.5 : radius) + 1.5}
+                    fill="var(--curve-outline)"
                   />
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={active ? radius + 1.5 : radius}
-                    className="fill-white"
+                    fill="var(--value-best)"
                   />
                 </g>
                 {/* The week's hit area: its whole column, centred on the point. */}
@@ -518,7 +512,9 @@ export function MacrocycleChart({
                   x2={bx}
                   y1={PLOT.top}
                   y2={PLOT.top + PLOT.height}
-                  className="pointer-events-none stroke-white/80"
+                  className="pointer-events-none"
+                  stroke="var(--chart-ink)"
+                  strokeOpacity={0.5}
                   strokeWidth={borderDrag?.border === border ? 2 : 1}
                 />
                 {onBordersChange && (
@@ -602,16 +598,7 @@ export function MacrocycleChart({
                 x2={marker.x}
                 y1={PLOT.top}
                 y2={PLOT.top + PLOT.height}
-                stroke="var(--chart-halo)"
-                strokeOpacity={0.6}
-                strokeWidth={4}
-              />
-              <line
-                x1={marker.x}
-                x2={marker.x}
-                y1={PLOT.top}
-                y2={PLOT.top + PLOT.height}
-                className="stroke-white"
+                stroke="var(--chart-ink)"
                 strokeWidth={2}
                 strokeDasharray="5 3"
               />
@@ -632,7 +619,9 @@ export function MacrocycleChart({
               x2={x(weeks.findIndex((w) => w.number === hovered))}
               y1={PLOT.top}
               y2={PLOT.top + PLOT.height}
-              className="pointer-events-none stroke-white/80"
+              className="pointer-events-none"
+              stroke="var(--chart-ink)"
+              strokeOpacity={0.5}
               strokeWidth={1}
             />
           )}

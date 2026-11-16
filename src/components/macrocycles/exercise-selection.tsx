@@ -128,7 +128,7 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
                 <span className="flex flex-col items-center gap-1">
                   <span
                     aria-hidden="true"
-                    className="inline-block h-1.5 w-8 rounded-full"
+                    className="inline-block h-1.5 w-8 rounded-full ring-1 ring-zinc-400/70 ring-inset"
                     style={{ background: SWATCH[i] }}
                   />
                   <span title={tm(m.type)}>{tm(`abbr.${m.type}`)}</span>

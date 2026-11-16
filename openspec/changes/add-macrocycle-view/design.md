@@ -120,12 +120,16 @@
 - **Dual-axis mitigation:** the `dataviz` guidance advises against two
   y-axes; the user chose them. To keep the units apart:
   - Each curve is in its value colour (see Colour association).
-  - kg curves are solid: best value with round points, average weight with
-    square points.
-  - Reps curves are dashed: set size with triangle points, weekly reps
-    with diamond points.
-  - The line style and point shape also keep purple and magenta apart for
-    colour-blind readers.
+  - Every curve has its own line style and point shape: best value solid
+    with circles, average weight dashed with squares, set size dotted with
+    triangles, weekly reps dash-dot with diamonds.
+  - Validator result (implementation): purple and magenta fail CVD
+    separation (ΔE 3.3) and the normal-vision floor (14.5 < 15). The colours
+    are the user's fixed choice, so identity is never carried by colour
+    alone: the line style, point shape, legend and tooltip values do that.
+  - Contrast: lime and cyan are below 3:1 on light greys and purple on dark
+    greys. A 1 px outline in the opposite of the surface fixes this (at
+    least 7.4:1 against every grey band).
   - The legend shows each line style with its marker and unit, e.g.
     "Best value (kg)".
   - Axis titles name the unit.
