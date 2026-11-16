@@ -91,7 +91,7 @@ exercises the volume SHALL be undefined.
 #### Scenario: No exercises yet
 - **GIVEN** a mesocycle without chosen exercises
 - **WHEN** the volume of one of its weeks is calculated
-- **THEN** it is undefined and the chart shows no volume for it
+- **THEN** it is undefined and the week's tooltip shows no volume
 
 ### Requirement: Default mesocycles
 A new macrocycle of N weeks SHALL be divided into the general preparation

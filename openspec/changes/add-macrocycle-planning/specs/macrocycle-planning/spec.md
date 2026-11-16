@@ -76,13 +76,12 @@ planned and the coach returns to the athlete's details page.
 - **THEN** the mesocycle lengths keep their proportions (each at least one week), the levels of weeks 1–21 stay, weeks 22–24 are medium, and the chosen exercises of each mesocycle stay
 
 ### Requirement: Intensity chart with week handles
-Step 2 SHALL show the macrocycle chart: weeks on the x-axis with each
-week's number and point at the start of its area, the intensity as a curve
-with one handle per week, mesocycle backgrounds in the app palette (general
-preparation #6f3ab1, special preparation #ba2db3, competition preparation
-#3bc8c8) and the volume once exercises are chosen. Each handle
-SHALL move one 5 % step up (high week) or down (low week) from the curve by
-dragging, tapping or keyboard; in between the week is medium.
+Step 2 SHALL show the macrocycle chart fitting the screen width: weeks on
+the x-axis ("Week"), each week's number and point at the start of its
+area, the intensity ("Intensity") as a curve with one handle per week, and
+mesocycle backgrounds in the app palette (#6f3ab1, #ba2db3, #3bc8c8). Each
+handle SHALL move one 5 % step up (high week) or down (low week) by
+dragging or tapping; in between it is medium.
 
 #### Scenario: Make a week high
 - **GIVEN** week 11 at 80 % intensity
@@ -99,10 +98,15 @@ dragging, tapping or keyboard; in between the week is medium.
 - **WHEN** the coach tries to drag its handle further up
 - **THEN** it stays at one step above the curve
 
-#### Scenario: Keyboard
-- **GIVEN** the handle of a week has keyboard focus
-- **WHEN** the coach presses the arrow key up or down
-- **THEN** the week level moves one step up or down
+#### Scenario: Whole cycle on a phone
+- **GIVEN** a 52-week macrocycle
+- **WHEN** the coach opens step 2 on a phone
+- **THEN** all 52 weeks are visible without scrolling sideways
+
+#### Scenario: No volume in the planning chart
+- **GIVEN** exercises are chosen for the mesocycles
+- **WHEN** the coach looks at the chart in step 2
+- **THEN** the chart shows the intensity only; a week's volume is shown in its tooltip
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
@@ -125,8 +129,8 @@ tooltip SHALL never cover the pointer or the week's point.
 
 ### Requirement: Adjustable mesocycle borders
 In step 2, the coach SHALL be able to move the two borders between the
-mesocycles left and right by whole weeks, by dragging a handle on each
-border or with the arrow keys. Each mesocycle SHALL keep at least one week.
+mesocycles left and right by whole weeks by dragging a handle on each
+border. Each mesocycle SHALL keep at least one week.
 Every change SHALL be saved.
 
 #### Scenario: Longer general preparation
@@ -137,11 +141,6 @@ Every change SHALL be saved.
 #### Scenario: At least one week
 - **WHEN** the coach drags the second border onto the first one
 - **THEN** it stops one week after the first border
-
-#### Scenario: Keyboard
-- **GIVEN** the handle of a border has keyboard focus
-- **WHEN** the coach presses the arrow key left or right
-- **THEN** the border moves one week
 
 ### Requirement: Exercises per mesocycle
 Step 3 SHALL let the coach choose any number of exercises from the exercise

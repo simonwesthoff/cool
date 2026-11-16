@@ -40,6 +40,8 @@
 
 - [x] 7.6 Acceptance feedback: app palette tokens (#6f3ab1, #ba2db3, #3bc8c8, #d7f212) for the mesocycle bands and legend, white haloed curve/points/markers, week points and numbers at the start of each week; verify component tests, the browser check and screenshots in light and dark mode
 
+- [ ] 7.7 Acceptance feedback: remove keyboard control of week handles and borders, the table view and the volume bar chart; add axis titles "Week" and "Intensity"; make the chart fit the width on phones (no horizontal scrolling, scaled points); add English and German texts; verify component tests, the browser check and phone screenshots (21 and 52 weeks)
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

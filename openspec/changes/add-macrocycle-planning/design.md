@@ -136,6 +136,19 @@ colours:
   band labels, the border lines with handles and the legend name the
   blocks; purple is not used as text colour on dark backgrounds.
 
+### Chart simplification (changed during acceptance)
+- No keyboard control of week handles and borders, no table view, and no
+  volume bar chart in step 2 (user decisions): dragging and tapping change
+  the chart; the tooltip shows every week's values including the volume.
+  Trade-off accepted by the user: the planning chart cannot be operated
+  with the keyboard alone, deviating from the `dataviz` guidance of a
+  table view.
+- Axis titles: "Week" under the x-axis, "Intensity" beside the y-axis.
+- The chart always fits its container width (no horizontal scrolling):
+  the column width is the available width divided by the number of weeks,
+  smaller margins on phones, points and hit areas scale with the column
+  width (point radius at least 2.5 px), week numbers thin out accordingly.
+
 ### Week positions (changed during acceptance)
 Each week's point, handle and x-axis number sit at the start (left edge) of
 the week's column instead of its centre, so a mesocycle border is exactly at
