@@ -19,7 +19,11 @@ import {
 } from "vitest";
 import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
-import type { ExerciseGroup } from "@/domain/exercises/catalog-types";
+import type {
+  Exercise,
+  ExerciseGroup,
+  ReferenceLift,
+} from "@/domain/exercises/catalog-types";
 import type {
   Macrocycle,
   MesocycleExercise,
@@ -49,29 +53,45 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const tag = (de: string, en: string) => ({ key: de, name: { de, en } });
 const exercise = (
   number: number,
   en: string,
+  referenceLift: ReferenceLift | null,
+  addresses: Exercise["addresses"] = [],
   comment: string | null = null,
-) => ({
+): Exercise => ({
   number,
-  groupNumber: 3,
+  groupNumber: 2,
   name: { de: en, en },
-  referenceLift: null,
+  referenceLift,
   bestValuePct: null,
   maxWeeklyAverageWeightPct: null,
   repsPerSet: { min: null, max: null },
   repsPerWeek: { min: null, max: null },
   comment: comment ? { de: comment, en: comment } : null,
+  addresses,
 });
 const catalog: ExerciseGroup[] = [
   {
-    number: 3,
-    code: "K3",
-    name: { de: "SKF", en: "Speed strength" },
+    number: 2,
+    code: "K2",
+    name: { de: "TWKÜ", en: "Partial competition exercises" },
     exercises: [
-      exercise(13, "Snatch pull", "Variations: from blocks"),
-      exercise(14, "Clean pull"),
+      exercise(
+        7,
+        "Power snatch",
+        "snatch",
+        [
+          tag("Beschleunigung im 2. Zug", "Acceleration in the second pull"),
+          tag("Hoher Zug", "High pull"),
+        ],
+        "Variations: from blocks",
+      ),
+      exercise(12, "Power jerk", "clean_and_jerk", [
+        tag("Rhythmus im Auftakt", "Rhythm in the dip"),
+      ]),
+      exercise(33, "Pull-up", null),
     ],
   },
 ];
@@ -103,15 +123,20 @@ const mesocycles = (
 ];
 const macrocycle = {
   athleteId: "a1",
+  snatchDeficits: "Slow turnover",
+  cleanDeficits: "Catch too soft",
+  jerkDeficits: "",
+  otherDeficits: "Ankle mobility",
   mesocycles: mesocycles(
     [
       {
-        exerciseNumber: 14,
-        variation: "From the hang",
-        reason: "Pull position",
+        exerciseNumber: 12,
+        variation: "From the rack",
+        tags: ["Rhythmus im Auftakt"],
+        note: null,
       },
     ],
-    [{ exerciseNumber: 13, variation: null, reason: "" }],
+    [{ exerciseNumber: 7, variation: null, tags: [], note: null }],
   ),
   weeks: [],
 } as unknown as Macrocycle;
@@ -126,6 +151,12 @@ const renderIt = (locale: "en" | "de" = "en") =>
     </NextIntlClientProvider>,
   );
 const dialog = () => screen.getByRole("dialog");
+const open = (name: string) =>
+  userEvent.click(screen.getByRole("button", { name }));
+const deficitKeys = () =>
+  [...dialog().querySelectorAll("[data-deficit]")].map((el) =>
+    el.getAttribute("data-deficit"),
+  );
 
 describe("ExerciseSelection", () => {
   it("is one table with a column per mesocycle", () => {
@@ -139,46 +170,72 @@ describe("ExerciseSelection", () => {
       "GLPWo. 1–3",
       "ABPWo. 4–13",
       "LAPWo. 14–21",
-      "K3 · SKF",
+      "K2 · TWKÜ",
     ]);
     expect(
-      within(table).getByRole("rowheader", { name: /Snatch pull/ }),
+      within(table).getByRole("rowheader", { name: /Power snatch/ }),
     ).toBeTruthy();
-    expect(screen.queryAllByRole("tab")).toHaveLength(0);
   });
 
   it("shows chosen cells with their variation and marks a missing reason", () => {
     renderIt();
     expect(
       screen.getByRole("button", {
-        name: "Clean pull, Special preparation block: chosen, From the hang",
+        name: "Power jerk, Special preparation block: chosen, From the rack",
       }),
     ).toBeTruthy();
     expect(
       screen.getByRole("button", {
-        name: "Snatch pull, General preparation block: chosen, Standard, Reason missing",
-      }),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("button", {
-        name: "Snatch pull, Special preparation block: choose",
+        name: "Power snatch, General preparation block: chosen, Standard, Reason missing",
       }),
     ).toBeTruthy();
   });
 
-  it("chooses an exercise with variation and reason", async () => {
+  it("shows the snatch and other deficits for a snatch exercise", async () => {
+    renderIt();
+    await open("Power snatch, Special preparation block: choose");
+    expect(dialog().querySelector("h2")!.textContent).toBe("7 Power snatch");
+    expect(dialog().textContent).toContain(
+      "Special preparation block · Snatch exercise",
+    );
+    expect(deficitKeys()).toEqual(["snatchDeficits", "otherDeficits"]);
+    const deficits = within(dialog()).getByRole("region", {
+      name: "Athlete's deficits",
+    });
+    expect(deficits.textContent).toContain(
+      "Deficits in the snatchSlow turnover",
+    );
+    expect(deficits.textContent).toContain("Other deficitsAnkle mobility");
+  });
+
+  it("shows clean, jerk and other deficits for a clean & jerk exercise, and only other ones without a reference lift", async () => {
+    renderIt();
+    await open("Power jerk, General preparation block: choose");
+    expect(deficitKeys()).toEqual([
+      "cleanDeficits",
+      "jerkDeficits",
+      "otherDeficits",
+    ]);
+    expect(dialog().textContent).toContain(
+      "Deficits in the jerkNot entered yet",
+    );
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Cancel" }),
+    );
+    await open("Pull-up, General preparation block: choose");
+    expect(deficitKeys()).toEqual(["otherDeficits"]);
+    expect(dialog().textContent).toContain("please write a note");
+  });
+
+  it("chooses an exercise by tapping tags", async () => {
     const saved = {
       ...macrocycle,
       mesocycles: mesocycles([
         {
-          exerciseNumber: 13,
+          exerciseNumber: 7,
           variation: "From blocks",
-          reason: "Pull strength",
-        },
-        {
-          exerciseNumber: 14,
-          variation: "From the hang",
-          reason: "Pull position",
+          tags: ["Beschleunigung im 2. Zug", "Hoher Zug"],
+          note: null,
         },
       ]),
     };
@@ -186,22 +243,19 @@ describe("ExerciseSelection", () => {
       new Response(JSON.stringify(saved), { status: 200 }),
     );
     renderIt();
-    await userEvent.click(
-      screen.getByRole("button", {
-        name: "Snatch pull, Special preparation block: choose",
-      }),
-    );
-    expect(within(dialog()).getByRole("heading").textContent).toBe(
-      "13 Snatch pull",
-    );
-    expect(dialog().textContent).toContain("Catalog: Variations: from blocks");
+    await open("Power snatch, Special preparation block: choose");
+    const high = within(dialog()).getByRole("button", { name: "High pull" });
+    const acceleration = within(dialog()).getByRole("button", {
+      name: "Acceleration in the second pull",
+    });
+    expect(high.getAttribute("aria-pressed")).toBe("false");
+    // Tapped in reverse order; saved in the catalog order.
+    await userEvent.click(high);
+    await userEvent.click(acceleration);
+    expect(high.getAttribute("aria-pressed")).toBe("true");
     await userEvent.type(
       within(dialog()).getByLabelText(/Variation/),
       "From blocks",
-    );
-    await userEvent.type(
-      within(dialog()).getByLabelText("Reason"),
-      "Pull strength",
     );
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "Choose exercise" }),
@@ -209,65 +263,86 @@ describe("ExerciseSelection", () => {
 
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(
-      "/api/athletes/a1/macrocycle/mesocycles/special_preparation/exercises/13",
+      "/api/athletes/a1/macrocycle/mesocycles/special_preparation/exercises/7",
     );
     expect(init.method).toBe("PUT");
     expect(JSON.parse(init.body)).toEqual({
+      tags: ["Beschleunigung im 2. Zug", "Hoher Zug"],
+      note: null,
       variation: "From blocks",
-      reason: "Pull strength",
     });
     expect(
       await screen.findByRole("button", {
-        name: "Snatch pull, Special preparation block: chosen, From blocks",
+        name: "Power snatch, Special preparation block: chosen, From blocks",
       }),
     ).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("requires a reason before saving", async () => {
-    renderIt();
-    await userEvent.click(
-      screen.getByRole("button", {
-        name: "Clean pull, General preparation block: choose",
-      }),
+  it("chooses an exercise without tags with a note", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(macrocycle), { status: 200 }),
     );
+    renderIt();
+    await open("Pull-up, General preparation block: choose");
+    await userEvent.type(
+      within(dialog()).getByLabelText(/Note/),
+      "Back strength",
+    );
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Choose exercise" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({
+      tags: [],
+      note: "Back strength",
+      variation: null,
+    });
+  });
+
+  it("requires a tag or a note", async () => {
+    renderIt();
+    await open("Power snatch, Special preparation block: choose");
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "Choose exercise" }),
     );
     expect(fetchMock).not.toHaveBeenCalled();
     expect(dialog().textContent).toContain(
-      "Please enter why the exercise is chosen.",
+      "Choose at least one point or write a note.",
     );
     expect(
-      within(dialog()).getByLabelText("Reason").getAttribute("aria-invalid"),
+      within(dialog()).getByLabelText(/Note/).getAttribute("aria-invalid"),
     ).toBe("true");
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "High pull" }),
+    );
+    expect(dialog().textContent).not.toContain(
+      "Choose at least one point or write a note.",
+    );
   });
 
   it("edits an existing choice and removes it", async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
     renderIt();
-    await userEvent.click(
-      screen.getByRole("button", {
-        name: /Clean pull, Special preparation block: chosen/,
-      }),
-    );
+    await open("Power jerk, Special preparation block: chosen, From the rack");
+    expect(
+      within(dialog())
+        .getByRole("button", { name: "Rhythm in the dip" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
     expect(
       (within(dialog()).getByLabelText(/Variation/) as HTMLInputElement).value,
-    ).toBe("From the hang");
-    expect(
-      (within(dialog()).getByLabelText("Reason") as HTMLTextAreaElement).value,
-    ).toBe("Pull position");
+    ).toBe("From the rack");
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "Remove" }),
     );
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(
-      "/api/athletes/a1/macrocycle/mesocycles/special_preparation/exercises/14",
+      "/api/athletes/a1/macrocycle/mesocycles/special_preparation/exercises/12",
     );
     expect(init.method).toBe("DELETE");
     expect(
       await screen.findByRole("button", {
-        name: "Clean pull, Special preparation block: choose",
+        name: "Power jerk, Special preparation block: choose",
       }),
     ).toBeTruthy();
   });
@@ -275,12 +350,10 @@ describe("ExerciseSelection", () => {
   it("keeps the dialog open with a message when saving fails", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
     renderIt();
+    await open("Power snatch, Special preparation block: choose");
     await userEvent.click(
-      screen.getByRole("button", {
-        name: "Clean pull, General preparation block: choose",
-      }),
+      within(dialog()).getByRole("button", { name: "High pull" }),
     );
-    await userEvent.type(within(dialog()).getByLabelText("Reason"), "Strength");
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "Choose exercise" }),
     );
@@ -289,9 +362,18 @@ describe("ExerciseSelection", () => {
     );
     expect(
       screen.getByRole("button", {
-        name: "Clean pull, General preparation block: choose",
+        name: "Power snatch, Special preparation block: choose",
       }),
     ).toBeTruthy();
+  });
+
+  it("shows German tags and deficit labels", async () => {
+    renderIt("de");
+    await open("Power snatch, Aufbauphase (ABP): wählen");
+    expect(
+      within(dialog()).getByRole("button", { name: "Hoher Zug" }),
+    ).toBeTruthy();
+    expect(dialog().textContent).toContain("Defizite im ReißenSlow turnover");
   });
 
   it("finishes on the athlete details page", () => {
@@ -299,5 +381,20 @@ describe("ExerciseSelection", () => {
     expect(
       screen.getByRole("link", { name: "Finish planning" }),
     ).toHaveProperty("pathname", "/athletes/a1");
+  });
+});
+
+describe("ExerciseChoiceDialog closing", () => {
+  it("stays open for a cell opened before the previous close event arrived", async () => {
+    renderIt();
+    await open("Power jerk, General preparation block: choose");
+    const element = dialog() as HTMLDialogElement;
+    // Close without the event, open another cell, then deliver the late event.
+    element.removeAttribute("open");
+    await open("Pull-up, General preparation block: choose");
+    element.dispatchEvent(new Event("close"));
+    await waitFor(() =>
+      expect(dialog().querySelector("h2")!.textContent).toBe("33 Pull-up"),
+    );
   });
 });

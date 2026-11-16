@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { localized, type Exercise } from "@/domain/exercises/catalog-types";
 import type {
+  MacrocycleBaseData,
   MesocycleExercise,
   MesocycleType,
 } from "@/domain/macrocycles/macrocycle-types";
@@ -15,21 +16,45 @@ export type ChoiceTarget = {
   choice: MesocycleExercise | null;
 };
 
+export type Deficits = Pick<
+  MacrocycleBaseData,
+  "snatchDeficits" | "cleanDeficits" | "jerkDeficits" | "otherDeficits"
+>;
+
+export type ChoiceInput = {
+  tags: string[];
+  note: string | null;
+  variation: string | null;
+};
+
 type Props = {
   /** The cell being edited; null closes the dialog. */
   target: ChoiceTarget | null;
+  deficits: Deficits;
   /** Resolves to false when saving failed. */
-  onSave: (variation: string, reason: string) => Promise<boolean>;
+  onSave: (input: ChoiceInput) => Promise<boolean>;
   onRemove: () => Promise<boolean>;
   onClose: () => void;
 };
 
-const REASON_MAX = 500;
+const NOTE_MAX = 500;
 const VARIATION_MAX = 200;
 
-/** Dialog for one cell of the exercise table: variation and reason. */
+/** The deficits relevant for an exercise: those of its reference lift and the other ones. */
+export function relevantDeficits(
+  exercise: Pick<Exercise, "referenceLift">,
+): (keyof Deficits)[] {
+  if (exercise.referenceLift === "snatch")
+    return ["snatchDeficits", "otherDeficits"];
+  if (exercise.referenceLift === "clean_and_jerk")
+    return ["cleanDeficits", "jerkDeficits", "otherDeficits"];
+  return ["otherDeficits"];
+}
+
+/** Dialog for one cell of the exercise table: reason (tags, note) and variation. */
 export function ExerciseChoiceDialog({
   target,
+  deficits,
   onSave,
   onRemove,
   onClose,
@@ -47,7 +72,11 @@ export function ExerciseChoiceDialog({
     <dialog
       ref={dialog}
       aria-labelledby="exercise-choice-title"
-      onClose={onClose}
+      // The close event arrives after the dialog closed; if another cell was
+      // opened in the meantime, the dialog is open again and stays open.
+      onClose={(event) => {
+        if (!event.currentTarget.open) onClose();
+      }}
       onClick={(event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
       }}
@@ -58,6 +87,7 @@ export function ExerciseChoiceDialog({
           // A new cell starts with a fresh form.
           key={`${target.type}-${target.exercise.number}`}
           target={target}
+          deficits={deficits}
           onSave={onSave}
           onRemove={onRemove}
           close={() => dialog.current?.close()}
@@ -69,41 +99,71 @@ export function ExerciseChoiceDialog({
 
 function ChoiceForm({
   target,
+  deficits,
   onSave,
   onRemove,
   close,
 }: {
   target: ChoiceTarget;
+  deficits: Deficits;
   onSave: Props["onSave"];
   onRemove: Props["onRemove"];
   close: () => void;
 }) {
   const t = useTranslations("Macrocycle.exercises");
   const tm = useTranslations("Macrocycle.mesocycles");
+  const tf = useTranslations("Macrocycle.baseData.fields");
+  const tc = useTranslations("Catalog");
   const locale = useLocale();
+  const noteId = useId();
   const variationId = useId();
-  const reasonId = useId();
   const reasonErrorId = useId();
+  const reasonHintId = useId();
   const hintId = useId();
-  const [variation, setVariation] = useState(target.choice?.variation ?? "");
-  const [reason, setReason] = useState(target.choice?.reason ?? "");
-  const [reasonError, setReasonError] = useState<string | null>(null);
+  const { exercise, type, choice } = target;
+  const [tags, setTags] = useState<string[]>(choice?.tags ?? []);
+  const [note, setNote] = useState(choice?.note ?? "");
+  const [variation, setVariation] = useState(choice?.variation ?? "");
+  const [reasonError, setReasonError] = useState(false);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
-  const { exercise, type, choice } = target;
+
   // Title: number and name as one text, as in the catalog dialog.
   const title = `${exercise.number} ${localized(exercise.name, locale)}`;
+  const subtitle = [
+    tm(type),
+    exercise.referenceLift
+      ? tc(`liftExercise.${exercise.referenceLift}`)
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  function toggle(key: string) {
+    setReasonError(false);
+    setTags((current) =>
+      current.includes(key)
+        ? current.filter((k) => k !== key)
+        : // Keep the catalog order of the exercise's points.
+          exercise.addresses
+            .map((a) => a.key)
+            .filter((k) => k === key || current.includes(k)),
+    );
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (reason.trim().length === 0) {
-      setReasonError(t("reasonRequired"));
+    if (tags.length === 0 && note.trim().length === 0) {
+      setReasonError(true);
       return;
     }
-    setReasonError(null);
     setFailed(false);
     setBusy(true);
-    const ok = await onSave(variation.trim(), reason.trim());
+    const ok = await onSave({
+      tags,
+      note: note.trim() || null,
+      variation: variation.trim() || null,
+    });
     setBusy(false);
     if (ok) close();
     else setFailed(true);
@@ -134,9 +194,9 @@ function ChoiceForm({
         >
           {title}
         </h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{tm(type)}</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{subtitle}</p>
       </div>
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-5 p-4">
         {failed && (
           <p
             role="alert"
@@ -145,6 +205,89 @@ function ChoiceForm({
             {t("saveFailed")}
           </p>
         )}
+        <section
+          aria-label={t("deficitsTitle")}
+          className="flex flex-col gap-2 rounded-xl bg-zinc-100 p-3 dark:bg-zinc-900"
+        >
+          <h3 className="text-sm font-semibold">{t("deficitsTitle")}</h3>
+          <dl className="flex flex-col gap-2 text-sm">
+            {relevantDeficits(exercise).map((key) => (
+              <div key={key} data-deficit={key}>
+                <dt className="text-zinc-600 dark:text-zinc-400">{tf(key)}</dt>
+                <dd
+                  className={
+                    deficits[key]
+                      ? "whitespace-pre-line"
+                      : "text-zinc-500 italic"
+                  }
+                >
+                  {deficits[key] || t("notEntered")}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+        <fieldset
+          className="flex flex-col gap-2"
+          aria-describedby={
+            reasonError ? `${reasonHintId} ${reasonErrorId}` : reasonHintId
+          }
+        >
+          <legend className="text-sm font-medium">{t("reason")}</legend>
+          <p id={reasonHintId} className="text-xs text-zinc-500">
+            {exercise.addresses.length > 0
+              ? t("reasonHint")
+              : t("reasonHintNoTags")}
+          </p>
+          {exercise.addresses.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {exercise.addresses.map((tag) => {
+                const pressed = tags.includes(tag.key);
+                return (
+                  <button
+                    key={tag.key}
+                    type="button"
+                    aria-pressed={pressed}
+                    onClick={() => toggle(tag.key)}
+                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-left text-sm ${
+                      pressed
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                        : "border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                    }`}
+                  >
+                    {pressed && <CheckIcon />}
+                    {localized(tag.name, locale)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <label htmlFor={noteId} className="mt-1 text-sm font-medium">
+            {t("note")}
+            <span className="font-normal text-zinc-500"> {t("optional")}</span>
+          </label>
+          <textarea
+            id={noteId}
+            value={note}
+            rows={2}
+            maxLength={NOTE_MAX}
+            onChange={(event) => {
+              setReasonError(false);
+              setNote(event.target.value);
+            }}
+            aria-invalid={reasonError ? true : undefined}
+            aria-describedby={reasonError ? reasonErrorId : undefined}
+            className={`${inputClass} py-2`}
+          />
+          {reasonError && (
+            <p
+              id={reasonErrorId}
+              className="text-sm text-red-700 dark:text-red-400"
+            >
+              {t("reasonRequired")}
+            </p>
+          )}
+        </fieldset>
         <div className="flex flex-col gap-1">
           <label htmlFor={variationId} className="text-sm font-medium">
             {t("variation")}
@@ -164,30 +307,6 @@ function ChoiceForm({
               {t("catalogHint", {
                 comment: localized(exercise.comment, locale),
               })}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor={reasonId} className="text-sm font-medium">
-            {t("reason")}
-          </label>
-          <textarea
-            id={reasonId}
-            value={reason}
-            rows={3}
-            maxLength={REASON_MAX}
-            required
-            onChange={(event) => setReason(event.target.value)}
-            aria-invalid={reasonError ? true : undefined}
-            aria-describedby={reasonError ? reasonErrorId : undefined}
-            className={`${inputClass} py-2`}
-          />
-          {reasonError && (
-            <p
-              id={reasonErrorId}
-              className="text-sm text-red-700 dark:text-red-400"
-            >
-              {reasonError}
             </p>
           )}
         </div>
@@ -219,5 +338,22 @@ function ChoiceForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="size-3.5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 8.5 6.5 12 13 4.5" />
+    </svg>
   );
 }

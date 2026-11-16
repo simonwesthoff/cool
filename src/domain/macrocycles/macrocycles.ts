@@ -8,6 +8,7 @@ import { z } from "zod";
 import { getDb } from "@/server/db";
 import {
   exercise,
+  exerciseAddresses,
   macrocycle,
   macrocycleWeek,
   mesocycle,
@@ -84,7 +85,10 @@ function baseDataOf(row: BaseRow): MacrocycleBaseData {
     targetBodyWeightKg: row.targetBodyWeightKg,
     bodyFatPct: row.bodyFatPct,
     muscleMassPct: row.muscleMassPct,
-    deficits: row.deficits,
+    snatchDeficits: row.snatchDeficits,
+    cleanDeficits: row.cleanDeficits,
+    jerkDeficits: row.jerkDeficits,
+    otherDeficits: row.otherDeficits,
     injuriesAndIllnesses: row.injuriesAndIllnesses,
     strengths: row.strengths,
     experience: row.experience,
@@ -139,7 +143,8 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
           mesocycleId: mesocycleExercise.mesocycleId,
           number: mesocycleExercise.exerciseNumber,
           variation: mesocycleExercise.variation,
-          reason: mesocycleExercise.reason,
+          tags: mesocycleExercise.tags,
+          note: mesocycleExercise.note,
         })
         .from(mesocycleExercise)
         .where(
@@ -179,7 +184,8 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
       exercises: own.map((c) => ({
         exerciseNumber: c.number,
         variation: c.variation,
-        reason: c.reason,
+        tags: c.tags,
+        note: c.note,
       })),
     };
   });
@@ -367,18 +373,31 @@ export async function setWeekLevel(
 }
 
 const choiceCode = (value: string) => ({ params: { code: value } });
-const choiceSchema = z.strictObject({
-  reason: z
+const optionalText = (max: number) =>
+  z
     .string()
     .trim()
-    .refine((v) => v.length > 0, choiceCode("REQUIRED"))
-    .refine((v) => v.length <= 500, choiceCode("TOO_LONG")),
-  variation: z
-    .string()
-    .trim()
-    .refine((v) => v.length <= 200, choiceCode("TOO_LONG"))
-    .nullish(),
-});
+    .refine((v) => v.length <= max, choiceCode("TOO_LONG"))
+    .nullish()
+    .transform((v) => (v ? v : null));
+const choiceSchema = z
+  .strictObject({
+    tags: z
+      .array(z.string())
+      .max(20)
+      .refine(
+        (list) => new Set(list).size === list.length,
+        choiceCode("DUPLICATE"),
+      )
+      .default([]),
+    note: optionalText(500),
+    variation: optionalText(200),
+  })
+  // The reason is the tags and/or the note: at least one is required.
+  .refine((v) => v.tags.length > 0 || v.note !== null, {
+    path: ["reason"],
+    params: { code: "REQUIRED" },
+  });
 
 export function isMesocycleType(value: string): value is MesocycleType {
   return (MESOCYCLE_TYPES as readonly string[]).includes(value);
@@ -411,7 +430,8 @@ function exerciseNumberOf(value: string): number {
 
 /**
  * Step 3: choose one exercise for a mesocycle, or change its variation and
- * reason. The reason is required; the variation is information only.
+ * reason. The reason (tags the exercise addresses and/or a note) is
+ * required; the variation is information only.
  */
 export async function setMesocycleExercise(
   coach: CurrentUser,
@@ -422,13 +442,23 @@ export async function setMesocycleExercise(
 ): Promise<Macrocycle> {
   const mesocycleId = await findMesocycle(coach, athleteId, type);
   const exerciseNumber = exerciseNumberOf(exerciseNumberParam);
-  const { reason, variation } = parseInput(choiceSchema, input);
+  const { tags, note, variation } = parseInput(choiceSchema, input);
   const [known] = await getDb()
     .select({ number: exercise.number })
     .from(exercise)
     .where(eq(exercise.number, exerciseNumber));
   if (!known) throw new DomainError("not_found", "EXERCISE_NOT_FOUND");
-  const values = { reason, variation: variation ? variation : null };
+  if (tags.length > 0) {
+    const addressed = await getDb()
+      .select({ tag: exerciseAddresses.tag })
+      .from(exerciseAddresses)
+      .where(eq(exerciseAddresses.exerciseNumber, exerciseNumber));
+    const allowed = new Set(addressed.map((a) => a.tag));
+    if (tags.some((tag) => !allowed.has(tag))) {
+      throw new DomainValidationError({ tags: ["UNKNOWN_TAG"] });
+    }
+  }
+  const values = { tags, note, variation };
   await getDb()
     .insert(mesocycleExercise)
     .values({ mesocycleId, exerciseNumber, ...values })

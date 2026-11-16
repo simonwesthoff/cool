@@ -44,7 +44,7 @@
 
 - [x] 7.8 Acceptance feedback: exercise step as one table (exercise × GLP/ABP/LAP) with a dialog per cell; variation (optional) and reason (required) per mesocycle choice: migration 0008, domain functions, per-exercise PUT/DELETE API replacing the bulk PUT, English and German texts; verify domain, API and component tests, the browser check and phone/desktop screenshots
 
-- [ ] 7.9 Acceptance feedback: split deficits into snatch, clean, jerk and other (base data form, schema, migration); catalog "Addresses" tags (source column, translations, tag tables, generated data migration, catalog details); reason as tags + optional note per choice (migration, domain, API); dialog shows the deficits of the reference lift and tag buttons; English and German texts; verify tests, browser check and screenshots
+- [x] 7.9 Acceptance feedback: split deficits into snatch, clean, jerk and other (base data form, schema, migration); catalog "Addresses" tags (source column, translations, tag tables, generated data migration, catalog details); reason as tags + optional note per choice (migration, domain, API); dialog shows the deficits of the reference lift and tag buttons; English and German texts; verify tests, browser check and screenshots
 
 ## Workflow follow-up
 

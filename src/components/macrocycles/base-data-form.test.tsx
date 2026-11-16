@@ -36,7 +36,10 @@ const existing = {
   targetBodyWeightKg: 80.5,
   bodyFatPct: 12,
   muscleMassPct: null,
-  deficits: "Turnover",
+  snatchDeficits: "Turnover",
+  cleanDeficits: "Catch position",
+  jerkDeficits: "Dip",
+  otherDeficits: "None",
   injuriesAndIllnesses: "None",
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
@@ -92,7 +95,10 @@ describe("BaseDataForm", () => {
     await fill("Goal clean & jerk (kg)", "130");
     await fill("Body weight (kg)", "81");
     await fill("Target body weight (kg)", "80.5");
-    await fill("Current deficits", "Turnover");
+    await fill("Deficits in the snatch", "Turnover");
+    await fill("Deficits in the clean", "Catch position");
+    await fill("Deficits in the jerk", "Dip");
+    await fill("Other deficits", "None");
     await fill("Current and chronic injuries and illnesses", "None");
     await fill("Training sessions per week", "8");
     await fill("Strengths", "Fast under the bar");

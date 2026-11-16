@@ -140,7 +140,8 @@
     "liftExercise": {
       "snatch": "Reißübung",
       "clean_and_jerk": "Stoßübung"
-    }
+    },
+    "addresses": "Adressiert"
   },
   "Navigation": {
     "label": "Hauptnavigation",
@@ -163,7 +164,8 @@
         "body": "Körper",
         "notes": "Notizen",
         "training": "Training",
-        "athlete": "Stärken und Erfahrung"
+        "athlete": "Stärken und Erfahrung",
+        "deficits": "Defizite"
       },
       "fields": {
         "startDate": "Beginn",
@@ -179,7 +181,10 @@
         "targetBodyWeightKg": "Zielkörpergewicht (kg)",
         "bodyFatPct": "Körperfett (%)",
         "muscleMassPct": "Muskelmasse (%)",
-        "deficits": "Aktuelle Defizite",
+        "snatchDeficits": "Defizite im Reißen",
+        "cleanDeficits": "Defizite im Umsetzen",
+        "jerkDeficits": "Defizite im Ausstoßen",
+        "otherDeficits": "Sonstige Defizite",
         "injuriesAndIllnesses": "Aktuelle und chronische Verletzungen und Krankheiten",
         "trainingFrequency": "Trainingseinheiten pro Woche",
         "strengths": "Stärken",
@@ -213,7 +218,8 @@
         "down": "Schwerpunkt {position} nach unten",
         "remove": "Schwerpunkt {position} entfernen",
         "add": "Schwerpunkt hinzufügen"
-      }
+      },
+      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen, sonstige Defizite bei allen."
     },
     "mesocycles": {
       "general_preparation": "Grundlagenphase (GLP)",
@@ -254,7 +260,7 @@
       "back": "Zurück zu den Stammdaten"
     },
     "exercises": {
-      "help": "Wähle die Übungen jedes Mesozyklus: Tippe auf eine Zelle, gib an, warum die Übung gewählt wird, und bei Bedarf ihre Variation. Jede Änderung wird gespeichert.",
+      "help": "Wähle die Übungen jedes Mesozyklus: Tippe auf eine Zelle, wähle, was die Übung adressieren soll (die Defizite des Athleten in der Disziplin werden angezeigt), und bei Bedarf ihre Variation. Jede Änderung wird gespeichert.",
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "finish": "Planung abschließen",
       "back": "Zurück zur Intensität",
@@ -270,11 +276,16 @@
       "variationPlaceholder": "z. B. im Hang",
       "catalogHint": "Katalog: {comment}",
       "reason": "Begründung",
-      "reasonRequired": "Bitte gib an, warum die Übung gewählt wird.",
+      "reasonRequired": "Wähle mindestens einen Punkt oder schreibe eine Notiz.",
       "save": "Speichern",
       "choose": "Übung wählen",
       "remove": "Entfernen",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "deficitsTitle": "Defizite des Athleten",
+      "notEntered": "Noch nicht eingetragen",
+      "reasonHint": "Tippe an, was die Übung adressieren soll, und/oder schreibe eine Notiz.",
+      "reasonHintNoTags": "Der Katalog nennt für diese Übung keine adressierten Punkte; bitte schreibe eine Notiz.",
+      "note": "Notiz"
     }
   }
 }

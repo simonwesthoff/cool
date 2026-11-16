@@ -15,7 +15,11 @@ export type MacrocycleBaseData = {
   targetBodyWeightKg: number;
   bodyFatPct: number | null;
   muscleMassPct: number | null;
-  deficits: string;
+  /** Deficits per lift (all required). */
+  snatchDeficits: string;
+  cleanDeficits: string;
+  jerkDeficits: string;
+  otherDeficits: string;
   injuriesAndIllnesses: string;
   strengths: string;
   experience: string;
@@ -52,8 +56,10 @@ export type MesocycleExercise = {
   exerciseNumber: number;
   /** Free-text variation; null for the standard exercise. */
   variation: string | null;
-  /** Why it is chosen; empty only for choices made before reasons existed. */
-  reason: string;
+  /** Reason: keys (German names) of tags the exercise addresses. */
+  tags: string[];
+  /** Reason: optional note. A reason has at least one tag or a note. */
+  note: string | null;
 };
 
 export type MesocycleView = {

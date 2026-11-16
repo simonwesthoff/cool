@@ -71,6 +71,14 @@ export function ExerciseDialog({ exercise, group, onClose }: Props) {
             t("comment"),
             exercise.comment ? localized(exercise.comment, locale) : null,
           ],
+          [
+            t("addresses"),
+            exercise.addresses.length > 0
+              ? exercise.addresses
+                  .map((tag) => localized(tag.name, locale))
+                  .join(", ")
+              : null,
+          ],
         ]
       : [];
 

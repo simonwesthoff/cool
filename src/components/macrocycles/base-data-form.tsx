@@ -342,17 +342,54 @@ function BaseDataFormFields({
       />
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-1 text-lg font-semibold">
+          {t("sections.deficits")}
+        </legend>
+        <p className="-mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          {t("deficitsHint")}
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {field("snatchDeficits", (p) => (
+            <textarea
+              {...p}
+              rows={2}
+              maxLength={2000}
+              defaultValue={m?.snatchDeficits ?? ""}
+              className={`${inputClass} py-2`}
+            />
+          ))}
+          {field("cleanDeficits", (p) => (
+            <textarea
+              {...p}
+              rows={2}
+              maxLength={2000}
+              defaultValue={m?.cleanDeficits ?? ""}
+              className={`${inputClass} py-2`}
+            />
+          ))}
+          {field("jerkDeficits", (p) => (
+            <textarea
+              {...p}
+              rows={2}
+              maxLength={2000}
+              defaultValue={m?.jerkDeficits ?? ""}
+              className={`${inputClass} py-2`}
+            />
+          ))}
+          {field("otherDeficits", (p) => (
+            <textarea
+              {...p}
+              rows={2}
+              maxLength={2000}
+              defaultValue={m?.otherDeficits ?? ""}
+              className={`${inputClass} py-2`}
+            />
+          ))}
+        </div>
+      </fieldset>
+      <fieldset className="flex flex-col gap-4">
+        <legend className="mb-1 text-lg font-semibold">
           {t("sections.notes")}
         </legend>
-        {field("deficits", (p) => (
-          <textarea
-            {...p}
-            rows={3}
-            maxLength={2000}
-            defaultValue={m?.deficits ?? ""}
-            className={`${inputClass} py-2`}
-          />
-        ))}
         {field("injuriesAndIllnesses", (p) => (
           <textarea
             {...p}

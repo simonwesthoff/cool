@@ -17,7 +17,12 @@ export type Exercise = {
   repsPerSet: Range;
   repsPerWeek: Range;
   comment: LocalizedText | null;
+  /** Points the exercise addresses, in catalog order (may be empty). */
+  addresses: ExerciseTag[];
 };
+
+/** A point exercises address; `key` is its German name. */
+export type ExerciseTag = { key: string; name: LocalizedText };
 
 export type ExerciseGroup = {
   number: number;

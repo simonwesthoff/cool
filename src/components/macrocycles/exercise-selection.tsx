@@ -14,6 +14,7 @@ import type {
 } from "@/domain/macrocycles/macrocycle-types";
 import {
   ExerciseChoiceDialog,
+  type ChoiceInput,
   type ChoiceTarget,
 } from "./exercise-choice-dialog";
 
@@ -43,12 +44,12 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
   const api = (cell: ChoiceTarget) =>
     `/api/athletes/${macrocycle.athleteId}/macrocycle/mesocycles/${cell.type}/exercises/${cell.exercise.number}`;
 
-  async function save(variation: string, reason: string) {
+  async function save(input: ChoiceInput) {
     if (!target) return false;
     const response = await fetch(api(target), {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ reason, variation: variation || null }),
+      body: JSON.stringify(input),
     }).catch(() => null);
     if (!response?.ok) return false;
     setChoices(choicesOf((await response.json()) as Macrocycle));
@@ -173,6 +174,7 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
       </table>
       <ExerciseChoiceDialog
         target={target}
+        deficits={macrocycle}
         onSave={save}
         onRemove={remove}
         onClose={() => setTarget(null)}
@@ -206,7 +208,8 @@ function ChoiceCell({
   onOpen: () => void;
 }) {
   const t = useTranslations("Macrocycle.exercises");
-  const missingReason = choice !== null && choice.reason.length === 0;
+  const missingReason =
+    choice !== null && choice.tags.length === 0 && !choice.note;
   return (
     <button
       type="button"

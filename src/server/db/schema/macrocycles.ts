@@ -44,7 +44,10 @@ export const macrocycle = pgTable("macrocycle", {
   targetBodyWeightKg: kg("target_body_weight_kg").notNull(),
   bodyFatPct: pct("body_fat_pct"),
   muscleMassPct: pct("muscle_mass_pct"),
-  deficits: text("deficits").notNull(),
+  snatchDeficits: text("snatch_deficits").notNull(),
+  cleanDeficits: text("clean_deficits").notNull(),
+  jerkDeficits: text("jerk_deficits").notNull(),
+  otherDeficits: text("other_deficits").notNull(),
   injuriesAndIllnesses: text("injuries_and_illnesses").notNull(),
   strengths: text("strengths").notNull(),
   experience: text("experience").notNull(),
@@ -95,7 +98,7 @@ export const mesocycle = pgTable(
   ],
 );
 
-/** Exercises chosen for a mesocycle, each with a reason and a variation. */
+/** Exercises chosen for a mesocycle, each with a reason (tags and/or note) and a variation. */
 export const mesocycleExercise = pgTable(
   "mesocycle_exercise",
   {
@@ -107,8 +110,10 @@ export const mesocycleExercise = pgTable(
       .references(() => exercise.number),
     /** Free-text variation of the exercise (information only). */
     variation: text("variation"),
-    /** Why the exercise is chosen for this mesocycle (empty for old rows). */
-    reason: text("reason").notNull(),
+    /** Reason: keys of tags the exercise addresses (see exercise_tag). */
+    tags: text("tags").array().notNull(),
+    /** Reason: optional free-text note. */
+    note: text("note"),
   },
   (table) => [
     primaryKey({ columns: [table.mesocycleId, table.exerciseNumber] }),

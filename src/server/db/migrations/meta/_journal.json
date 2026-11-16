@@ -64,6 +64,27 @@
       "when": 1794830422144,
       "tag": "0008_mesocycle_exercise_reason",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794835210513,
+      "tag": "0009_deficits_per_lift_and_reason_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794835210860,
+      "tag": "0010_drop_old_deficits_and_reason",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794835224358,
+      "tag": "0011_exercise_catalog_data",
+      "breakpoints": true
     }
   ]
 }

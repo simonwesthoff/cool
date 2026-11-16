@@ -140,7 +140,8 @@
     "liftExercise": {
       "snatch": "Snatch exercise",
       "clean_and_jerk": "C&J exercise"
-    }
+    },
+    "addresses": "Addresses"
   },
   "Navigation": {
     "label": "Main navigation",
@@ -163,7 +164,8 @@
         "body": "Body",
         "notes": "Notes",
         "training": "Training",
-        "athlete": "Strengths and experience"
+        "athlete": "Strengths and experience",
+        "deficits": "Deficits"
       },
       "fields": {
         "startDate": "Start",
@@ -179,7 +181,10 @@
         "targetBodyWeightKg": "Target body weight (kg)",
         "bodyFatPct": "Body fat (%)",
         "muscleMassPct": "Muscle mass (%)",
-        "deficits": "Current deficits",
+        "snatchDeficits": "Deficits in the snatch",
+        "cleanDeficits": "Deficits in the clean",
+        "jerkDeficits": "Deficits in the jerk",
+        "otherDeficits": "Other deficits",
         "injuriesAndIllnesses": "Current and chronic injuries and illnesses",
         "trainingFrequency": "Training sessions per week",
         "strengths": "Strengths",
@@ -213,7 +218,8 @@
         "down": "Move focus point {position} down",
         "remove": "Remove focus point {position}",
         "add": "Add focus point"
-      }
+      },
+      "deficitsHint": "Shown when choosing exercises: snatch deficits for snatch exercises, clean and jerk deficits for clean & jerk exercises, other deficits for all."
     },
     "mesocycles": {
       "general_preparation": "General preparation block",
@@ -254,7 +260,7 @@
       "back": "Back to base data"
     },
     "exercises": {
-      "help": "Choose the exercises of each mesocycle: tap a cell, enter why the exercise is chosen and, if needed, its variation. Every change is saved.",
+      "help": "Choose the exercises of each mesocycle: tap a cell, pick what the exercise should address (the athlete's deficits for the lift are shown) and, if needed, its variation. Every change is saved.",
       "saveFailed": "The change could not be saved. Please try again.",
       "finish": "Finish planning",
       "back": "Back to intensity",
@@ -270,11 +276,16 @@
       "variationPlaceholder": "e.g. from the hang",
       "catalogHint": "Catalog: {comment}",
       "reason": "Reason",
-      "reasonRequired": "Please enter why the exercise is chosen.",
+      "reasonRequired": "Choose at least one point or write a note.",
       "save": "Save",
       "choose": "Choose exercise",
       "remove": "Remove",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "deficitsTitle": "Athlete's deficits",
+      "notEntered": "Not entered yet",
+      "reasonHint": "Tap what this exercise should address, and/or write a note.",
+      "reasonHintNoTags": "The catalog lists no addressed points for this exercise; please write a note.",
+      "note": "Note"
     }
   }
 }

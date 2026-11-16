@@ -8,16 +8,17 @@ import {
 } from "./catalog-source";
 
 const header =
-  "Komplex,Nr.,Bezeichnung,Bestwert (% vom Reiß-/Stoß Max.),Max. Wochen Mittleres Hantelgewicht (MHG),Minimale Wdh,Maximale Wdh,Referenzübung,min Wochen Wdh,max Wochen Wdh,Kommentar";
+  "Komplex,Nr.,Bezeichnung,Bestwert (% vom Reiß-/Stoß Max.),Max. Wochen Mittleres Hantelgewicht (MHG),Minimale Wdh,Maximale Wdh,Referenzübung,min Wochen Wdh,max Wochen Wdh,Kommentar,Addresses";
 const translations: Translations = {
   groups: { "1": "Competition exercises", "8": "General strength training 1" },
   exercises: { "1": "Snatch", "31": "Bench press" },
   comments: { "1": "Competition exercise" },
+  tags: { "Hoher Zug": "High pull", WKÜ: "Competition exercise" },
 };
 const csv = [
   header,
-  'K1 Wettkampfübungen (WKÜ),1,Reißen,100,86,1,5,Reißen,10,30,"Wettkampfübung, mit Komma"',
-  "K8 Allgemeines Muskelkrafttraining 1 (AMKT),31,Bankdrücken,,,,,,,,",
+  'K1 Wettkampfübungen (WKÜ),1,Reißen,100,86,1,5,Reißen,10,30,"Wettkampfübung, mit Komma","WKÜ, Hoher Zug"',
+  "K8 Allgemeines Muskelkrafttraining 1 (AMKT),31,Bankdrücken,,,,,,,,,-",
 ].join("\n");
 
 describe("parseCsv", () => {
@@ -64,6 +65,7 @@ describe("buildCatalog", () => {
       maxRepsPerWeek: 30,
       commentDe: "Wettkampfübung, mit Komma",
       commentEn: "Competition exercise",
+      addresses: ["WKÜ", "Hoher Zug"],
     });
     expect(catalog.exercises[1]).toMatchObject({
       number: 31,
@@ -72,7 +74,12 @@ describe("buildCatalog", () => {
       minRepsPerSet: null,
       commentDe: null,
       commentEn: null,
+      addresses: [],
     });
+    expect(catalog.tags).toEqual([
+      { nameDe: "WKÜ", nameEn: "Competition exercise" },
+      { nameDe: "Hoher Zug", nameEn: "High pull" },
+    ]);
   });
 
   it.each([
@@ -87,6 +94,24 @@ describe("buildCatalog", () => {
       { ...translations, comments: {} },
       csv,
       "No English comment for exercise 1",
+    ],
+    [
+      "a missing English tag",
+      { ...translations, tags: { WKÜ: "Competition exercise" } },
+      csv,
+      'No English name for tag "Hoher Zug"',
+    ],
+    [
+      "a translation of an unknown tag",
+      { ...translations, tags: { ...translations.tags, Abbremsen: "x" } },
+      csv,
+      'Translation for unknown tag "Abbremsen"',
+    ],
+    [
+      "a duplicate tag of one exercise",
+      translations,
+      csv.replace('"WKÜ, Hoher Zug"', '"WKÜ, WKÜ"'),
+      "duplicate entry",
     ],
     [
       "a duplicate number",
@@ -130,6 +155,13 @@ describe("buildCatalog", () => {
     expect(catalogMigrationSql(catalog)).toContain("'Reißen''s'");
   });
 
+  it("replaces the addressed points in the generated SQL", () => {
+    const sql = catalogMigrationSql(buildCatalog(csv, translations));
+    expect(sql).toContain('DELETE FROM "exercise_addresses";');
+    expect(sql).toContain("('Hoher Zug', 'High pull')");
+    expect(sql).toContain("(1, 'WKÜ', 0),\n  (1, 'Hoher Zug', 1);");
+  });
+
   it("accepts the real catalog: 9 groups, 45 exercises", () => {
     const catalog = buildCatalog(
       readFileSync("data/exercise-catalog/Trainingsmittelkatalog.csv", "utf8"),
@@ -151,5 +183,10 @@ describe("buildCatalog", () => {
     expect(catalog.exercises.map((e) => e.number)).toEqual(
       Array.from({ length: 45 }, (_, i) => i + 1),
     );
+    expect(catalog.tags).toHaveLength(26);
+    expect(catalog.exercises[6]!.addresses).toEqual([
+      "Beschleunigung im 2. Zug",
+      "Hoher Zug",
+    ]);
   });
 });

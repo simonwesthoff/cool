@@ -1,6 +1,13 @@
 // The exercise catalog (see src/domain/exercises). Filled by a generated data
 // migration from data/exercise-catalog (npm run catalog:migration).
-import { numeric, pgEnum, pgTable, smallint, text } from "drizzle-orm/pg-core";
+import {
+  numeric,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  smallint,
+  text,
+} from "drizzle-orm/pg-core";
 
 export const referenceLiftEnum = pgEnum("reference_lift", [
   "snatch",
@@ -36,3 +43,24 @@ export const exercise = pgTable("exercise", {
   commentDe: text("comment_de"),
   commentEn: text("comment_en"),
 });
+
+/** A point exercises address (e.g. "Hoher Zug"); the German name is the key. */
+export const exerciseTag = pgTable("exercise_tag", {
+  nameDe: text("name_de").primaryKey(),
+  nameEn: text("name_en").notNull(),
+});
+
+/** Which exercise addresses which tag, in catalog order. */
+export const exerciseAddresses = pgTable(
+  "exercise_addresses",
+  {
+    exerciseNumber: smallint("exercise_number")
+      .notNull()
+      .references(() => exercise.number),
+    tag: text("tag")
+      .notNull()
+      .references(() => exerciseTag.nameDe),
+    position: smallint("position").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.exerciseNumber, table.tag] })],
+);

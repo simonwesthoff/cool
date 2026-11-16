@@ -23,7 +23,10 @@ const baseData = {
   cleanAndJerkGoalKg: 130,
   bodyWeightKg: 81,
   targetBodyWeightKg: 80.5,
-  deficits: "Turnover",
+  snatchDeficits: "Turnover",
+  cleanDeficits: "Catch",
+  jerkDeficits: "Dip",
+  otherDeficits: "None",
   injuriesAndIllnesses: "None",
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
@@ -70,15 +73,20 @@ describe("macrocycle API", () => {
     const created = await main.POST(json("POST", baseData), ctx(id));
     expect(created.status).toBe(201);
     const put = await exercises.PUT(
-      json("PUT", { reason: "Pull strength", variation: "From blocks" }),
+      json("PUT", { tags: ["SKF"], variation: "From blocks" }),
       ctx({ ...id, type: "special_preparation", number: "13" }),
     );
     expect(put.status).toBe(200);
     expect((await put.json()).mesocycles[1].exercises).toEqual([
-      { exerciseNumber: 13, variation: "From blocks", reason: "Pull strength" },
+      {
+        exerciseNumber: 13,
+        variation: "From blocks",
+        tags: ["SKF"],
+        note: null,
+      },
     ]);
     const invalid = await exercises.PUT(
-      json("PUT", { reason: "" }),
+      json("PUT", { note: "" }),
       ctx({ ...id, type: "special_preparation", number: "14" }),
     );
     expect(invalid.status).toBe(400);
@@ -216,7 +224,7 @@ describe("macrocycle API", () => {
         ctx({ ...id, week: "1" }),
       ),
       await exercises.PUT(
-        json("PUT", { reason: "x" }),
+        json("PUT", { note: "x" }),
         ctx({ ...id, type: "special_preparation", number: "13" }),
       ),
       await exercises.DELETE(
