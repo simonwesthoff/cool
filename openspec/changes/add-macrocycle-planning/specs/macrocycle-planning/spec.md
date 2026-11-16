@@ -224,6 +224,20 @@ change the calculated values.
 - **WHEN** the coach removes it in its cell
 - **THEN** it no longer belongs to that mesocycle
 
+### Requirement: Exercise table summary
+Above the exercise table, step 4 SHALL show all of the athlete's deficits
+(snatch, clean, jerk and other) instead of an explanation text. Below the
+table, a total row SHALL show the number of chosen exercises per mesocycle.
+
+#### Scenario: Deficits above the table
+- **WHEN** the coach opens step 4
+- **THEN** the snatch, clean, jerk and other deficits are shown above the table
+
+#### Scenario: Totals
+- **GIVEN** exercises 1, 7 and 13 chosen for the special preparation block and none for the others
+- **WHEN** the coach looks at the end of the table
+- **THEN** the total row shows 0, 3 and 0, and it changes as soon as an exercise is chosen or removed
+
 ### Requirement: Reason of a chosen exercise
 The reason of a chosen exercise SHALL consist of one or more of the points
 the exercise addresses (tags to tap) and/or an own reason (free text),

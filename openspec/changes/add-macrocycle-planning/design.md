@@ -197,6 +197,10 @@ colours:
   empty cells show "+", chosen cells a check mark and, from `sm` up, the
   variation (no text without a variation). The button opens a dialog (exercise, block, catalog comment as
   hint, variation, required reason, Save / Remove / Cancel).
+- Above the table: the four deficits in the dialog's style (bold title,
+  text; two columns from `sm` up) instead of the help text. Below: a
+  `tfoot` row "Total" with the number of chosen exercises per mesocycle,
+  from the local state.
 - Variation and reason are stored per mesocycle choice
   (`mesocycle_exercise.variation`, `.reason`); they are information only.
   Existing choices get an empty reason; their cell is marked "Reason

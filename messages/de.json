@@ -260,7 +260,6 @@
       "back": "Zurück zur SWOT"
     },
     "exercises": {
-      "help": "Wähle die Übungen jedes Mesozyklus: Tippe auf eine Zelle, wähle, was die Übung adressieren soll (die Defizite des Athleten in der Disziplin werden angezeigt), und bei Bedarf ihre Variation. Jede Änderung wird gespeichert.",
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "finish": "Planung abschließen",
       "back": "Zurück zur Intensität",
@@ -287,7 +286,9 @@
       "ownReason": "Eigene Begründung",
       "ownReasonPlaceholder": "Deine Begründung",
       "ownReasonAdd": "Eigene Begründung hinzufügen",
-      "ownReasonEdit": "Eigene Begründung: {reason}. Bearbeiten"
+      "ownReasonEdit": "Eigene Begründung: {reason}. Bearbeiten",
+      "total": "Summe",
+      "deficitsLabel": "Defizite des Athleten"
     }
   }
 }

@@ -191,6 +191,71 @@ describe("ExerciseSelection", () => {
     ).toBeTruthy();
   });
 
+  it("shows all deficits above the table instead of an explanation", () => {
+    renderIt();
+    const deficits = document.querySelector<HTMLElement>(
+      'dl[aria-label="Athlete\'s deficits"]',
+    )!;
+    expect(
+      [...deficits.querySelectorAll("dt")].map((d) => d.textContent),
+    ).toEqual([
+      "Deficits in the snatch",
+      "Deficits in the clean",
+      "Deficits in the jerk",
+      "Other deficits",
+    ]);
+    expect(
+      [...deficits.querySelectorAll("dd")].map((d) => d.textContent),
+    ).toEqual([
+      "Slow turnover",
+      "Catch too soft",
+      "Not entered yet",
+      "Ankle mobility",
+    ]);
+    expect(screen.queryByText(/tap a cell/)).toBeNull();
+  });
+
+  it("shows the number of chosen exercises per block in a total row", async () => {
+    const saved = {
+      ...macrocycle,
+      mesocycles: mesocycles(
+        [
+          {
+            exerciseNumber: 7,
+            variation: null,
+            tags: ["Hoher Zug"],
+            note: null,
+          },
+          {
+            exerciseNumber: 12,
+            variation: "From the rack",
+            tags: ["Rhythmus im Auftakt"],
+            note: null,
+          },
+        ],
+        [{ exerciseNumber: 7, variation: null, tags: [], note: null }],
+      ),
+    };
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(saved), { status: 200 }),
+    );
+    renderIt();
+    const totals = () =>
+      [...document.querySelectorAll("tfoot [data-total]")].map(
+        (c) => c.textContent,
+      );
+    expect(screen.getByRole("rowheader", { name: "Total" })).toBeTruthy();
+    expect(totals()).toEqual(["1", "1", "0"]);
+    await open("Power snatch, Special preparation block: choose");
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "High pull" }),
+    );
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Choose exercise" }),
+    );
+    await waitFor(() => expect(totals()).toEqual(["1", "2", "0"]));
+  });
+
   it("shows the variation below the check mark, and no text without one", () => {
     renderIt();
     const withVariation = screen.getByRole("button", {

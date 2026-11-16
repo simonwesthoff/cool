@@ -21,6 +21,14 @@ import {
 type Props = { macrocycle: Macrocycle; catalog: ExerciseGroup[] };
 type Choices = Record<MesocycleType, MesocycleExercise[]>;
 
+/** All deficits, shown above the table. */
+const DEFICITS = [
+  "snatchDeficits",
+  "cleanDeficits",
+  "jerkDeficits",
+  "otherDeficits",
+] as const;
+
 /** Same colours as the mesocycle bands of the chart. */
 const SWATCH = ["var(--band-1)", "var(--band-2)", "var(--band-3)"];
 
@@ -37,6 +45,7 @@ const choicesOf = (macrocycle: Pick<Macrocycle, "mesocycles">): Choices =>
 export function ExerciseSelection({ macrocycle, catalog }: Props) {
   const t = useTranslations("Macrocycle.exercises");
   const tm = useTranslations("Macrocycle.mesocycles");
+  const tf = useTranslations("Macrocycle.baseData.fields");
   const locale = useLocale();
   const [choices, setChoices] = useState<Choices>(() => choicesOf(macrocycle));
   const [target, setTarget] = useState<ChoiceTarget | null>(null);
@@ -74,7 +83,23 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-zinc-600 dark:text-zinc-400">{t("help")}</p>
+      <dl
+        aria-label={t("deficitsLabel")}
+        className="grid grid-cols-1 gap-3 rounded-xl bg-zinc-100 p-3 text-sm sm:grid-cols-2 dark:bg-zinc-900"
+      >
+        {DEFICITS.map((key) => (
+          <div key={key} data-deficit={key} className="flex flex-col gap-0.5">
+            <dt className="font-semibold">{tf(key)}</dt>
+            <dd
+              className={
+                macrocycle[key] ? "whitespace-pre-line" : "text-zinc-500 italic"
+              }
+            >
+              {macrocycle[key] || t("notEntered")}
+            </dd>
+          </div>
+        ))}
+      </dl>
       <table className="w-full table-fixed border-collapse text-left">
         <caption className="sr-only">{t("tableCaption")}</caption>
         <colgroup>
@@ -171,6 +196,22 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
             })}
           </tbody>
         ))}
+        <tfoot>
+          <tr className="border-t-2 border-zinc-300 dark:border-zinc-700">
+            <th scope="row" className="py-3 pr-2 text-sm font-semibold">
+              {t("total")}
+            </th>
+            {macrocycle.mesocycles.map((m) => (
+              <td
+                key={m.type}
+                data-total={m.type}
+                className="py-3 text-center font-semibold tabular-nums"
+              >
+                {choices[m.type].length}
+              </td>
+            ))}
+          </tr>
+        </tfoot>
       </table>
       <ExerciseChoiceDialog
         target={target}

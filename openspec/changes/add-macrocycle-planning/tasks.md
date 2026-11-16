@@ -58,6 +58,8 @@
 
 - [x] 7.15 Acceptance feedback: dialog shows only the deficits of the exercise's lift with their titles styled as headings; own reason via a "+" tag instead of the note field; texts (incl. the SWOT deficits hint); verify tests, browser check and screenshots
 
+- [x] 7.16 Acceptance feedback: exercise step shows all deficits above the table instead of the help text, and a total row per mesocycle below it; texts; verify tests, browser check and screenshots
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

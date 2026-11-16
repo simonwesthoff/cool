@@ -260,7 +260,6 @@
       "back": "Back to SWOT"
     },
     "exercises": {
-      "help": "Choose the exercises of each mesocycle: tap a cell, pick what the exercise should address (the athlete's deficits for the lift are shown) and, if needed, its variation. Every change is saved.",
       "saveFailed": "The change could not be saved. Please try again.",
       "finish": "Finish planning",
       "back": "Back to intensity",
@@ -287,7 +286,9 @@
       "ownReason": "Own reason",
       "ownReasonPlaceholder": "Your reason",
       "ownReasonAdd": "Add own reason",
-      "ownReasonEdit": "Own reason: {reason}. Edit"
+      "ownReasonEdit": "Own reason: {reason}. Edit",
+      "total": "Total",
+      "deficitsLabel": "Athlete's deficits"
     }
   }
 }
