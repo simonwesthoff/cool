@@ -143,17 +143,29 @@ Every change SHALL be saved.
 - **THEN** it stops one week after the first border
 
 ### Requirement: Exercises per mesocycle
-Step 3 SHALL let the coach choose any number of exercises from the exercise
-catalog for each of the three mesocycles, shown grouped by exercise group.
-The same exercise MAY be chosen for several mesocycles.
+Step 3 SHALL show one table of the exercise catalog, grouped by exercise
+group, with one row per exercise and one column per mesocycle (GLP, ABP,
+LAP). In each cell the coach SHALL be able to choose the exercise for that
+mesocycle with a required reason and an optional variation (free text, the
+catalog comment as a hint), change both later, or remove the choice. The
+same exercise MAY be chosen for several mesocycles. The variation SHALL NOT
+change the calculated values.
 
 #### Scenario: Choose exercises
-- **WHEN** the coach chooses exercises 1, 13 and 19 for the special preparation block and saves
-- **THEN** these three exercises belong to that mesocycle
+- **WHEN** the coach chooses exercises 1, 13 and 19 in the special preparation column, each with a reason
+- **THEN** these three exercises belong to that mesocycle with their reasons
+
+#### Scenario: Variation and reason
+- **WHEN** the coach chooses exercise 1 for the general preparation block with the variation "No feet snatch" and the reason "Footwork in the turnover"
+- **THEN** the cell shows the variation, and the choice keeps the variation and the reason
+
+#### Scenario: Reason required
+- **WHEN** the coach tries to choose an exercise without a reason
+- **THEN** it is not chosen and the dialog shows that the reason is required
 
 #### Scenario: Remove an exercise
 - **GIVEN** exercise 13 chosen for a mesocycle
-- **WHEN** the coach deselects it and saves
+- **WHEN** the coach removes it in its cell
 - **THEN** it no longer belongs to that mesocycle
 
 ### Requirement: Macrocycle API

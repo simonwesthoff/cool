@@ -42,6 +42,8 @@
 
 - [x] 7.7 Acceptance feedback: remove keyboard control of week handles and borders, the table view and the volume bar chart; add axis titles "Week" and "Intensity"; make the chart fit the width on phones (no horizontal scrolling, scaled points); add English and German texts; verify component tests, the browser check and phone screenshots (21 and 52 weeks)
 
+- [ ] 7.8 Acceptance feedback: exercise step as one table (exercise × GLP/ABP/LAP) with a dialog per cell; variation (optional) and reason (required) per mesocycle choice: migration 0008, domain functions, per-exercise PUT/DELETE API replacing the bulk PUT, English and German texts; verify domain, API and component tests, the browser check and phone/desktop screenshots
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

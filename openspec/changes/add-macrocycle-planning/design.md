@@ -80,7 +80,8 @@ ranges and `MACROCYCLE_EXISTS`.
 | `POST /api/athletes/{id}/macrocycle` | step 1, create (201; 409 `MACROCYCLE_EXISTS`) |
 | `PATCH /api/athletes/{id}/macrocycle` | step 1, change base data |
 | `PUT /api/athletes/{id}/macrocycle/weeks/{week}` | `{ level }` |
-| `PUT /api/athletes/{id}/macrocycle/mesocycles/{type}/exercises` | `{ exerciseNumbers }` |
+| `PUT /api/athletes/{id}/macrocycle/mesocycles/{type}/exercises/{number}` | choose or change one exercise: `{ reason, variation? }` (reason 1–500, variation ≤ 200 characters) |
+| `DELETE /api/athletes/{id}/macrocycle/mesocycles/{type}/exercises/{number}` | remove one exercise (204) |
 | `PUT /api/athletes/{id}/macrocycle/mesocycles/borders` | `{ specialPreparationStart, competitionPreparationStart }` (week numbers; each block ≥ 1 week) |
 
 ### Pages (coach only, under the athlete)
@@ -136,6 +137,20 @@ colours:
   band labels, the border lines with handles and the legend name the
   blocks; purple is not used as text colour on dark backgrounds.
 
+### Exercise table (changed during acceptance)
+- Step 3 is one table instead of three tabs: rows = catalog exercises under
+  group header rows, columns = exercise, GLP, ABP, LAP (column headers with
+  the palette swatch of the block and its weeks). Each cell is a button:
+  empty cells show "+", chosen cells a check mark and, from `sm` up, the
+  variation. The button opens a dialog (exercise, block, catalog comment as
+  hint, variation, required reason, Save / Remove / Cancel).
+- Variation and reason are stored per mesocycle choice
+  (`mesocycle_exercise.variation`, `.reason`); they are information only.
+  Existing choices get an empty reason; their cell is marked "Reason
+  missing" until the coach adds one.
+- The bulk `PUT …/exercises` is replaced by per-exercise `PUT`/`DELETE`, so
+  one choice never overwrites the reasons of the others.
+
 ### Chart simplification (changed during acceptance)
 - No keyboard control of week handles and borders, no table view, and no
   volume bar chart in step 2 (user decisions): dragging and tapping change
@@ -175,7 +190,8 @@ erDiagram
     Athlete ||--o| Macrocycle : "is planned in"
     Macrocycle ||--|{ MacrocycleWeek : "consists of"
     Macrocycle ||--|{ Mesocycle : "is divided into"
-    Mesocycle }o--o{ Exercise : "uses"
+    Mesocycle ||--o{ MesocycleExercise : "uses"
+    MesocycleExercise }o--|| Exercise : "is"
     Macrocycle {
         date startDate
         int durationWeeks
@@ -195,6 +211,10 @@ erDiagram
         int firstWeek
         int lastWeek
     }
+    MesocycleExercise {
+        string variation
+        string reason
+    }
 ```
 
 - An Athlete has at most one Macrocycle; it belongs to the athlete's Team
@@ -202,8 +222,9 @@ erDiagram
 - A Macrocycle consists of its weeks (each high, medium or low) and is
   divided into three Mesocycles: general preparation, special preparation
   and competition preparation block.
-- A Mesocycle uses exercises from the exercise catalog; the same exercise
-  can be used in several mesocycles.
+- A Mesocycle uses exercises from the exercise catalog, each with a reason
+  and optionally a variation; the same exercise can be used in several
+  mesocycles with different variations and reasons.
 - Intensity, planned weights, reps and volume are calculated, not stored.
 
 ## Risks / Trade-offs
@@ -221,3 +242,5 @@ erDiagram
 ## Migration Plan
 
 One schema migration (four tables, two enums). Rollback: drop them.
+Migration 0008 adds `variation` (nullable) and `reason` (empty for existing
+rows) to `mesocycle_exercise`.
