@@ -9,13 +9,13 @@ mesocycle.
 ## ADDED Requirements
 
 ### Requirement: Macrocycle base data
-A macrocycle SHALL have these base data: current personal best and goal in
-snatch and in clean & jerk (kg), current and target body weight (kg),
-optional body fat and muscle mass (%), free texts for current deficits and
-for injuries and illnesses, start date (a Monday), duration in weeks (7 to
-52), date and type of the main competition, and the entry value (30 % to
-95 %, default 60 %). All base data except body fat and muscle mass SHALL be
-required.
+A macrocycle SHALL have: personal bests and goals in snatch and clean &
+jerk (kg), current and target body weight (kg), body fat and muscle mass
+(%, optional), texts for deficits, injuries and illnesses, strengths and
+weightlifting experience, training sessions per week (1–14), focus points,
+a start date (a Monday), a duration (7–52 weeks), date and type of the main
+competition, and the entry value (30–95 %, default 60 %). All except body
+fat and muscle mass SHALL be required.
 
 #### Scenario: Required values missing
 - **WHEN** the coach saves the base data without a snatch goal
@@ -32,6 +32,19 @@ required.
 #### Scenario: Default entry value
 - **WHEN** the coach opens the base data form of a new macrocycle
 - **THEN** the entry value is 60 %
+
+### Requirement: Focus points
+A macrocycle SHALL have an ordered list of 1 to 3 focus points (texts of up
+to 200 characters each). The coach SHALL be able to add, remove and reorder
+them in step 1.
+
+#### Scenario: Focus points
+- **WHEN** the coach enters the focus points "Turnover", "Squat strength" and "Jerk stability" in this order and saves
+- **THEN** the macrocycle has these three focus points in this order
+
+#### Scenario: Number of focus points
+- **WHEN** the coach saves the base data without a focus point, or tries to add a fourth one
+- **THEN** the form shows that 1 to 3 focus points are needed, and no fourth field can be added
 
 ### Requirement: One macrocycle per athlete
 An athlete SHALL have at most one macrocycle. Only the coach of the
@@ -60,15 +73,15 @@ planned and the coach returns to the athlete's details page.
 #### Scenario: Change the duration later
 - **GIVEN** a planned macrocycle of 21 weeks with high and low weeks and chosen exercises
 - **WHEN** the coach changes the duration to 24 weeks in step 1
-- **THEN** the mesocycles are divided again by default, the levels of weeks 1–21 stay, weeks 22–24 are medium, and the chosen exercises of each mesocycle stay
+- **THEN** the mesocycle lengths keep their proportions (each at least one week), the levels of weeks 1–21 stay, weeks 22–24 are medium, and the chosen exercises of each mesocycle stay
 
 ### Requirement: Intensity chart with week handles
-Step 2 SHALL show the macrocycle chart with the weeks from start to end on
-the x-axis, the intensity of each week as a curve with one handle per week,
-the weeks coloured by mesocycle, and the volume once exercises are chosen.
-Each handle SHALL be movable one 5 % step up (high week) or down (low week)
-from the curve; in between the week is medium. The handles SHALL be
-operable by dragging, by tapping and by keyboard.
+Step 2 SHALL show the macrocycle chart: weeks on the x-axis, the intensity
+as a curve with one handle per week, mesocycle backgrounds in muted tones
+(general preparation red, special preparation yellow, competition
+preparation green) and the volume once exercises are chosen. Each handle
+SHALL move one 5 % step up (high week) or down (low week) from the curve by
+dragging, tapping or keyboard; in between the week is medium.
 
 #### Scenario: Make a week high
 - **GIVEN** week 11 at 80 % intensity
@@ -92,7 +105,37 @@ operable by dragging, by tapping and by keyboard.
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
-- **THEN** weeks 1–3, 4–13 and 14–21 have different background colours with a legend naming the three mesocycles
+- **THEN** weeks 1–3 have a muted red, weeks 4–13 a muted yellow and weeks 14–21 a muted green background, with a legend naming the three mesocycles
+
+### Requirement: Week tooltip
+Pointing at or focusing a week in the chart SHALL show a tooltip with the
+week's number, start date, mesocycle, level, intensity and volume. The
+tooltip SHALL never cover the pointer or the week's point.
+
+#### Scenario: Tooltip near the top right
+- **GIVEN** a week whose point is at the top right of the chart
+- **WHEN** the coach points at it
+- **THEN** its tooltip appears where it covers neither the pointer nor the point
+
+### Requirement: Adjustable mesocycle borders
+In step 2, the coach SHALL be able to move the two borders between the
+mesocycles left and right by whole weeks, by dragging a handle on each
+border or with the arrow keys. Each mesocycle SHALL keep at least one week.
+Every change SHALL be saved.
+
+#### Scenario: Longer general preparation
+- **GIVEN** a 21-week macrocycle with the default blocks 1–3, 4–13 and 14–21
+- **WHEN** the coach drags the first border two weeks to the right
+- **THEN** the blocks are 1–5, 6–13 and 14–21, and the weeks' mesocycles and calculated values follow
+
+#### Scenario: At least one week
+- **WHEN** the coach drags the second border onto the first one
+- **THEN** it stops one week after the first border
+
+#### Scenario: Keyboard
+- **GIVEN** the handle of a border has keyboard focus
+- **WHEN** the coach presses the arrow key left or right
+- **THEN** the border moves one week
 
 ### Requirement: Exercises per mesocycle
 Step 3 SHALL let the coach choose any number of exercises from the exercise
@@ -111,8 +154,8 @@ The same exercise MAY be chosen for several mesocycles.
 ### Requirement: Macrocycle API
 The HTTP API SHALL let the coach of an athlete create and change the
 athlete's macrocycle, set week levels, set the exercises of each mesocycle,
-and read the macrocycle with mesocycles, week levels and all calculated
-values per week. Invalid input SHALL be answered with 400
+set the mesocycle borders, and read the macrocycle with mesocycles, week
+levels and all calculated values per week. Invalid input SHALL be answered with 400
 `VALIDATION_FAILED` and field codes; other Teams' athletes with 404
 `ATHLETE_NOT_FOUND`; a second macrocycle with 409 `MACROCYCLE_EXISTS`;
 reading a missing one with 404 `MACROCYCLE_NOT_FOUND`.

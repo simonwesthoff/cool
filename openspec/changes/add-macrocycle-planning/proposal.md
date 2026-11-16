@@ -15,7 +15,10 @@ as described by the user on 2026-11-16.
 - **Macrocycle base data** (entered in step 1 of the planning): current
   personal bests and goals in snatch and clean & jerk, current and target
   body weight, optional body fat and muscle mass, texts for current
-  deficits and for injuries and illnesses, start date and duration in
+  deficits and for injuries and illnesses, training frequency (1 to 14
+  sessions per week), strengths, weightlifting experience, an ordered list
+  of 1 to 3 focus points (added during acceptance; birth date and height
+  stay in the athlete's basic data), start date and duration in
   weeks, date and type of the main competition, and the entry value (% of
   the max values the cycle starts with; usually 60 %).
 - **Mesocycles** by default: general preparation block = first 15 % of the
@@ -38,8 +41,9 @@ as described by the user on 2026-11-16.
   1. base data form;
   2. macrocycle chart: intensity per week with a handle each that can be
      moved up or down by 5 %: up = high week, unchanged = medium, down =
-     low; weeks coloured by mesocycle; volume shown once exercises are
-     chosen;
+     low; weeks coloured by mesocycle (muted red, yellow, green); the two
+     borders between the mesocycles can be dragged to change their lengths;
+     volume shown once exercises are chosen;
   3. exercise selection per mesocycle from the exercise catalog.
   After step 3 the macrocycle is planned. All steps can be revisited.
 - **Entry point**: the athlete details page gets a macrocycle section for
@@ -62,7 +66,9 @@ as described by the user on 2026-11-16.
   weeks (each mesocycle has at least one week).
 - One macrocycle per athlete for now; a new cycle after the competition is
   a later change.
-- Mesocycle borders use the default split and are not adjustable yet.
+- Mesocycle borders start with the default split and can be dragged in
+  step 2; a duration change scales the block lengths (user decisions during
+  acceptance).
 - Competition type is a free text (e.g. "German Championships").
 - Exercises without reference values (K8, K9) can be chosen but get no
   calculated weights or reps.
@@ -72,8 +78,7 @@ as described by the user on 2026-11-16.
 - The macrocycle view (feature 7) and the athlete details sections
   (feature 5).
 - Weekly plans and training sessions (features 9 and 10).
-- Adjusting mesocycle borders, taper and transition blocks, several
-  macrocycles per athlete.
+- Taper and transition blocks, several macrocycles per athlete.
 - Athletes seeing their macrocycle.
 - Per-athlete adjustments of catalog values.
 
@@ -90,6 +95,9 @@ as described by the user on 2026-11-16.
 - **Volume** (Umfang): sum of the weekly reps of a week's exercises.
 - **Personal best** (Bestleistung) and **Goal** (Zielleistung) in snatch and
   clean & jerk; **Main competition** (Hauptwettkampf).
+- **Training frequency** (Trainingshäufigkeit): training sessions per week.
+- **Focus point** (Schwerpunkt): one of the 1 to 3 ordered priorities of a
+  macrocycle.
 
 ## Capabilities
 

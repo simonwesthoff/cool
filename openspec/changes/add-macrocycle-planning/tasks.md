@@ -30,6 +30,14 @@
 - [x] 6.1 Browser check on the dev server at phone and desktop width: plan a 21-week macrocycle end to end, drag/tap/keyboard week levels, check intensity values in the chart against the spec, choose exercises and see the volume, change the duration; screenshots reviewed; both languages
 - [x] 6.2 Docker stack: rebuild (verify the image is new), migration runs on start, repeat the main flow of 6.1
 
+## 7. Acceptance feedback
+
+- [ ] 7.1 Extend the base data by training frequency (1–14), strengths, weightlifting experience and an ordered list of 1–3 focus points (schema, migration, validation, API, form with add/remove/reorder of focus points); add English and German texts; verify PGlite, route and component tests
+- [ ] 7.2 Adjustable mesocycle borders: borders endpoint, domain rule (each block ≥ 1 week), duration change scaling the block lengths, border handles in the chart (drag, keyboard); add English and German texts; verify calculation, PGlite, route and component tests
+- [ ] 7.3 Muted red/yellow/green mesocycle bands (light and dark) and tooltip placement that never covers the pointer or the point; verify component tests and screenshots
+- [ ] 7.4 Repeat the browser checks of 6.1 and 6.2 including focus points, border dragging, colours and the tooltip at the top right
+- [ ] 7.5 Add Training frequency and Focus point to `openspec/glossary.md` and the new attributes to `openspec/domain-model.md`
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

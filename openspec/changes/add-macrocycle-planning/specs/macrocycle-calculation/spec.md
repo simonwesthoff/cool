@@ -94,14 +94,22 @@ exercises the volume SHALL be undefined.
 - **THEN** it is undefined and the chart shows no volume for it
 
 ### Requirement: Default mesocycles
-A macrocycle of N weeks SHALL be divided into the general preparation block
-(first floor(0.15·N) weeks), the special preparation block (next
+A new macrocycle of N weeks SHALL be divided into the general preparation
+block (first floor(0.15·N) weeks), the special preparation block (next
 floor(0.5·N) weeks) and the competition preparation block (remaining
-weeks).
+weeks). When the duration of a macrocycle changes, the current block
+lengths SHALL be scaled to the new duration (rounded to whole weeks, each
+block at least one week, the competition preparation block taking the
+rest).
 
 #### Scenario: 21 weeks
 - **WHEN** a macrocycle of 21 weeks is divided
 - **THEN** weeks 1–3 are general preparation, 4–13 special preparation and 14–21 competition preparation
+
+#### Scenario: Duration change keeps proportions
+- **GIVEN** a 21-week macrocycle with the blocks 1–5, 6–13 and 14–21 (5, 8 and 8 weeks)
+- **WHEN** its duration changes to 42 weeks
+- **THEN** the blocks are 1–10, 11–26 and 27–42
 
 #### Scenario: Shortest macrocycle
 - **WHEN** a macrocycle of 7 weeks is divided
