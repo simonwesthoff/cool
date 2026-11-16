@@ -43,6 +43,13 @@
       "when": 1794783401463,
       "tag": "0005_exercise_catalog_data",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794822854002,
+      "tag": "0006_macrocycles",
+      "breakpoints": true
     }
   ]
 }

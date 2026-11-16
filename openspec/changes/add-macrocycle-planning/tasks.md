@@ -2,16 +2,16 @@
 
 ## 1. Calculation
 
-- [ ] 1.1 Implement the pure calculation module (cycle progress, curve shape, intensity with week levels, planned best value and average weight, set size, weekly reps, volume, mesocycle split, rounding); verify unit tests with every example value of the `macrocycle-calculation` spec plus edge cases (7 and 52 weeks, entry values 30 % and 95 %, exercises without values)
+- [x] 1.1 Implement the pure calculation module (cycle progress, curve shape, intensity with week levels, planned best value and average weight, set size, weekly reps, volume, mesocycle split, rounding); verify unit tests with every example value of the `macrocycle-calculation` spec plus edge cases (7 and 52 weeks, entry values 30 % and 95 %, exercises without values)
 
 ## 2. Data and domain
 
-- [ ] 2.1 Add the tables `macrocycle`, `macrocycle_week`, `mesocycle`, `mesocycle_exercise` with the enums and generate the migration; verify the tables and constraints in PostgreSQL
-- [ ] 2.2 Implement the base data validation and `createMacrocycle`, `updateBaseData` (incl. duration change rules), `setWeekLevel`, `setMesocycleExercises` and `getMacrocycle` with calculated weeks; verify PGlite tests (create with default mesocycles and medium weeks, required fields, Monday rule, ranges, `MACROCYCLE_EXISTS`, other Team → `ATHLETE_NOT_FOUND`, duration change keeps levels and exercises, calculated values of week 11 from the spec)
+- [x] 2.1 Add the tables `macrocycle`, `macrocycle_week`, `mesocycle`, `mesocycle_exercise` with the enums and generate the migration; verify the tables and constraints in PostgreSQL
+- [x] 2.2 Implement the base data validation and `createMacrocycle`, `updateBaseData` (incl. duration change rules), `setWeekLevel`, `setMesocycleExercises` and `getMacrocycle` with calculated weeks; verify PGlite tests (create with default mesocycles and medium weeks, required fields, Monday rule, ranges, `MACROCYCLE_EXISTS`, other Team → `ATHLETE_NOT_FOUND`, duration change keeps levels and exercises, calculated values of week 11 from the spec)
 
 ## 3. API
 
-- [ ] 3.1 Add the five macrocycle endpoints; verify route tests (201/200, 400 with field codes, 401, 403, 404 `ATHLETE_NOT_FOUND` / `MACROCYCLE_NOT_FOUND`, 409)
+- [x] 3.1 Add the five macrocycle endpoints; verify route tests (201/200, 400 with field codes, 401, 403, 404 `ATHLETE_NOT_FOUND` / `MACROCYCLE_NOT_FOUND`, 409)
 
 ## 4. Pages
 

@@ -1,0 +1,57 @@
+/** Shapes of a macrocycle as the app and the API see it (no server imports). */
+import type { MesocycleType, WeekLevel } from "./calculation";
+
+export type { MesocycleType, WeekLevel };
+
+export type MacrocycleBaseData = {
+  startDate: string;
+  durationWeeks: number;
+  entryValuePct: number;
+  snatchBestKg: number;
+  cleanAndJerkBestKg: number;
+  snatchGoalKg: number;
+  cleanAndJerkGoalKg: number;
+  bodyWeightKg: number;
+  targetBodyWeightKg: number;
+  bodyFatPct: number | null;
+  muscleMassPct: number | null;
+  deficits: string;
+  injuriesAndIllnesses: string;
+  competitionDate: string;
+  competitionType: string;
+};
+
+export type PlannedWeekExercise = {
+  exerciseNumber: number;
+  bestKg: number | null;
+  averageKg: number | null;
+  setSize: number | null;
+  weeklyReps: number | null;
+};
+
+export type MacrocycleWeekView = {
+  number: number;
+  /** Monday of the week. */
+  startDate: string;
+  mesocycle: MesocycleType;
+  level: WeekLevel;
+  /** Intensity in % with one decimal (e.g. 80, 65.9). */
+  intensityPct: number;
+  /** Sum of the planned weekly reps; null without exercises. */
+  volume: number | null;
+  exercises: PlannedWeekExercise[];
+};
+
+export type MesocycleView = {
+  type: MesocycleType;
+  firstWeek: number;
+  lastWeek: number;
+  exerciseNumbers: number[];
+};
+
+export type Macrocycle = MacrocycleBaseData & {
+  id: string;
+  athleteId: string;
+  mesocycles: MesocycleView[];
+  weeks: MacrocycleWeekView[];
+};
