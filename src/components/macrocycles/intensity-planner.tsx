@@ -102,6 +102,10 @@ export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
         mesocycles={mesocycles}
         onLevelChange={changeLevel}
         onBordersChange={changeBorders}
+        competition={{
+          date: macrocycle.competitionDate,
+          type: macrocycle.competitionType,
+        }}
       />
       <div className="flex flex-wrap gap-3">
         <Link

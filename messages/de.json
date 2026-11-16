@@ -248,7 +248,10 @@
       "tooltipVolume": "Umfang: {volume}",
       "borderValue": "{block} ab Woche {week}",
       "axisIntensity": "Intensität",
-      "axisWeek": "Woche"
+      "axisWeek": "Woche",
+      "legendCompetition": "Hauptwettkampf",
+      "competitionValue": "Hauptwettkampf: {type}, {date}",
+      "competitionAfter": "{date}, nach dem Zyklus"
     },
     "intensity": {
       "help": "Ziehe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche, oder tippe darüber oder darunter. Ziehe die Griffe an den Grenzen, um die Länge der Mesozyklen zu ändern. Jede Änderung wird gespeichert.",

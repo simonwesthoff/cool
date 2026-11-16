@@ -29,6 +29,8 @@ type Props = {
   onLevelChange?: (week: number, level: WeekLevel) => void;
   /** When set, the two mesocycle borders can be moved (planning step 2). */
   onBordersChange?: (specialStart: number, competitionStart: number) => void;
+  /** The main competition, marked with a vertical line and an annotation. */
+  competition?: { date: string; type: string };
 };
 
 /** Width and height of the tooltip box, used to place it next to a point. */
@@ -49,6 +51,7 @@ export function MacrocycleChart({
   mesocycles: savedMesocycles,
   onLevelChange,
   onBordersChange,
+  competition,
 }: Props) {
   const t = useTranslations("Macrocycle.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
@@ -219,6 +222,44 @@ export function MacrocycleChart({
     ((week - 1) % every === 0 &&
       blockStarts.every((start) => Math.abs(start - week) >= every));
 
+  // --- Main competition marker -------------------------------------------------
+  const marker = (() => {
+    if (!competition || n === 0) return null;
+    const days =
+      (Date.parse(`${competition.date}T00:00:00Z`) -
+        Date.parse(`${weeks[0]!.startDate}T00:00:00Z`)) /
+      86_400_000;
+    if (Number.isNaN(days)) return null;
+    const after = days >= 7 * n;
+    const mx = after
+      ? plotRight
+      : margin.left + column * (Math.max(0, days) / 7);
+    // Curve height at the competition's week decides the annotation's half.
+    const index = Math.min(n - 1, Math.max(0, Math.floor(days / 7)));
+    const curveY = points[index]!.y;
+    const below = curveY < PLOT.top + PLOT.height / 2;
+    const toLeft = mx > margin.left + (plotRight - margin.left) / 2;
+    const room = toLeft ? mx - margin.left - 8 : plotRight - mx - 8;
+    // About 6.5 px per character at 11 px.
+    const maxChars = Math.max(4, Math.floor(room / 6.5));
+    const type =
+      competition.type.length > maxChars
+        ? `${competition.type.slice(0, maxChars - 1).trimEnd()}…`
+        : competition.type;
+    const date = format.dateTime(new Date(`${competition.date}T00:00:00Z`), {
+      dateStyle: "medium",
+      timeZone: "UTC",
+    });
+    return {
+      x: mx,
+      lines: [type, after ? t("competitionAfter", { date }) : date],
+      label: t("competitionValue", { type: competition.type, date }),
+      anchor: toLeft ? ("end" as const) : ("start" as const),
+      textX: toLeft ? mx - 6 : mx + 6,
+      textY: below ? PLOT.top + PLOT.height - 26 : PLOT.top + 50,
+    };
+  })();
+
   const shown =
     hovered === null ? null : weeks.find((w) => w.number === hovered);
   // Place the tooltip beside the point's column (never over the pointer,
@@ -267,6 +308,22 @@ export function MacrocycleChart({
           <span aria-hidden="true">▲▼</span>
           {t("legendLevels")}
         </li>
+        {marker && (
+          <li className="flex items-center gap-2">
+            <svg aria-hidden="true" width="12" height="14" className="shrink-0">
+              <line
+                x1="6"
+                x2="6"
+                y1="0"
+                y2="14"
+                className="stroke-zinc-900 dark:stroke-zinc-100"
+                strokeWidth={2}
+                strokeDasharray="3 2"
+              />
+            </svg>
+            {t("legendCompetition")}
+          </li>
+        )}
       </ul>
       <div
         ref={container}
@@ -524,6 +581,55 @@ export function MacrocycleChart({
               </g>
             );
           })}
+          {marker && (
+            <g
+              data-competition
+              role="img"
+              aria-label={marker.label}
+              className="pointer-events-none"
+            >
+              <line
+                x1={marker.x}
+                x2={marker.x}
+                y1={PLOT.top}
+                y2={PLOT.top + PLOT.height}
+                stroke="var(--chart-halo)"
+                strokeOpacity={0.6}
+                strokeWidth={4}
+              />
+              <line
+                x1={marker.x}
+                x2={marker.x}
+                y1={PLOT.top}
+                y2={PLOT.top + PLOT.height}
+                className="stroke-white"
+                strokeWidth={2}
+                strokeDasharray="5 3"
+              />
+              <text
+                x={marker.textX}
+                y={marker.textY}
+                textAnchor={marker.anchor}
+                className="fill-white text-[11px]"
+                stroke="var(--chart-halo)"
+                strokeWidth={2.5}
+                strokeLinejoin="round"
+                paintOrder="stroke"
+                aria-hidden="true"
+              >
+                {marker.lines.map((line, i) => (
+                  <tspan
+                    key={i}
+                    x={marker.textX}
+                    dy={i === 0 ? 0 : 14}
+                    className={i === 0 ? "font-semibold" : undefined}
+                  >
+                    {line}
+                  </tspan>
+                ))}
+              </text>
+            </g>
+          )}
           {hovered !== null && (
             <line
               x1={x(weeks.findIndex((w) => w.number === hovered))}

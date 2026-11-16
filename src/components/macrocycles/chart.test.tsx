@@ -391,6 +391,8 @@ describe("IntensityPlanner", () => {
   const fetchMock = vi.fn();
   const macrocycle = {
     athleteId: "a1",
+    competitionDate: "2027-04-24",
+    competitionType: "German Championships",
     mesocycles: mesocycles.map((m) => ({ ...m, exerciseNumbers: [] })),
     weeks: makeWeeks().map((w) => ({ ...w, exercises: [] })),
   } as unknown as Macrocycle;
@@ -482,5 +484,128 @@ describe("IntensityPlanner", () => {
     expect(pointOf(container, 11).getAttribute("aria-label")).toBe(
       "Week 11, Medium week, 80%",
     );
+  });
+});
+
+describe("main competition marker", () => {
+  const competition = { date: "2027-04-24", type: "German Championships" };
+  const markerOf = (container: HTMLElement) =>
+    container.querySelector("[data-competition]")!;
+  // Width 800, margins 56/16: 21 columns of 728/21 px; day 0 = Monday 2026-11-30.
+  const xOfDay = (day: number) => 56 + (728 / 21) * (day / 7);
+
+  it("draws a line at the competition day with type and date", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={competition}
+      />,
+    );
+    const marker = markerOf(container);
+    expect(marker.getAttribute("aria-label")).toBe(
+      "Main competition: German Championships, Apr 24, 2027",
+    );
+    // Saturday of week 21 = day 145.
+    const line = marker.querySelectorAll("line")[1]!;
+    expect(Number(line.getAttribute("x1"))).toBeCloseTo(xOfDay(145), 5);
+    expect(
+      [...marker.querySelectorAll("tspan")].map((t) => t.textContent),
+    ).toEqual(["German Championships", "Apr 24, 2027"]);
+    expect(screen.getByRole("list", { name: "Legend" }).textContent).toContain(
+      "Main competition",
+    );
+  });
+
+  it("puts the annotation left of the line and below a high curve", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={competition}
+      />,
+    );
+    const text = markerOf(container).querySelector("text")!;
+    expect(text.getAttribute("text-anchor")).toBe("end");
+    // Plot from y = 28, 220 px high: lower half below y = 138.
+    expect(Number(text.getAttribute("y"))).toBeGreaterThan(138);
+  });
+
+  it("puts the annotation right of the line and above a low curve early in the cycle", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={{ date: "2026-12-12", type: "Club competition" }}
+      />,
+    );
+    const text = markerOf(container).querySelector("text")!;
+    expect(text.getAttribute("text-anchor")).toBe("start");
+    expect(Number(text.getAttribute("y"))).toBeLessThan(138);
+  });
+
+  it("marks a competition after the cycle at the end", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={{ date: "2027-05-08", type: "European Championships" }}
+      />,
+    );
+    const marker = markerOf(container);
+    expect(
+      Number(marker.querySelector("line")!.getAttribute("x1")),
+    ).toBeCloseTo(784, 5);
+    expect(marker.textContent).toContain("May 8, 2027, after the cycle");
+  });
+
+  it("shortens a long type to the available width and keeps it in the label", () => {
+    containerWidth = 390;
+    const type =
+      "International Weightlifting Federation Junior World Championships";
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={{ ...competition, type }}
+      />,
+    );
+    const marker = markerOf(container);
+    const first = marker.querySelector("tspan")!.textContent!;
+    expect(first.endsWith("…")).toBe(true);
+    expect(first.length).toBeLessThan(type.length);
+    expect(marker.getAttribute("aria-label")).toContain(type);
+  });
+
+  it("is not drawn for an invalid date", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={{ date: "", type: "x" }}
+      />,
+    );
+    expect(container.querySelector("[data-competition]")).toBeNull();
+  });
+
+  it("is not drawn without a competition, in German with the German date", () => {
+    const { container } = renderIn(
+      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+    );
+    expect(container.querySelector("[data-competition]")).toBeNull();
+    cleanup();
+    const view = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={competition}
+      />,
+      "de",
+    );
+    expect(
+      view.container
+        .querySelector("[data-competition]")!
+        .getAttribute("aria-label"),
+    ).toBe("Hauptwettkampf: German Championships, 24.04.2027");
   });
 });
