@@ -48,6 +48,8 @@
 
 - [x] 7.10 Acceptance feedback: split step 1 into "Base data" (sections Historical data and New macrocycle plan) and a new step 2 "SWOT" (strengths, deficits, experience, focus points, injuries and illnesses); create without SWOT, `PUT …/swot`; four-step indicator and links; English and German texts; verify tests, browser check and screenshots
 
+- [ ] 7.11 Acceptance feedback: mark the main competition in the intensity chart (vertical line at its date, annotation with type and date, legend entry, after-the-cycle case); English and German texts; verify component tests, browser check and screenshots
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).

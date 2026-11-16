@@ -138,6 +138,16 @@ colours:
   band labels, the border lines with handles and the legend name the
   blocks; purple is not used as text colour on dark backgrounds.
 
+### Main competition marker (added during acceptance)
+- x = plot start + column × (days since the start date / 7), so the line is
+  at the exact day (the week's point is its Monday). After the last week:
+  clamped to the right edge, with "after the cycle" in the annotation.
+- Dashed white line (2 px) with the dark chart halo, not interactive; the
+  annotation (type, date; type truncated to the available width) is white
+  text with a halo, on the side of the line with more room and in the
+  vertical half away from the curve at that date. `role="img"` with an
+  aria-label; legend entry "Main competition" with a dashed swatch.
+
 ### Base data and SWOT steps (changed during acceptance)
 - Planning has four steps: `/base-data`, `/swot`, `/intensity`,
   `/exercises`. Step 1 has the sections "Historical data" (personal bests,

@@ -140,6 +140,21 @@ dragging or tapping; in between it is medium.
 - **WHEN** the coach looks at the chart
 - **THEN** the point and the number of week 4 are exactly on the border where the special preparation background begins
 
+### Requirement: Main competition in the chart
+The chart in step 3 SHALL mark the main competition with a vertical line
+at its date and an annotation with its type and date, and name it in the
+legend. A competition after the last week SHALL be marked at the end of the
+chart with the note that it is after the cycle.
+
+#### Scenario: Competition in the last week
+- **GIVEN** a 21-week macrocycle from Monday 2026-11-30 with the German Championships on Saturday 2027-04-24
+- **WHEN** the coach opens step 3
+- **THEN** a vertical line marks Saturday of week 21, annotated "German Championships" and "Apr 24, 2027"
+
+#### Scenario: Annotation beside the curve
+- **WHEN** the curve is high at the competition date
+- **THEN** the annotation is in the lower half of the chart, so it covers no week point
+
 ### Requirement: Week tooltip
 Pointing at or focusing a week in the chart SHALL show a tooltip with the
 week's number, start date, mesocycle, level, intensity and volume. The
