@@ -39,8 +39,9 @@
   `ATHLETE_NOT_FOUND`.
 - `getMacrocycle`, `findMacrocycle` and the new exercise values function
   use it. All write functions keep `requireOwnAthlete`.
-- A linked athlete therefore gets `ATHLETE_NOT_FOUND` on writes, the same
-  answer as any other user.
+- A linked athlete therefore gets the existing write answers: 403
+  `NOT_A_COACH` without a Team of their own, 404 `ATHLETE_NOT_FOUND` with
+  another Team.
 - Alternative considered: separate athlete-only read functions. Rejected:
   two read paths for the same data.
 

@@ -11,6 +11,9 @@ const weeks = await import("./weeks/[week]/route");
 const exercises = await import("./mesocycles/[type]/exercises/[number]/route");
 const borders = await import("./mesocycles/borders/route");
 const swot = await import("./swot/route");
+const exerciseWeeks = await import("./exercises/[number]/route");
+const { athlete: athleteTable } = await import("@/server/db/schema");
+const { eq } = await import("drizzle-orm");
 const { startAsCoach } = await import("@/domain/roles");
 const { createAthlete } = await import("@/domain/athletes");
 
@@ -214,7 +217,7 @@ describe("macrocycle API", () => {
     });
   });
 
-  it("answers another Team (404), users without a Team (403) and no session (401)", async () => {
+  it("answers another Team (404), users without a Team (403 for writes, 404 for reads) and no session (401)", async () => {
     const { athlete } = await coachWithAthlete();
     const id = { id: athlete.id };
     const other = await createUser(testDb.db);
@@ -226,10 +229,13 @@ describe("macrocycle API", () => {
       error: { code: "ATHLETE_NOT_FOUND" },
     });
 
+    // Without a Team: writes are coach-only (403); reading is also open to
+    // linked athletes, so an unrelated user gets "not found" (404).
     as(await createUser(testDb.db));
+    expect((await main.PATCH(json("PATCH", {}), ctx(id))).status).toBe(403);
     expect(
       (await main.GET(new Request("https://localhost/api"), ctx(id))).status,
-    ).toBe(403);
+    ).toBe(404);
 
     as(null);
     for (const response of [
@@ -252,5 +258,77 @@ describe("macrocycle API", () => {
     ]) {
       expect(response.status).toBe(401);
     }
+  });
+});
+
+describe("macrocycle view API", () => {
+  const get = () => new Request("https://localhost/api");
+
+  async function linkedAthlete() {
+    const { coach, athlete } = await coachWithAthlete();
+    await main.POST(json("POST", baseData), ctx({ id: athlete.id }));
+    const linked = await createUser(testDb.db);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: linked.id })
+      .where(eq(athleteTable.id, athlete.id));
+    return { coach, athlete, linked };
+  }
+
+  it("lets the linked athlete read the macrocycle and an exercise's weeks", async () => {
+    const { athlete, linked } = await linkedAthlete();
+    as(linked);
+    const read = await main.GET(get(), ctx({ id: athlete.id }));
+    expect(read.status).toBe(200);
+    expect((await read.json()).athleteId).toBe(athlete.id);
+    const values = await exerciseWeeks.GET(
+      get(),
+      ctx({ id: athlete.id, number: "1" }),
+    );
+    expect(values.status).toBe(200);
+    const body = await values.json();
+    expect(body.weeks).toHaveLength(21);
+    expect(body.weeks[10]).toEqual({
+      number: 11,
+      bestKg: 80,
+      averageKg: 69,
+      setSize: 3,
+      weeklyReps: 20,
+    });
+  });
+
+  it("refuses the linked athlete's changes and answers errors", async () => {
+    const { athlete, linked } = await linkedAthlete();
+    as(linked);
+    const patch = await main.PATCH(
+      json("PATCH", { snatchGoalKg: 110 }),
+      ctx({ id: athlete.id }),
+    );
+    expect(patch.status).toBe(403);
+    const level = await weeks.PUT(
+      json("PUT", { level: "high" }),
+      ctx({ id: athlete.id, week: "11" }),
+    );
+    expect(level.status).toBe(403);
+    const unknown = await exerciseWeeks.GET(
+      get(),
+      ctx({ id: athlete.id, number: "99" }),
+    );
+    expect(unknown.status).toBe(404);
+    expect(await unknown.json()).toEqual({
+      error: { code: "EXERCISE_NOT_FOUND" },
+    });
+    as(await createUser(testDb.db));
+    const stranger = await exerciseWeeks.GET(
+      get(),
+      ctx({ id: athlete.id, number: "1" }),
+    );
+    expect(stranger.status).toBe(404);
+    as(null);
+    const anonymous = await exerciseWeeks.GET(
+      get(),
+      ctx({ id: athlete.id, number: "1" }),
+    );
+    expect(anonymous.status).toBe(401);
   });
 });

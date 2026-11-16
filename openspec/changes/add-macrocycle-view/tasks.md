@@ -2,13 +2,13 @@
 
 ## 1. Domain and API
 
-- [ ] 1.1 Add `requireViewableAthlete` (coach of the Team or linked user) and use it in `getMacrocycle` and `findMacrocycle`; all write functions keep coach-only access. Verify with PGlite tests: linked athlete reads (same content as the coach); linked athlete gets `ATHLETE_NOT_FOUND` for base data, SWOT, week level, borders and exercise changes; unrelated user gets `ATHLETE_NOT_FOUND`; a user who is coach and athlete of different Teams sees both.
-- [ ] 1.2 Add `getExerciseWeeks(user, athleteId, exerciseNumber)` with the planned values of every week, independent of the mesocycles' chosen exercises. Verify with PGlite tests:
+- [x] 1.1 Add `requireViewableAthlete` (coach of the Team or linked user) and use it in `getMacrocycle` and `findMacrocycle`; all write functions keep coach-only access. Verify with PGlite tests: linked athlete reads (same content as the coach); linked athlete gets `NOT_A_COACH` (no own Team) or `ATHLETE_NOT_FOUND` (other Team) for base data, SWOT, week level, borders and exercise changes; unrelated user gets `ATHLETE_NOT_FOUND`; a user who is coach and athlete of different Teams sees both.
+- [x] 1.2 Add `getExerciseWeeks(user, athleteId, exerciseNumber)` with the planned values of every week, independent of the mesocycles' chosen exercises. Verify with PGlite tests:
   - Snatch, week 11 of 21: 80 kg, 69 kg, set size 3, 20 weekly reps.
   - A high week.
   - Exercise 31: all values null.
   - `EXERCISE_NOT_FOUND`, `MACROCYCLE_NOT_FOUND`, and `ATHLETE_NOT_FOUND` for other users.
-- [ ] 1.3 Allow the linked athlete on `GET /api/athletes/{id}/macrocycle` and add `GET /api/athletes/{id}/macrocycle/exercises/{number}`. Verify with route tests: 200 for coach and linked athlete, 404 codes, 401 without a session, 404 for the linked athlete's write requests.
+- [x] 1.3 Allow the linked athlete on `GET /api/athletes/{id}/macrocycle` and add `GET /api/athletes/{id}/macrocycle/exercises/{number}`. Verify with route tests: 200 for coach and linked athlete, 404 codes, 401 without a session, 403/404 for the linked athlete's write requests.
 
 ## 2. Chart
 

@@ -9,7 +9,7 @@ import { apiHandler, readJsonBody } from "@/server/http";
 type Context = RouteContext<"/api/athletes/[id]/macrocycle">;
 const noStore = { "cache-control": "no-store" };
 
-/** The athlete's macrocycle with all calculated weekly values. */
+/** The athlete's macrocycle with all calculated weekly values (coach or linked athlete). */
 export const GET = apiHandler(async (request: Request, context: Context) => {
   const coach = await requireCurrentUser(request.headers);
   const { id } = await context.params;

@@ -82,7 +82,7 @@ the Athlete SHALL see it.
 #### Scenario: Linked athlete opens the planning
 - **GIVEN** a user linked to an Athlete with a macrocycle
 - **WHEN** they open one of the planning steps of their macrocycle
-- **THEN** they see the "not found" page
+- **THEN** they are sent to the home page if they lead no Team, and see the "not found" page if they lead another Team
 
 ### Requirement: Macrocycle API
 The HTTP API SHALL let the coach of an athlete create and change the
@@ -112,4 +112,4 @@ reading a missing one with 404 `MACROCYCLE_NOT_FOUND`.
 #### Scenario: Linked athlete cannot change
 - **GIVEN** a user linked to an Athlete with a macrocycle
 - **WHEN** they try to change its base data, SWOT, week levels, borders or exercises
-- **THEN** the response has status 404 and code `ATHLETE_NOT_FOUND`, and nothing changes
+- **THEN** nothing changes, and the response has status 403 `NOT_A_COACH` if they lead no Team, or 404 `ATHLETE_NOT_FOUND` if they lead another Team
