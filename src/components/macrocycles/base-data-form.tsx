@@ -4,8 +4,9 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import type { MacrocycleBaseData } from "@/domain/macrocycles/macrocycle-types";
+import { FocusPointsField } from "./focus-points-field";
 
-type FieldName = keyof MacrocycleBaseData;
+type FieldName = Exclude<keyof MacrocycleBaseData, "focusPoints">;
 type FieldErrors = Partial<Record<string, string[]>>;
 
 const errorCodes = [
@@ -16,6 +17,7 @@ const errorCodes = [
   "BEFORE_START",
   "INVALID_FORMAT",
   "TOO_LONG",
+  "TOO_MANY",
 ] as const;
 type ErrorCode = (typeof errorCodes)[number];
 
@@ -30,13 +32,20 @@ const numberFields: FieldName[] = [
   "targetBodyWeightKg",
   "bodyFatPct",
   "muscleMassPct",
+  "trainingFrequency",
 ];
 const optionalFields: FieldName[] = ["bodyFatPct", "muscleMassPct"];
 
 function valuesOf(form: HTMLFormElement): Record<string, unknown> {
   const data = new FormData(form);
   const result: Record<string, unknown> = {};
+  // Ordered focus points; empty entries are left out.
+  result.focusPoints = data
+    .getAll("focusPoints")
+    .map((v) => String(v).trim())
+    .filter((v) => v !== "");
   for (const [key, raw] of data.entries()) {
+    if (key === "focusPoints") continue;
     const text = String(raw).trim();
     const name = key as FieldName;
     if (numberFields.includes(name)) {
@@ -277,6 +286,60 @@ function BaseDataFormFields({
           {num("muscleMassPct", "0.1", m?.muscleMassPct)}
         </>,
       )}
+      {section(
+        t("sections.training"),
+        <>
+          {field(
+            "trainingFrequency",
+            (p) => (
+              <input
+                {...p}
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={14}
+                step={1}
+                defaultValue={m?.trainingFrequency ?? ""}
+                className={inputClass}
+              />
+            ),
+            { hint: t("trainingFrequencyHint") },
+          )}
+        </>,
+      )}
+      <fieldset className="flex flex-col gap-4">
+        <legend className="mb-1 text-lg font-semibold">
+          {t("sections.athlete")}
+        </legend>
+        {field("strengths", (p) => (
+          <textarea
+            {...p}
+            rows={3}
+            maxLength={2000}
+            defaultValue={m?.strengths ?? ""}
+            className={`${inputClass} py-2`}
+          />
+        ))}
+        {field("experience", (p) => (
+          <textarea
+            {...p}
+            rows={3}
+            maxLength={2000}
+            defaultValue={m?.experience ?? ""}
+            className={`${inputClass} py-2`}
+          />
+        ))}
+      </fieldset>
+      <FocusPointsField
+        initial={m?.focusPoints ?? []}
+        errors={errors.focusPoints ?? []}
+        itemErrors={Object.fromEntries(
+          Object.entries(errors)
+            .filter(([key]) => key.startsWith("focusPoints."))
+            .map(([key, codes]) => [Number(key.split(".")[1]), codes ?? []]),
+        )}
+        message={message}
+      />
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-1 text-lg font-semibold">
           {t("sections.notes")}

@@ -161,7 +161,9 @@
         "period": "Zeitraum und Hauptwettkampf",
         "lifts": "Bestleistungen und Ziele",
         "body": "Körper",
-        "notes": "Notizen"
+        "notes": "Notizen",
+        "training": "Training",
+        "athlete": "Stärken und Erfahrung"
       },
       "fields": {
         "startDate": "Beginn",
@@ -178,7 +180,10 @@
         "bodyFatPct": "Körperfett (%)",
         "muscleMassPct": "Muskelmasse (%)",
         "deficits": "Aktuelle Defizite",
-        "injuriesAndIllnesses": "Aktuelle und chronische Verletzungen und Krankheiten"
+        "injuriesAndIllnesses": "Aktuelle und chronische Verletzungen und Krankheiten",
+        "trainingFrequency": "Trainingseinheiten pro Woche",
+        "strengths": "Stärken",
+        "experience": "Erfahrung im Gewichtheben"
       },
       "optional": "(optional)",
       "mondayHint": "Makrozyklen beginnen an einem Montag.",
@@ -195,7 +200,19 @@
         "BEFORE_START": "Darf nicht vor dem Beginn liegen.",
         "INVALID_FORMAT": "Bitte ein gültiges Datum eingeben.",
         "TOO_LONG": "Zu lang.",
-        "INVALID": "Ungültiger Wert."
+        "INVALID": "Ungültiger Wert.",
+        "TOO_MANY": "Höchstens 3 Schwerpunkte."
+      },
+      "trainingFrequencyHint": "1 bis 14 Einheiten.",
+      "focusPoints": {
+        "title": "Schwerpunkte",
+        "help": "1 bis 3 Schwerpunkte für diesen Makrozyklus, den wichtigsten zuerst.",
+        "position": "{position}.",
+        "entry": "Schwerpunkt {position}",
+        "up": "Schwerpunkt {position} nach oben",
+        "down": "Schwerpunkt {position} nach unten",
+        "remove": "Schwerpunkt {position} entfernen",
+        "add": "Schwerpunkt hinzufügen"
       }
     },
     "mesocycles": {

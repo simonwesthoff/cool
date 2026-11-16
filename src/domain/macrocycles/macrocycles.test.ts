@@ -32,6 +32,10 @@ const baseData = {
   injuriesAndIllnesses: "None",
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
+  strengths: "Fast under the bar",
+  experience: "6 years, 2 national championships",
+  trainingFrequency: 8,
+  focusPoints: ["Turnover", "Squat strength"],
 };
 
 async function setup() {
@@ -152,6 +156,56 @@ describe("createMacrocycle", () => {
         }),
       ),
     ).toEqual({ competitionDate: ["BEFORE_START"] });
+  });
+
+  it("keeps 1 to 3 focus points in order", async () => {
+    const { coach, athlete } = await setup();
+    const created = await createMacrocycle(coach, athlete.id, {
+      ...baseData,
+      focusPoints: ["Turnover", "Squat strength", "Jerk stability"],
+    });
+    expect(created.focusPoints).toEqual([
+      "Turnover",
+      "Squat strength",
+      "Jerk stability",
+    ]);
+    const reordered = await updateBaseData(coach, athlete.id, {
+      focusPoints: ["Jerk stability", "Turnover"],
+    });
+    expect(reordered.focusPoints).toEqual(["Jerk stability", "Turnover"]);
+  });
+
+  it("rejects no focus point, more than three, empty ones and a wrong frequency", async () => {
+    const { coach, athlete } = await setup();
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, { ...baseData, focusPoints: [] }),
+      ),
+    ).toEqual({ focusPoints: ["REQUIRED"] });
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, {
+          ...baseData,
+          focusPoints: ["a", "b", "c", "d"],
+        }),
+      ),
+    ).toEqual({ focusPoints: ["TOO_MANY"] });
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, {
+          ...baseData,
+          focusPoints: ["a", " "],
+        }),
+      ),
+    ).toEqual({ "focusPoints.1": ["REQUIRED"] });
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, {
+          ...baseData,
+          trainingFrequency: 15,
+        }),
+      ),
+    ).toEqual({ trainingFrequency: ["OUT_OF_RANGE"] });
   });
 
   it("allows only one macrocycle per athlete", async () => {

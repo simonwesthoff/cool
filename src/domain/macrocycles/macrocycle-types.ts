@@ -17,6 +17,11 @@ export type MacrocycleBaseData = {
   muscleMassPct: number | null;
   deficits: string;
   injuriesAndIllnesses: string;
+  strengths: string;
+  experience: string;
+  trainingFrequency: number;
+  /** Ordered, 1 to 3 entries. */
+  focusPoints: string[];
   competitionDate: string;
   competitionType: string;
 };

@@ -26,6 +26,10 @@ const baseData = {
   injuriesAndIllnesses: "None",
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
+  strengths: "Fast under the bar",
+  experience: "6 years, 2 national championships",
+  trainingFrequency: 8,
+  focusPoints: ["Turnover", "Squat strength"],
 };
 const json = (method: string, body: unknown) =>
   new Request("https://localhost/api", {

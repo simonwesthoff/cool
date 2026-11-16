@@ -24,6 +24,8 @@ const monday = z.iso
   .date()
   .refine((v) => weekdayOf(v) === 1, code("NOT_MONDAY"));
 
+export const MAX_FOCUS_POINTS = 3;
+export const FOCUS_POINT_MAX_LENGTH = 200;
 export const DURATION_MIN_WEEKS = 7;
 export const DURATION_MAX_WEEKS = 52;
 
@@ -45,6 +47,16 @@ const fields = {
   targetBodyWeightKg: number(20, 250),
   deficits: text(2000),
   injuriesAndIllnesses: text(2000),
+  strengths: text(2000),
+  experience: text(2000),
+  trainingFrequency: z
+    .number()
+    .refine(Number.isInteger, code("NOT_INTEGER"))
+    .refine((v) => v >= 1 && v <= 14, code("OUT_OF_RANGE")),
+  focusPoints: z
+    .array(text(FOCUS_POINT_MAX_LENGTH))
+    .refine((list) => list.length >= 1, code("REQUIRED"))
+    .refine((list) => list.length <= MAX_FOCUS_POINTS, code("TOO_MANY")),
   competitionDate: z.iso.date(),
   competitionType: text(200),
 };

@@ -83,6 +83,10 @@ function baseDataOf(row: BaseRow): MacrocycleBaseData {
     muscleMassPct: row.muscleMassPct,
     deficits: row.deficits,
     injuriesAndIllnesses: row.injuriesAndIllnesses,
+    strengths: row.strengths,
+    experience: row.experience,
+    trainingFrequency: row.trainingFrequency,
+    focusPoints: row.focusPoints,
     competitionDate: row.competitionDate,
     competitionType: row.competitionType,
   };

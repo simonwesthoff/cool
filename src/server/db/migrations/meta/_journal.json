@@ -50,6 +50,13 @@
       "when": 1794822854002,
       "tag": "0006_macrocycles",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794826147789,
+      "tag": "0007_macrocycle_profile",
+      "breakpoints": true
     }
   ]
 }

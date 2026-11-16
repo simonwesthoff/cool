@@ -46,6 +46,11 @@ export const macrocycle = pgTable("macrocycle", {
   muscleMassPct: pct("muscle_mass_pct"),
   deficits: text("deficits").notNull(),
   injuriesAndIllnesses: text("injuries_and_illnesses").notNull(),
+  strengths: text("strengths").notNull(),
+  experience: text("experience").notNull(),
+  trainingFrequency: smallint("training_frequency").notNull(),
+  /** Ordered list of 1–3 focus points. */
+  focusPoints: text("focus_points").array().notNull(),
   competitionDate: date("competition_date", { mode: "string" }).notNull(),
   competitionType: text("competition_type").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -86,6 +86,8 @@ const eslintConfig = defineConfig([
             "▲",
             "▼",
             "▲▼",
+            "↑",
+            "↓",
           ],
           ignoreProps: true,
         },

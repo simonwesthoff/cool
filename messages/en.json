@@ -161,7 +161,9 @@
         "period": "Period and main competition",
         "lifts": "Personal bests and goals",
         "body": "Body",
-        "notes": "Notes"
+        "notes": "Notes",
+        "training": "Training",
+        "athlete": "Strengths and experience"
       },
       "fields": {
         "startDate": "Start",
@@ -178,7 +180,10 @@
         "bodyFatPct": "Body fat (%)",
         "muscleMassPct": "Muscle mass (%)",
         "deficits": "Current deficits",
-        "injuriesAndIllnesses": "Current and chronic injuries and illnesses"
+        "injuriesAndIllnesses": "Current and chronic injuries and illnesses",
+        "trainingFrequency": "Training sessions per week",
+        "strengths": "Strengths",
+        "experience": "Weightlifting experience"
       },
       "optional": "(optional)",
       "mondayHint": "Macrocycles start on a Monday.",
@@ -195,7 +200,19 @@
         "BEFORE_START": "Must not be before the start.",
         "INVALID_FORMAT": "Please enter a valid date.",
         "TOO_LONG": "Too long.",
-        "INVALID": "Invalid value."
+        "INVALID": "Invalid value.",
+        "TOO_MANY": "At most 3 focus points."
+      },
+      "trainingFrequencyHint": "1 to 14 sessions.",
+      "focusPoints": {
+        "title": "Focus points",
+        "help": "1 to 3 focus points for this macrocycle, the most important first.",
+        "position": "{position}.",
+        "entry": "Focus point {position}",
+        "up": "Move focus point {position} up",
+        "down": "Move focus point {position} down",
+        "remove": "Remove focus point {position}",
+        "add": "Add focus point"
       }
     },
     "mesocycles": {

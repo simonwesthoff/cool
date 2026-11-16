@@ -40,6 +40,10 @@ const existing = {
   injuriesAndIllnesses: "None",
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
+  strengths: "Fast under the bar",
+  experience: "6 years, 2 national championships",
+  trainingFrequency: 8,
+  focusPoints: ["Turnover", "Squat strength"],
 };
 
 beforeEach(() => {
@@ -90,6 +94,17 @@ describe("BaseDataForm", () => {
     await fill("Target body weight (kg)", "80.5");
     await fill("Current deficits", "Turnover");
     await fill("Current and chronic injuries and illnesses", "None");
+    await fill("Training sessions per week", "8");
+    await fill("Strengths", "Fast under the bar");
+    await fill("Weightlifting experience", "6 years, 2 national championships");
+    await userEvent.type(screen.getByLabelText("Focus point 1"), "Turnover");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add focus point" }),
+    );
+    await userEvent.type(
+      screen.getByLabelText("Focus point 2"),
+      "Squat strength",
+    );
     await userEvent.click(
       screen.getByRole("button", { name: "Save and continue" }),
     );
@@ -152,6 +167,67 @@ describe("BaseDataForm", () => {
       "Please check the marked fields.",
     );
     expect(router.push).not.toHaveBeenCalled();
+  });
+});
+
+describe("focus points", () => {
+  it("adds up to three, reorders and removes them", async () => {
+    respond(200, {});
+    renderWith(
+      <BaseDataForm
+        athleteId="a1"
+        macrocycle={existing}
+        defaultStartDate="2026-11-23"
+      />,
+    );
+    expect(screen.getByLabelText("Focus point 1")).toHaveProperty(
+      "value",
+      "Turnover",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add focus point" }),
+    );
+    await userEvent.type(
+      screen.getByLabelText("Focus point 3"),
+      "Jerk stability",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Add focus point" }),
+    ).toBeNull();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Move focus point 3 up" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Remove focus point 1" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save and continue" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body).focusPoints).toEqual([
+      "Jerk stability",
+      "Squat strength",
+    ]);
+  });
+
+  it("keeps at least one entry and shows list errors", async () => {
+    respond(400, {
+      error: {
+        code: "VALIDATION_FAILED",
+        fields: { focusPoints: ["REQUIRED"] },
+      },
+    });
+    renderWith(<BaseDataForm athleteId="a1" defaultStartDate="2026-11-23" />);
+    expect(
+      screen.getByRole("button", { name: "Remove focus point 1" }),
+    ).toHaveProperty("disabled", true);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save and continue" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body).focusPoints).toEqual(
+      [],
+    );
+    expect(await screen.findByText("Required.")).toBeTruthy();
   });
 });
 
