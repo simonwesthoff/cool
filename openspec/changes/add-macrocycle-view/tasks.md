@@ -14,7 +14,7 @@
 
 - [x] 2.0 Load the `dataviz` skill, then add the value colour tokens and switch the mesocycle tokens to the grey shades (light and dark mode); run the validator for the value colours against both surfaces and the grey bands, and set the curve outline accordingly. Colour the planning chart's intensity curve and week points in the best value colour. Verify the planning chart (purple intensity on grey blocks), its legend and the exercise table headers show grey blocks (component tests for the fills, screenshots in light and dark mode).
 
-- [ ] 2.1 Move the shared chart parts out of `MacrocycleChart` into a chart frame module:
+- [x] 2.1 Move the shared chart parts out of `MacrocycleChart` into a chart frame module:
   - **Geometry:** width fit, margins, columns and `x()`.
   - **Bands and labels:** bands with label collisions.
   - **Competition:** the competition marker.
