@@ -217,31 +217,26 @@ describe("ExerciseSelection", () => {
     expect(cell.querySelector("svg")).toBeTruthy();
   });
 
-  it("shows the snatch and other deficits for a snatch exercise", async () => {
+  it("shows only the snatch deficits for a snatch exercise, titled like a heading", async () => {
     renderIt();
     await open("Power snatch, Special preparation block: choose");
     expect(dialog().querySelector("h2")!.textContent).toBe("7 Power snatch");
     expect(dialog().textContent).toContain(
       "Special preparation block · Snatch exercise",
     );
-    expect(deficitKeys()).toEqual(["snatchDeficits", "otherDeficits"]);
-    const deficits = within(dialog()).getByRole("region", {
-      name: "Athlete's deficits",
-    });
-    expect(deficits.textContent).toContain(
-      "Deficits in the snatchSlow turnover",
-    );
-    expect(deficits.textContent).toContain("Other deficitsAnkle mobility");
+    expect(deficitKeys()).toEqual(["snatchDeficits"]);
+    const title = dialog().querySelector('[data-deficit="snatchDeficits"] dt')!;
+    expect(title.textContent).toBe("Deficits in the snatch");
+    expect(title.className).toContain("font-semibold");
+    expect(dialog().textContent).toContain("Slow turnover");
+    expect(dialog().textContent).not.toContain("Athlete's deficits");
+    expect(dialog().textContent).not.toContain("Ankle mobility");
   });
 
-  it("shows clean, jerk and other deficits for a clean & jerk exercise, and only other ones without a reference lift", async () => {
+  it("shows clean and jerk deficits for a clean & jerk exercise, and none without a reference lift", async () => {
     renderIt();
     await open("Power jerk, General preparation block: choose");
-    expect(deficitKeys()).toEqual([
-      "cleanDeficits",
-      "jerkDeficits",
-      "otherDeficits",
-    ]);
+    expect(deficitKeys()).toEqual(["cleanDeficits", "jerkDeficits"]);
     expect(dialog().textContent).toContain(
       "Deficits in the jerkNot entered yet",
     );
@@ -249,8 +244,9 @@ describe("ExerciseSelection", () => {
       within(dialog()).getByRole("button", { name: "Cancel" }),
     );
     await open("Pull-up, General preparation block: choose");
-    expect(deficitKeys()).toEqual(["otherDeficits"]);
-    expect(dialog().textContent).toContain("please write a note");
+    expect(deficitKeys()).toEqual([]);
+    expect(dialog().querySelector("dl")).toBeNull();
+    expect(dialog().textContent).toContain("add your own reason with +");
   });
 
   it("chooses an exercise by tapping tags", async () => {
@@ -305,27 +301,74 @@ describe("ExerciseSelection", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("chooses an exercise without tags with a note", async () => {
+  it("adds an own reason with the + tag, shows it as a selected tag and edits it", async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify(macrocycle), { status: 200 }),
     );
     renderIt();
     await open("Pull-up, General preparation block: choose");
+    expect(
+      within(dialog()).queryByRole("textbox", { name: "Own reason" }),
+    ).toBeNull();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Add own reason" }),
+    );
+    const field = within(dialog()).getByRole("textbox", { name: "Own reason" });
+    expect(document.activeElement).toBe(field);
+    // Enter confirms the reason and does not save the dialog.
+    await userEvent.type(field, " Back strength {Enter}");
+    expect(fetchMock).not.toHaveBeenCalled();
+    const chip = within(dialog()).getByRole("button", {
+      name: "Own reason: Back strength. Edit",
+    });
+    expect(chip.getAttribute("aria-pressed")).toBe("true");
+    expect(
+      within(dialog()).queryByRole("button", { name: "Add own reason" }),
+    ).toBeNull();
+    // Tapping the reason opens the field again.
+    await userEvent.click(chip);
     await userEvent.type(
-      within(dialog()).getByLabelText(/Note/),
-      "Back strength",
+      within(dialog()).getByRole("textbox", { name: "Own reason" }),
+      " and core",
     );
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "Choose exercise" }),
     );
     expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({
       tags: [],
-      note: "Back strength",
+      note: "Back strength and core",
       variation: null,
     });
   });
 
-  it("requires a tag or a note", async () => {
+  it("removes an own reason when its text is cleared", async () => {
+    renderIt();
+    await open("Power snatch, Special preparation block: choose");
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Add own reason" }),
+    );
+    await userEvent.type(
+      within(dialog()).getByRole("textbox", { name: "Own reason" }),
+      "x",
+    );
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "High pull" }),
+    );
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Own reason: x. Edit" }),
+    );
+    await userEvent.clear(
+      within(dialog()).getByRole("textbox", { name: "Own reason" }),
+    );
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "High pull" }),
+    );
+    expect(
+      within(dialog()).getByRole("button", { name: "Add own reason" }),
+    ).toBeTruthy();
+  });
+
+  it("requires a tag or an own reason", async () => {
     renderIt();
     await open("Power snatch, Special preparation block: choose");
     await userEvent.click(
@@ -333,16 +376,13 @@ describe("ExerciseSelection", () => {
     );
     expect(fetchMock).not.toHaveBeenCalled();
     expect(dialog().textContent).toContain(
-      "Choose at least one point or write a note.",
+      "Choose at least one point or add your own reason.",
     );
-    expect(
-      within(dialog()).getByLabelText(/Note/).getAttribute("aria-invalid"),
-    ).toBe("true");
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "High pull" }),
     );
     expect(dialog().textContent).not.toContain(
-      "Choose at least one point or write a note.",
+      "Choose at least one point or add your own reason.",
     );
   });
 

@@ -216,7 +216,7 @@
         "remove": "Schwerpunkt {position} entfernen",
         "add": "Schwerpunkt hinzufügen"
       },
-      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen, sonstige Defizite bei allen."
+      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen."
     },
     "mesocycles": {
       "general_preparation": "Grundlagenphase (GLP)",
@@ -276,16 +276,18 @@
       "variationPlaceholder": "z. B. im Hang",
       "catalogHint": "Katalog: {comment}",
       "reason": "Begründung",
-      "reasonRequired": "Wähle mindestens einen Punkt oder schreibe eine Notiz.",
+      "reasonRequired": "Wähle mindestens einen Punkt oder ergänze eine eigene Begründung.",
       "save": "Speichern",
       "choose": "Übung wählen",
       "remove": "Entfernen",
       "cancel": "Abbrechen",
-      "deficitsTitle": "Defizite des Athleten",
       "notEntered": "Noch nicht eingetragen",
-      "reasonHint": "Tippe an, was die Übung adressieren soll, und/oder schreibe eine Notiz.",
-      "reasonHintNoTags": "Der Katalog nennt für diese Übung keine adressierten Punkte; bitte schreibe eine Notiz.",
-      "note": "Notiz"
+      "reasonHint": "Tippe an, was die Übung adressieren soll; mit + kannst du eine eigene Begründung ergänzen.",
+      "reasonHintNoTags": "Der Katalog nennt für diese Übung keine adressierten Punkte; ergänze mit + eine eigene Begründung.",
+      "ownReason": "Eigene Begründung",
+      "ownReasonPlaceholder": "Deine Begründung",
+      "ownReasonAdd": "Eigene Begründung hinzufügen",
+      "ownReasonEdit": "Eigene Begründung: {reason}. Bearbeiten"
     }
   }
 }

@@ -216,7 +216,7 @@
         "remove": "Remove focus point {position}",
         "add": "Add focus point"
       },
-      "deficitsHint": "Shown when choosing exercises: snatch deficits for snatch exercises, clean and jerk deficits for clean & jerk exercises, other deficits for all."
+      "deficitsHint": "Shown when choosing exercises: snatch deficits for snatch exercises, clean and jerk deficits for clean & jerk exercises."
     },
     "mesocycles": {
       "general_preparation": "General preparation block",
@@ -276,16 +276,18 @@
       "variationPlaceholder": "e.g. from the hang",
       "catalogHint": "Catalog: {comment}",
       "reason": "Reason",
-      "reasonRequired": "Choose at least one point or write a note.",
+      "reasonRequired": "Choose at least one point or add your own reason.",
       "save": "Save",
       "choose": "Choose exercise",
       "remove": "Remove",
       "cancel": "Cancel",
-      "deficitsTitle": "Athlete's deficits",
       "notEntered": "Not entered yet",
-      "reasonHint": "Tap what this exercise should address, and/or write a note.",
-      "reasonHintNoTags": "The catalog lists no addressed points for this exercise; please write a note.",
-      "note": "Note"
+      "reasonHint": "Tap what this exercise should address; with + you can add your own reason.",
+      "reasonHintNoTags": "The catalog lists no addressed points for this exercise; add your own reason with +.",
+      "ownReason": "Own reason",
+      "ownReasonPlaceholder": "Your reason",
+      "ownReasonAdd": "Add own reason",
+      "ownReasonEdit": "Own reason: {reason}. Edit"
     }
   }
 }

@@ -38,20 +38,22 @@ type Props = {
 };
 
 const NOTE_MAX = 500;
+const PRESSED = "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900";
+const UNPRESSED =
+  "border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900";
 const VARIATION_MAX = 200;
 
-/** The deficits relevant for an exercise: those of its reference lift and the other ones. */
+/** The deficits relevant for an exercise: those of its reference lift (none without one). */
 export function relevantDeficits(
   exercise: Pick<Exercise, "referenceLift">,
 ): (keyof Deficits)[] {
-  if (exercise.referenceLift === "snatch")
-    return ["snatchDeficits", "otherDeficits"];
+  if (exercise.referenceLift === "snatch") return ["snatchDeficits"];
   if (exercise.referenceLift === "clean_and_jerk")
-    return ["cleanDeficits", "jerkDeficits", "otherDeficits"];
-  return ["otherDeficits"];
+    return ["cleanDeficits", "jerkDeficits"];
+  return [];
 }
 
-/** Dialog for one cell of the exercise table: reason (tags, note) and variation. */
+/** Dialog for one cell of the exercise table: reason (tags, own reason) and variation. */
 export function ExerciseChoiceDialog({
   target,
   deficits,
@@ -115,14 +117,15 @@ function ChoiceForm({
   const tf = useTranslations("Macrocycle.baseData.fields");
   const tc = useTranslations("Catalog");
   const locale = useLocale();
-  const noteId = useId();
   const variationId = useId();
   const reasonErrorId = useId();
   const reasonHintId = useId();
   const hintId = useId();
   const { exercise, type, choice } = target;
   const [tags, setTags] = useState<string[]>(choice?.tags ?? []);
+  // The own reason (free text); edited in a field that "+" opens.
   const [note, setNote] = useState(choice?.note ?? "");
+  const [editingNote, setEditingNote] = useState(false);
   const [variation, setVariation] = useState(choice?.variation ?? "");
   const [reasonError, setReasonError] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -149,6 +152,11 @@ function ChoiceForm({
             .map((a) => a.key)
             .filter((k) => k === key || current.includes(k)),
     );
+  }
+
+  function finishNote() {
+    setNote((current) => current.trim());
+    setEditingNote(false);
   }
 
   async function submit(event: FormEvent) {
@@ -205,15 +213,15 @@ function ChoiceForm({
             {t("saveFailed")}
           </p>
         )}
-        <section
-          aria-label={t("deficitsTitle")}
-          className="flex flex-col gap-2 rounded-xl bg-zinc-100 p-3 dark:bg-zinc-900"
-        >
-          <h3 className="text-sm font-semibold">{t("deficitsTitle")}</h3>
-          <dl className="flex flex-col gap-2 text-sm">
+        {relevantDeficits(exercise).length > 0 && (
+          <dl className="flex flex-col gap-3 rounded-xl bg-zinc-100 p-3 text-sm dark:bg-zinc-900">
             {relevantDeficits(exercise).map((key) => (
-              <div key={key} data-deficit={key}>
-                <dt className="text-zinc-600 dark:text-zinc-400">{tf(key)}</dt>
+              <div
+                key={key}
+                data-deficit={key}
+                className="flex flex-col gap-0.5"
+              >
+                <dt className="font-semibold">{tf(key)}</dt>
                 <dd
                   className={
                     deficits[key]
@@ -226,7 +234,7 @@ function ChoiceForm({
               </div>
             ))}
           </dl>
-        </section>
+        )}
         <fieldset
           className="flex flex-col gap-2"
           aria-describedby={
@@ -239,46 +247,72 @@ function ChoiceForm({
               ? t("reasonHint")
               : t("reasonHintNoTags")}
           </p>
-          {exercise.addresses.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {exercise.addresses.map((tag) => {
-                const pressed = tags.includes(tag.key);
-                return (
-                  <button
-                    key={tag.key}
-                    type="button"
-                    aria-pressed={pressed}
-                    onClick={() => toggle(tag.key)}
-                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-left text-sm ${
-                      pressed
-                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                        : "border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-                    }`}
-                  >
-                    {pressed && <CheckIcon />}
-                    {localized(tag.name, locale)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <label htmlFor={noteId} className="mt-1 text-sm font-medium">
-            {t("note")}
-            <span className="font-normal text-zinc-500"> {t("optional")}</span>
-          </label>
-          <textarea
-            id={noteId}
-            value={note}
-            rows={2}
-            maxLength={NOTE_MAX}
-            onChange={(event) => {
-              setReasonError(false);
-              setNote(event.target.value);
-            }}
-            aria-invalid={reasonError ? true : undefined}
-            aria-describedby={reasonError ? reasonErrorId : undefined}
-            className={`${inputClass} py-2`}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {exercise.addresses.map((tag) => {
+              const pressed = tags.includes(tag.key);
+              return (
+                <button
+                  key={tag.key}
+                  type="button"
+                  aria-pressed={pressed}
+                  onClick={() => toggle(tag.key)}
+                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-left text-sm ${
+                    pressed ? PRESSED : UNPRESSED
+                  }`}
+                >
+                  {pressed && <CheckIcon />}
+                  {localized(tag.name, locale)}
+                </button>
+              );
+            })}
+            {editingNote ? (
+              <input
+                // Opened by the user's tap on "+" or on the own reason.
+                autoFocus
+                value={note}
+                maxLength={NOTE_MAX}
+                aria-label={t("ownReason")}
+                placeholder={t("ownReasonPlaceholder")}
+                aria-invalid={reasonError ? true : undefined}
+                onChange={(event) => {
+                  setReasonError(false);
+                  setNote(event.target.value);
+                }}
+                onBlur={finishNote}
+                onKeyDown={(event) => {
+                  // Enter confirms the own reason instead of saving the dialog.
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    finishNote();
+                  }
+                }}
+                className="min-h-9 min-w-0 flex-1 basis-48 rounded-full border border-zinc-400 bg-transparent px-3 text-sm dark:border-zinc-600"
+              />
+            ) : note ? (
+              <button
+                type="button"
+                aria-pressed
+                aria-label={t("ownReasonEdit", { reason: note })}
+                onClick={() => setEditingNote(true)}
+                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-left text-sm ${PRESSED}`}
+              >
+                <CheckIcon />
+                <span className="break-words">{note}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                aria-label={t("ownReasonAdd")}
+                onClick={() => {
+                  setReasonError(false);
+                  setEditingNote(true);
+                }}
+                className={`inline-flex size-9 items-center justify-center rounded-full ${UNPRESSED}`}
+              >
+                <PlusIcon />
+              </button>
+            )}
+          </div>
           {reasonError && (
             <p
               id={reasonErrorId}
@@ -354,6 +388,22 @@ function CheckIcon() {
       aria-hidden="true"
     >
       <path d="M3 8.5 6.5 12 13 4.5" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M8 3v10M3 8h10" />
     </svg>
   );
 }

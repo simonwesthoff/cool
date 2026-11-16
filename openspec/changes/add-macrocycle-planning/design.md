@@ -182,8 +182,12 @@ colours:
   (field code `reason: REQUIRED`, unknown tags `tags: UNKNOWN_TAG`).
   Migration: the old reason becomes the note.
 - Dialog order for a fast flow: deficits for the reference lift (snatch →
-  snatch; clean & jerk → clean and jerk; always other), then tag toggle
-  buttons (`aria-pressed`), note, variation. The catalog's exercise details
+  snatch; clean & jerk → clean and jerk; none without a reference lift;
+  each under its own small bold title, no section title), then tag toggle
+  buttons (`aria-pressed`) ending with a "+" tag that opens an inline text
+  field for an own reason (stored as `note`; shown afterwards as a selected
+  tag that opens the field again; clearing the text removes it), then the
+  variation. The catalog's exercise details
   list the addressed points.
 
 ### Exercise table (changed during acceptance)

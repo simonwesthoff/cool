@@ -212,8 +212,8 @@ change the calculated values.
 - **THEN** these three exercises belong to that mesocycle with their reasons
 
 #### Scenario: Variation and note
-- **WHEN** the coach chooses exercise 1 for the general preparation block with the variation "No feet snatch" and the note "Footwork in the turnover"
-- **THEN** the cell shows the variation, and the choice keeps the variation and the note
+- **WHEN** the coach chooses exercise 1 for the general preparation block with the variation "No feet snatch" and the own reason "Footwork in the turnover"
+- **THEN** the cell shows the variation, and the choice keeps the variation and the reason
 
 #### Scenario: No variation
 - **WHEN** the coach chooses an exercise without a variation
@@ -226,34 +226,38 @@ change the calculated values.
 
 ### Requirement: Reason of a chosen exercise
 The reason of a chosen exercise SHALL consist of one or more of the points
-the exercise addresses (tags to tap) and/or a free-text note; at least one
-of them is required.
+the exercise addresses (tags to tap) and/or an own reason (free text),
+added with a "+" tag after the exercise's tags; at least one is required.
 
 #### Scenario: Reason as tags
 - **WHEN** the coach chooses exercise 7 and taps the tags "Beschleunigung im 2. Zug" and "Hoher Zug"
 - **THEN** the choice has these two tags as its reason
 
 #### Scenario: Reason required
-- **WHEN** the coach tries to choose an exercise without a tag and without a note
+- **WHEN** the coach tries to choose an exercise without a tag and without an own reason
 - **THEN** it is not chosen and the dialog shows that a reason is required
+
+#### Scenario: Own reason
+- **WHEN** the coach taps "+", writes "Back strength" and saves
+- **THEN** the choice has "Back strength" as its own reason, shown as a selected tag when the dialog is opened again
 
 #### Scenario: Only the exercise's tags
 - **WHEN** a choice of exercise 7 is saved with a tag exercise 7 does not address
 - **THEN** it is rejected
 
 ### Requirement: Deficits in the exercise dialog
-The dialog of a cell SHALL show the athlete's deficits for the exercise's
-reference lift: the snatch deficits for a snatch exercise, the clean and the
-jerk deficits for a clean & jerk exercise, and the other deficits for every
-exercise.
+The dialog of a cell SHALL show only the athlete's deficits for the
+exercise's reference lift, each under its own title: the snatch deficits
+for a snatch exercise, the clean and the jerk deficits for a clean & jerk
+exercise, and no deficits for an exercise without a reference lift.
 
 #### Scenario: Snatch exercise
 - **WHEN** the coach taps "+" for exercise 7 (power snatch)
-- **THEN** the dialog shows the snatch deficits and the other deficits, but not the clean and jerk deficits
+- **THEN** the dialog shows only the snatch deficits
 
 #### Scenario: Exercise without reference lift
 - **WHEN** the coach taps "+" for exercise 33 (pull-up)
-- **THEN** the dialog shows only the other deficits
+- **THEN** the dialog shows no deficits
 
 ### Requirement: Macrocycle API
 The HTTP API SHALL let the coach of an athlete create and change the
