@@ -12,6 +12,8 @@
 
 ## 2. Chart
 
+- [ ] 2.0 Load the `dataviz` skill, then add the value colour tokens and switch the mesocycle tokens to the grey shades (light and dark mode); run the validator for the value colours against both surfaces and the grey bands, and set the curve outline accordingly. Verify the planning chart, its legend and the exercise table headers show grey blocks (component tests for the fills, screenshots in light and dark mode).
+
 - [ ] 2.1 Move the shared chart parts out of `MacrocycleChart` into a chart frame module:
   - **Geometry:** width fit, margins, columns and `x()`.
   - **Bands and labels:** bands with label collisions.
@@ -19,19 +21,19 @@
   - **Labels and tooltip:** week labels and tooltip placement.
 
   Verify: all existing chart tests pass unchanged.
-- [ ] 2.2 Load the `dataviz` skill, then build `ExerciseChart`:
-  - **Curves and axes:** four curves on a kg axis (left) and a reps axis (right); distinct line styles and point shapes; gaps for null values.
-  - **Legend:** each curve with its unit.
+- [ ] 2.2 Build `ExerciseChart`:
+  - **Curves and axes:** four curves in the value colours on a kg axis (left) and a reps axis (right); distinct line styles and point shapes; gaps for null values.
+  - **Legend:** each curve with colour, line style and unit, plus "Current week".
   - **Context:** mesocycle bands, competition marker and week-number x-axis.
   - **Tooltip:** week line, block, and the four values.
-  - **Current week:** column highlight and "Now" label, with label collisions; no marker outside the cycle.
+  - **Current week:** a solid line at the current week; none outside the cycle.
 
-  Verify with component tests: curve points against both scales; legend texts; gaps; tooltip lines; current week on 2027-01-06 (week 6), before the start and after the end; read-only (no handles).
+  Verify with component tests: curve points against both scales; curve colours; legend texts; gaps; tooltip lines; current week line on 2027-01-06 (week 6), none before the start or after the end; read-only (no handles).
 
 ## 3. View and pages
 
 - [ ] 3.1 Build `MacrocycleView`:
-  - **Order:** exercise selector, "Week n of N" / "Starts on …" / "Ended on …", chart, focus points, base data summary, deficits with injuries and illnesses.
+  - **Order:** exercise selector (the only control above the chart), chart, focus points, base data summary, deficits with injuries and illnesses.
   - **Coach only:** "Change planning" when `editHref` is given.
   - **Back link:** depends on the role.
 
@@ -54,7 +56,7 @@
 
   Verify with component and page tests.
 - [ ] 3.5 Add English and German texts for all new strings:
-  - **Chart:** selector label, "Week n of N", start and end texts, "Now", axis titles, legend entries, tooltip value lines.
+  - **Chart:** selector label, axis titles, legend entries (incl. "Current week"), tooltip value lines.
   - **Sections:** focus points title and empty text, section titles, links, empty states.
 
   Verify with the message completeness test.
@@ -68,7 +70,8 @@
 - [ ] 5.1 Browser check on the dev server and on the Docker build, at phone and desktop width, in light and dark mode:
   - **Coach:** opens the view from athlete details, then "Change planning" and back.
   - **Linked athlete:** opens it from "My training", read-only; their API write attempts get 404.
-  - **Chart:** snatch is shown by default and switching to exercise 13 changes the curves; the current-week marker is in the right week; the planning chart still works.
+  - **Chart:** snatch is shown by default and switching to exercise 13 changes the curves; the current-week line is in the right week; colours match the value colours.
+  - **Planning chart and exercise table:** they show grey blocks and still work.
 
   Review the screenshots.
 

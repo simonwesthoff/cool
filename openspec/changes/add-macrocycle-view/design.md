@@ -86,6 +86,26 @@
 - `MacrocycleChart` keeps its behaviour; its tests must stay green
   unchanged.
 
+### Colour association (app-wide)
+- **Value tokens** in `globals.css`: `--value-best` #6f3ab1,
+  `--value-average` #ba2db3, `--value-set-size` #3bc8c8,
+  `--value-weekly-reps` #d7f212. They are the same in light and dark mode.
+- **Mesocycle tokens:** `--band-1..3` become grey, with contrast to the
+  surface growing towards competition preparation.
+  - **Light mode:** #e4e4e7, #d4d4d8, #a1a1aa.
+  - **Dark mode:** #27272a, #3f3f46, #52525b.
+  - This also changes the planning chart, its legend swatches and the
+    exercise table header swatches, which already use these tokens.
+- **Planning chart marks:** the intensity curve and handles stay white with
+  the dark halo. They are not one of the four values and remain readable on
+  every grey. The `dataviz` validator checks this during implementation.
+- **Value curves on grey bands:** each curve gets a 1 px outline in the
+  surface's opposite (dark in light mode, light in dark mode). Lime and
+  cyan need it on light greys, purple on dark greys. The validator decides
+  the final outline strength.
+- **Memory:** the colour rule is recorded as a user preference for all
+  later screens (weekly plans, athlete details).
+
 ### Exercise chart
 - **Axes:** one plot with two y-scales, as the user decided.
   - **Left axis "kg":** from a clean step below the lowest weight to a
@@ -97,12 +117,13 @@
     numbered) and has no title.
 - **Dual-axis mitigation:** the `dataviz` guidance advises against two
   y-axes; the user chose them. To keep the units apart:
-  - All curves are white with the dark halo, as in planning, so they read
-    on every band colour.
-  - kg curves are solid: best value 2.5 px with round points, average
-    weight 1.5 px with square points.
+  - Each curve is in its value colour (see Colour association).
+  - kg curves are solid: best value with round points, average weight with
+    square points.
   - Reps curves are dashed: set size with triangle points, weekly reps
     with diamond points.
+  - The line style and point shape also keep purple and magenta apart for
+    colour-blind readers.
   - The legend shows each line style with its marker and unit, e.g.
     "Best value (kg)".
   - Axis titles name the unit.
@@ -110,16 +131,16 @@
 - **Tooltip:** hovering a week shows its three planning-style lines (week
   from date, block abbreviation) plus the four values, e.g. "Best value:
   80 kg". The week hit areas are full columns, as in planning.
-- **Current week:** a column highlight (white at 20 %) on that week, plus
-  a "Now" label in the label row above the plot.
-  - Mesocycle labels give way to it, as for the competition label.
-  - "Now" moves to the other side of its column if it would overlap the
-    competition label.
+- **Current week:** a solid 2 px line in the text colour (black in light
+  mode, white in dark mode) at the current week's x, the same position as
+  that week's points. It appears in the legend as "Current week".
+  - It differs from the dashed competition line and the thin grey block
+    borders.
   - `today` (YYYY-MM-DD, UTC, from `today()`) is passed in from the
     server, so tests can fix the date.
-- **Above the chart:** the exercise selector (native `select` with
-  "1 Snatch" style entries) and "Week n of N" / "Starts on …" / "Ended
-  on …".
+  - Before the start and after the end there is no line.
+- **Above the chart:** only the exercise selector (native `select` with
+  "1 Snatch" style entries).
 
 ### Summary sections below the chart
 - **Focus points:** an ordered list; "No focus points entered yet" if the
@@ -132,6 +153,9 @@
 
 ## Risks / Trade-offs
 
+- [Purple and magenta are close for colour-vision deficiencies, and lime
+  and cyan are light on light greys] → Line style and point shape per
+  curve, outlines on the curves, and a validator run on both surfaces.
 - [Two y-axes invite misreading kg against reps] → Distinct line styles
   and markers per unit, unit names in the legend and axis titles, and
   values in the tooltip. The user chose this layout over stacked plots.

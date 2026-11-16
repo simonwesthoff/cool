@@ -48,9 +48,10 @@ and illnesses.
 The view SHALL show a read-only chart of one exercise's planned best value
 and average weight (kg, left axis) and set size and weekly reps (reps,
 right axis) for every week, calculated as in planning even in weeks whose
-mesocycle does not use the exercise. A legend SHALL name each curve with
-its unit; the x-axis SHALL show only week numbers. The mesocycle bands and
-the main competition marker SHALL be shown as in planning.
+mesocycle does not use the exercise. The curves SHALL use the value colours; a
+legend SHALL name each curve with its unit, and the x-axis SHALL show only
+week numbers. The grey mesocycle bands and the main competition marker
+SHALL be shown as in planning.
 
 #### Scenario: Snatch by default
 - **GIVEN** a 21-week macrocycle with a snatch goal of 100 kg and entry value 60 %
@@ -59,15 +60,15 @@ the main competition marker SHALL be shown as in planning.
 
 #### Scenario: Legend
 - **WHEN** the view is shown
-- **THEN** the legend names "Best value (kg)", "Average weight (kg)", "Set size (reps)" and "Weekly reps (reps)" with the line style of each curve
+- **THEN** the legend names "Best value (kg)", "Average weight (kg)", "Set size (reps)" and "Weekly reps (reps)" with the colour and line style of each curve, and the current week
 
 #### Scenario: Read-only
 - **WHEN** the coach or the athlete drags inside the chart
 - **THEN** nothing changes and nothing is saved
 
 ### Requirement: Exercise selection
-Above the chart, the coach and the athlete SHALL be able to choose the
-exercise shown, from the catalog exercises 1 to 29 (those with reference
+The only control above the chart SHALL let the coach and the athlete choose
+the exercise shown, from the catalog exercises 1 to 29 (those with reference
 values), listed with number and name. The chart SHALL then show that
 exercise's values; the choice SHALL NOT be saved.
 
@@ -113,25 +114,20 @@ injuries and illnesses.
 - **THEN** the deficits and the injuries and illnesses read "Not entered yet", and no focus points are entered
 
 ### Requirement: Current week
-The view SHALL show which week of the macrocycle contains today: "Week n of
-N" above the chart and a marker on that week in the chart. Before the start
-it SHALL say when the macrocycle starts, after the end that it has ended,
-and the chart SHALL then show no current-week marker.
+The exercise chart SHALL mark the week of the macrocycle that contains
+today with a solid vertical line at that week's values, named "Current
+week" in the legend. Before the start and after the end of the macrocycle
+there SHALL be no such line.
 
 #### Scenario: During the macrocycle
 - **GIVEN** a 21-week macrocycle from Monday 2026-11-30
 - **WHEN** the view is opened on Wednesday 2027-01-06
-- **THEN** it shows "Week 6 of 21" and marks week 6 in the chart
+- **THEN** a solid line marks week 6 in the chart
 
-#### Scenario: Before the start
-- **GIVEN** a macrocycle starting on Monday 2026-11-30
-- **WHEN** the view is opened on 2026-11-20
-- **THEN** it says that the macrocycle starts on Nov 30, 2026, and no week is marked
-
-#### Scenario: After the end
+#### Scenario: Before the start or after the end
 - **GIVEN** a 21-week macrocycle from Monday 2026-11-30
-- **WHEN** the view is opened on 2027-05-03
-- **THEN** it says that the macrocycle has ended, and no week is marked
+- **WHEN** the view is opened on 2026-11-20 or on 2027-05-03
+- **THEN** no week is marked
 
 ### Requirement: Exercise values in the API
 The HTTP API SHALL return, for any catalog exercise, its planned best
