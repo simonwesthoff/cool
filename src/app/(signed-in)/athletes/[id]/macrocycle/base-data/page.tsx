@@ -36,6 +36,7 @@ export async function BaseData({ params }: { params: Params }) {
       />
       <BaseDataForm
         athleteId={id}
+        part="base"
         macrocycle={macrocycle ?? undefined}
         defaultStartDate={nextMonday(today())}
       />

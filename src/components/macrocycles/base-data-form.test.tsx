@@ -24,7 +24,7 @@ const renderWith = (node: React.ReactNode) =>
     </NextIntlClientProvider>,
   );
 
-const existing = {
+const baseData = {
   startDate: "2026-11-30",
   durationWeeks: 21,
   entryValuePct: 60,
@@ -36,18 +36,21 @@ const existing = {
   targetBodyWeightKg: 80.5,
   bodyFatPct: 12,
   muscleMassPct: null,
+  competitionDate: "2027-04-24",
+  competitionType: "German Championships",
+  trainingFrequency: 8,
+};
+const swot = {
+  strengths: "Fast under the bar",
   snatchDeficits: "Turnover",
   cleanDeficits: "Catch position",
   jerkDeficits: "Dip",
   otherDeficits: "None",
-  injuriesAndIllnesses: "None",
-  competitionDate: "2027-04-24",
-  competitionType: "German Championships",
-  strengths: "Fast under the bar",
   experience: "6 years, 2 national championships",
-  trainingFrequency: 8,
   focusPoints: ["Turnover", "Squat strength"],
+  injuriesAndIllnesses: "None",
 };
+const existing = { ...baseData, ...swot };
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -69,7 +72,9 @@ async function fill(label: string, value: string) {
 
 describe("BaseDataForm", () => {
   it("starts with entry value 60 % and the next Monday", () => {
-    renderWith(<BaseDataForm athleteId="a1" defaultStartDate="2026-11-23" />);
+    renderWith(
+      <BaseDataForm athleteId="a1" part="base" defaultStartDate="2026-11-23" />,
+    );
     expect(screen.getByLabelText("Entry value (%)")).toHaveProperty(
       "value",
       "60",
@@ -83,9 +88,39 @@ describe("BaseDataForm", () => {
     ).toContain("(optional)");
   });
 
-  it("creates the macrocycle and continues to step 2", async () => {
+  it("has the sections Historical data and New macrocycle plan, without SWOT fields", () => {
+    renderWith(
+      <BaseDataForm athleteId="a1" part="base" defaultStartDate="2026-11-23" />,
+    );
+    const legends = [...document.querySelectorAll("legend")].map(
+      (l) => l.textContent,
+    );
+    expect(legends).toEqual(["Historical data", "New macrocycle plan"]);
+    const labelsIn = (legend: string) =>
+      [
+        ...[...document.querySelectorAll("fieldset")]
+          .find((f) => f.querySelector("legend")!.textContent === legend)!
+          .querySelectorAll("label"),
+      ].map((l) => l.textContent);
+    expect(labelsIn("Historical data")).toEqual([
+      "Personal best snatch (kg)",
+      "Personal best clean & jerk (kg)",
+      "Body weight (kg)",
+      "Body fat (%) (optional)",
+      "Muscle mass (%) (optional)",
+    ]);
+    expect(labelsIn("New macrocycle plan").at(-1)).toBe(
+      "Training sessions per week",
+    );
+    expect(screen.queryByLabelText("Strengths")).toBeNull();
+    expect(screen.queryByLabelText("Focus point 1")).toBeNull();
+  });
+
+  it("creates the macrocycle and continues to the SWOT", async () => {
     respond(201, {});
-    renderWith(<BaseDataForm athleteId="a1" defaultStartDate="2026-11-30" />);
+    renderWith(
+      <BaseDataForm athleteId="a1" part="base" defaultStartDate="2026-11-30" />,
+    );
     await fill("Duration (weeks)", "21");
     await fill("Date of the main competition", "2027-04-24");
     await fill("Type of the main competition", "German Championships");
@@ -95,22 +130,7 @@ describe("BaseDataForm", () => {
     await fill("Goal clean & jerk (kg)", "130");
     await fill("Body weight (kg)", "81");
     await fill("Target body weight (kg)", "80.5");
-    await fill("Deficits in the snatch", "Turnover");
-    await fill("Deficits in the clean", "Catch position");
-    await fill("Deficits in the jerk", "Dip");
-    await fill("Other deficits", "None");
-    await fill("Current and chronic injuries and illnesses", "None");
     await fill("Training sessions per week", "8");
-    await fill("Strengths", "Fast under the bar");
-    await fill("Weightlifting experience", "6 years, 2 national championships");
-    await userEvent.type(screen.getByLabelText("Focus point 1"), "Turnover");
-    await userEvent.click(
-      screen.getByRole("button", { name: "Add focus point" }),
-    );
-    await userEvent.type(
-      screen.getByLabelText("Focus point 2"),
-      "Squat strength",
-    );
     await userEvent.click(
       screen.getByRole("button", { name: "Save and continue" }),
     );
@@ -119,14 +139,12 @@ describe("BaseDataForm", () => {
     expect(url).toBe("/api/athletes/a1/macrocycle");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toEqual({
-      ...existing,
+      ...baseData,
       bodyFatPct: null,
       muscleMassPct: null,
     });
     await waitFor(() =>
-      expect(router.push).toHaveBeenCalledWith(
-        "/athletes/a1/macrocycle/intensity",
-      ),
+      expect(router.push).toHaveBeenCalledWith("/athletes/a1/macrocycle/swot"),
     );
   });
 
@@ -135,6 +153,7 @@ describe("BaseDataForm", () => {
     renderWith(
       <BaseDataForm
         athleteId="a1"
+        part="base"
         macrocycle={existing}
         defaultStartDate="2026-11-23"
       />,
@@ -163,7 +182,9 @@ describe("BaseDataForm", () => {
         fields: { startDate: ["NOT_MONDAY"], snatchGoalKg: ["REQUIRED"] },
       },
     });
-    renderWith(<BaseDataForm athleteId="a1" defaultStartDate="2026-11-30" />);
+    renderWith(
+      <BaseDataForm athleteId="a1" part="base" defaultStartDate="2026-11-30" />,
+    );
     await userEvent.click(
       screen.getByRole("button", { name: "Save and continue" }),
     );
@@ -176,12 +197,60 @@ describe("BaseDataForm", () => {
   });
 });
 
+describe("SWOT", () => {
+  it("shows strengths, deficits, experience, focus points and injuries in this order", () => {
+    renderWith(
+      <BaseDataForm athleteId="a1" part="swot" defaultStartDate="2026-11-23" />,
+    );
+    const labels = [...document.querySelectorAll("label")].map(
+      (l) => l.textContent,
+    );
+    expect(labels).toEqual([
+      "Strengths",
+      "Deficits in the snatch",
+      "Deficits in the clean",
+      "Deficits in the jerk",
+      "Other deficits",
+      "Weightlifting experience",
+      "1.",
+      "Current and chronic injuries and illnesses",
+    ]);
+    expect(screen.queryByLabelText("Start")).toBeNull();
+  });
+
+  it("saves the SWOT with PUT and continues to the intensity step", async () => {
+    respond(200, {});
+    renderWith(
+      <BaseDataForm
+        athleteId="a1"
+        part="swot"
+        macrocycle={existing}
+        defaultStartDate="2026-11-23"
+      />,
+    );
+    await fill("Strengths", "Explosive");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save and continue" }),
+    );
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("/api/athletes/a1/macrocycle/swot");
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body)).toEqual({ ...swot, strengths: "Explosive" });
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith(
+        "/athletes/a1/macrocycle/intensity",
+      ),
+    );
+  });
+});
+
 describe("focus points", () => {
   it("adds up to three, reorders and removes them", async () => {
     respond(200, {});
     renderWith(
       <BaseDataForm
         athleteId="a1"
+        part="swot"
         macrocycle={existing}
         defaultStartDate="2026-11-23"
       />,
@@ -223,7 +292,9 @@ describe("focus points", () => {
         fields: { focusPoints: ["REQUIRED"] },
       },
     });
-    renderWith(<BaseDataForm athleteId="a1" defaultStartDate="2026-11-23" />);
+    renderWith(
+      <BaseDataForm athleteId="a1" part="swot" defaultStartDate="2026-11-23" />,
+    );
     expect(
       screen.getByRole("button", { name: "Remove focus point 1" }),
     ).toHaveProperty("disabled", true);
@@ -242,14 +313,18 @@ describe("StepIndicator", () => {
     const view = renderWith(
       <StepIndicator athleteId="a1" current="intensity" available />,
     );
-    expect(screen.getByText("2 Intensity").getAttribute("aria-current")).toBe(
+    expect(screen.getByText("3 Intensity").getAttribute("aria-current")).toBe(
       "step",
     );
     expect(screen.getByRole("link", { name: "1 Base data" })).toHaveProperty(
       "pathname",
       "/athletes/a1/macrocycle/base-data",
     );
-    expect(screen.getByRole("link", { name: "3 Exercises" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "2 SWOT" })).toHaveProperty(
+      "pathname",
+      "/athletes/a1/macrocycle/swot",
+    );
+    expect(screen.getByRole("link", { name: "4 Exercises" })).toBeTruthy();
     view.unmount();
     renderWith(
       <StepIndicator athleteId="a1" current="base-data" available={false} />,

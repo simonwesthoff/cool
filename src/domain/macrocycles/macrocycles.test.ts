@@ -15,6 +15,7 @@ const {
   setMesocycleBorders,
   removeMesocycleExercise,
   setMesocycleExercise,
+  setSwot,
   setWeekLevel,
   updateBaseData,
 } = await import("./index");
@@ -30,17 +31,21 @@ const baseData = {
   cleanAndJerkGoalKg: 130,
   bodyWeightKg: 81,
   targetBodyWeightKg: 80.5,
+  competitionDate: "2027-04-24",
+  competitionType: "German Championships",
+  trainingFrequency: 8,
+};
+
+/** Step 2 of the planning. */
+const swot = {
+  strengths: "Fast under the bar",
   snatchDeficits: "Weak turnover in the snatch",
   cleanDeficits: "Slow catch",
   jerkDeficits: "Short dip",
   otherDeficits: "Ankle mobility",
-  injuriesAndIllnesses: "None",
-  competitionDate: "2027-04-24",
-  competitionType: "German Championships",
-  strengths: "Fast under the bar",
   experience: "6 years, 2 national championships",
-  trainingFrequency: 8,
   focusPoints: ["Turnover", "Squat strength"],
+  injuriesAndIllnesses: "None",
 };
 
 async function setup() {
@@ -71,6 +76,11 @@ describe("createMacrocycle", () => {
       ...baseData,
       bodyFatPct: null,
       muscleMassPct: null,
+      // The SWOT is filled in step 2.
+      strengths: "",
+      snatchDeficits: "",
+      focusPoints: [],
+      injuriesAndIllnesses: "",
     });
     expect(created.mesocycles).toEqual([
       {
@@ -119,19 +129,19 @@ describe("createMacrocycle", () => {
     const { coach, athlete } = await setup();
     const incomplete: Record<string, unknown> = { ...baseData };
     delete incomplete.snatchGoalKg;
-    delete incomplete.jerkDeficits;
+    delete incomplete.trainingFrequency;
     expect(
-      await fieldsOf(
-        createMacrocycle(coach, athlete.id, {
-          ...incomplete,
-          cleanDeficits: " ",
-        }),
-      ),
+      await fieldsOf(createMacrocycle(coach, athlete.id, incomplete)),
     ).toEqual({
       snatchGoalKg: ["REQUIRED"],
-      cleanDeficits: ["REQUIRED"],
-      jerkDeficits: ["REQUIRED"],
+      trainingFrequency: ["REQUIRED"],
     });
+    // SWOT fields belong to step 2.
+    expect(
+      await fieldsOf(
+        createMacrocycle(coach, athlete.id, { ...baseData, strengths: "x" }),
+      ),
+    ).toEqual({ strengths: ["UNKNOWN_FIELD"] });
     expect(
       await fieldsOf(
         createMacrocycle(coach, athlete.id, {
@@ -172,46 +182,8 @@ describe("createMacrocycle", () => {
     ).toEqual({ competitionDate: ["BEFORE_START"] });
   });
 
-  it("keeps 1 to 3 focus points in order", async () => {
+  it("rejects a wrong training frequency", async () => {
     const { coach, athlete } = await setup();
-    const created = await createMacrocycle(coach, athlete.id, {
-      ...baseData,
-      focusPoints: ["Turnover", "Squat strength", "Jerk stability"],
-    });
-    expect(created.focusPoints).toEqual([
-      "Turnover",
-      "Squat strength",
-      "Jerk stability",
-    ]);
-    const reordered = await updateBaseData(coach, athlete.id, {
-      focusPoints: ["Jerk stability", "Turnover"],
-    });
-    expect(reordered.focusPoints).toEqual(["Jerk stability", "Turnover"]);
-  });
-
-  it("rejects no focus point, more than three, empty ones and a wrong frequency", async () => {
-    const { coach, athlete } = await setup();
-    expect(
-      await fieldsOf(
-        createMacrocycle(coach, athlete.id, { ...baseData, focusPoints: [] }),
-      ),
-    ).toEqual({ focusPoints: ["REQUIRED"] });
-    expect(
-      await fieldsOf(
-        createMacrocycle(coach, athlete.id, {
-          ...baseData,
-          focusPoints: ["a", "b", "c", "d"],
-        }),
-      ),
-    ).toEqual({ focusPoints: ["TOO_MANY"] });
-    expect(
-      await fieldsOf(
-        createMacrocycle(coach, athlete.id, {
-          ...baseData,
-          focusPoints: ["a", " "],
-        }),
-      ),
-    ).toEqual({ "focusPoints.1": ["REQUIRED"] });
     expect(
       await fieldsOf(
         createMacrocycle(coach, athlete.id, {
@@ -245,6 +217,65 @@ describe("createMacrocycle", () => {
         code: "ATHLETE_NOT_FOUND",
       });
     }
+  });
+});
+
+describe("setSwot", () => {
+  it("saves all SWOT fields and keeps the base data", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setSwot(coach, athlete.id, swot);
+    expect(m).toMatchObject({ ...baseData, ...swot });
+  });
+
+  it("requires every SWOT field", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const incomplete: Record<string, unknown> = { ...swot, cleanDeficits: " " };
+    delete incomplete.strengths;
+    delete incomplete.jerkDeficits;
+    expect(await fieldsOf(setSwot(coach, athlete.id, incomplete))).toEqual({
+      strengths: ["REQUIRED"],
+      cleanDeficits: ["REQUIRED"],
+      jerkDeficits: ["REQUIRED"],
+    });
+    expect(
+      await fieldsOf(
+        setSwot(coach, athlete.id, { ...swot, snatchGoalKg: 100 }),
+      ),
+    ).toEqual({ snatchGoalKg: ["UNKNOWN_FIELD"] });
+  });
+
+  it("keeps 1 to 3 focus points in order", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setSwot(coach, athlete.id, {
+      ...swot,
+      focusPoints: ["Jerk stability", "Turnover", "Squat strength"],
+    });
+    expect(m.focusPoints).toEqual([
+      "Jerk stability",
+      "Turnover",
+      "Squat strength",
+    ]);
+    for (const [focusPoints, expected] of [
+      [[], { focusPoints: ["REQUIRED"] }],
+      [["a", "b", "c", "d"], { focusPoints: ["TOO_MANY"] }],
+      [["a", " "], { "focusPoints.1": ["REQUIRED"] }],
+    ] as const) {
+      expect(
+        await fieldsOf(setSwot(coach, athlete.id, { ...swot, focusPoints })),
+      ).toEqual(expected);
+    }
+  });
+
+  it("needs an existing macrocycle of the coach's athlete", async () => {
+    const { coach, athlete } = await setup();
+    await expect(
+      errorOf(setSwot(coach, athlete.id, swot)),
+    ).resolves.toMatchObject({
+      code: "MACROCYCLE_NOT_FOUND",
+    });
   });
 });
 
@@ -552,11 +583,9 @@ describe("updateBaseData", () => {
       competitionDate: ["BEFORE_START"],
     });
     expect(
-      await fieldsOf(
-        updateBaseData(coach, athlete.id, { otherDeficits: null }),
-      ),
+      await fieldsOf(updateBaseData(coach, athlete.id, { otherDeficits: "x" })),
     ).toEqual({
-      otherDeficits: ["INVALID_TYPE"],
+      otherDeficits: ["UNKNOWN_FIELD"],
     });
   });
 });

@@ -39,11 +39,13 @@ const optionalFields: FieldName[] = ["bodyFatPct", "muscleMassPct"];
 function valuesOf(form: HTMLFormElement): Record<string, unknown> {
   const data = new FormData(form);
   const result: Record<string, unknown> = {};
-  // Ordered focus points; empty entries are left out.
-  result.focusPoints = data
-    .getAll("focusPoints")
-    .map((v) => String(v).trim())
-    .filter((v) => v !== "");
+  // Ordered focus points (SWOT step only); empty entries are left out.
+  if (form.querySelector('[name="focusPoints"]')) {
+    result.focusPoints = data
+      .getAll("focusPoints")
+      .map((v) => String(v).trim())
+      .filter((v) => v !== "");
+  }
   for (const [key, raw] of data.entries()) {
     if (key === "focusPoints") continue;
     const text = String(raw).trim();
@@ -67,13 +69,15 @@ function valuesOf(form: HTMLFormElement): Record<string, unknown> {
 
 type Props = {
   athleteId: string;
+  /** Step 1 (base data) or step 2 (SWOT). */
+  part: "base" | "swot";
   /** Base data of the existing macrocycle; undefined for a new one. */
   macrocycle?: MacrocycleBaseData;
   /** Default start date for a new macrocycle (the next Monday). */
   defaultStartDate: string;
 };
 
-/** Planning step 1: the macrocycle's base data. */
+/** Planning steps 1 (base data) and 2 (SWOT) of a macrocycle. */
 export function BaseDataForm(props: Props) {
   const { bfcacheId } = useRouter();
   return <BaseDataFormFields key={bfcacheId} {...props} />;
@@ -81,6 +85,7 @@ export function BaseDataForm(props: Props) {
 
 function BaseDataFormFields({
   athleteId,
+  part,
   macrocycle,
   defaultStartDate,
 }: Props) {
@@ -97,14 +102,16 @@ function BaseDataFormFields({
     setErrors({});
     setFormError(null);
     const body = valuesOf(event.currentTarget);
-    const response = await fetch(`/api/athletes/${athleteId}/macrocycle`, {
-      method: macrocycle ? "PATCH" : "POST",
+    const api = `/api/athletes/${athleteId}/macrocycle`;
+    const response = await fetch(part === "swot" ? `${api}/swot` : api, {
+      method: part === "swot" ? "PUT" : macrocycle ? "PATCH" : "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     }).catch(() => null);
     setPending(false);
     if (response?.ok) {
-      router.push(`/athletes/${athleteId}/macrocycle/intensity`);
+      const next = part === "swot" ? "intensity" : "swot";
+      router.push(`/athletes/${athleteId}/macrocycle/${next}`);
       router.refresh();
       return;
     }
@@ -202,204 +209,194 @@ function BaseDataFormFields({
           {formError}
         </p>
       )}
-      {section(
-        t("sections.period"),
+      {part === "base" ? (
         <>
-          {field(
-            "startDate",
-            (p) => (
-              <input
-                {...p}
-                type="date"
-                defaultValue={m?.startDate ?? defaultStartDate}
-                className={inputClass}
-              />
-            ),
-            { hint: t("mondayHint") },
+          {section(
+            t("sections.history"),
+            <>
+              {num("snatchBestKg", "0.5", m?.snatchBestKg)}
+              {num("cleanAndJerkBestKg", "0.5", m?.cleanAndJerkBestKg)}
+              {num("bodyWeightKg", "0.1", m?.bodyWeightKg)}
+              {num("bodyFatPct", "0.1", m?.bodyFatPct)}
+              {num("muscleMassPct", "0.1", m?.muscleMassPct)}
+            </>,
           )}
-          {field(
-            "durationWeeks",
-            (p) => (
-              <input
-                {...p}
-                type="number"
-                inputMode="numeric"
-                min={7}
-                max={52}
-                step={1}
-                defaultValue={m?.durationWeeks ?? ""}
-                className={inputClass}
-              />
-            ),
-            { hint: t("durationHint") },
+          {section(
+            t("sections.plan"),
+            <>
+              {field(
+                "startDate",
+                (p) => (
+                  <input
+                    {...p}
+                    type="date"
+                    defaultValue={m?.startDate ?? defaultStartDate}
+                    className={inputClass}
+                  />
+                ),
+                { hint: t("mondayHint") },
+              )}
+              {field(
+                "durationWeeks",
+                (p) => (
+                  <input
+                    {...p}
+                    type="number"
+                    inputMode="numeric"
+                    min={7}
+                    max={52}
+                    step={1}
+                    defaultValue={m?.durationWeeks ?? ""}
+                    className={inputClass}
+                  />
+                ),
+                { hint: t("durationHint") },
+              )}
+              {field("competitionDate", (p) => (
+                <input
+                  {...p}
+                  type="date"
+                  defaultValue={m?.competitionDate ?? ""}
+                  className={inputClass}
+                />
+              ))}
+              {field("competitionType", (p) => (
+                <input
+                  {...p}
+                  type="text"
+                  maxLength={200}
+                  defaultValue={m?.competitionType ?? ""}
+                  className={inputClass}
+                />
+              ))}
+              {field(
+                "entryValuePct",
+                (p) => (
+                  <input
+                    {...p}
+                    type="number"
+                    inputMode="decimal"
+                    min={30}
+                    max={95}
+                    step={0.5}
+                    defaultValue={m?.entryValuePct ?? 60}
+                    className={inputClass}
+                  />
+                ),
+                { hint: t("entryValueHint") },
+              )}
+              {num("snatchGoalKg", "0.5", m?.snatchGoalKg)}
+              {num("cleanAndJerkGoalKg", "0.5", m?.cleanAndJerkGoalKg)}
+              {num("targetBodyWeightKg", "0.1", m?.targetBodyWeightKg)}
+              {field(
+                "trainingFrequency",
+                (p) => (
+                  <input
+                    {...p}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={14}
+                    step={1}
+                    defaultValue={m?.trainingFrequency ?? ""}
+                    className={inputClass}
+                  />
+                ),
+                { hint: t("trainingFrequencyHint") },
+              )}
+            </>,
           )}
-          {field("competitionDate", (p) => (
-            <input
+        </>
+      ) : (
+        <>
+          {field("strengths", (p) => (
+            <textarea
               {...p}
-              type="date"
-              defaultValue={m?.competitionDate ?? ""}
-              className={inputClass}
+              rows={3}
+              maxLength={2000}
+              defaultValue={m?.strengths ?? ""}
+              className={`${inputClass} py-2`}
             />
           ))}
-          {field("competitionType", (p) => (
-            <input
+          <fieldset className="flex flex-col gap-4">
+            <legend className="mb-1 text-lg font-semibold">
+              {t("sections.deficits")}
+            </legend>
+            <p className="-mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              {t("deficitsHint")}
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {field("snatchDeficits", (p) => (
+                <textarea
+                  {...p}
+                  rows={2}
+                  maxLength={2000}
+                  defaultValue={m?.snatchDeficits ?? ""}
+                  className={`${inputClass} py-2`}
+                />
+              ))}
+              {field("cleanDeficits", (p) => (
+                <textarea
+                  {...p}
+                  rows={2}
+                  maxLength={2000}
+                  defaultValue={m?.cleanDeficits ?? ""}
+                  className={`${inputClass} py-2`}
+                />
+              ))}
+              {field("jerkDeficits", (p) => (
+                <textarea
+                  {...p}
+                  rows={2}
+                  maxLength={2000}
+                  defaultValue={m?.jerkDeficits ?? ""}
+                  className={`${inputClass} py-2`}
+                />
+              ))}
+              {field("otherDeficits", (p) => (
+                <textarea
+                  {...p}
+                  rows={2}
+                  maxLength={2000}
+                  defaultValue={m?.otherDeficits ?? ""}
+                  className={`${inputClass} py-2`}
+                />
+              ))}
+            </div>
+          </fieldset>
+          {field("experience", (p) => (
+            <textarea
               {...p}
-              type="text"
-              maxLength={200}
-              defaultValue={m?.competitionType ?? ""}
-              className={inputClass}
+              rows={3}
+              maxLength={2000}
+              defaultValue={m?.experience ?? ""}
+              className={`${inputClass} py-2`}
             />
           ))}
-          {field(
-            "entryValuePct",
-            (p) => (
-              <input
-                {...p}
-                type="number"
-                inputMode="decimal"
-                min={30}
-                max={95}
-                step={0.5}
-                defaultValue={m?.entryValuePct ?? 60}
-                className={inputClass}
-              />
-            ),
-            { hint: t("entryValueHint") },
-          )}
-        </>,
-      )}
-      {section(
-        t("sections.lifts"),
-        <>
-          {num("snatchBestKg", "0.5", m?.snatchBestKg)}
-          {num("cleanAndJerkBestKg", "0.5", m?.cleanAndJerkBestKg)}
-          {num("snatchGoalKg", "0.5", m?.snatchGoalKg)}
-          {num("cleanAndJerkGoalKg", "0.5", m?.cleanAndJerkGoalKg)}
-        </>,
-      )}
-      {section(
-        t("sections.body"),
-        <>
-          {num("bodyWeightKg", "0.1", m?.bodyWeightKg)}
-          {num("targetBodyWeightKg", "0.1", m?.targetBodyWeightKg)}
-          {num("bodyFatPct", "0.1", m?.bodyFatPct)}
-          {num("muscleMassPct", "0.1", m?.muscleMassPct)}
-        </>,
-      )}
-      {section(
-        t("sections.training"),
-        <>
-          {field(
-            "trainingFrequency",
-            (p) => (
-              <input
-                {...p}
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={14}
-                step={1}
-                defaultValue={m?.trainingFrequency ?? ""}
-                className={inputClass}
-              />
-            ),
-            { hint: t("trainingFrequencyHint") },
-          )}
-        </>,
-      )}
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-lg font-semibold">
-          {t("sections.athlete")}
-        </legend>
-        {field("strengths", (p) => (
-          <textarea
-            {...p}
-            rows={3}
-            maxLength={2000}
-            defaultValue={m?.strengths ?? ""}
-            className={`${inputClass} py-2`}
+          <FocusPointsField
+            initial={m?.focusPoints ?? []}
+            errors={errors.focusPoints ?? []}
+            itemErrors={Object.fromEntries(
+              Object.entries(errors)
+                .filter(([key]) => key.startsWith("focusPoints."))
+                .map(([key, codes]) => [
+                  Number(key.split(".")[1]),
+                  codes ?? [],
+                ]),
+            )}
+            message={message}
           />
-        ))}
-        {field("experience", (p) => (
-          <textarea
-            {...p}
-            rows={3}
-            maxLength={2000}
-            defaultValue={m?.experience ?? ""}
-            className={`${inputClass} py-2`}
-          />
-        ))}
-      </fieldset>
-      <FocusPointsField
-        initial={m?.focusPoints ?? []}
-        errors={errors.focusPoints ?? []}
-        itemErrors={Object.fromEntries(
-          Object.entries(errors)
-            .filter(([key]) => key.startsWith("focusPoints."))
-            .map(([key, codes]) => [Number(key.split(".")[1]), codes ?? []]),
-        )}
-        message={message}
-      />
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-lg font-semibold">
-          {t("sections.deficits")}
-        </legend>
-        <p className="-mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          {t("deficitsHint")}
-        </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {field("snatchDeficits", (p) => (
+          {field("injuriesAndIllnesses", (p) => (
             <textarea
               {...p}
-              rows={2}
+              rows={3}
               maxLength={2000}
-              defaultValue={m?.snatchDeficits ?? ""}
+              defaultValue={m?.injuriesAndIllnesses ?? ""}
               className={`${inputClass} py-2`}
             />
           ))}
-          {field("cleanDeficits", (p) => (
-            <textarea
-              {...p}
-              rows={2}
-              maxLength={2000}
-              defaultValue={m?.cleanDeficits ?? ""}
-              className={`${inputClass} py-2`}
-            />
-          ))}
-          {field("jerkDeficits", (p) => (
-            <textarea
-              {...p}
-              rows={2}
-              maxLength={2000}
-              defaultValue={m?.jerkDeficits ?? ""}
-              className={`${inputClass} py-2`}
-            />
-          ))}
-          {field("otherDeficits", (p) => (
-            <textarea
-              {...p}
-              rows={2}
-              maxLength={2000}
-              defaultValue={m?.otherDeficits ?? ""}
-              className={`${inputClass} py-2`}
-            />
-          ))}
-        </div>
-      </fieldset>
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-lg font-semibold">
-          {t("sections.notes")}
-        </legend>
-        {field("injuriesAndIllnesses", (p) => (
-          <textarea
-            {...p}
-            rows={3}
-            maxLength={2000}
-            defaultValue={m?.injuriesAndIllnesses ?? ""}
-            className={`${inputClass} py-2`}
-          />
-        ))}
-      </fieldset>
+        </>
+      )}
       <div>
         <button
           type="submit"

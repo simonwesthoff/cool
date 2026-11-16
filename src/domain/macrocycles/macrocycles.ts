@@ -17,6 +17,8 @@ import {
 import {
   completeBaseDataSchema,
   createBaseDataSchema,
+  EMPTY_SWOT,
+  swotSchema,
   updateBaseDataSchema,
 } from "./base-data";
 import {
@@ -230,7 +232,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
   };
 }
 
-/** Step 1 for a new macrocycle: base data, default mesocycles, medium weeks. */
+/** Step 1 for a new macrocycle: base data (empty SWOT), default mesocycles, medium weeks. */
 export async function createMacrocycle(
   coach: CurrentUser,
   athleteId: string,
@@ -248,6 +250,7 @@ export async function createMacrocycle(
         .insert(macrocycle)
         .values({
           ...data,
+          ...EMPTY_SWOT,
           bodyFatPct: data.bodyFatPct ?? null,
           muscleMassPct: data.muscleMassPct ?? null,
           athleteId,
@@ -272,6 +275,20 @@ export async function createMacrocycle(
       throw new DomainError("conflict", "MACROCYCLE_EXISTS");
     throw error;
   }
+  return getMacrocycle(coach, athleteId);
+}
+
+/** Step 2: the SWOT, replaced as a whole (all fields required). */
+export async function setSwot(
+  coach: CurrentUser,
+  athleteId: string,
+  input: unknown,
+): Promise<Macrocycle> {
+  await requireOwnAthlete(coach, athleteId);
+  const swot = parseInput(swotSchema, input);
+  const row = await findMacrocycleRow(athleteId);
+  if (!row) throw notFound();
+  await getDb().update(macrocycle).set(swot).where(eq(macrocycle.id, row.id));
   return getMacrocycle(coach, athleteId);
 }
 

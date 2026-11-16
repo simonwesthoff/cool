@@ -154,17 +154,14 @@
     "steps": {
       "label": "Planning steps",
       "base-data": "Base data",
+      "swot": "SWOT",
       "intensity": "Intensity",
       "exercises": "Exercises"
     },
     "baseData": {
       "sections": {
-        "period": "Period and main competition",
-        "lifts": "Personal bests and goals",
-        "body": "Body",
-        "notes": "Notes",
-        "training": "Training",
-        "athlete": "Strengths and experience",
+        "history": "Historical data",
+        "plan": "New macrocycle plan",
         "deficits": "Deficits"
       },
       "fields": {
@@ -257,7 +254,7 @@
       "help": "Drag a week's point up for a high week or down for a low week, or tap above or below it. Drag the handles on the borders to change the length of the mesocycles. Each change is saved.",
       "saveFailed": "The change could not be saved. Please try again.",
       "continue": "Continue to exercises",
-      "back": "Back to base data"
+      "back": "Back to SWOT"
     },
     "exercises": {
       "help": "Choose the exercises of each mesocycle: tap a cell, pick what the exercise should address (the athlete's deficits for the lift are shown) and, if needed, its variation. Every change is saved.",

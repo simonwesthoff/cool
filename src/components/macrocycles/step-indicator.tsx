@@ -1,10 +1,10 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-const steps = ["base-data", "intensity", "exercises"] as const;
+const steps = ["base-data", "swot", "intensity", "exercises"] as const;
 export type PlanningStep = (typeof steps)[number];
 
-/** "1 Base data · 2 Intensity · 3 Exercises" with the current step marked. */
+/** "1 Base data · 2 SWOT · 3 Intensity · 4 Exercises" with the current step marked. */
 export function StepIndicator({
   athleteId,
   current,
@@ -12,7 +12,7 @@ export function StepIndicator({
 }: {
   athleteId: string;
   current: PlanningStep;
-  /** Steps 2 and 3 need an existing macrocycle. */
+  /** Steps 2 to 4 need an existing macrocycle. */
   available: boolean;
 }) {
   const t = useTranslations("Macrocycle.steps");

@@ -111,7 +111,7 @@ export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
           {t("continue")}
         </Link>
         <Link
-          href={`${base}/base-data`}
+          href={`${base}/swot`}
           className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
           {t("back")}

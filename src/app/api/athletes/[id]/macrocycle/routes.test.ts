@@ -10,6 +10,7 @@ const main = await import("./route");
 const weeks = await import("./weeks/[week]/route");
 const exercises = await import("./mesocycles/[type]/exercises/[number]/route");
 const borders = await import("./mesocycles/borders/route");
+const swot = await import("./swot/route");
 const { startAsCoach } = await import("@/domain/roles");
 const { createAthlete } = await import("@/domain/athletes");
 
@@ -23,17 +24,19 @@ const baseData = {
   cleanAndJerkGoalKg: 130,
   bodyWeightKg: 81,
   targetBodyWeightKg: 80.5,
+  competitionDate: "2027-04-24",
+  competitionType: "German Championships",
+  trainingFrequency: 8,
+};
+const swotData = {
+  strengths: "Fast under the bar",
   snatchDeficits: "Turnover",
   cleanDeficits: "Catch",
   jerkDeficits: "Dip",
   otherDeficits: "None",
-  injuriesAndIllnesses: "None",
-  competitionDate: "2027-04-24",
-  competitionType: "German Championships",
-  strengths: "Fast under the bar",
   experience: "6 years, 2 national championships",
-  trainingFrequency: 8,
   focusPoints: ["Turnover", "Squat strength"],
+  injuriesAndIllnesses: "None",
 };
 const json = (method: string, body: unknown) =>
   new Request("https://localhost/api", {
@@ -125,7 +128,7 @@ describe("macrocycle API", () => {
     expect(after.mesocycles[1].exercises).toEqual([]);
   });
 
-  it("changes base data and week levels", async () => {
+  it("changes base data, the SWOT and week levels", async () => {
     const { athlete } = await coachWithAthlete();
     const id = { id: athlete.id };
     await main.POST(json("POST", baseData), ctx(id));
@@ -134,6 +137,20 @@ describe("macrocycle API", () => {
       ctx(id),
     );
     expect((await patched.json()).snatchGoalKg).toBe(105);
+    const saved = await swot.PUT(json("PUT", swotData), ctx(id));
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toMatchObject({
+      ...swotData,
+      snatchGoalKg: 105,
+    });
+    const incomplete = await swot.PUT(
+      json("PUT", { ...swotData, strengths: "" }),
+      ctx(id),
+    );
+    expect(incomplete.status).toBe(400);
+    expect(await incomplete.json()).toMatchObject({
+      error: { code: "VALIDATION_FAILED", fields: { strengths: ["REQUIRED"] } },
+    });
     const high = await weeks.PUT(
       json("PUT", { level: "high" }),
       ctx({ ...id, week: "11" }),
@@ -219,6 +236,7 @@ describe("macrocycle API", () => {
       await main.GET(new Request("https://localhost/api"), ctx(id)),
       await main.POST(json("POST", baseData), ctx(id)),
       await main.PATCH(json("PATCH", {}), ctx(id)),
+      await swot.PUT(json("PUT", swotData), ctx(id)),
       await weeks.PUT(
         json("PUT", { level: "high" }),
         ctx({ ...id, week: "1" }),

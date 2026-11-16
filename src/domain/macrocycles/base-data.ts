@@ -45,23 +45,41 @@ const fields = {
   cleanAndJerkGoalKg: number(1, 400),
   bodyWeightKg: number(20, 250),
   targetBodyWeightKg: number(20, 250),
-  snatchDeficits: text(2000),
-  cleanDeficits: text(2000),
-  jerkDeficits: text(2000),
-  otherDeficits: text(2000),
-  injuriesAndIllnesses: text(2000),
-  strengths: text(2000),
-  experience: text(2000),
   trainingFrequency: z
     .number()
     .refine(Number.isInteger, code("NOT_INTEGER"))
     .refine((v) => v >= 1 && v <= 14, code("OUT_OF_RANGE")),
+  competitionDate: z.iso.date(),
+  competitionType: text(200),
+};
+
+/** Step 2 (SWOT): all required and saved together. */
+export const swotSchema = z.strictObject({
+  strengths: text(2000),
+  snatchDeficits: text(2000),
+  cleanDeficits: text(2000),
+  jerkDeficits: text(2000),
+  otherDeficits: text(2000),
+  experience: text(2000),
   focusPoints: z
     .array(text(FOCUS_POINT_MAX_LENGTH))
     .refine((list) => list.length >= 1, code("REQUIRED"))
     .refine((list) => list.length <= MAX_FOCUS_POINTS, code("TOO_MANY")),
-  competitionDate: z.iso.date(),
-  competitionType: text(200),
+  injuriesAndIllnesses: text(2000),
+});
+
+export type Swot = z.output<typeof swotSchema>;
+
+/** The SWOT of a macrocycle created in step 1, before step 2 is saved. */
+export const EMPTY_SWOT: Swot = {
+  strengths: "",
+  snatchDeficits: "",
+  cleanDeficits: "",
+  jerkDeficits: "",
+  otherDeficits: "",
+  experience: "",
+  focusPoints: [],
+  injuriesAndIllnesses: "",
 };
 
 const optional = {
@@ -69,10 +87,10 @@ const optional = {
   muscleMassPct: number(10, 80).nullable().optional(),
 };
 
-/** Base data of a new macrocycle: everything except body fat and muscle mass is required. */
+/** Step 1 of a new macrocycle: everything except body fat and muscle mass is required; no SWOT. */
 export const createBaseDataSchema = z.strictObject({ ...fields, ...optional });
 
-/** Changes to the base data: any subset; `null` clears the optional values. */
+/** Changes to the step 1 data: any subset; `null` clears the optional values. */
 export const updateBaseDataSchema = z.strictObject({
   ...Object.fromEntries(
     Object.entries(fields).map(([k, s]) => [k, s.optional()]),

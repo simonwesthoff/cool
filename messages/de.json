@@ -154,17 +154,14 @@
     "steps": {
       "label": "Planungsschritte",
       "base-data": "Stammdaten",
+      "swot": "SWOT",
       "intensity": "Intensität",
       "exercises": "Übungen"
     },
     "baseData": {
       "sections": {
-        "period": "Zeitraum und Hauptwettkampf",
-        "lifts": "Bestleistungen und Ziele",
-        "body": "Körper",
-        "notes": "Notizen",
-        "training": "Training",
-        "athlete": "Stärken und Erfahrung",
+        "history": "Historische Daten",
+        "plan": "Neue Makrozyklusplanung",
         "deficits": "Defizite"
       },
       "fields": {
@@ -257,7 +254,7 @@
       "help": "Ziehe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche, oder tippe darüber oder darunter. Ziehe die Griffe an den Grenzen, um die Länge der Mesozyklen zu ändern. Jede Änderung wird gespeichert.",
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "continue": "Weiter zu den Übungen",
-      "back": "Zurück zu den Stammdaten"
+      "back": "Zurück zur SWOT"
     },
     "exercises": {
       "help": "Wähle die Übungen jedes Mesozyklus: Tippe auf eine Zelle, wähle, was die Übung adressieren soll (die Defizite des Athleten in der Disziplin werden angezeigt), und bei Bedarf ihre Variation. Jede Änderung wird gespeichert.",
