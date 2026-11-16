@@ -191,6 +191,32 @@ describe("ExerciseSelection", () => {
     ).toBeTruthy();
   });
 
+  it("shows the variation below the check mark, and no text without one", () => {
+    renderIt();
+    const withVariation = screen.getByRole("button", {
+      name: "Power jerk, Special preparation block: chosen, From the rack",
+    });
+    expect(withVariation.textContent).toBe("From the rack");
+    // Chosen without a variation and with a reason: check mark only.
+    cleanup();
+    const plain = {
+      ...macrocycle,
+      mesocycles: mesocycles([
+        { exerciseNumber: 7, variation: null, tags: ["Hoher Zug"], note: null },
+      ]),
+    } as unknown as Macrocycle;
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <ExerciseSelection macrocycle={plain} catalog={catalog} />
+      </NextIntlClientProvider>,
+    );
+    const cell = screen.getByRole("button", {
+      name: "Power snatch, Special preparation block: chosen, Standard",
+    });
+    expect(cell.textContent).toBe("");
+    expect(cell.querySelector("svg")).toBeTruthy();
+  });
+
   it("shows the snatch and other deficits for a snatch exercise", async () => {
     renderIt();
     await open("Power snatch, Special preparation block: choose");

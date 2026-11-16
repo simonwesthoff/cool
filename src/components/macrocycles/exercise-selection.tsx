@@ -229,11 +229,12 @@ function ChoiceCell({
           >
             <CheckIcon />
           </span>
-          <span className="hidden w-full truncate text-xs text-zinc-600 sm:block dark:text-zinc-400">
-            {missingReason
-              ? t("reasonMissing")
-              : (choice.variation ?? t("standard"))}
-          </span>
+          {/* Text only for a variation or a missing reason. */}
+          {(missingReason || choice.variation) && (
+            <span className="hidden w-full truncate text-xs text-zinc-600 sm:block dark:text-zinc-400">
+              {missingReason ? t("reasonMissing") : choice.variation}
+            </span>
+          )}
         </>
       ) : (
         <span aria-hidden="true" className="text-zinc-400 dark:text-zinc-600">

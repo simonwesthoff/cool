@@ -215,6 +215,10 @@ change the calculated values.
 - **WHEN** the coach chooses exercise 1 for the general preparation block with the variation "No feet snatch" and the note "Footwork in the turnover"
 - **THEN** the cell shows the variation, and the choice keeps the variation and the note
 
+#### Scenario: No variation
+- **WHEN** the coach chooses an exercise without a variation
+- **THEN** its cell shows only the check mark, no text
+
 #### Scenario: Remove an exercise
 - **GIVEN** exercise 13 chosen for a mesocycle
 - **WHEN** the coach removes it in its cell

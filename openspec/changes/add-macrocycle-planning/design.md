@@ -191,7 +191,7 @@ colours:
   group header rows, columns = exercise, GLP, ABP, LAP (column headers with
   the palette swatch of the block and its weeks). Each cell is a button:
   empty cells show "+", chosen cells a check mark and, from `sm` up, the
-  variation. The button opens a dialog (exercise, block, catalog comment as
+  variation (no text without a variation). The button opens a dialog (exercise, block, catalog comment as
   hint, variation, required reason, Save / Remove / Cancel).
 - Variation and reason are stored per mesocycle choice
   (`mesocycle_exercise.variation`, `.reason`); they are information only.

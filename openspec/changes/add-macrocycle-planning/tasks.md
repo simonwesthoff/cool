@@ -54,6 +54,8 @@
 
 - [x] 7.13 Acceptance feedback: tooltip "85% (high)" / "Week n from <date>" / block abbreviation, no volume; English abbreviations GPB/SPB/CPB; abbreviations in the labels above the chart, tooltips and exercise table headers; verify tests, browser check and screenshots
 
+- [x] 7.14 Acceptance feedback: no text below the check mark of a chosen exercise without a variation; verify tests and browser check
+
 ## Workflow follow-up
 
 - User acceptance, archive, PR into main. Next: macrocycle view (feature 7).
