@@ -94,11 +94,14 @@ ranges and `MACROCYCLE_EXISTS`.
   macrocycle" or period, competition and "Change planning".
 
 ### Macrocycle chart (custom SVG, no chart library)
+(Adjusted after loading the `dataviz` skill: no second y-axis. Intensity and
+volume are two charts stacked on the same week axis in one scroll container,
+plus a tooltip per week and a table view.)
 - Follows the `dataviz` skill's guidance (to be loaded before writing the
   chart): x = weeks (labels every few weeks, calendar week numbers),
   left y-axis intensity 50–110 %, line with a handle (circle, ≥ 44 px touch
-  target) per week; volume as light bars on a right axis once exercises
-  exist; mesocycle bands as three neutral grey shades behind the plot with a
+  target) per week; volume as a separate bar chart below (same columns)
+  once exercises exist; mesocycle bands as three neutral grey shades behind the plot with a
   legend (staying in the black-and-white style); high/low weeks additionally
   marked with ▲/▼ above/below the handle so the level is not conveyed by
   position alone.

@@ -139,5 +139,97 @@
     "athletes": "Athletes",
     "training": "My training",
     "exercises": "Exercises"
+  },
+  "Macrocycle": {
+    "title": "Macrocycle planning",
+    "steps": {
+      "label": "Planning steps",
+      "base-data": "Base data",
+      "intensity": "Intensity",
+      "exercises": "Exercises"
+    },
+    "baseData": {
+      "sections": {
+        "period": "Period and main competition",
+        "lifts": "Personal bests and goals",
+        "body": "Body",
+        "notes": "Notes"
+      },
+      "fields": {
+        "startDate": "Start",
+        "durationWeeks": "Duration (weeks)",
+        "competitionDate": "Date of the main competition",
+        "competitionType": "Type of the main competition",
+        "entryValuePct": "Entry value (%)",
+        "snatchBestKg": "Personal best snatch (kg)",
+        "cleanAndJerkBestKg": "Personal best clean & jerk (kg)",
+        "snatchGoalKg": "Goal snatch (kg)",
+        "cleanAndJerkGoalKg": "Goal clean & jerk (kg)",
+        "bodyWeightKg": "Body weight (kg)",
+        "targetBodyWeightKg": "Target body weight (kg)",
+        "bodyFatPct": "Body fat (%)",
+        "muscleMassPct": "Muscle mass (%)",
+        "deficits": "Current deficits",
+        "injuriesAndIllnesses": "Current and chronic injuries and illnesses"
+      },
+      "optional": "(optional)",
+      "mondayHint": "Macrocycles start on a Monday.",
+      "durationHint": "7 to 52 weeks.",
+      "entryValueHint": "Share of the max values the cycle starts with, usually 60 %.",
+      "continue": "Save and continue",
+      "checkFields": "Please check the marked fields.",
+      "saveFailed": "Could not save. Please try again.",
+      "errors": {
+        "REQUIRED": "Required.",
+        "OUT_OF_RANGE": "Outside the allowed range.",
+        "NOT_INTEGER": "Please enter a whole number.",
+        "NOT_MONDAY": "Please choose a Monday.",
+        "BEFORE_START": "Must not be before the start.",
+        "INVALID_FORMAT": "Please enter a valid date.",
+        "TOO_LONG": "Too long.",
+        "INVALID": "Invalid value."
+      }
+    },
+    "mesocycles": {
+      "general_preparation": "General preparation block",
+      "special_preparation": "Special preparation block",
+      "competition_preparation": "Competition preparation block",
+      "short": {
+        "general_preparation": "General preparation",
+        "special_preparation": "Special preparation",
+        "competition_preparation": "Competition preparation"
+      }
+    },
+    "chart": {
+      "caption": "Macrocycle chart: intensity and volume per week",
+      "legend": "Legend",
+      "legendLevels": "High / low week",
+      "intensity": "Intensity per week",
+      "volume": "Volume (weekly reps)",
+      "noVolume": "The volume appears once exercises are chosen.",
+      "weekValue": "Week {week}, {level}, {intensity}",
+      "levels": {
+        "high": "High week",
+        "medium": "Medium week",
+        "low": "Low week"
+      },
+      "tooltipWeek": "Week {week} · from {date}",
+      "tooltipVolume": "Volume: {volume}",
+      "showTable": "Show as table",
+      "table": {
+        "week": "Week",
+        "start": "From",
+        "mesocycle": "Mesocycle",
+        "level": "Level",
+        "intensity": "Intensity",
+        "volume": "Volume"
+      }
+    },
+    "intensity": {
+      "help": "Move a week's point up for a high week or down for a low week (drag, tap above or below, or use the arrow keys). Each change is saved.",
+      "saveFailed": "The change could not be saved. Please try again.",
+      "continue": "Continue to exercises",
+      "back": "Back to base data"
+    }
   }
 }

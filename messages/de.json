@@ -139,5 +139,97 @@
     "athletes": "Athleten",
     "training": "Mein Training",
     "exercises": "Übungen"
+  },
+  "Macrocycle": {
+    "title": "Makrozyklusplanung",
+    "steps": {
+      "label": "Planungsschritte",
+      "base-data": "Stammdaten",
+      "intensity": "Intensität",
+      "exercises": "Übungen"
+    },
+    "baseData": {
+      "sections": {
+        "period": "Zeitraum und Hauptwettkampf",
+        "lifts": "Bestleistungen und Ziele",
+        "body": "Körper",
+        "notes": "Notizen"
+      },
+      "fields": {
+        "startDate": "Beginn",
+        "durationWeeks": "Dauer (Wochen)",
+        "competitionDate": "Datum des Hauptwettkampfs",
+        "competitionType": "Art des Hauptwettkampfs",
+        "entryValuePct": "Einstiegswert (%)",
+        "snatchBestKg": "Bestleistung Reißen (kg)",
+        "cleanAndJerkBestKg": "Bestleistung Stoßen (kg)",
+        "snatchGoalKg": "Zielleistung Reißen (kg)",
+        "cleanAndJerkGoalKg": "Zielleistung Stoßen (kg)",
+        "bodyWeightKg": "Körpergewicht (kg)",
+        "targetBodyWeightKg": "Zielkörpergewicht (kg)",
+        "bodyFatPct": "Körperfett (%)",
+        "muscleMassPct": "Muskelmasse (%)",
+        "deficits": "Aktuelle Defizite",
+        "injuriesAndIllnesses": "Aktuelle und chronische Verletzungen und Krankheiten"
+      },
+      "optional": "(optional)",
+      "mondayHint": "Makrozyklen beginnen an einem Montag.",
+      "durationHint": "7 bis 52 Wochen.",
+      "entryValueHint": "Anteil der Maximalwerte zu Beginn des Zyklus, meist 60 %.",
+      "continue": "Speichern und weiter",
+      "checkFields": "Bitte prüfe die markierten Felder.",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
+      "errors": {
+        "REQUIRED": "Pflichtfeld.",
+        "OUT_OF_RANGE": "Außerhalb des erlaubten Bereichs.",
+        "NOT_INTEGER": "Bitte eine ganze Zahl eingeben.",
+        "NOT_MONDAY": "Bitte einen Montag wählen.",
+        "BEFORE_START": "Darf nicht vor dem Beginn liegen.",
+        "INVALID_FORMAT": "Bitte ein gültiges Datum eingeben.",
+        "TOO_LONG": "Zu lang.",
+        "INVALID": "Ungültiger Wert."
+      }
+    },
+    "mesocycles": {
+      "general_preparation": "Grundlagenphase (GLP)",
+      "special_preparation": "Aufbauphase (ABP)",
+      "competition_preparation": "Leistungsausprägungsphase (LAP)",
+      "short": {
+        "general_preparation": "GLP",
+        "special_preparation": "ABP",
+        "competition_preparation": "LAP"
+      }
+    },
+    "chart": {
+      "caption": "Makrozyklus-Diagramm: Intensität und Umfang pro Woche",
+      "legend": "Legende",
+      "legendLevels": "Hohe / niedrige Woche",
+      "intensity": "Intensität pro Woche",
+      "volume": "Umfang (Wochenwiederholungen)",
+      "noVolume": "Der Umfang erscheint, sobald Übungen ausgewählt sind.",
+      "weekValue": "Woche {week}, {level}, {intensity}",
+      "levels": {
+        "high": "Hohe Woche",
+        "medium": "Mittlere Woche",
+        "low": "Niedrige Woche"
+      },
+      "tooltipWeek": "Woche {week} · ab {date}",
+      "tooltipVolume": "Umfang: {volume}",
+      "showTable": "Als Tabelle anzeigen",
+      "table": {
+        "week": "Woche",
+        "start": "Ab",
+        "mesocycle": "Mesozyklus",
+        "level": "Stufe",
+        "intensity": "Intensität",
+        "volume": "Umfang"
+      }
+    },
+    "intensity": {
+      "help": "Schiebe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche (ziehen, darüber oder darunter tippen oder Pfeiltasten). Jede Änderung wird gespeichert.",
+      "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+      "continue": "Weiter zu den Übungen",
+      "back": "Zurück zu den Stammdaten"
+    }
   }
 }

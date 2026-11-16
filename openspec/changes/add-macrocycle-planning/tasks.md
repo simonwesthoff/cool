@@ -15,8 +15,8 @@
 
 ## 4. Pages
 
-- [ ] 4.1 Step 1 base data page with step indicator (new and edit, default entry value 60 %, next Monday as default start date, field errors); add English and German texts; verify component and page tests
-- [ ] 4.2 Load the `dataviz` skill, then build the macrocycle chart (intensity line with handles, mesocycle bands with legend, volume bars, ▲/▼ markers, horizontal scrolling for long cycles) and step 2 with drag, tap and keyboard changes saved per week; add English and German texts; verify component tests (snapping to three positions, keyboard, aria texts, saved level, revert on failure)
+- [x] 4.1 Step 1 base data page with step indicator (new and edit, default entry value 60 %, next Monday as default start date, field errors); add English and German texts; verify component and page tests
+- [x] 4.2 Load the `dataviz` skill, then build the macrocycle chart (intensity line with handles, mesocycle bands with legend, volume bars, ▲/▼ markers, horizontal scrolling for long cycles) and step 2 with drag, tap and keyboard changes saved per week; add English and German texts; verify component tests (snapping to three positions, keyboard, aria texts, saved level, revert on failure)
 - [ ] 4.3 Step 3 exercise selection per mesocycle (catalog grouped by exercise group, checkboxes, save per mesocycle, Finish to the details page); add English and German texts; verify component tests
 - [ ] 4.4 Macrocycle section on the athlete details page ("Plan macrocycle" or period, competition and "Change planning"); add English and German texts; verify component and page tests
 
