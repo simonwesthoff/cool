@@ -85,11 +85,11 @@ describe("macrocycle API", () => {
         exerciseNumber: 13,
         variation: "From blocks",
         tags: ["SKF"],
-        note: null,
+        ownReasons: [],
       },
     ]);
     const invalid = await exercises.PUT(
-      json("PUT", { note: "" }),
+      json("PUT", { ownReasons: [] }),
       ctx({ ...id, type: "special_preparation", number: "14" }),
     );
     expect(invalid.status).toBe(400);
@@ -242,7 +242,7 @@ describe("macrocycle API", () => {
         ctx({ ...id, week: "1" }),
       ),
       await exercises.PUT(
-        json("PUT", { note: "x" }),
+        json("PUT", { ownReasons: ["x"] }),
         ctx({ ...id, type: "special_preparation", number: "13" }),
       ),
       await exercises.DELETE(

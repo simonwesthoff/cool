@@ -295,7 +295,7 @@ describe("getMacrocycle", () => {
     await createMacrocycle(coach, athlete.id, baseData);
     for (const n of ["13", "19"])
       await setMesocycleExercise(coach, athlete.id, "special_preparation", n, {
-        note: "Strength",
+        ownReasons: ["Strength"],
       });
     const week11 = (await getMacrocycle(coach, athlete.id)).weeks[10]!;
     expect(week11).toMatchObject({
@@ -359,7 +359,7 @@ describe("setMesocycleExercise", () => {
     input: unknown,
   ) => setMesocycleExercise(coach, athleteId, type, number, input);
 
-  it("chooses exercises with tags, note and variation, and changes them", async () => {
+  it("chooses exercises with tags, own reasons and variation, and changes them", async () => {
     const { coach, athlete } = await setup();
     await createMacrocycle(coach, athlete.id, baseData);
     await set(coach, athlete.id, "special_preparation", "19", {
@@ -370,7 +370,7 @@ describe("setMesocycleExercise", () => {
     });
     const m = await set(coach, athlete.id, "special_preparation", "1", {
       variation: "  No feet snatch ",
-      note: " Footwork in the turnover ",
+      ownReasons: [" Footwork in the turnover ", "Balance"],
     });
     expect(m.mesocycles[1]!.exerciseNumbers).toEqual([1, 7, 19]);
     expect(m.mesocycles[1]!.exercises).toEqual([
@@ -378,28 +378,28 @@ describe("setMesocycleExercise", () => {
         exerciseNumber: 1,
         variation: "No feet snatch",
         tags: [],
-        note: "Footwork in the turnover",
+        ownReasons: ["Footwork in the turnover", "Balance"],
       },
       {
         exerciseNumber: 7,
         variation: null,
         tags: ["Beschleunigung im 2. Zug", "Hoher Zug"],
-        note: null,
+        ownReasons: [],
       },
-      { exerciseNumber: 19, variation: null, tags: ["MKF"], note: null },
+      { exerciseNumber: 19, variation: null, tags: ["MKF"], ownReasons: [] },
     ]);
     expect(m.mesocycles[0]!.exercises).toEqual([]);
 
     const changed = await set(coach, athlete.id, "special_preparation", "1", {
       tags: ["WKÜ"],
       variation: "",
-      note: "",
+      ownReasons: [],
     });
     expect(changed.mesocycles[1]!.exercises[0]).toEqual({
       exerciseNumber: 1,
       variation: null,
       tags: ["WKÜ"],
-      note: null,
+      ownReasons: [],
     });
   });
 
@@ -420,7 +420,7 @@ describe("setMesocycleExercise", () => {
     const { coach, athlete } = await setup();
     await createMacrocycle(coach, athlete.id, baseData);
     await set(coach, athlete.id, "general_preparation", "13", {
-      note: "Basics",
+      ownReasons: ["Basics"],
     });
     const m = await set(coach, athlete.id, "competition_preparation", "13", {
       tags: ["SKF"],
@@ -433,14 +433,25 @@ describe("setMesocycleExercise", () => {
     ]);
   });
 
-  it("requires a tag or a note, only the exercise's tags, and limits the lengths", async () => {
+  it("requires a tag or an own reason, only the exercise's tags, and limits the own reasons", async () => {
     const { coach, athlete } = await setup();
     await createMacrocycle(coach, athlete.id, baseData);
     const seven = (input: unknown) =>
       set(coach, athlete.id, "special_preparation", "7", input);
-    expect(await fieldsOf(seven({ note: "   " }))).toEqual({
+    expect(await fieldsOf(seven({ ownReasons: [] }))).toEqual({
       reason: ["REQUIRED"],
     });
+    expect(await fieldsOf(seven({ ownReasons: ["a", " "] }))).toEqual({
+      "ownReasons.1": ["REQUIRED"],
+    });
+    expect(await fieldsOf(seven({ ownReasons: ["a", "a"] }))).toEqual({
+      ownReasons: ["DUPLICATE"],
+    });
+    expect(
+      await fieldsOf(
+        seven({ ownReasons: Array.from({ length: 11 }, (_, i) => `r${i}`) }),
+      ),
+    ).toEqual({ ownReasons: ["TOO_BIG"] });
     expect(await fieldsOf(seven({}))).toEqual({ reason: ["REQUIRED"] });
     expect(await fieldsOf(seven({ tags: ["SKF"] }))).toEqual({
       tags: ["UNKNOWN_TAG"],
@@ -452,12 +463,12 @@ describe("setMesocycleExercise", () => {
     );
     expect(
       await fieldsOf(
-        seven({ note: "x".repeat(501), variation: "v".repeat(201) }),
+        seven({ ownReasons: ["x".repeat(201)], variation: "v".repeat(201) }),
       ),
-    ).toEqual({ note: ["TOO_LONG"], variation: ["TOO_LONG"] });
-    // Exercises without addressed points are chosen with a note.
+    ).toEqual({ "ownReasons.0": ["TOO_LONG"], variation: ["TOO_LONG"] });
+    // Exercises without addressed points are chosen with own reasons.
     const m = await set(coach, athlete.id, "general_preparation", "33", {
-      note: "Back",
+      ownReasons: ["Back"],
     });
     expect(m.mesocycles[0]!.exerciseNumbers).toEqual([33]);
   });
@@ -468,11 +479,13 @@ describe("setMesocycleExercise", () => {
     for (const n of ["99", "abc", "0"])
       await expect(
         errorOf(
-          set(coach, athlete.id, "special_preparation", n, { note: "x" }),
+          set(coach, athlete.id, "special_preparation", n, {
+            ownReasons: ["x"],
+          }),
         ),
       ).resolves.toMatchObject({ code: "EXERCISE_NOT_FOUND" });
     await expect(
-      errorOf(set(coach, athlete.id, "taper", "1", { note: "x" })),
+      errorOf(set(coach, athlete.id, "taper", "1", { ownReasons: ["x"] })),
     ).resolves.toMatchObject({ code: "MESOCYCLE_NOT_FOUND" });
   });
 });
@@ -483,7 +496,9 @@ describe("removeMesocycleExercise", () => {
     await createMacrocycle(coach, athlete.id, baseData);
     for (const type of ["general_preparation", "special_preparation"])
       for (const n of ["1", "13"])
-        await setMesocycleExercise(coach, athlete.id, type, n, { note: "x" });
+        await setMesocycleExercise(coach, athlete.id, type, n, {
+          ownReasons: ["x"],
+        });
     await removeMesocycleExercise(
       coach,
       athlete.id,

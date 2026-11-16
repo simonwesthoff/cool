@@ -281,14 +281,13 @@
       "remove": "Entfernen",
       "cancel": "Abbrechen",
       "notEntered": "Noch nicht eingetragen",
-      "reasonHint": "Tippe an, was die Übung adressieren soll; mit + kannst du eine eigene Begründung ergänzen.",
-      "reasonHintNoTags": "Der Katalog nennt für diese Übung keine adressierten Punkte; ergänze mit + eine eigene Begründung.",
       "ownReason": "Eigene Begründung",
       "ownReasonPlaceholder": "Deine Begründung",
       "ownReasonAdd": "Eigene Begründung hinzufügen",
-      "ownReasonEdit": "Eigene Begründung: {reason}. Bearbeiten",
       "total": "Summe",
-      "deficitsLabel": "Defizite des Athleten"
+      "deficitsLabel": "Defizite des Athleten",
+      "ownReasonRemove": "Eigene Begründung entfernen: {reason}",
+      "ownReasonCancel": "Eigene Begründung verwerfen"
     }
   }
 }

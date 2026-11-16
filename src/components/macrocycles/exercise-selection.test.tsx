@@ -133,10 +133,10 @@ const macrocycle = {
         exerciseNumber: 12,
         variation: "From the rack",
         tags: ["Rhythmus im Auftakt"],
-        note: null,
+        ownReasons: [],
       },
     ],
-    [{ exerciseNumber: 7, variation: null, tags: [], note: null }],
+    [{ exerciseNumber: 7, variation: null, tags: [], ownReasons: [] }],
   ),
   weeks: [],
 } as unknown as Macrocycle;
@@ -153,6 +153,10 @@ const renderIt = (locale: "en" | "de" = "en") =>
 const dialog = () => screen.getByRole("dialog");
 const open = (name: string) =>
   userEvent.click(screen.getByRole("button", { name }));
+const ownReasonTags = () =>
+  [...dialog().querySelectorAll("[data-own-reason]")].map((el) =>
+    el.getAttribute("data-own-reason"),
+  );
 const deficitKeys = () =>
   [...dialog().querySelectorAll("[data-deficit]")].map((el) =>
     el.getAttribute("data-deficit"),
@@ -224,16 +228,16 @@ describe("ExerciseSelection", () => {
             exerciseNumber: 7,
             variation: null,
             tags: ["Hoher Zug"],
-            note: null,
+            ownReasons: [],
           },
           {
             exerciseNumber: 12,
             variation: "From the rack",
             tags: ["Rhythmus im Auftakt"],
-            note: null,
+            ownReasons: [],
           },
         ],
-        [{ exerciseNumber: 7, variation: null, tags: [], note: null }],
+        [{ exerciseNumber: 7, variation: null, tags: [], ownReasons: [] }],
       ),
     };
     fetchMock.mockResolvedValue(
@@ -267,7 +271,12 @@ describe("ExerciseSelection", () => {
     const plain = {
       ...macrocycle,
       mesocycles: mesocycles([
-        { exerciseNumber: 7, variation: null, tags: ["Hoher Zug"], note: null },
+        {
+          exerciseNumber: 7,
+          variation: null,
+          tags: ["Hoher Zug"],
+          ownReasons: [],
+        },
       ]),
     } as unknown as Macrocycle;
     render(
@@ -311,7 +320,6 @@ describe("ExerciseSelection", () => {
     await open("Pull-up, General preparation block: choose");
     expect(deficitKeys()).toEqual([]);
     expect(dialog().querySelector("dl")).toBeNull();
-    expect(dialog().textContent).toContain("add your own reason with +");
   });
 
   it("chooses an exercise by tapping tags", async () => {
@@ -322,7 +330,7 @@ describe("ExerciseSelection", () => {
           exerciseNumber: 7,
           variation: "From blocks",
           tags: ["Beschleunigung im 2. Zug", "Hoher Zug"],
-          note: null,
+          ownReasons: [],
         },
       ]),
     };
@@ -355,7 +363,7 @@ describe("ExerciseSelection", () => {
     expect(init.method).toBe("PUT");
     expect(JSON.parse(init.body)).toEqual({
       tags: ["Beschleunigung im 2. Zug", "Hoher Zug"],
-      note: null,
+      ownReasons: [],
       variation: "From blocks",
     });
     expect(
@@ -366,7 +374,7 @@ describe("ExerciseSelection", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("adds an own reason with the + tag, shows it as a selected tag and edits it", async () => {
+  it("adds own reasons with Enter and with a comma, each followed by a new +", async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify(macrocycle), { status: 200 }),
     );
@@ -380,33 +388,36 @@ describe("ExerciseSelection", () => {
     );
     const field = within(dialog()).getByRole("textbox", { name: "Own reason" });
     expect(document.activeElement).toBe(field);
-    // Enter confirms the reason and does not save the dialog.
-    await userEvent.type(field, " Back strength {Enter}");
+    // A comma adds the reason and keeps the field open for the next one.
+    await userEvent.type(field, "Back strength, Grip");
+    expect(ownReasonTags()).toEqual(["Back strength"]);
+    expect((field as HTMLInputElement).value).toBe(" Grip");
+    // Enter adds it and closes the field; a new + follows.
+    await userEvent.type(field, "{Enter}");
     expect(fetchMock).not.toHaveBeenCalled();
-    const chip = within(dialog()).getByRole("button", {
-      name: "Own reason: Back strength. Edit",
-    });
-    expect(chip.getAttribute("aria-pressed")).toBe("true");
+    expect(ownReasonTags()).toEqual(["Back strength", "Grip"]);
     expect(
-      within(dialog()).queryByRole("button", { name: "Add own reason" }),
+      within(dialog()).queryByRole("textbox", { name: "Own reason" }),
     ).toBeNull();
-    // Tapping the reason opens the field again.
-    await userEvent.click(chip);
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Add own reason" }),
+    );
+    // Text still in the field counts when saving.
     await userEvent.type(
       within(dialog()).getByRole("textbox", { name: "Own reason" }),
-      " and core",
+      "Core",
     );
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "Choose exercise" }),
     );
     expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({
       tags: [],
-      note: "Back strength and core",
+      ownReasons: ["Back strength", "Grip", "Core"],
       variation: null,
     });
   });
 
-  it("removes an own reason when its text is cleared", async () => {
+  it("cancels an own reason with X and removes added ones", async () => {
     renderIt();
     await open("Power snatch, Special preparation block: choose");
     await userEvent.click(
@@ -414,23 +425,84 @@ describe("ExerciseSelection", () => {
     );
     await userEvent.type(
       within(dialog()).getByRole("textbox", { name: "Own reason" }),
-      "x",
+      "Typo",
     );
     await userEvent.click(
-      within(dialog()).getByRole("button", { name: "High pull" }),
-    );
-    await userEvent.click(
-      within(dialog()).getByRole("button", { name: "Own reason: x. Edit" }),
-    );
-    await userEvent.clear(
-      within(dialog()).getByRole("textbox", { name: "Own reason" }),
-    );
-    await userEvent.click(
-      within(dialog()).getByRole("button", { name: "High pull" }),
+      within(dialog()).getByRole("button", { name: "Cancel own reason" }),
     );
     expect(
+      within(dialog()).queryByRole("textbox", { name: "Own reason" }),
+    ).toBeNull();
+    expect(ownReasonTags()).toEqual([]);
+    await userEvent.click(
       within(dialog()).getByRole("button", { name: "Add own reason" }),
-    ).toBeTruthy();
+    );
+    await userEvent.type(
+      within(dialog()).getByRole("textbox", { name: "Own reason" }),
+      "A, B,",
+    );
+    expect(ownReasonTags()).toEqual(["A", "B"]);
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Remove own reason: A" }),
+    );
+    expect(ownReasonTags()).toEqual(["B"]);
+  });
+
+  it("prefills a new choice from the same exercise in another block", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(macrocycle), { status: 200 }),
+    );
+    const chosen = {
+      ...macrocycle,
+      mesocycles: mesocycles(
+        [],
+        [
+          {
+            exerciseNumber: 7,
+            variation: "From blocks",
+            tags: ["Hoher Zug"],
+            ownReasons: ["Technique"],
+          },
+        ],
+      ),
+    } as unknown as Macrocycle;
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <ExerciseSelection macrocycle={chosen} catalog={catalog} />
+      </NextIntlClientProvider>,
+    );
+    await open("Power snatch, Special preparation block: choose");
+    expect(
+      within(dialog())
+        .getByRole("button", { name: "High pull" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(ownReasonTags()).toEqual(["Technique"]);
+    expect(
+      (within(dialog()).getByLabelText(/Variation/) as HTMLInputElement).value,
+    ).toBe("From blocks");
+    // Still a new choice: nothing saved yet, "Choose exercise" and no "Remove".
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(
+      within(dialog()).queryByRole("button", { name: "Remove" }),
+    ).toBeNull();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Choose exercise" }),
+    );
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toContain("/mesocycles/special_preparation/exercises/7");
+    expect(JSON.parse(init.body)).toEqual({
+      tags: ["Hoher Zug"],
+      ownReasons: ["Technique"],
+      variation: "From blocks",
+    });
+  });
+
+  it("has no hint text under the reason", async () => {
+    renderIt();
+    await open("Power snatch, Special preparation block: choose");
+    const fieldset = within(dialog()).getByRole("group", { name: "Reason" });
+    expect(fieldset.querySelector("p")).toBeNull();
   });
 
   it("requires a tag or an own reason", async () => {

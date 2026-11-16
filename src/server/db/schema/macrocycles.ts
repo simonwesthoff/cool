@@ -112,8 +112,8 @@ export const mesocycleExercise = pgTable(
     variation: text("variation"),
     /** Reason: keys of tags the exercise addresses (see exercise_tag). */
     tags: text("tags").array().notNull(),
-    /** Reason: optional free-text note. */
-    note: text("note"),
+    /** Reason: the coach's own reasons (free texts). */
+    ownReasons: text("own_reasons").array().notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.mesocycleId, table.exerciseNumber] }),

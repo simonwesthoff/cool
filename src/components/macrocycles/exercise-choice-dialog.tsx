@@ -14,6 +14,8 @@ export type ChoiceTarget = {
   type: MesocycleType;
   /** The current choice; null when the exercise is not chosen yet. */
   choice: MesocycleExercise | null;
+  /** For a new choice: the same exercise in another block, to start from. */
+  prefill?: MesocycleExercise | null;
 };
 
 export type Deficits = Pick<
@@ -23,7 +25,7 @@ export type Deficits = Pick<
 
 export type ChoiceInput = {
   tags: string[];
-  note: string | null;
+  ownReasons: string[];
   variation: string | null;
 };
 
@@ -37,7 +39,8 @@ type Props = {
   onClose: () => void;
 };
 
-const NOTE_MAX = 500;
+const OWN_REASON_MAX = 200;
+const OWN_REASONS_MAX = 10;
 const PRESSED = "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900";
 const UNPRESSED =
   "border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900";
@@ -119,14 +122,16 @@ function ChoiceForm({
   const locale = useLocale();
   const variationId = useId();
   const reasonErrorId = useId();
-  const reasonHintId = useId();
   const hintId = useId();
   const { exercise, type, choice } = target;
-  const [tags, setTags] = useState<string[]>(choice?.tags ?? []);
-  // The own reason (free text); edited in a field that "+" opens.
-  const [note, setNote] = useState(choice?.note ?? "");
-  const [editingNote, setEditingNote] = useState(false);
-  const [variation, setVariation] = useState(choice?.variation ?? "");
+  const start = choice ?? target.prefill ?? null;
+  const [tags, setTags] = useState<string[]>(start?.tags ?? []);
+  const [ownReasons, setOwnReasons] = useState<string[]>(
+    start?.ownReasons ?? [],
+  );
+  // Text of the own reason field that "+" opens; null while it is closed.
+  const [draft, setDraft] = useState<string | null>(null);
+  const [variation, setVariation] = useState(start?.variation ?? "");
   const [reasonError, setReasonError] = useState(false);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -154,22 +159,41 @@ function ChoiceForm({
     );
   }
 
-  function finishNote() {
-    setNote((current) => current.trim());
-    setEditingNote(false);
+  /** Own reasons with new texts added (trimmed, no empty ones or duplicates). */
+  function withOwnReasons(current: string[], texts: string[]): string[] {
+    const next = [...current];
+    for (const text of texts.map((t) => t.trim())) {
+      if (text && !next.includes(text) && next.length < OWN_REASONS_MAX)
+        next.push(text);
+    }
+    return next;
+  }
+
+  /** A comma adds the text before it and keeps the field open for the next one. */
+  function changeDraft(value: string) {
+    setReasonError(false);
+    const parts = value.split(",");
+    const rest = parts.pop()!;
+    if (parts.length > 0)
+      setOwnReasons((current) => withOwnReasons(current, parts));
+    setDraft(rest);
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (tags.length === 0 && note.trim().length === 0) {
+    // Text still in the field counts as an own reason.
+    const reasons = withOwnReasons(ownReasons, [draft ?? ""]);
+    if (tags.length === 0 && reasons.length === 0) {
       setReasonError(true);
       return;
     }
+    setOwnReasons(reasons);
+    setDraft(null);
     setFailed(false);
     setBusy(true);
     const ok = await onSave({
       tags,
-      note: note.trim() || null,
+      ownReasons: reasons,
       variation: variation.trim() || null,
     });
     setBusy(false);
@@ -237,16 +261,9 @@ function ChoiceForm({
         )}
         <fieldset
           className="flex flex-col gap-2"
-          aria-describedby={
-            reasonError ? `${reasonHintId} ${reasonErrorId}` : reasonHintId
-          }
+          aria-describedby={reasonError ? reasonErrorId : undefined}
         >
           <legend className="text-sm font-medium">{t("reason")}</legend>
-          <p id={reasonHintId} className="text-xs text-zinc-500">
-            {exercise.addresses.length > 0
-              ? t("reasonHint")
-              : t("reasonHintNoTags")}
-          </p>
           <div className="flex flex-wrap items-center gap-2">
             {exercise.addresses.map((tag) => {
               const pressed = tags.includes(tag.key);
@@ -265,52 +282,78 @@ function ChoiceForm({
                 </button>
               );
             })}
-            {editingNote ? (
-              <input
-                // Opened by the user's tap on "+" or on the own reason.
-                autoFocus
-                value={note}
-                maxLength={NOTE_MAX}
-                aria-label={t("ownReason")}
-                placeholder={t("ownReasonPlaceholder")}
-                aria-invalid={reasonError ? true : undefined}
-                onChange={(event) => {
-                  setReasonError(false);
-                  setNote(event.target.value);
-                }}
-                onBlur={finishNote}
-                onKeyDown={(event) => {
-                  // Enter confirms the own reason instead of saving the dialog.
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    finishNote();
-                  }
-                }}
-                className="min-h-9 min-w-0 flex-1 basis-48 rounded-full border border-zinc-400 bg-transparent px-3 text-sm dark:border-zinc-600"
-              />
-            ) : note ? (
-              <button
-                type="button"
-                aria-pressed
-                aria-label={t("ownReasonEdit", { reason: note })}
-                onClick={() => setEditingNote(true)}
-                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-left text-sm ${PRESSED}`}
+            {ownReasons.map((reason) => (
+              <span
+                key={reason}
+                data-own-reason={reason}
+                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full pr-1 pl-3 text-sm ${PRESSED}`}
               >
                 <CheckIcon />
-                <span className="break-words">{note}</span>
-              </button>
+                <span className="break-words">{reason}</span>
+                <button
+                  type="button"
+                  aria-label={t("ownReasonRemove", { reason })}
+                  onClick={() =>
+                    setOwnReasons((current) =>
+                      current.filter((r) => r !== reason),
+                    )
+                  }
+                  className="inline-flex size-7 items-center justify-center rounded-full hover:bg-white/20 dark:hover:bg-black/10"
+                >
+                  <CrossIcon />
+                </button>
+              </span>
+            ))}
+            {draft !== null ? (
+              <span className="inline-flex min-w-0 flex-1 basis-56 items-center gap-1">
+                <input
+                  // Opened by the user's tap on "+".
+                  autoFocus
+                  value={draft}
+                  maxLength={OWN_REASON_MAX}
+                  aria-label={t("ownReason")}
+                  placeholder={t("ownReasonPlaceholder")}
+                  aria-invalid={reasonError ? true : undefined}
+                  onChange={(event) => changeDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    // Enter adds the reason instead of saving the dialog.
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      setOwnReasons((current) =>
+                        withOwnReasons(current, [draft]),
+                      );
+                      setDraft(null);
+                    } else if (event.key === "Escape") {
+                      // Escape cancels the field, not the whole dialog.
+                      event.preventDefault();
+                      setDraft(null);
+                    }
+                  }}
+                  className="min-h-9 min-w-0 flex-1 rounded-full border border-zinc-400 bg-transparent px-3 text-sm dark:border-zinc-600"
+                />
+                <button
+                  type="button"
+                  aria-label={t("ownReasonCancel")}
+                  onClick={() => setDraft(null)}
+                  className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full ${UNPRESSED}`}
+                >
+                  <CrossIcon />
+                </button>
+              </span>
             ) : (
-              <button
-                type="button"
-                aria-label={t("ownReasonAdd")}
-                onClick={() => {
-                  setReasonError(false);
-                  setEditingNote(true);
-                }}
-                className={`inline-flex size-9 items-center justify-center rounded-full ${UNPRESSED}`}
-              >
-                <PlusIcon />
-              </button>
+              ownReasons.length < OWN_REASONS_MAX && (
+                <button
+                  type="button"
+                  aria-label={t("ownReasonAdd")}
+                  onClick={() => {
+                    setReasonError(false);
+                    setDraft("");
+                  }}
+                  className={`inline-flex size-9 items-center justify-center rounded-full ${UNPRESSED}`}
+                >
+                  <PlusIcon />
+                </button>
+              )
             )}
           </div>
           {reasonError && (
@@ -404,6 +447,22 @@ function PlusIcon() {
       aria-hidden="true"
     >
       <path d="M8 3v10M3 8h10" />
+    </svg>
+  );
+}
+
+function CrossIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="size-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M4 4l8 8M12 4l-8 8" />
     </svg>
   );
 }

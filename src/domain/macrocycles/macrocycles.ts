@@ -146,7 +146,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
           number: mesocycleExercise.exerciseNumber,
           variation: mesocycleExercise.variation,
           tags: mesocycleExercise.tags,
-          note: mesocycleExercise.note,
+          ownReasons: mesocycleExercise.ownReasons,
         })
         .from(mesocycleExercise)
         .where(
@@ -187,7 +187,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
         exerciseNumber: c.number,
         variation: c.variation,
         tags: c.tags,
-        note: c.note,
+        ownReasons: c.ownReasons,
       })),
     };
   });
@@ -407,11 +407,24 @@ const choiceSchema = z
         choiceCode("DUPLICATE"),
       )
       .default([]),
-    note: optionalText(500),
+    ownReasons: z
+      .array(
+        z
+          .string()
+          .trim()
+          .refine((v) => v.length > 0, choiceCode("REQUIRED"))
+          .refine((v) => v.length <= 200, choiceCode("TOO_LONG")),
+      )
+      .max(10)
+      .refine(
+        (list) => new Set(list).size === list.length,
+        choiceCode("DUPLICATE"),
+      )
+      .default([]),
     variation: optionalText(200),
   })
   // The reason is the tags and/or the note: at least one is required.
-  .refine((v) => v.tags.length > 0 || v.note !== null, {
+  .refine((v) => v.tags.length > 0 || v.ownReasons.length > 0, {
     path: ["reason"],
     params: { code: "REQUIRED" },
   });
@@ -447,7 +460,7 @@ function exerciseNumberOf(value: string): number {
 
 /**
  * Step 3: choose one exercise for a mesocycle, or change its variation and
- * reason. The reason (tags the exercise addresses and/or a note) is
+ * reason. The reason (tags the exercise addresses and/or own reasons) is
  * required; the variation is information only.
  */
 export async function setMesocycleExercise(
@@ -459,7 +472,7 @@ export async function setMesocycleExercise(
 ): Promise<Macrocycle> {
   const mesocycleId = await findMesocycle(coach, athleteId, type);
   const exerciseNumber = exerciseNumberOf(exerciseNumberParam);
-  const { tags, note, variation } = parseInput(choiceSchema, input);
+  const { tags, ownReasons, variation } = parseInput(choiceSchema, input);
   const [known] = await getDb()
     .select({ number: exercise.number })
     .from(exercise)
@@ -475,7 +488,7 @@ export async function setMesocycleExercise(
       throw new DomainValidationError({ tags: ["UNKNOWN_TAG"] });
     }
   }
-  const values = { tags, note, variation };
+  const values = { tags, ownReasons, variation };
   await getDb()
     .insert(mesocycleExercise)
     .values({ mesocycleId, exerciseNumber, ...values })

@@ -50,6 +50,11 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
   const [choices, setChoices] = useState<Choices>(() => choicesOf(macrocycle));
   const [target, setTarget] = useState<ChoiceTarget | null>(null);
   const base = `/athletes/${macrocycle.athleteId}`;
+  /** The same exercise in the first block (GPB, SPB, CPB) that has it. */
+  const chosenElsewhere = (number: number) =>
+    macrocycle.mesocycles
+      .map((m) => choices[m.type].find((c) => c.exerciseNumber === number))
+      .find((c) => c !== undefined) ?? null;
   const api = (cell: ChoiceTarget) =>
     `/api/athletes/${macrocycle.athleteId}/macrocycle/mesocycles/${cell.type}/exercises/${cell.exercise.number}`;
 
@@ -185,7 +190,14 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
                                 })
                           }
                           onOpen={() =>
-                            setTarget({ exercise, type: m.type, choice })
+                            setTarget({
+                              exercise,
+                              type: m.type,
+                              choice,
+                              prefill: choice
+                                ? null
+                                : chosenElsewhere(exercise.number),
+                            })
                           }
                         />
                       </td>
@@ -250,7 +262,9 @@ function ChoiceCell({
 }) {
   const t = useTranslations("Macrocycle.exercises");
   const missingReason =
-    choice !== null && choice.tags.length === 0 && !choice.note;
+    choice !== null &&
+    choice.tags.length === 0 &&
+    choice.ownReasons.length === 0;
   return (
     <button
       type="button"

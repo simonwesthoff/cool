@@ -92,6 +92,20 @@
       "when": 1794862186736,
       "tag": "0012_exercise_catalog_data",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794866860310,
+      "tag": "0013_own_reasons",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794866860676,
+      "tag": "0014_drop_note",
+      "breakpoints": true
     }
   ]
 }

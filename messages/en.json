@@ -281,14 +281,13 @@
       "remove": "Remove",
       "cancel": "Cancel",
       "notEntered": "Not entered yet",
-      "reasonHint": "Tap what this exercise should address; with + you can add your own reason.",
-      "reasonHintNoTags": "The catalog lists no addressed points for this exercise; add your own reason with +.",
       "ownReason": "Own reason",
       "ownReasonPlaceholder": "Your reason",
       "ownReasonAdd": "Add own reason",
-      "ownReasonEdit": "Own reason: {reason}. Edit",
       "total": "Total",
-      "deficitsLabel": "Athlete's deficits"
+      "deficitsLabel": "Athlete's deficits",
+      "ownReasonRemove": "Remove own reason: {reason}",
+      "ownReasonCancel": "Cancel own reason"
     }
   }
 }

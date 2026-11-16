@@ -58,8 +58,8 @@ export type MesocycleExercise = {
   variation: string | null;
   /** Reason: keys (German names) of tags the exercise addresses. */
   tags: string[];
-  /** Reason: optional note. A reason has at least one tag or a note. */
-  note: string | null;
+  /** Reason: the coach's own reasons. A reason has at least one tag or own reason. */
+  ownReasons: string[];
 };
 
 export type MesocycleView = {
