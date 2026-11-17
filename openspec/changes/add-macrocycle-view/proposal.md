@@ -32,8 +32,11 @@ athlete cannot see it at all.
 - **App-wide mesocycle colours** (user decision): general preparation
   #6f3ab1, special preparation #ba2db3, competition preparation #d7f212,
   in the planning chart, the exercise table and the view.
-- **Athlete details page:** the planned macrocycle links to the view; "Plan
-  macrocycle" and "Change planning" stay.
+- **One athlete page** (user decision): the athlete details page looks like
+  "My training" and uses the same component: picture, name and coach on top,
+  then a macrocycle card (period, competition) that opens the view. The
+  coach also gets the back link, "Plan macrocycle" and "Basic data";
+  "Change planning" moves into the view.
 - **Read access:** the linked athlete may read the macrocycle (page and
   `GET` API); creating and changing it stays coach-only.
 - **API:** a new endpoint returns an exercise's planned values for every
@@ -61,9 +64,10 @@ Out of scope:
     athlete read the macrocycle (writes stay coach-only).
   - "Intensity chart with week handles" uses the new mesocycle colours.
   - A new requirement fixes the mesocycle colours app-wide.
-- `athlete-details`: "Macrocycle entry point" links a planned macrocycle to
-  the new view.
-- `user-roles`: "Athlete view" links to the athlete's macrocycle view.
+- `athlete-details`: "Athlete details header" and "Macrocycle entry point"
+  follow the shared athlete page; the macrocycle card opens the new view.
+- `user-roles`: "Athlete view" shows the macrocycle card that opens the
+  athlete's macrocycle view.
 
 ## Impact
 

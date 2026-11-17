@@ -109,26 +109,20 @@
       "failed": "Something went wrong. Please try again."
     }
   },
-  "Training": {
+  "AthleteHome": {
     "pictureAlt": "Profile picture of {name}",
     "coach": "Coach: {name}",
     "placeholder": "Your training plan will appear here.",
+    "placeholderCoach": "The training plan will appear here.",
+    "sections": "Training",
     "macrocycle": "Macrocycle",
-    "macrocycleOpen": "Open your macrocycle"
-  },
-  "AthleteDetails": {
-    "back": "Back to athletes",
+    "macrocycleOpen": "Open macrocycle",
+    "period": "{start} – {end}",
+    "competition": "{type}, {date}",
+    "plan": "Plan macrocycle",
+    "notPlanned": "No macrocycle planned yet.",
     "basicData": "Basic data",
-    "pictureAlt": "Profile picture of {name}",
-    "macrocycle": {
-      "title": "Macrocycle",
-      "none": "No macrocycle planned yet.",
-      "plan": "Plan macrocycle",
-      "period": "{start} – {end} ({weeks} weeks)",
-      "competition": "Main competition: {type} on {date}",
-      "change": "Change planning",
-      "open": "Open macrocycle"
-    }
+    "back": "Back to athletes"
   },
   "Catalog": {
     "title": "Exercises",

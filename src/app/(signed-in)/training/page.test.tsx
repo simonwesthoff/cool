@@ -14,11 +14,6 @@ vi.mock("next/navigation", () => ({
     throw new Redirect(url);
   },
 }));
-vi.mock("next-intl/server", () => ({
-  getTranslations:
-    async () => (key: string, values?: Record<string, string>) =>
-      values ? `${key}:${Object.values(values).join(",")}` : key,
-}));
 
 const { Training } = await import("./page");
 const user = { id: "u1", name: "Anna", email: "a@b.c", image: null };
@@ -47,17 +42,17 @@ describe("athlete view", () => {
     });
     findMacrocycle.mockResolvedValue(null);
     const element = await Training();
-    const text = JSON.stringify(element);
-    expect(text).toContain("Anna Weber");
-    expect(text).toContain("coach:Max Berg");
-    expect(
-      (
-        [element.props.children].flat(3) as { props?: { href?: string } }[]
-      ).some((c) => c?.props?.href === "/training/macrocycle"),
-    ).toBe(false);
+    expect(element.props).toEqual({
+      viewer: "athlete",
+      athleteId: "a1",
+      name: "Anna Weber",
+      image: null,
+      coachName: "Max Berg",
+      macrocycle: null,
+    });
   });
 
-  it("links to the own macrocycle when one is planned", async () => {
+  it("passes the own macrocycle when one is planned", async () => {
     requirePageRoles.mockResolvedValue({
       user,
       roles: {
@@ -72,12 +67,7 @@ describe("athlete view", () => {
     });
     findMacrocycle.mockResolvedValue({ athleteId: "a1" });
     const element = await Training();
-    const children = [element.props.children].flat(3) as {
-      props?: { href?: string };
-    }[];
-    expect(
-      children.some((c) => c?.props?.href === "/training/macrocycle"),
-    ).toBe(true);
+    expect(element.props.macrocycle).toEqual({ athleteId: "a1" });
     expect(findMacrocycle).toHaveBeenCalledWith(user, "a1");
   });
 });

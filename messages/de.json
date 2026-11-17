@@ -109,26 +109,20 @@
       "failed": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
     }
   },
-  "Training": {
+  "AthleteHome": {
     "pictureAlt": "Profilbild von {name}",
     "coach": "Trainer: {name}",
     "placeholder": "Hier erscheint bald dein Trainingsplan.",
+    "placeholderCoach": "Hier erscheint bald der Trainingsplan.",
+    "sections": "Training",
     "macrocycle": "Makrozyklus",
-    "macrocycleOpen": "Deinen Makrozyklus öffnen"
-  },
-  "AthleteDetails": {
-    "back": "Zurück zu den Athleten",
+    "macrocycleOpen": "Makrozyklus öffnen",
+    "period": "{start} – {end}",
+    "competition": "{type}, {date}",
+    "plan": "Makrozyklus planen",
+    "notPlanned": "Noch kein Makrozyklus geplant.",
     "basicData": "Stammdaten",
-    "pictureAlt": "Profilbild von {name}",
-    "macrocycle": {
-      "title": "Makrozyklus",
-      "none": "Noch kein Makrozyklus geplant.",
-      "plan": "Makrozyklus planen",
-      "period": "{start} – {end} ({weeks} Wochen)",
-      "competition": "Hauptwettkampf: {type} am {date}",
-      "change": "Planung ändern",
-      "open": "Makrozyklus öffnen"
-    }
+    "back": "Zurück zu den Athleten"
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",
