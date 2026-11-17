@@ -5,6 +5,7 @@ import { ExerciseSelection } from "@/components/macrocycles/exercise-selection";
 import { getCatalog } from "@/domain/exercises";
 import { PlanningHeader } from "../planning-header";
 import { loadPlanning } from "../shared";
+import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]/macrocycle/exercises">["params"];
 
@@ -13,11 +14,11 @@ export default function ExercisesStepPage({
   params,
 }: PageProps<"/athletes/[id]/macrocycle/exercises">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-4 pb-24 sm:px-8">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <ExercisesStep params={params} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

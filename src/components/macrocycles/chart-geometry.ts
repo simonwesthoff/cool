@@ -59,3 +59,47 @@ export function labelEvery(columnWidth: number): number {
 export function fitsLabel(label: string, bandWidth: number): boolean {
   return label.length * 6.2 + 8 <= bandWidth;
 }
+
+/** A clean step (1, 2 or 5 × 10^k) giving about `count` intervals. */
+export function niceStep(range: number, count = 5): number {
+  const raw = Math.max(range, 1) / count;
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const factor = [1, 2, 5, 10].find((f) => f * power >= raw) ?? 10;
+  return factor * power;
+}
+
+/**
+ * Axis from a clean step below `min` (or from 0) to a clean step above `max`,
+ * with its ticks. Without values the axis is 0–10.
+ */
+export function niceDomain(
+  values: number[],
+  options: { fromZero?: boolean } = {},
+): { min: number; max: number; ticks: number[] } {
+  if (values.length === 0) return { min: 0, max: 10, ticks: [0, 5, 10] };
+  const low = options.fromZero ? 0 : Math.min(...values);
+  const high = Math.max(...values);
+  const step = niceStep(high - low || high || 1);
+  const min = options.fromZero
+    ? 0
+    : Math.max(0, Math.floor(low / step) * step - step);
+  const max = Math.ceil(high / step) * step + (high % step === 0 ? step : 0);
+  const ticks: number[] = [];
+  for (let v = min; v <= max + 1e-9; v += step)
+    ticks.push(Math.round(v * 1000) / 1000);
+  return { min, max, ticks };
+}
+
+/** Index of the week containing `today` (YYYY-MM-DD), or null outside the cycle. */
+export function currentWeekIndex(
+  startDate: string,
+  weekCount: number,
+  today: string,
+): number | null {
+  const days =
+    (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) /
+    86_400_000;
+  if (Number.isNaN(days) || days < 0) return null;
+  const index = Math.floor(days / 7);
+  return index < weekCount ? index : null;
+}

@@ -101,3 +101,12 @@ describe("localized", () => {
     expect(localized({ de: "Reißen", en: "Snatch" }, "en")).toBe("Snatch");
   });
 });
+
+describe("getExercisesWithValues", () => {
+  it("returns exercises 1 to 29, the ones with reference values", async () => {
+    const { getExercisesWithValues } = await import("./index");
+    expect((await getExercisesWithValues()).map((e) => e.number)).toEqual(
+      Array.from({ length: 29 }, (_, i) => i + 1),
+    );
+  });
+});

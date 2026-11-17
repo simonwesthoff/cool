@@ -2,7 +2,7 @@ import { and, asc, eq, gt, inArray } from "drizzle-orm";
 import { findAthleteInTeam } from "@/domain/athletes";
 import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
-import { requireCoachTeam } from "@/domain/roles";
+import { getRoles, requireCoachTeam } from "@/domain/roles";
 import { DomainValidationError, parseInput } from "@/domain/validation";
 import { z } from "zod";
 import { getDb } from "@/server/db";
@@ -37,6 +37,7 @@ import {
   type WeekLevel,
 } from "./calculation";
 import type {
+  ExerciseWeeks,
   Macrocycle,
   MacrocycleBaseData,
   MacrocycleWeekView,
@@ -49,6 +50,18 @@ async function requireOwnAthlete(coach: CurrentUser, athleteId: string) {
   const found = await findAthleteInTeam(teamId, athleteId);
   if (!found) throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
   return found;
+}
+
+/**
+ * Read access: the coach of the athlete's Team or the user linked to the
+ * Athlete. Everyone else gets `ATHLETE_NOT_FOUND`, as for writes.
+ */
+async function requireViewableAthlete(user: CurrentUser, athleteId: string) {
+  const roles = await getRoles(user);
+  if (roles.athlete?.athleteId === athleteId) return;
+  if (roles.coach && (await findAthleteInTeam(roles.coach.teamId, athleteId)))
+    return;
+  throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
 }
 
 async function findMacrocycleRow(athleteId: string) {
@@ -101,12 +114,15 @@ function baseDataOf(row: BaseRow): MacrocycleBaseData {
   };
 }
 
-/** The athlete's macrocycle with all calculated weekly values. */
+/**
+ * The athlete's macrocycle with all calculated weekly values, for the coach
+ * of the athlete's Team or the user linked to the Athlete.
+ */
 export async function getMacrocycle(
-  coach: CurrentUser,
+  user: CurrentUser,
   athleteId: string,
 ): Promise<Macrocycle> {
-  await requireOwnAthlete(coach, athleteId);
+  await requireViewableAthlete(user, athleteId);
   const row = await findMacrocycleRow(athleteId);
   if (!row) throw notFound();
   return loadMacrocycle(row);
@@ -114,12 +130,66 @@ export async function getMacrocycle(
 
 /** Like `getMacrocycle`, but null when the athlete has none. */
 export async function findMacrocycle(
-  coach: CurrentUser,
+  user: CurrentUser,
   athleteId: string,
 ): Promise<Macrocycle | null> {
-  await requireOwnAthlete(coach, athleteId);
+  await requireViewableAthlete(user, athleteId);
   const row = await findMacrocycleRow(athleteId);
   return row ? loadMacrocycle(row) : null;
+}
+
+/**
+ * One exercise's planned values for every week of the athlete's macrocycle,
+ * independent of the exercises chosen for the mesocycles (macrocycle view).
+ */
+export async function getExerciseWeeks(
+  user: CurrentUser,
+  athleteId: string,
+  exerciseNumberParam: string,
+): Promise<ExerciseWeeks> {
+  await requireViewableAthlete(user, athleteId);
+  const number = Number(exerciseNumberParam);
+  if (!Number.isInteger(number) || number < 1 || number > 32767)
+    throw new DomainError("not_found", "EXERCISE_NOT_FOUND");
+  const row = await findMacrocycleRow(athleteId);
+  if (!row) throw notFound();
+  const db = getDb();
+  const [[e], weeks] = await Promise.all([
+    db.select().from(exercise).where(eq(exercise.number, number)),
+    db
+      .select({
+        number: macrocycleWeek.weekNumber,
+        level: macrocycleWeek.level,
+      })
+      .from(macrocycleWeek)
+      .where(eq(macrocycleWeek.macrocycleId, row.id))
+      .orderBy(asc(macrocycleWeek.weekNumber)),
+  ]);
+  if (!e) throw new DomainError("not_found", "EXERCISE_NOT_FOUND");
+  const values: ExerciseValues = {
+    referenceLift: e.referenceLift,
+    bestValuePct: e.bestValuePct,
+    maxWeeklyAverageWeightPct: e.maxWeeklyAverageWeightPct,
+    repsPerSet: { min: e.minRepsPerSet, max: e.maxRepsPerSet },
+    repsPerWeek: { min: e.minRepsPerWeek, max: e.maxRepsPerWeek },
+  };
+  const goals = {
+    snatchGoalKg: row.snatchGoalKg,
+    cleanAndJerkGoalKg: row.cleanAndJerkGoalKg,
+  };
+  return {
+    exerciseNumber: number,
+    weeks: weeks.map((week) => ({
+      number: week.number,
+      ...plannedExercise(
+        values,
+        goals,
+        row.entryValuePct / 100,
+        cycleProgress(week.number, row.durationWeeks),
+        week.level,
+      ),
+    })),
+  };
 }
 
 async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {

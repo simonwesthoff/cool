@@ -265,7 +265,7 @@ describe("week positions and colours", () => {
     expect(numbers).toEqual(expect.arrayContaining([1, 4, 14]));
   });
 
-  it("colours the bands with the app palette", () => {
+  it("colours the bands with the palette and draws the intensity white", () => {
     const { container } = renderIn(
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
     );
@@ -277,6 +277,11 @@ describe("week positions and colours", () => {
       "var(--band-2)",
       "var(--band-3)",
     ]);
+    expect(
+      container.querySelector("[data-intensity-line]")!.getAttribute("class"),
+    ).toBe("stroke-white");
+    const dot = pointOf(container, 4).querySelectorAll("circle")[1]!;
+    expect(dot.getAttribute("class")).toBe("fill-white");
   });
 });
 
@@ -528,7 +533,7 @@ describe("main competition marker", () => {
       "Main competition: German Championships, Apr 24, 2027",
     );
     // Saturday of week 21 = day 145.
-    const line = marker.querySelectorAll("line")[1]!;
+    const line = marker.querySelector("line")!;
     expect(Number(line.getAttribute("x1"))).toBeCloseTo(xOfDay(145), 5);
     const text = marker.querySelector("text")!;
     expect(text.textContent).toBe("German Championships · Apr 24, 2027");

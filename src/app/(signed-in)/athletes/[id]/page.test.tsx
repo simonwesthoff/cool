@@ -3,8 +3,8 @@ import { DomainError } from "@/domain/errors";
 
 const getAthlete = vi.fn();
 vi.mock("@/domain/athletes", () => ({ getAthlete }));
-const findMacrocycle = vi.fn();
-vi.mock("@/domain/macrocycles", () => ({ findMacrocycle }));
+const loadMacrocycleChart = vi.fn();
+vi.mock("../../macrocycle-view/load", () => ({ loadMacrocycleChart }));
 const requireCoachPage = vi.fn();
 vi.mock("../../current-user", () => ({ requireCoachPage }));
 class NotFound extends Error {}
@@ -30,20 +30,25 @@ const coach = {
 };
 
 describe("athlete details page", () => {
-  it("renders the header for the coach's athlete", async () => {
+  it("shows the athlete's page from the coach's side", async () => {
     requireCoachPage.mockResolvedValue(coach);
     getAthlete.mockResolvedValue({
       id: "a1",
       name: "Anna Weber",
-      linkedAccount: null,
+      linkedAccount: { email: "a@w.invalid", image: "https://img/a.png" },
     });
-    findMacrocycle.mockResolvedValue(null);
+    loadMacrocycleChart.mockResolvedValue(null);
     const element = await AthleteDetails({ params });
-    const [header, section] = element.props.children;
-    expect(header.props.athlete).toMatchObject({ name: "Anna Weber" });
-    expect(section.props).toEqual({ athleteId: "a1", macrocycle: null });
+    expect(element.props).toEqual({
+      viewer: "coach",
+      athleteId: "a1",
+      name: "Anna Weber",
+      image: "https://img/a.png",
+      coachName: "Max",
+      macrocycle: null,
+    });
     expect(getAthlete).toHaveBeenCalledWith(coach.user, "a1");
-    expect(findMacrocycle).toHaveBeenCalledWith(coach.user, "a1");
+    expect(loadMacrocycleChart).toHaveBeenCalledWith(coach.user, "a1");
   });
 
   it("shows not found for an athlete of another Team", async () => {

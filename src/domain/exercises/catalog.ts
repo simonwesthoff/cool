@@ -101,3 +101,18 @@ export async function getExercise(
     },
   };
 }
+
+/**
+ * Exercises with reference values (a best value and reps per week), in
+ * catalog order: those whose planned values can be shown (exercises 1–29).
+ */
+export async function getExercisesWithValues(): Promise<Exercise[]> {
+  return (await getCatalog())
+    .flatMap((group) => group.exercises)
+    .filter(
+      (e) =>
+        e.bestValuePct !== null &&
+        e.repsPerWeek.min !== null &&
+        e.repsPerWeek.max !== null,
+    );
+}

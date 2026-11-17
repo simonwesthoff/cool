@@ -2,18 +2,27 @@ import { Suspense } from "react";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { InvitationLinkForm } from "@/components/roles/invitation-link-form";
 import { requirePageUser } from "../../current-user";
+import { BackLink } from "@/components/back-link";
+import { getTranslations } from "next-intl/server";
+import { PageMain } from "@/components/page-main";
 
 export default function StartAthletePage() {
   return (
-    <main className="flex w-full flex-1 flex-col px-4 pb-24">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <StartAthlete />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 
 async function StartAthlete() {
   await requirePageUser("/start/athlete");
-  return <InvitationLinkForm />;
+  const tb = await getTranslations("Back");
+  return (
+    <div className="flex flex-col gap-4">
+      <BackLink href="/" label={tb("start")} />
+      <InvitationLinkForm />
+    </div>
+  );
 }

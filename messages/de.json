@@ -109,23 +109,16 @@
       "failed": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
     }
   },
-  "Training": {
+  "AthleteHome": {
     "pictureAlt": "Profilbild von {name}",
     "coach": "Trainer: {name}",
-    "placeholder": "Hier erscheint bald dein Trainingsplan."
-  },
-  "AthleteDetails": {
-    "back": "Zurück zu den Athleten",
-    "basicData": "Stammdaten",
-    "pictureAlt": "Profilbild von {name}",
-    "macrocycle": {
-      "title": "Makrozyklus",
-      "none": "Noch kein Makrozyklus geplant.",
-      "plan": "Makrozyklus planen",
-      "period": "{start} – {end} ({weeks} Wochen)",
-      "competition": "Hauptwettkampf: {type} am {date}",
-      "change": "Planung ändern"
-    }
+    "placeholder": "Hier erscheint bald dein Trainingsplan.",
+    "placeholderCoach": "Hier erscheint bald der Trainingsplan.",
+    "macrocycle": "Makrozyklus",
+    "macrocycleOpen": "Zum Makrozyklus",
+    "plan": "Makrozyklus planen",
+    "notPlanned": "Noch kein Makrozyklus geplant.",
+    "editBasicData": "Stammdaten bearbeiten"
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",
@@ -148,6 +141,13 @@
     "athletes": "Athleten",
     "training": "Mein Training",
     "exercises": "Übungen"
+  },
+  "Back": {
+    "athletes": "Zurück zu den Athleten",
+    "athlete": "Zurück zu {name}",
+    "macrocycle": "Zurück zum Makrozyklus",
+    "training": "Zurück zu Mein Training",
+    "start": "Zurück zur Startseite"
   },
   "Macrocycle": {
     "title": "Makrozyklusplanung",
@@ -289,5 +289,54 @@
       "ownReasonRemove": "Eigene Begründung entfernen: {reason}",
       "ownReasonCancel": "Eigene Begründung verwerfen"
     }
+  },
+  "MacrocycleView": {
+    "chart": {
+      "caption": "{value} der Übung je Woche",
+      "legend": "Legende",
+      "series": {
+        "bestKg": "Bestwert (kg)",
+        "averageKg": "Mittleres Hantelgewicht (kg)",
+        "setSize": "Seriengröße",
+        "weeklyReps": "Wochenwiederholungen"
+      },
+      "competition": "Hauptwettkampf",
+      "currentWeek": "Aktuelle Woche",
+      "none": "–",
+      "kg": "{value} kg",
+      "tooltipWeek": "Woche {week} ab {date}",
+      "tooltip": {
+        "bestKg": "Bestwert: {value}",
+        "averageKg": "MHG: {value}",
+        "setSize": "Seriengröße: {value}",
+        "weeklyReps": "Wochenwdh.: {value}"
+      }
+    },
+    "title": "Makrozyklus",
+    "chartTitle": "Geplante Werte",
+    "exercise": "Übung",
+    "exerciseOption": "{number} {name}",
+    "loadFailed": "Die Werte konnten nicht geladen werden. Bitte versuche es erneut.",
+    "change": "Planung ändern",
+    "notPlanned": "Dein Trainer hat noch keinen Makrozyklus geplant.",
+    "summary": {
+      "focusPoints": "Schwerpunkte",
+      "noFocusPoints": "Noch keine Schwerpunkte eingetragen.",
+      "position": "{position}.",
+      "plan": "Neue Makrozyklusplanung",
+      "kg": "{value} kg",
+      "period": "Zeitraum",
+      "periodValue": "{start} – {end}",
+      "duration": "Dauer",
+      "weeks": "{count, plural, one {# Woche} other {# Wochen}}",
+      "competition": "Hauptwettkampf",
+      "competitionValue": "{type}, {date}",
+      "entryValue": "Einstiegswert",
+      "snatchGoal": "Zielleistung Reißen",
+      "cleanAndJerkGoal": "Zielleistung Stoßen",
+      "targetBodyWeight": "Zielkörpergewicht",
+      "trainingFrequency": "Trainingseinheiten pro Woche"
+    },
+    "value": "Wert"
   }
 }

@@ -71,7 +71,8 @@ them in the SWOT step.
 
 ### Requirement: One macrocycle per athlete
 An athlete SHALL have at most one macrocycle. Only the coach of the
-athlete's Team SHALL create, see or change it.
+athlete's Team SHALL create or change it; the coach and the user linked to
+the Athlete SHALL see it.
 
 #### Scenario: Plan an athlete without a macrocycle
 - **GIVEN** an athlete of the coach's Team without a macrocycle
@@ -81,6 +82,11 @@ athlete's Team SHALL create, see or change it.
 #### Scenario: Another coach
 - **WHEN** a coach opens the planning of an athlete of another Team
 - **THEN** they see the "not found" page
+
+#### Scenario: Linked athlete opens the planning
+- **GIVEN** a user linked to an Athlete with a macrocycle
+- **WHEN** they open one of the planning steps of their macrocycle
+- **THEN** they are sent to the home page if they lead no Team, and see the "not found" page if they lead another Team
 
 ### Requirement: Planning in four steps
 The planning SHALL consist of four steps the coach goes through in order
@@ -102,9 +108,9 @@ be planned and the coach returns to the athlete's details page.
 Step 3 SHALL show the macrocycle chart fitting the screen width: weeks on
 the x-axis ("Week"), each week's number and point at the start of its
 area, the intensity ("Intensity") as a curve with one handle per week, and
-mesocycle backgrounds in the app palette (#6f3ab1, #ba2db3, #3bc8c8). Each
-handle SHALL move one 5 % step up (high week) or down (low week) by
-dragging or tapping; in between it is medium.
+the mesocycle backgrounds in their colours. Each handle SHALL move
+one 5 % step up (high week) or down (low week) by dragging or tapping; in
+between it is medium.
 
 #### Scenario: Make a week high
 - **GIVEN** week 11 at 80 % intensity
@@ -133,7 +139,7 @@ dragging or tapping; in between it is medium.
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
-- **THEN** weeks 1–3 have a #6f3ab1, weeks 4–13 a #ba2db3 and weeks 14–21 a #3bc8c8 background, with a legend and labels naming the three mesocycles
+- **THEN** weeks 1–3 have a #6f3ab1, weeks 4–13 a #ba2db3 and weeks 14–21 a #d7f212 background, with a legend and labels naming the three mesocycles
 
 #### Scenario: Points at the start of a week
 - **GIVEN** the special preparation block starts in week 4
@@ -283,13 +289,12 @@ exercise, and no deficits for an exercise without a reference lift.
 - **THEN** the dialog shows no deficits
 
 ### Requirement: Macrocycle API
-The HTTP API SHALL let the coach of an athlete create and change the
-athlete's macrocycle, set week levels, set the exercises of each mesocycle,
-set the mesocycle borders, and read the macrocycle with mesocycles, week
-levels and all calculated values per week. Invalid input SHALL be answered with 400
-`VALIDATION_FAILED` and field codes; other Teams' athletes with 404
-`ATHLETE_NOT_FOUND`; a second macrocycle with 409 `MACROCYCLE_EXISTS`;
-reading a missing one with 404 `MACROCYCLE_NOT_FOUND`.
+The HTTP API SHALL let the coach create and change an athlete's
+macrocycle (base data, week levels, mesocycle exercises and borders) and
+read it with all calculated values per week; the linked user SHALL be able
+to read it. Errors: 400 `VALIDATION_FAILED` with field codes, 404
+`ATHLETE_NOT_FOUND` for other users, 409 `MACROCYCLE_EXISTS`, 404
+`MACROCYCLE_NOT_FOUND`.
 
 #### Scenario: Read with calculated values
 - **GIVEN** a planned macrocycle of 21 weeks with exercise 13 in the special preparation block
@@ -300,3 +305,23 @@ reading a missing one with 404 `MACROCYCLE_NOT_FOUND`.
 - **GIVEN** an athlete with a macrocycle
 - **WHEN** the coach tries to create another one
 - **THEN** the response has status 409 and code `MACROCYCLE_EXISTS`
+
+#### Scenario: Linked athlete reads
+- **GIVEN** a user linked to an Athlete with a macrocycle
+- **WHEN** they request the macrocycle of their Athlete
+- **THEN** the response has status 200 and the same content the coach gets
+
+#### Scenario: Linked athlete cannot change
+- **GIVEN** a user linked to an Athlete with a macrocycle
+- **WHEN** they try to change its base data, SWOT, week levels, borders or exercises
+- **THEN** nothing changes, and the response has status 403 `NOT_A_COACH` if they lead no Team, or 404 `ATHLETE_NOT_FOUND` if they lead another Team
+
+### Requirement: Mesocycle colours in the app
+Wherever the app shows the mesocycles by colour, it SHALL use the same
+colours: general preparation #6f3ab1, special preparation #ba2db3,
+competition preparation #d7f212. Marks drawn on them SHALL stay readable
+on every one of these colours.
+
+#### Scenario: Same colours everywhere
+- **WHEN** the coach looks at the intensity chart, the exercise table or the macrocycle view of a 21-week macrocycle
+- **THEN** the general, special and competition preparation blocks are shown in #6f3ab1, #ba2db3 and #d7f212, with labels naming them

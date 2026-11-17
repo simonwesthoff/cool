@@ -109,23 +109,16 @@
       "failed": "Something went wrong. Please try again."
     }
   },
-  "Training": {
+  "AthleteHome": {
     "pictureAlt": "Profile picture of {name}",
     "coach": "Coach: {name}",
-    "placeholder": "Your training plan will appear here."
-  },
-  "AthleteDetails": {
-    "back": "Back to athletes",
-    "basicData": "Basic data",
-    "pictureAlt": "Profile picture of {name}",
-    "macrocycle": {
-      "title": "Macrocycle",
-      "none": "No macrocycle planned yet.",
-      "plan": "Plan macrocycle",
-      "period": "{start} – {end} ({weeks} weeks)",
-      "competition": "Main competition: {type} on {date}",
-      "change": "Change planning"
-    }
+    "placeholder": "Your training plan will appear here.",
+    "placeholderCoach": "The training plan will appear here.",
+    "macrocycle": "Macrocycle",
+    "macrocycleOpen": "Open macrocycle",
+    "plan": "Plan macrocycle",
+    "notPlanned": "No macrocycle planned yet.",
+    "editBasicData": "Edit basic data"
   },
   "Catalog": {
     "title": "Exercises",
@@ -148,6 +141,13 @@
     "athletes": "Athletes",
     "training": "My training",
     "exercises": "Exercises"
+  },
+  "Back": {
+    "athletes": "Back to athletes",
+    "athlete": "Back to {name}",
+    "macrocycle": "Back to the macrocycle",
+    "training": "Back to My training",
+    "start": "Back to the start page"
   },
   "Macrocycle": {
     "title": "Macrocycle planning",
@@ -289,5 +289,54 @@
       "ownReasonRemove": "Remove own reason: {reason}",
       "ownReasonCancel": "Cancel own reason"
     }
+  },
+  "MacrocycleView": {
+    "chart": {
+      "caption": "{value} of the exercise per week",
+      "legend": "Legend",
+      "series": {
+        "bestKg": "Best value (kg)",
+        "averageKg": "Average weight (kg)",
+        "setSize": "Set size",
+        "weeklyReps": "Weekly reps"
+      },
+      "competition": "Main competition",
+      "currentWeek": "Current week",
+      "none": "–",
+      "kg": "{value} kg",
+      "tooltipWeek": "Week {week} from {date}",
+      "tooltip": {
+        "bestKg": "Best value: {value}",
+        "averageKg": "Average weight: {value}",
+        "setSize": "Set size: {value}",
+        "weeklyReps": "Weekly reps: {value}"
+      }
+    },
+    "title": "Macrocycle",
+    "chartTitle": "Planned values",
+    "exercise": "Exercise",
+    "exerciseOption": "{number} {name}",
+    "loadFailed": "The values could not be loaded. Please try again.",
+    "change": "Change planning",
+    "notPlanned": "Your coach has not planned a macrocycle yet.",
+    "summary": {
+      "focusPoints": "Focus points",
+      "noFocusPoints": "No focus points entered yet.",
+      "position": "{position}.",
+      "plan": "New macrocycle plan",
+      "kg": "{value} kg",
+      "period": "Period",
+      "periodValue": "{start} – {end}",
+      "duration": "Duration",
+      "weeks": "{count, plural, one {# week} other {# weeks}}",
+      "competition": "Main competition",
+      "competitionValue": "{type}, {date}",
+      "entryValue": "Entry value",
+      "snatchGoal": "Goal snatch",
+      "cleanAndJerkGoal": "Goal clean & jerk",
+      "targetBodyWeight": "Target body weight",
+      "trainingFrequency": "Training sessions per week"
+    },
+    "value": "Value"
   }
 }

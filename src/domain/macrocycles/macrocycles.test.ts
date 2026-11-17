@@ -7,10 +7,13 @@ vi.mock("@/server/db", () => ({ getDb: () => testDb.db }));
 afterAll(() => testDb.close());
 
 const { startAsCoach } = await import("@/domain/roles");
+const { athlete: athleteTable } = await import("@/server/db/schema");
+const { eq } = await import("drizzle-orm");
 const { createAthlete } = await import("@/domain/athletes");
 const {
   createMacrocycle,
   findMacrocycle,
+  getExerciseWeeks,
   getMacrocycle,
   setMesocycleBorders,
   removeMesocycleExercise,
@@ -654,5 +657,179 @@ describe("setMesocycleBorders", () => {
         _root: ["INVALID_BORDERS"],
       });
     }
+  });
+});
+
+describe("read access for the linked athlete", () => {
+  const link = (athleteId: string, userId: string) =>
+    testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: userId })
+      .where(eq(athleteTable.id, athleteId));
+
+  async function linkedSetup() {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const linked = await createUser(testDb.db);
+    await link(athlete.id, linked.id);
+    return { coach, athlete, linked };
+  }
+
+  it("lets the linked athlete read the same macrocycle as the coach", async () => {
+    const { coach, athlete, linked } = await linkedSetup();
+    const asCoach = await getMacrocycle(coach, athlete.id);
+    expect(await getMacrocycle(linked, athlete.id)).toEqual(asCoach);
+    expect(await findMacrocycle(linked, athlete.id)).toEqual(asCoach);
+  });
+
+  it("refuses every change by the linked athlete", async () => {
+    const { athlete, linked } = await linkedSetup();
+    const attempts = () => [
+      () => createMacrocycle(linked, athlete.id, baseData),
+      () => updateBaseData(linked, athlete.id, { snatchGoalKg: 110 }),
+      () => setSwot(linked, athlete.id, swot),
+      () => setWeekLevel(linked, athlete.id, 11, { level: "high" }),
+      () =>
+        setMesocycleBorders(linked, athlete.id, {
+          specialPreparationStart: 5,
+          competitionPreparationStart: 14,
+        }),
+      () =>
+        setMesocycleExercise(linked, athlete.id, "special_preparation", "13", {
+          tags: ["SKF"],
+        }),
+      () =>
+        removeMesocycleExercise(
+          linked,
+          athlete.id,
+          "special_preparation",
+          "13",
+        ),
+    ];
+    // Without a Team of their own: the answer for every user without a Team.
+    for (const attempt of attempts()) {
+      await expect(errorOf(attempt())).resolves.toMatchObject({
+        code: "NOT_A_COACH",
+      });
+    }
+    // Leading another Team: the athlete is not in it.
+    await startAsCoach(linked);
+    for (const attempt of attempts()) {
+      await expect(errorOf(attempt())).resolves.toMatchObject({
+        code: "ATHLETE_NOT_FOUND",
+      });
+    }
+    expect((await getMacrocycle(linked, athlete.id)).snatchGoalKg).toBe(100);
+  });
+
+  it("refuses unrelated users", async () => {
+    const { athlete } = await linkedSetup();
+    const stranger = await createUser(testDb.db);
+    await expect(
+      errorOf(getMacrocycle(stranger, athlete.id)),
+    ).resolves.toMatchObject({ code: "ATHLETE_NOT_FOUND" });
+  });
+
+  it("lets a coach who is linked to an Athlete of another Team see both", async () => {
+    const { athlete: own, linked } = await linkedSetup();
+    // The linked user also leads a Team of their own.
+    await startAsCoach(linked);
+    const theirs = await createAthlete(linked, { name: "Max Coach" });
+    await createMacrocycle(linked, theirs.id, baseData);
+    expect((await getMacrocycle(linked, own.id)).athleteId).toBe(own.id);
+    expect((await getMacrocycle(linked, theirs.id)).athleteId).toBe(theirs.id);
+  });
+});
+
+describe("getExerciseWeeks", () => {
+  it("returns the snatch values of every week as in the spec", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const { exerciseNumber, weeks } = await getExerciseWeeks(
+      coach,
+      athlete.id,
+      "1",
+    );
+    expect(exerciseNumber).toBe(1);
+    expect(weeks).toHaveLength(21);
+    expect(weeks[0]).toEqual({
+      number: 1,
+      bestKg: 60,
+      averageKg: 52,
+      setSize: 5,
+      weeklyReps: 30,
+    });
+    expect(weeks[10]).toEqual({
+      number: 11,
+      bestKg: 80,
+      averageKg: 69,
+      setSize: 3,
+      weeklyReps: 20,
+    });
+  });
+
+  it("follows the week levels and does not depend on the chosen exercises", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await setWeekLevel(coach, athlete.id, 11, { level: "high" });
+    // Exercise 1 is chosen in no mesocycle; its values exist anyway.
+    const { weeks } = await getExerciseWeeks(coach, athlete.id, "1");
+    expect(weeks[10]).toEqual({
+      number: 11,
+      bestKg: 85,
+      averageKg: 73,
+      setSize: 3,
+      weeklyReps: 21,
+    });
+  });
+
+  it("has no values for an exercise without catalog values", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const { weeks } = await getExerciseWeeks(coach, athlete.id, "31");
+    expect(
+      weeks.every(
+        (w) =>
+          w.bestKg === null &&
+          w.averageKg === null &&
+          w.setSize === null &&
+          w.weeklyReps === null,
+      ),
+    ).toBe(true);
+  });
+
+  it("answers unknown exercises, missing macrocycles and other users", async () => {
+    const { coach, athlete } = await setup();
+    await expect(
+      errorOf(getExerciseWeeks(coach, athlete.id, "1")),
+    ).resolves.toMatchObject({
+      code: "MACROCYCLE_NOT_FOUND",
+    });
+    await createMacrocycle(coach, athlete.id, baseData);
+    for (const n of ["99", "abc", "0"])
+      await expect(
+        errorOf(getExerciseWeeks(coach, athlete.id, n)),
+      ).resolves.toMatchObject({
+        code: "EXERCISE_NOT_FOUND",
+      });
+    const stranger = await createUser(testDb.db);
+    await expect(
+      errorOf(getExerciseWeeks(stranger, athlete.id, "1")),
+    ).resolves.toMatchObject({
+      code: "ATHLETE_NOT_FOUND",
+    });
+  });
+
+  it("is readable by the linked athlete", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const linked = await createUser(testDb.db);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: linked.id })
+      .where(eq(athleteTable.id, athlete.id));
+    expect(await getExerciseWeeks(linked, athlete.id, "13")).toEqual(
+      await getExerciseWeeks(coach, athlete.id, "13"),
+    );
   });
 });

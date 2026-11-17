@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 const requirePageRoles = vi.fn();
+const loadMacrocycleChart = vi.fn();
+vi.mock("../macrocycle-view/load", () => ({ loadMacrocycleChart }));
 vi.mock("../current-user", () => ({ requirePageRoles }));
 class Redirect extends Error {
   constructor(readonly url: string) {
@@ -11,11 +13,6 @@ vi.mock("next/navigation", () => ({
   redirect: (url: string) => {
     throw new Redirect(url);
   },
-}));
-vi.mock("next-intl/server", () => ({
-  getTranslations:
-    async () => (key: string, values?: Record<string, string>) =>
-      values ? `${key}:${Object.values(values).join(",")}` : key,
 }));
 
 const { Training } = await import("./page");
@@ -43,9 +40,34 @@ describe("athlete view", () => {
         },
       },
     });
+    loadMacrocycleChart.mockResolvedValue(null);
     const element = await Training();
-    const text = JSON.stringify(element);
-    expect(text).toContain("Anna Weber");
-    expect(text).toContain("coach:Max Berg");
+    expect(element.props).toEqual({
+      viewer: "athlete",
+      athleteId: "a1",
+      name: "Anna Weber",
+      image: null,
+      coachName: "Max Berg",
+      macrocycle: null,
+    });
+  });
+
+  it("passes the own macrocycle chart data when one is planned", async () => {
+    requirePageRoles.mockResolvedValue({
+      user,
+      roles: {
+        coach: null,
+        athlete: {
+          athleteId: "a1",
+          athleteName: "Anna Weber",
+          teamId: "t1",
+          coachName: "Max Berg",
+        },
+      },
+    });
+    loadMacrocycleChart.mockResolvedValue({ athleteId: "a1" });
+    const element = await Training();
+    expect(element.props.macrocycle).toEqual({ athleteId: "a1" });
+    expect(loadMacrocycleChart).toHaveBeenCalledWith(user, "a1");
   });
 });

@@ -78,3 +78,18 @@ export type Macrocycle = MacrocycleBaseData & {
   mesocycles: MesocycleView[];
   weeks: MacrocycleWeekView[];
 };
+
+/** Planned values of one exercise in one week (null where not defined). */
+export type ExerciseWeek = {
+  number: number;
+  bestKg: number | null;
+  averageKg: number | null;
+  setSize: number | null;
+  weeklyReps: number | null;
+};
+
+/** An exercise's planned values for every week of a macrocycle. */
+export type ExerciseWeeks = {
+  exerciseNumber: number;
+  weeks: ExerciseWeek[];
+};

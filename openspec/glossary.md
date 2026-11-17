@@ -44,6 +44,7 @@ Domain terms for the weightlifting coaching app.
 | Hauptwettkampf | - | Main competition | The competition a macrocycle leads to. |
 | Trainingshäufigkeit | TE/Woche | Training frequency | Training sessions per week (1–14). |
 | Schwerpunkt | - | Focus point | One of the 1 to 3 ordered priorities of a macrocycle. |
+| Aktuelle Woche | - | Current week | The week of the macrocycle that contains today; none before the start or after the end. |
 
 ### Exercise groups
 
@@ -70,3 +71,5 @@ Domain terms for the weightlifting coaching app.
 | Stammdaten | - | Basic data | An athlete's personal data that rarely changes: name, date of birth, gender, start date of the weightlifting career, height, email address and profile picture. |
 | Rolle | - | Role | Coach or athlete. A user account holds roles per Team: coach of the Team it leads, athlete of the Team whose Athlete it is linked to. |
 | Einladung | - | Invitation | A link a coach creates for one Athlete of their Team. Accepting it links the user account to that Athlete. Usable once, valid for 7 days, replaced by a newer one. |
+| Makrozyklusansicht | - | Macrocycle view | Read-only page of a planned macrocycle for the coach of the athlete's Team and the linked athlete. |
+| Übungsdiagramm | - | Exercise chart | Chart of one exercise's planned best value, average weight, set size and weekly reps for every week of a macrocycle. |

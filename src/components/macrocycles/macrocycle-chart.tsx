@@ -1,18 +1,27 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
+import { useId, useState, type PointerEvent } from "react";
 import type {
   MacrocycleWeekView,
   MesocycleView,
   WeekLevel,
 } from "@/domain/macrocycles/macrocycle-types";
 import {
+  BandSwatch,
+  CompetitionMarkerLine,
+  CompetitionSwatch,
+  MesocycleBands,
+  tooltipPlacement,
+  useCompetitionMarker,
+  useContainerWidth,
+  weekLabelShown,
+  weekLayout,
+} from "./chart-frame";
+import {
   baseIntensity,
-  fitsLabel,
   intensityAt,
   intensityDomain,
-  labelEvery,
   levelForValue,
   stepLevel,
 } from "./chart-geometry";
@@ -38,11 +47,6 @@ const TOOLTIP = { width: 208, height: 84, gap: 10 };
 const PLOT = { top: 28, height: 220 };
 /** Space below the plot for the week numbers and the axis title. */
 const X_AXIS = 44;
-const BAND_FILL = ["var(--band-1)", "var(--band-2)", "var(--band-3)"];
-/** Estimated width of one character of an 11 px label. */
-const LABEL_CHAR = 6.2;
-/** Width used before the container has been measured. */
-const DEFAULT_WIDTH = 640;
 
 /**
  * The macrocycle chart: intensity per week with one handle per week on the
@@ -58,8 +62,7 @@ export function MacrocycleChart({
   const t = useTranslations("Macrocycle.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
   const format = useFormatter();
-  const container = useRef<HTMLDivElement>(null);
-  const [available, setAvailable] = useState(0);
+  const { container, width } = useContainerWidth();
   const [hovered, setHovered] = useState<number | null>(null);
   const [dragging, setDragging] = useState<{
     week: number;
@@ -72,22 +75,9 @@ export function MacrocycleChart({
   } | null>(null);
   const titleId = useId();
 
-  useEffect(() => {
-    const el = container.current;
-    if (!el) return;
-    const observer = new ResizeObserver(([entry]) =>
-      setAvailable(entry!.contentRect.width),
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   const n = weeks.length;
-  const width = available || DEFAULT_WIDTH;
-  const narrow = width < 500;
-  const margin = narrow ? { left: 44, right: 10 } : { left: 56, right: 16 };
-  // The whole cycle always fits: no horizontal scrolling.
-  const column = (width - margin.left - margin.right) / Math.max(n, 1);
+  const layout = weekLayout(width, n);
+  const { margin, column, x, plotRight, every } = layout;
   const height = PLOT.top + PLOT.height + X_AXIS;
 
   // Borders = first weeks of the special and competition preparation blocks.
@@ -120,9 +110,6 @@ export function MacrocycleChart({
     (1 - (svgY - PLOT.top) / PLOT.height) * (domain.max - domain.min);
   // A week's point sits at the start (left edge) of its column, so a
   // mesocycle border is exactly at the point of the block's first week.
-  const x = (index: number) => margin.left + column * index;
-  const plotRight = margin.left + column * n;
-  const every = labelEvery(column);
   // Points shrink with narrow columns, so many weeks still fit side by side.
   const radius = Math.min(4.5, Math.max(2.5, column * 0.3));
 
@@ -215,80 +202,25 @@ export function MacrocycleChart({
     }
   }
 
-  // --- Week labels and tooltip -------------------------------------------------
-  // The first week of every block is always numbered; the other numbers
-  // follow the regular spacing and give way when they come too close.
-  const blockStarts = mesocycles.map((m) => m.firstWeek);
-  const showWeekLabel = (week: number) =>
-    blockStarts.includes(week) ||
-    ((week - 1) % every === 0 &&
-      blockStarts.every((start) => Math.abs(start - week) >= every));
-
-  // --- Main competition marker -------------------------------------------------
-  const marker = (() => {
-    if (!competition || n === 0) return null;
-    const days =
-      (Date.parse(`${competition.date}T00:00:00Z`) -
-        Date.parse(`${weeks[0]!.startDate}T00:00:00Z`)) /
-      86_400_000;
-    if (Number.isNaN(days)) return null;
-    const mx = Math.min(
-      plotRight,
-      margin.left + column * (Math.max(0, days) / 7),
-    );
-    const date = format.dateTime(new Date(`${competition.date}T00:00:00Z`), {
-      dateStyle: "medium",
-      timeZone: "UTC",
-    });
-    // The label sits above the plot like the mesocycle labels: ending at
-    // the line in the right half, starting at it in the left half.
-    const toLeft = mx > margin.left + (plotRight - margin.left) / 2;
-    const room = toLeft ? mx - 4 - margin.left : plotRight - mx - 4;
-    const fixed = t("competitionLabel", { type: "", date }).length;
-    const maxType = Math.max(4, Math.floor(room / LABEL_CHAR) - fixed);
-    const type =
-      competition.type.length > maxType
-        ? `${competition.type.slice(0, maxType - 1).trimEnd()}…`
-        : competition.type;
-    const text = t("competitionLabel", { type, date });
-    const textX = toLeft ? mx - 4 : mx + 4;
-    const textWidth = text.length * LABEL_CHAR;
-    return {
-      x: mx,
-      text,
-      label: t("competitionValue", { type: competition.type, date }),
-      anchor: toLeft ? ("end" as const) : ("start" as const),
-      textX,
-      extent: toLeft ? [textX - textWidth, textX] : [textX, textX + textWidth],
-    };
-  })();
-  /** Mesocycle labels give way to the competition's label. */
-  const clearOfMarker = (start: number, label: string) =>
-    !marker ||
-    start + label.length * LABEL_CHAR + 8 < marker.extent[0]! ||
-    start > marker.extent[1]! + 8;
-
+  // --- Week labels, competition marker and tooltip ---------------------------
+  const showWeekLabel = weekLabelShown(mesocycles, every);
+  const marker = useCompetitionMarker(
+    competition,
+    weeks[0]?.startDate,
+    n,
+    layout,
+  );
   const shown =
     hovered === null ? null : weeks.find((w) => w.number === hovered);
-  // Place the tooltip beside the point's column (never over the pointer,
-  // which is in that column) and in the vertical half the point is not in.
-  const tooltipPosition = (() => {
-    if (!shown) return null;
-    const index = weeks.indexOf(shown);
-    const px = x(index);
-    const py = y(intensityOf(shown));
-    const rightOfColumn = px + column / 2 + TOOLTIP.gap;
-    const leftOfColumn = px - column / 2 - TOOLTIP.gap - TOOLTIP.width;
-    const fitsRight = rightOfColumn + TOOLTIP.width <= width;
-    const fitsLeft = leftOfColumn >= 0;
-    const preferLeft = px > width / 2;
-    let left =
-      (preferLeft && fitsLeft) || !fitsRight ? leftOfColumn : rightOfColumn;
-    if (left < 0) left = 0;
-    const upperHalf = py < PLOT.top + PLOT.height / 2;
-    const top = upperHalf ? PLOT.top + PLOT.height - TOOLTIP.height : PLOT.top;
-    return { left, top };
-  })();
+  const tooltipPosition = shown
+    ? tooltipPlacement(
+        x(weeks.indexOf(shown)),
+        y(intensityOf(shown)),
+        layout,
+        PLOT,
+        TOOLTIP,
+      )
+    : null;
 
   return (
     <figure
@@ -304,11 +236,7 @@ export function MacrocycleChart({
       >
         {mesocycles.map((m, i) => (
           <li key={m.type} className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="inline-block size-3 rounded-sm"
-              style={{ background: BAND_FILL[i] }}
-            />
+            <BandSwatch index={i} />
             {tm(m.type)}
           </li>
         ))}
@@ -318,17 +246,7 @@ export function MacrocycleChart({
         </li>
         {marker && (
           <li className="flex items-center gap-2">
-            <svg aria-hidden="true" width="12" height="14" className="shrink-0">
-              <line
-                x1="6"
-                x2="6"
-                y1="0"
-                y2="14"
-                className="stroke-zinc-900 dark:stroke-zinc-100"
-                strokeWidth={2}
-                strokeDasharray="3 2"
-              />
-            </svg>
+            <CompetitionSwatch />
             {t("legendCompetition")}
           </li>
         )}
@@ -345,31 +263,12 @@ export function MacrocycleChart({
           aria-label={t("intensity")}
           className="block touch-none select-none"
         >
-          {mesocycles.map((m, i) => (
-            <g key={m.type}>
-              <rect
-                x={x(m.firstWeek - 1)}
-                y={PLOT.top}
-                width={column * (m.lastWeek - m.firstWeek + 1)}
-                height={PLOT.height}
-                fill={BAND_FILL[i]}
-              />
-              {/* Only label a band when the name fits; the legend names it otherwise. */}
-              {fitsLabel(
-                tm(`abbr.${m.type}`),
-                column * (m.lastWeek - m.firstWeek + 1),
-              ) &&
-                clearOfMarker(x(m.firstWeek - 1) + 4, tm(`abbr.${m.type}`)) && (
-                  <text
-                    x={x(m.firstWeek - 1) + 4}
-                    y={PLOT.top - 8}
-                    className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
-                  >
-                    {tm(`abbr.${m.type}`)}
-                  </text>
-                )}
-            </g>
-          ))}
+          <MesocycleBands
+            mesocycles={mesocycles}
+            layout={layout}
+            plot={PLOT}
+            marker={marker}
+          />
           {domain.ticks.map((tick) => (
             <g key={tick}>
               <line
@@ -377,7 +276,8 @@ export function MacrocycleChart({
                 x2={plotRight}
                 y1={y(tick)}
                 y2={y(tick)}
-                className="stroke-black/20"
+                stroke="var(--chart-ink)"
+                strokeOpacity={0.12}
                 strokeWidth={1}
               />
               <text
@@ -431,6 +331,7 @@ export function MacrocycleChart({
             strokeLinecap="round"
           />
           <path
+            data-intensity-line
             d={linePath}
             fill="none"
             className="stroke-white"
@@ -518,7 +419,9 @@ export function MacrocycleChart({
                   x2={bx}
                   y1={PLOT.top}
                   y2={PLOT.top + PLOT.height}
-                  className="pointer-events-none stroke-white/80"
+                  className="pointer-events-none"
+                  stroke="var(--chart-ink)"
+                  strokeOpacity={0.5}
                   strokeWidth={borderDrag?.border === border ? 2 : 1}
                 />
                 {onBordersChange && (
@@ -590,49 +493,16 @@ export function MacrocycleChart({
               </g>
             );
           })}
-          {marker && (
-            <g
-              data-competition
-              role="img"
-              aria-label={marker.label}
-              className="pointer-events-none"
-            >
-              <line
-                x1={marker.x}
-                x2={marker.x}
-                y1={PLOT.top}
-                y2={PLOT.top + PLOT.height}
-                stroke="var(--chart-halo)"
-                strokeOpacity={0.6}
-                strokeWidth={4}
-              />
-              <line
-                x1={marker.x}
-                x2={marker.x}
-                y1={PLOT.top}
-                y2={PLOT.top + PLOT.height}
-                className="stroke-white"
-                strokeWidth={2}
-                strokeDasharray="5 3"
-              />
-              <text
-                x={marker.textX}
-                y={PLOT.top - 8}
-                textAnchor={marker.anchor}
-                className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
-                aria-hidden="true"
-              >
-                {marker.text}
-              </text>
-            </g>
-          )}
+          {marker && <CompetitionMarkerLine marker={marker} plot={PLOT} />}
           {hovered !== null && (
             <line
               x1={x(weeks.findIndex((w) => w.number === hovered))}
               x2={x(weeks.findIndex((w) => w.number === hovered))}
               y1={PLOT.top}
               y2={PLOT.top + PLOT.height}
-              className="pointer-events-none stroke-white/80"
+              className="pointer-events-none"
+              stroke="var(--chart-ink)"
+              strokeOpacity={0.5}
               strokeWidth={1}
             />
           )}
