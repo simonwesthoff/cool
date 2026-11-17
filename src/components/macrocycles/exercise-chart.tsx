@@ -210,15 +210,6 @@ export function ExerciseChart({
               </text>
             </g>
           ))}
-          {/* Axis title with the unit. */}
-          <text
-            data-axis-title
-            transform={`translate(12 ${PLOT.top + PLOT.height / 2}) rotate(-90)`}
-            textAnchor="middle"
-            className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
-          >
-            {unit === "kg" ? t("axisKg") : t("axisReps")}
-          </text>
           {weeks.map(
             (w, i) =>
               showWeekLabel(w.number) && (

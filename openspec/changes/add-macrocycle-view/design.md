@@ -101,7 +101,8 @@
 
 ### Exercise chart (changed during acceptance)
 - **One value, one curve, one y-axis:** the chart draws only the selected
-  value, on its own scale with a unit title ("kg" or "Reps").
+  value, on its own scale, without a unit title next to the axis (user
+  decision; the value selection names the unit).
   - **kg:** from a clean step below the lowest value to one above the
     highest.
   - **Reps:** from 0.

@@ -25,3 +25,21 @@ export async function loadMacrocycleView(user: CurrentUser, athleteId: string) {
     today: today(),
   };
 }
+
+/**
+ * Data of the macrocycle chart on the athlete's page: the macrocycle, the
+ * snatch values and today. Null when the athlete has no macrocycle.
+ */
+export async function loadMacrocycleChart(
+  user: CurrentUser,
+  athleteId: string,
+) {
+  const macrocycle = await findMacrocycle(user, athleteId);
+  if (!macrocycle) return null;
+  const values = await getExerciseWeeks(
+    user,
+    athleteId,
+    String(DEFAULT_EXERCISE),
+  );
+  return { macrocycle, values, today: today() };
+}

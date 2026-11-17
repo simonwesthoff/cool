@@ -34,7 +34,8 @@ athlete cannot see it at all.
   in the planning chart, the exercise table and the view.
 - **One athlete page** (user decision): the athlete details page looks like
   "My training" and uses the same component: picture, name and coach on top,
-  then a macrocycle card (period, competition) that opens the view. The
+  then the macrocycle chart (snatch, best value) with an "Open macrocycle"
+  button below it on the right. The
   coach also gets the back link, "Plan macrocycle" and a pencil icon next
   to the name for the basic data; "Change planning" moves into the view.
 - **One content width** (user decision): every page uses the width of the

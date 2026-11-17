@@ -104,7 +104,7 @@ describe("ExerciseChart", () => {
     });
   });
 
-  it("draws only the selected value as one white curve on a kg axis", () => {
+  it("draws only the selected value as one white curve on a kg axis without a unit title", () => {
     const { container } = renderChart();
     expect(container.querySelectorAll("[data-curve]")).toHaveLength(1);
     expect(
@@ -122,9 +122,8 @@ describe("ExerciseChart", () => {
         Number(t.textContent),
       ),
     ).toEqual(kg.ticks);
-    expect(container.querySelector("[data-axis-title]")!.textContent).toBe(
-      "kg",
-    );
+    // No unit written next to the axis.
+    expect(container.querySelector("[data-axis-title]")).toBeNull();
   });
 
   it("uses a reps axis from 0 for set size and weekly reps", () => {
@@ -140,9 +139,6 @@ describe("ExerciseChart", () => {
         Number(t.textContent),
       ),
     ).toEqual(reps.ticks);
-    expect(container.querySelector("[data-axis-title]")!.textContent).toBe(
-      "Reps",
-    );
   });
 
   it("has the mesocycles, competition and current week in the legend, and only week numbers on the x-axis", () => {

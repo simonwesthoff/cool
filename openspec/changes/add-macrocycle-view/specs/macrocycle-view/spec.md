@@ -51,7 +51,8 @@ the planning step with the intensity chart.
 The view SHALL show a read-only chart of one planned value of one exercise
 for every week, calculated as in planning even in weeks whose mesocycle
 does not use the exercise: the best value (kg), the average weight (kg),
-the set size or the weekly reps, as one curve on one y-axis with its unit.
+the set size or the weekly reps, as one curve on one y-axis; no unit title is written next to the axis
+(the value selection names the unit).
 The x-axis SHALL show only week numbers; the mesocycle bands and the main
 competition marker SHALL be shown as in planning.
 

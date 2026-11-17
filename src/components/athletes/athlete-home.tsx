@@ -1,13 +1,22 @@
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
-import type { MacrocycleBaseData } from "@/domain/macrocycles/macrocycle-types";
+import type {
+  ExerciseWeeks,
+  Macrocycle,
+} from "@/domain/macrocycles/macrocycle-types";
 import { Avatar } from "../avatar";
+import { ExerciseChart } from "../macrocycles/exercise-chart";
 
-function addDays(isoDate: string, days: number): Date {
-  const date = new Date(`${isoDate}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date;
-}
+export type AthleteHomeMacrocycle = {
+  macrocycle: Pick<
+    Macrocycle,
+    "weeks" | "mesocycles" | "competitionDate" | "competitionType"
+  >;
+  /** Planned snatch values for every week (the chart's default curve). */
+  values: ExerciseWeeks;
+  /** Today (YYYY-MM-DD) for the current-week line. */
+  today: string;
+};
 
 type Props = {
   /** Who looks at the page: the athlete themselves or their coach. */
@@ -16,10 +25,8 @@ type Props = {
   name: string;
   image: string | null;
   coachName: string;
-  macrocycle: Pick<
-    MacrocycleBaseData,
-    "startDate" | "durationWeeks" | "competitionDate" | "competitionType"
-  > | null;
+  /** The planned macrocycle with the chart data, or null. */
+  macrocycle: AthleteHomeMacrocycle | null;
 };
 
 const card =
@@ -54,7 +61,8 @@ function PencilIcon() {
 
 /**
  * The athlete's page, shared by "My training" (athlete) and the athlete
- * details page (coach): picture, name and coach on top, then link cards.
+ * details page (coach): picture, name and coach on top, then the
+ * macrocycle chart with a button to the macrocycle view.
  * The coach additionally gets the way back, a pencil next to the name for
  * the basic data, and planning.
  */
@@ -67,9 +75,6 @@ export function AthleteHome({
   macrocycle,
 }: Props) {
   const t = useTranslations("AthleteHome");
-  const format = useFormatter();
-  const date = (value: Date) =>
-    format.dateTime(value, { dateStyle: "medium", timeZone: "UTC" });
   const coach = viewer === "coach";
   const macrocycleHref = coach
     ? `/athletes/${athleteId}/macrocycle`
@@ -119,52 +124,50 @@ export function AthleteHome({
           {coach ? t("placeholderCoach") : t("placeholder")}
         </p>
       </section>
-      <nav aria-label={t("sections")} className="mt-4 flex flex-col gap-3">
-        {macrocycle ? (
+      {macrocycle ? (
+        // The macrocycle section is the macrocycle view's chart (snatch,
+        // best value) with the way to the full view below it.
+        <section
+          aria-labelledby="macrocycle-heading"
+          className="mt-4 flex flex-col gap-3"
+        >
+          <h2 id="macrocycle-heading" className="sr-only">
+            {t("macrocycle")}
+          </h2>
+          <ExerciseChart
+            weeks={macrocycle.macrocycle.weeks}
+            mesocycles={macrocycle.macrocycle.mesocycles}
+            values={macrocycle.values.weeks}
+            value="bestKg"
+            competition={{
+              date: macrocycle.macrocycle.competitionDate,
+              type: macrocycle.macrocycle.competitionType,
+            }}
+            today={macrocycle.today}
+          />
           <Link
             href={macrocycleHref}
-            aria-label={t("macrocycleOpen")}
-            className={card}
+            className="inline-flex min-h-11 items-center self-end rounded-full border border-zinc-300 px-5 font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          >
+            {t("macrocycleOpen")}
+          </Link>
+        </section>
+      ) : (
+        coach && (
+          <Link
+            href={`/athletes/${athleteId}/macrocycle/base-data`}
+            className={`mt-4 ${card}`}
           >
             <span className="flex min-w-0 flex-col gap-1">
-              <span className="font-semibold">{t("macrocycle")}</span>
+              <span className="font-semibold">{t("plan")}</span>
               <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                {t("period", {
-                  start: date(addDays(macrocycle.startDate, 0)),
-                  end: date(
-                    addDays(
-                      macrocycle.startDate,
-                      7 * macrocycle.durationWeeks - 1,
-                    ),
-                  ),
-                })}
-              </span>
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                {t("competition", {
-                  type: macrocycle.competitionType,
-                  date: date(addDays(macrocycle.competitionDate, 0)),
-                })}
+                {t("notPlanned")}
               </span>
             </span>
             <Chevron />
           </Link>
-        ) : (
-          coach && (
-            <Link
-              href={`/athletes/${athleteId}/macrocycle/base-data`}
-              className={card}
-            >
-              <span className="flex min-w-0 flex-col gap-1">
-                <span className="font-semibold">{t("plan")}</span>
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {t("notPlanned")}
-                </span>
-              </span>
-              <Chevron />
-            </Link>
-          )
-        )}
-      </nav>
+        )
+      )}
     </div>
   );
 }

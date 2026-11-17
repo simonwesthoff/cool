@@ -4,8 +4,8 @@ import { AthleteHome } from "@/components/athletes/athlete-home";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
-import { findMacrocycle } from "@/domain/macrocycles";
 import { requireCoachPage } from "../../current-user";
+import { loadMacrocycleChart } from "../../macrocycle-view/load";
 import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]">["params"];
@@ -30,7 +30,7 @@ export async function AthleteDetails({ params }: { params: Params }) {
     if (error instanceof DomainError && error.kind === "not_found") notFound();
     throw error;
   });
-  const macrocycle = await findMacrocycle(user, id);
+  const macrocycle = await loadMacrocycleChart(user, id);
   return (
     <AthleteHome
       viewer="coach"

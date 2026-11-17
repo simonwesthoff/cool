@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 const requirePageRoles = vi.fn();
-const findMacrocycle = vi.fn();
-vi.mock("@/domain/macrocycles", () => ({ findMacrocycle }));
+const loadMacrocycleChart = vi.fn();
+vi.mock("../macrocycle-view/load", () => ({ loadMacrocycleChart }));
 vi.mock("../current-user", () => ({ requirePageRoles }));
 class Redirect extends Error {
   constructor(readonly url: string) {
@@ -40,7 +40,7 @@ describe("athlete view", () => {
         },
       },
     });
-    findMacrocycle.mockResolvedValue(null);
+    loadMacrocycleChart.mockResolvedValue(null);
     const element = await Training();
     expect(element.props).toEqual({
       viewer: "athlete",
@@ -52,7 +52,7 @@ describe("athlete view", () => {
     });
   });
 
-  it("passes the own macrocycle when one is planned", async () => {
+  it("passes the own macrocycle chart data when one is planned", async () => {
     requirePageRoles.mockResolvedValue({
       user,
       roles: {
@@ -65,9 +65,9 @@ describe("athlete view", () => {
         },
       },
     });
-    findMacrocycle.mockResolvedValue({ athleteId: "a1" });
+    loadMacrocycleChart.mockResolvedValue({ athleteId: "a1" });
     const element = await Training();
     expect(element.props.macrocycle).toEqual({ athleteId: "a1" });
-    expect(findMacrocycle).toHaveBeenCalledWith(user, "a1");
+    expect(loadMacrocycleChart).toHaveBeenCalledWith(user, "a1");
   });
 });
