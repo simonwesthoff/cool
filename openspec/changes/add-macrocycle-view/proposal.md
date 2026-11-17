@@ -69,8 +69,8 @@ Out of scope:
   - "Intensity chart with week handles" uses the new mesocycle colours.
   - A new requirement fixes the mesocycle colours app-wide.
 - `athlete-details`: "Athlete details header" and "Macrocycle entry point"
-  follow the shared athlete page; the macrocycle card opens the new view.
-- `user-roles`: "Athlete view" shows the macrocycle card that opens the
+  follow the shared athlete page; the macrocycle chart with its button opens the new view.
+- `user-roles`: "Athlete view" shows the macrocycle chart with a button that opens the
   athlete's macrocycle view.
 
 ## Impact
