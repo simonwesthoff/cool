@@ -7,7 +7,8 @@ The details page of an athlete SHALL look like the athlete's own "My
 training" page and use the same component: the profile picture (or
 initials) centred on top, the athlete's name and their coach below it. For
 the coach the page SHALL additionally offer the way back to the athlete
-overview and a "Basic data" card that opens the athlete's basic data.
+overview and an edit (pencil) icon next to the name that opens the
+athlete's basic data.
 
 #### Scenario: Header content
 - **GIVEN** the athlete "Anna Weber" in the Team of coach "Max Berg"
@@ -15,7 +16,7 @@ overview and a "Basic data" card that opens the athlete's basic data.
 - **THEN** they see her profile picture or initials, "Anna Weber" and "Coach: Max Berg" at the top, as on her "My training" page
 
 #### Scenario: Open basic data
-- **WHEN** the coach chooses "Basic data" on the details page
+- **WHEN** the coach chooses the edit icon next to the athlete's name
 - **THEN** the form with the athlete's basic data opens
 
 #### Scenario: Back to the overview

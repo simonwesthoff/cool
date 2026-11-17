@@ -60,7 +60,7 @@ export function AcceptInvitation({ token, info, alreadyLinked }: Props) {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-sm flex-col gap-4 pt-12">
+    <section className="flex w-full flex-col gap-4 pt-12">
       <h1 className="text-2xl font-semibold">{t("title")}</h1>
       {info && (
         <p className="text-lg">

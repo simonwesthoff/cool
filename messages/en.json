@@ -121,7 +121,7 @@
     "competition": "{type}, {date}",
     "plan": "Plan macrocycle",
     "notPlanned": "No macrocycle planned yet.",
-    "basicData": "Basic data",
+    "editBasicData": "Edit basic data",
     "back": "Back to athletes"
   },
   "Catalog": {

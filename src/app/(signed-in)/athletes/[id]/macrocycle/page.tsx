@@ -7,6 +7,7 @@ import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
 import { requireCoachPage } from "../../../current-user";
 import { loadMacrocycleView } from "../../../macrocycle-view/load";
+import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]/macrocycle">["params"];
 
@@ -15,11 +16,11 @@ export default function MacrocycleViewPage({
   params,
 }: PageProps<"/athletes/[id]/macrocycle">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pt-4 pb-24 sm:px-8">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <CoachMacrocycleView params={params} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

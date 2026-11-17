@@ -4,6 +4,7 @@ import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { IntensityPlanner } from "@/components/macrocycles/intensity-planner";
 import { PlanningHeader } from "../planning-header";
 import { loadPlanning } from "../shared";
+import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]/macrocycle/intensity">["params"];
 
@@ -12,11 +13,11 @@ export default function IntensityPage({
   params,
 }: PageProps<"/athletes/[id]/macrocycle/intensity">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pt-4 pb-24 sm:px-8">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <Intensity params={params} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

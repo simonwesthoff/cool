@@ -35,8 +35,10 @@ athlete cannot see it at all.
 - **One athlete page** (user decision): the athlete details page looks like
   "My training" and uses the same component: picture, name and coach on top,
   then a macrocycle card (period, competition) that opens the view. The
-  coach also gets the back link, "Plan macrocycle" and "Basic data";
-  "Change planning" moves into the view.
+  coach also gets the back link, "Plan macrocycle" and a pencil icon next
+  to the name for the basic data; "Change planning" moves into the view.
+- **One content width** (user decision): every page uses the width of the
+  intensity step (`max-w-5xl`) on desktop.
 - **Read access:** the linked athlete may read the macrocycle (page and
   `GET` API); creating and changing it stays coach-only.
 - **API:** a new endpoint returns an exercise's planned values for every
@@ -57,6 +59,7 @@ Out of scope:
   the linked athlete: the exercise chart with exercise selection and
   current-week marker, focus points and the new macrocycle plan, and the API
   for an exercise's weekly values.
+- `app-layout`: one content width for all pages.
 
 ### Modified Capabilities
 - `macrocycle-planning`:

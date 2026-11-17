@@ -4,6 +4,7 @@ import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { DomainError } from "@/domain/errors";
 import { getInvitation, type InvitationInfo } from "@/domain/invitations";
 import { requirePageRoles } from "../../current-user";
+import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/invite/[token]">["params"];
 
@@ -11,11 +12,11 @@ export default function InvitationPage({
   params,
 }: PageProps<"/invite/[token]">) {
   return (
-    <main className="flex w-full flex-1 flex-col px-4 pb-24">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <Invitation params={params} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

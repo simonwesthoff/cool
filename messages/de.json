@@ -121,7 +121,7 @@
     "competition": "{type}, {date}",
     "plan": "Makrozyklus planen",
     "notPlanned": "Noch kein Makrozyklus geplant.",
-    "basicData": "Stammdaten",
+    "editBasicData": "Stammdaten bearbeiten",
     "back": "Zurück zu den Athleten"
   },
   "Catalog": {

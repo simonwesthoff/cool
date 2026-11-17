@@ -33,10 +33,30 @@ function Chevron() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
 /**
  * The athlete's page, shared by "My training" (athlete) and the athlete
  * details page (coach): picture, name and coach on top, then link cards.
- * The coach additionally gets the way back, the basic data and planning.
+ * The coach additionally gets the way back, a pencil next to the name for
+ * the basic data, and planning.
  */
 export function AthleteHome({
   viewer,
@@ -56,7 +76,7 @@ export function AthleteHome({
     : "/training/macrocycle";
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-3">
+    <div className="flex w-full flex-col gap-3">
       {coach && (
         <Link
           href="/"
@@ -77,7 +97,21 @@ export function AthleteHome({
           alt={t("pictureAlt", { name })}
           size={96}
         />
-        <h1 className="text-2xl font-semibold break-words">{name}</h1>
+        <div className="flex items-center gap-2">
+          {/* Same width as the pencil, so the name stays centred. */}
+          {coach && <span aria-hidden="true" className="size-11 shrink-0" />}
+          <h1 className="text-2xl font-semibold break-words">{name}</h1>
+          {coach && (
+            <Link
+              href={`/athletes/${athleteId}/basic-data`}
+              aria-label={t("editBasicData")}
+              title={t("editBasicData")}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+            >
+              <PencilIcon />
+            </Link>
+          )}
+        </div>
         <p className="text-zinc-600 dark:text-zinc-400">
           {t("coach", { name: coachName })}
         </p>
@@ -129,12 +163,6 @@ export function AthleteHome({
               <Chevron />
             </Link>
           )
-        )}
-        {coach && (
-          <Link href={`/athletes/${athleteId}/basic-data`} className={card}>
-            <span className="font-semibold">{t("basicData")}</span>
-            <Chevron />
-          </Link>
         )}
       </nav>
     </div>

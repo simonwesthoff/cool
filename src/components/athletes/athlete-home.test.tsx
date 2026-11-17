@@ -67,20 +67,23 @@ describe("AthleteHome", () => {
     expect(screen.queryAllByRole("link")).toHaveLength(0);
   });
 
-  it("gives the coach the same cards plus the way back, basic data and planning", () => {
+  it("gives the coach the same cards plus the way back, the basic data pencil and planning", () => {
     renderHome({ viewer: "coach" });
     expect(links()).toEqual([
       "/",
-      "/athletes/a1/macrocycle",
       "/athletes/a1/basic-data",
+      "/athletes/a1/macrocycle",
     ]);
+    const pencil = screen.getByRole("link", { name: "Edit basic data" });
+    expect(pencil.previousElementSibling?.textContent).toBe("Anna Weber");
+    expect(screen.queryByText("Basic data")).toBeNull();
     expect(screen.getByRole("link", { name: /Back to athletes/ })).toBeTruthy();
     cleanup();
     renderHome({ viewer: "coach", macrocycle: null });
     expect(links()).toEqual([
       "/",
-      "/athletes/a1/macrocycle/base-data",
       "/athletes/a1/basic-data",
+      "/athletes/a1/macrocycle/base-data",
     ]);
     expect(
       screen.getByRole("link", { name: /Plan macrocycle/ }).textContent,
@@ -90,7 +93,9 @@ describe("AthleteHome", () => {
   it("is translated to German", () => {
     renderHome({ viewer: "coach" }, "de");
     expect(screen.getByText("Trainer: Max Berg")).toBeTruthy();
-    expect(screen.getByText("Stammdaten")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Stammdaten bearbeiten" }),
+    ).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "Makrozyklus öffnen" }),
     ).toBeTruthy();

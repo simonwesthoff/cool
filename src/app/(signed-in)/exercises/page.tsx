@@ -3,15 +3,16 @@ import { ExerciseList } from "@/components/exercises/exercise-list";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { getCatalog } from "@/domain/exercises";
 import { requirePageUser } from "../current-user";
+import { PageMain } from "@/components/page-main";
 
 /** The exercise catalog, for every signed-in user. */
 export default function ExercisesPage() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-4 pb-24 sm:px-8">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <Exercises />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

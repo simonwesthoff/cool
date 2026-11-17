@@ -85,7 +85,9 @@
   Verify with component tests: the curve and axis per value; kg vs reps axis; defaults; no request for a value switch; the current week line.
 - [x] 6.3 View layout: as wide as the intensity step (`max-w-5xl`); below the chart only the focus points and the new macrocycle plan. Verify with component tests (sections, no historical data, deficits or injuries) and English and German texts.
 - [x] 6.4 Browser check on the dev server and Docker (coach and athlete, phone and desktop, light and dark), screenshots reviewed; update the memory with the colour rule.
-- [x] 6.5 One athlete page for both sides: the athlete details page uses the "My training" component (`AthleteHome`): picture, name and coach on top, then the macrocycle card (period and competition). The coach also gets the back link, "Plan macrocycle" without a macrocycle, and "Basic data"; "Change planning" stays in the macrocycle view. Verify with component and page tests and screenshots (coach and athlete, phone dark, desktop light).
+- [x] 6.5 One athlete page for both sides: the athlete details page uses the "My training" component (`AthleteHome`): picture, name and coach on top, then the macrocycle card (period and competition). The coach also gets the back link and "Plan macrocycle" without a macrocycle; "Change planning" stays in the macrocycle view. Verify with component and page tests and screenshots (coach and athlete, phone dark, desktop light).
+- [x] 6.6 Basic data via a pencil icon next to the athlete's name (coach only, name stays centred) instead of a "Basic data" card. Verify with component tests (link target, label in English and German, no card) and screenshots.
+- [x] 6.7 One content width for all pages: a shared `PageMain` (`max-w-5xl`, the intensity step's width) on every page, inner narrow wrappers removed. Verify with screenshots at 1280 px (overview, athlete page, basic data, planning, catalog) and 390 px.
 
 ## Workflow follow-up
 

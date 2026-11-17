@@ -4,6 +4,7 @@ import { BaseDataForm } from "@/components/macrocycles/base-data-form";
 import { today } from "@/domain/athletes/basic-data";
 import { PlanningHeader } from "../planning-header";
 import { loadPlanning, nextMonday } from "../shared";
+import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]/macrocycle/base-data">["params"];
 
@@ -12,11 +13,11 @@ export default function BaseDataPage({
   params,
 }: PageProps<"/athletes/[id]/macrocycle/base-data">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-4 pb-24 sm:px-8">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <BaseData params={params} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

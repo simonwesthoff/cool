@@ -29,7 +29,7 @@ export function StartChoice() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-sm flex-col gap-4 pt-12">
+    <section className="flex w-full flex-col gap-4 pt-12">
       <h1 className="text-2xl font-semibold">{t("title")}</h1>
       <p className="text-zinc-600 dark:text-zinc-400">{t("text")}</p>
       {failed && (

@@ -10,6 +10,7 @@ import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
 import { requireCoachPage } from "../../../current-user";
+import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]/basic-data">["params"];
 
@@ -17,11 +18,11 @@ export default function BasicDataPage({
   params,
 }: PageProps<"/athletes/[id]/basic-data">) {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-4 pb-24">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <EditAthlete params={params} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

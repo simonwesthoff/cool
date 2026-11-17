@@ -6,6 +6,7 @@ import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
 import { findMacrocycle } from "@/domain/macrocycles";
 import { requireCoachPage } from "../../current-user";
+import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]">["params"];
 
@@ -14,11 +15,11 @@ export default function AthleteDetailsPage({
   params,
 }: PageProps<"/athletes/[id]">) {
   return (
-    <main className="flex w-full flex-1 flex-col px-4 pt-4 pb-24">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <AthleteDetails params={params} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 

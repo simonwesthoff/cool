@@ -7,6 +7,7 @@ import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { signInErrorKind } from "@/components/auth/sign-in-error";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { getCurrentUser, safeReturnPath, signInUrl } from "@/domain/auth";
+import { PageMain } from "@/components/page-main";
 
 type SearchParams = PageProps<"/sign-in">["searchParams"];
 
@@ -33,7 +34,7 @@ export async function SignIn({ searchParams }: { searchParams: SearchParams }) {
   const error = signInErrorKind(first(params.error));
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-4 pb-24">
+    <PageMain className="justify-center gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-4xl font-semibold tracking-tight">
           {t("App.name")}
@@ -56,6 +57,6 @@ export async function SignIn({ searchParams }: { searchParams: SearchParams }) {
         returnPath={returnPath}
         errorPath={signInUrl(returnPath)}
       />
-    </main>
+    </PageMain>
   );
 }

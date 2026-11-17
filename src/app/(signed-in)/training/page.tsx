@@ -4,15 +4,16 @@ import { AthleteHome } from "@/components/athletes/athlete-home";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { findMacrocycle } from "@/domain/macrocycles";
 import { requirePageRoles } from "../current-user";
+import { PageMain } from "@/components/page-main";
 
 /** "My training": the athlete's page, as the coach sees it on the details page. */
 export default function TrainingPage() {
   return (
-    <main className="flex w-full flex-1 flex-col px-4 pt-4 pb-24">
+    <PageMain>
       <Suspense fallback={<LoadingPlaceholder />}>
         <Training />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 
