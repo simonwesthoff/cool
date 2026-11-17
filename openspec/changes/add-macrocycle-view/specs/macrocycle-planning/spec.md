@@ -2,24 +2,15 @@
 
 ## ADDED Requirements
 
-### Requirement: Colours of values and mesocycles
-Wherever the app shows them, the planned values SHALL have fixed colours:
-best value #6f3ab1 (also the intensity, which is the best value in %),
-average weight #ba2db3, set size #3bc8c8, weekly reps #d7f212. The mesocycles SHALL be shown in three shades of grey, from light
-(general preparation) to dark (competition preparation) in light mode and
-correspondingly in dark mode; they SHALL NOT use the value colours.
+### Requirement: Mesocycle colours in the app
+Wherever the app shows the mesocycles by colour, it SHALL use the same
+colours: general preparation #6f3ab1, special preparation #ba2db3,
+competition preparation #d7f212. Marks drawn on them SHALL stay readable
+on every one of these colours.
 
-#### Scenario: Mesocycles in grey
-- **WHEN** the coach looks at the intensity chart or the exercise table of a 21-week macrocycle
-- **THEN** the general, special and competition preparation blocks are shown in three different shades of grey, with labels naming them
-
-#### Scenario: Values in their colours
-- **WHEN** a chart shows the best value, average weight, set size or weekly reps of an exercise
-- **THEN** they are drawn in #6f3ab1, #ba2db3, #3bc8c8 and #d7f212
-
-#### Scenario: Intensity in the best value colour
-- **WHEN** the coach looks at the intensity chart in step 3
-- **THEN** the intensity curve and its week handles are drawn in #6f3ab1
+#### Scenario: Same colours everywhere
+- **WHEN** the coach looks at the intensity chart, the exercise table or the macrocycle view of a 21-week macrocycle
+- **THEN** the general, special and competition preparation blocks are shown in #6f3ab1, #ba2db3 and #d7f212, with labels naming them
 
 ## MODIFIED Requirements
 
@@ -27,7 +18,7 @@ correspondingly in dark mode; they SHALL NOT use the value colours.
 Step 3 SHALL show the macrocycle chart fitting the screen width: weeks on
 the x-axis ("Week"), each week's number and point at the start of its
 area, the intensity ("Intensity") as a curve with one handle per week, and
-the mesocycle backgrounds in their shades of grey. Each handle SHALL move
+the mesocycle backgrounds in their colours. Each handle SHALL move
 one 5 % step up (high week) or down (low week) by dragging or tapping; in
 between it is medium.
 
@@ -58,7 +49,7 @@ between it is medium.
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
-- **THEN** weeks 1–3, 4–13 and 14–21 have three different grey backgrounds, from light to dark, with a legend and labels naming the three mesocycles
+- **THEN** weeks 1–3 have a #6f3ab1, weeks 4–13 a #ba2db3 and weeks 14–21 a #d7f212 background, with a legend and labels naming the three mesocycles
 
 #### Scenario: Points at the start of a week
 - **GIVEN** the special preparation block starts in week 4

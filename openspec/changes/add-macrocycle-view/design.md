@@ -87,84 +87,55 @@
 - `MacrocycleChart` keeps its behaviour; its tests must stay green
   unchanged.
 
-### Colour association (app-wide)
-- **Value tokens** in `globals.css`: `--value-best` #6f3ab1,
-  `--value-average` #ba2db3, `--value-set-size` #3bc8c8,
-  `--value-weekly-reps` #d7f212. They are the same in light and dark mode.
-- **Mesocycle tokens:** `--band-1..3` become grey, with contrast to the
-  surface growing towards competition preparation.
-  - **Light mode:** #e4e4e7, #d4d4d8, #a1a1aa.
-  - **Dark mode:** #27272a, #3f3f46, #52525b.
-  - This also changes the planning chart, its legend swatches and the
-    exercise table header swatches, which already use these tokens.
-- **Planning chart marks:** the intensity is the best value in %, so the
-  intensity curve and its week points use `--value-best` (#6f3ab1), with
-  the same outline as the value curves. The dashed base curve stays a thin
-  neutral line, and the ▲/▼ markers stay in the text colour.
-- **Value curves on grey bands:** each curve gets a 1 px outline in the
-  surface's opposite (dark in light mode, light in dark mode). Lime and
-  cyan need it on light greys, purple on dark greys. The validator decides
-  the final outline strength.
-- **Memory:** the colour rule is recorded as a user preference for all
-  later screens (weekly plans, athlete details).
+### Mesocycle colours (app-wide, changed during acceptance)
+- The user withdrew the value-colour association and the grey mesocycles.
+  The mesocycles get palette colours everywhere: `--band-1` #6f3ab1 (GPB),
+  `--band-2` #ba2db3 (SPB), `--band-3` #d7f212 (CPB), the same in light and
+  dark mode. Cyan #3bc8c8 stays in the palette, unused for now.
+- **Marks on the bands:** curves and points are white with the dark chart
+  halo, as before the colour change. That keeps them readable on dark purple
+  and on light lime alike. The planning chart's intensity curve returns to
+  this style; the value tokens are removed.
+- **Lines:** the competition line, current-week line, block borders and
+  gridlines use the neutral chart ink (`--chart-ink`).
 
-### Exercise chart
-- **Axes:** one plot with two y-scales, as the user decided.
-  - **Left axis "kg":** from a clean step below the lowest weight to a
-    clean step above the highest.
-  - **Right axis "Reps":** from 0 to a clean step above the highest weekly
+### Exercise chart (changed during acceptance)
+- **One value, one curve, one y-axis:** the chart draws only the selected
+  value, on its own scale with a unit title ("kg" or "Reps").
+  - **kg:** from a clean step below the lowest value to one above the
+    highest.
+  - **Reps:** from 0.
+  - This also follows the `dataviz` "one axis" rule.
+- **Selections above the chart:** two native `select`s in one row (wrapping
+  on phones):
+  - **"Exercise":** entries like "1 Snatch".
+  - **"Value":** best value (kg), average weight (kg), set size, weekly
     reps.
-  - Gridlines follow the left axis only.
-  - The x-axis shows week numbers (as in planning, block starts always
-    numbered) and has no title.
-- **Dual-axis mitigation:** the `dataviz` guidance advises against two
-  y-axes; the user chose them. To keep the units apart:
-  - Each curve is in its value colour (see Colour association).
-  - Every curve has its own line style and point shape: best value solid
-    with circles, average weight dashed with squares, set size dotted with
-    triangles, weekly reps dash-dot with diamonds.
-  - Validator result (implementation): purple and magenta fail CVD
-    separation (ΔE 3.3) and the normal-vision floor (14.5 < 15). The colours
-    are the user's fixed choice, so identity is never carried by colour
-    alone: the line style, point shape, legend and tooltip values do that.
-  - Contrast: lime and cyan are below 3:1 on light greys and purple on dark
-    greys. A 1 px outline in the opposite of the surface fixes this (at
-    least 7.4:1 against every grey band).
-  - The legend shows each line style with its marker and unit, e.g.
-    "Best value (kg)".
-  - Axis titles name the unit.
-- **Missing values:** weeks with `null` values leave a gap in that curve.
-- **Tooltip:** hovering a week shows its three planning-style lines (week
-  from date, block abbreviation) plus the four values, e.g. "Best value:
-  80 kg". The week hit areas are full columns, as in planning.
-- **Current week:** a solid 2 px line in the text colour (black in light
-  mode, white in dark mode) at the current week's x, the same position as
-  that week's points. It appears in the legend as "Current week".
-  - It differs from the dashed competition line and the thin grey block
-    borders.
-  - `today` (YYYY-MM-DD, UTC, from `today()`) is passed in from the
-    server, so tests can fix the date.
-  - Before the start and after the end there is no line.
-- **Above the chart:** only the exercise selector (native `select` with
-  "1 Snatch" style entries).
+  - **Data:** switching the value needs no request, since the API returns
+    all four values per week; switching the exercise fetches as before.
+- **Legend:** the mesocycles, the main competition and the current week.
+  The single curve needs no legend entry; the "Value" selection names it.
+- **Missing values:** weeks with `null` leave a gap in the curve.
+- **Tooltip:** week from date, block abbreviation, and the selected value
+  (e.g. "Best value: 80 kg").
+- **Current week:** a solid 2 px line in the chart ink at the current
+  week's x; "Current week" in the legend; no line outside the cycle.
+  `today` is passed in from the server.
+- **Width:** the view's `main` uses `max-w-5xl` like the intensity step, so
+  the chart has the same width on desktop.
 
 ### Summary sections below the chart
 - **Focus points:** an ordered list; "No focus points entered yet" if the
   list is empty.
-- **Base data:** definition lists with the planning step 1 section titles
-  ("Historical data", "New macrocycle plan"). Body fat and muscle mass are
-  left out when empty. The end date is start + 7 × weeks − 1.
-- **Deficits:** a box like the deficits above the exercise table, followed
-  by injuries and illnesses. Empty texts read "Not entered yet".
+- **New macrocycle plan:** a definition list with that title. The end date
+  is start + 7 × weeks − 1.
+- Historical data, deficits and injuries are not shown (user decision).
 
 ## Risks / Trade-offs
 
-- [Purple and magenta are close for colour-vision deficiencies, and lime
-  and cyan are light on light greys] → Line style and point shape per
-  curve, outlines on the curves, and a validator run on both surfaces.
-- [Two y-axes invite misreading kg against reps] → Distinct line styles
-  and markers per unit, unit names in the legend and axis titles, and
-  values in the tooltip. The user chose this layout over stacked plots.
+- [Purple and magenta mesocycles are close for colour-vision deficiencies]
+  → The blocks are also told apart by their labels, border lines and the
+  legend.
 - [Values in weeks where the exercise is not planned could be taken as
   planned] → The mesocycle bands show the blocks. This matches the user's
   decision that the chart shows the exercise across the whole cycle.

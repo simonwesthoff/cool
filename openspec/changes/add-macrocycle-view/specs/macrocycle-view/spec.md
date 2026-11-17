@@ -3,9 +3,8 @@
 ## Purpose
 
 Shows a planned macrocycle read-only to the coach of the athlete's Team and
-to the athlete linked to it: how the planned values of an exercise develop
-week by week, the focus points, the starting point and the plan towards the
-main competition.
+to the athlete linked to it: how a planned value of an exercise develops
+week by week, the focus points and the plan towards the main competition.
 
 ## ADDED Requirements
 
@@ -37,49 +36,53 @@ athlete SHALL see that no macrocycle is planned yet.
 
 ### Requirement: Layout of the view
 The view SHALL show, from top to bottom: the exercise chart, the focus
-points in their order, the base data, and the deficits with the injuries
-and illnesses.
+points in their order, and the new macrocycle plan. It SHALL be as wide as
+the planning step with the intensity chart.
 
 #### Scenario: Order
 - **WHEN** the coach opens the view
-- **THEN** the exercise chart is at the top, followed by the focus points, the base data and the deficits
+- **THEN** the exercise chart is at the top, followed by the focus points and the new macrocycle plan, and the historical data, deficits and injuries are not shown
+
+#### Scenario: Width
+- **WHEN** the coach opens the view on a desktop screen
+- **THEN** the exercise chart is as wide as the intensity chart in planning step 3
 
 ### Requirement: Exercise chart
-The view SHALL show a read-only chart of one exercise's planned best value
-and average weight (kg, left axis) and set size and weekly reps (reps,
-right axis) for every week, calculated as in planning even in weeks whose
-mesocycle does not use the exercise. The curves SHALL use the value colours; a
-legend SHALL name each curve with its unit, and the x-axis SHALL show only
-week numbers. The grey mesocycle bands and the main competition marker
-SHALL be shown as in planning.
+The view SHALL show a read-only chart of one planned value of one exercise
+for every week, calculated as in planning even in weeks whose mesocycle
+does not use the exercise: the best value (kg), the average weight (kg),
+the set size or the weekly reps, as one curve on one y-axis with its unit.
+The x-axis SHALL show only week numbers; the mesocycle bands and the main
+competition marker SHALL be shown as in planning.
 
-#### Scenario: Snatch by default
+#### Scenario: Best value of the snatch by default
 - **GIVEN** a 21-week macrocycle with a snatch goal of 100 kg and entry value 60 %
 - **WHEN** the coach opens the view
-- **THEN** the chart shows exercise 1 (snatch), and week 11 has best value 80 kg, average weight 69 kg, set size 3 and 20 weekly reps
-
-#### Scenario: Legend
-- **WHEN** the view is shown
-- **THEN** the legend names "Best value (kg)", "Average weight (kg)", "Set size (reps)" and "Weekly reps (reps)" with the colour and line style of each curve, and the current week
+- **THEN** the chart shows the best value of exercise 1 (snatch) as the only curve, with 80 kg in week 11, on a kg axis
 
 #### Scenario: Read-only
 - **WHEN** the coach or the athlete drags inside the chart
 - **THEN** nothing changes and nothing is saved
 
-### Requirement: Exercise selection
-The only control above the chart SHALL let the coach and the athlete choose
-the exercise shown, from the catalog exercises 1 to 29 (those with reference
-values), listed with number and name. The chart SHALL then show that
-exercise's values; the choice SHALL NOT be saved.
+### Requirement: Exercise and value selection
+The only controls above the chart SHALL be two selections: the exercise
+(catalog exercises 1 to 29, those with reference values, listed with number
+and name; snatch by default) and the value to draw (best value by default,
+average weight, set size, weekly reps). The chart SHALL then show that
+value of that exercise; the choices SHALL NOT be saved.
 
 #### Scenario: Choose another exercise
 - **WHEN** the athlete chooses exercise 13 (snatch pull)
-- **THEN** the chart shows the planned values of exercise 13 for every week
+- **THEN** the chart shows the planned best value of exercise 13 for every week
+
+#### Scenario: Choose another value
+- **WHEN** the coach chooses "Weekly reps" while the snatch is shown
+- **THEN** the chart shows the snatch's weekly reps as the only curve, with 20 in week 11, on a reps axis
 
 #### Scenario: Not saved
-- **GIVEN** the coach chose exercise 13 in the view
+- **GIVEN** the coach chose exercise 13 and the weekly reps in the view
 - **WHEN** they open the view again
-- **THEN** it shows the snatch again
+- **THEN** it shows the best value of the snatch again
 
 ### Requirement: Focus points in the view
 Below the chart, the view SHALL show the macrocycle's focus points in their
@@ -90,32 +93,25 @@ order, or that none are entered yet.
 - **WHEN** the view is shown
 - **THEN** it shows "1. Turnover" and "2. Squat strength" below the chart
 
-### Requirement: Base data in the view
-The view SHALL show, read-only: "Historical data" (personal bests in snatch
-and clean & jerk, body weight, and body fat and muscle mass when entered),
-"New macrocycle plan" (period with start and end date, duration, date and
-type of the main competition, entry value, goals in snatch and clean &
-jerk, target body weight, sessions per week), the four deficits and the
-injuries and illnesses.
+#### Scenario: No focus points yet
+- **GIVEN** a macrocycle whose SWOT has not been saved yet
+- **WHEN** the view is shown
+- **THEN** it says that no focus points are entered yet
 
-#### Scenario: Base data shown
+### Requirement: Macrocycle plan in the view
+Below the focus points, the view SHALL show the new macrocycle plan
+read-only: period with start and end date, duration, date and type of the
+main competition, entry value, goals in snatch and clean & jerk, target
+body weight and sessions per week.
+
+#### Scenario: Plan shown
 - **GIVEN** a 21-week macrocycle from Monday 2026-11-30 towards the "German Championships" on 2027-04-24 with entry value 60 %
 - **WHEN** the coach opens the view
 - **THEN** they see the period "Nov 30, 2026 – Apr 25, 2027", 21 weeks, "German Championships" on "Apr 24, 2027" and 60 %
 
-#### Scenario: Optional values not entered
-- **GIVEN** a macrocycle without body fat and muscle mass
-- **WHEN** the view is shown
-- **THEN** it shows neither body fat nor muscle mass
-
-#### Scenario: SWOT not saved yet
-- **GIVEN** a macrocycle whose SWOT has not been saved yet
-- **WHEN** the view is shown
-- **THEN** the deficits and the injuries and illnesses read "Not entered yet", and no focus points are entered
-
 ### Requirement: Current week
 The exercise chart SHALL mark the week of the macrocycle that contains
-today with a solid vertical line at that week's values, named "Current
+today with a solid vertical line at that week's value, named "Current
 week" in the legend. Before the start and after the end of the macrocycle
 there SHALL be no such line.
 

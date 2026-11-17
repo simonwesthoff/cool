@@ -75,6 +75,17 @@
 
   Review the screenshots.
 
+## 6. Acceptance feedback
+
+- [ ] 6.1 Mesocycle colours back to the palette: GPB #6f3ab1, SPB #ba2db3, CPB #d7f212 (light and dark); remove the value colour tokens; planning chart intensity curve and points back to white with the dark halo; competition and current-week lines in the chart ink. Verify: component tests (band fills, curve style), planning and exercise table screenshots in light and dark mode.
+- [ ] 6.2 Exercise chart with one curve and one y-axis:
+  - **Selections:** a "Value" select next to the exercise select (best value by default); switching the value needs no request.
+  - **Legend and tooltip:** the legend has blocks, competition and current week; the tooltip shows week, block and the selected value.
+
+  Verify with component tests: the curve and axis per value; kg vs reps axis; defaults; no request for a value switch; the current week line.
+- [ ] 6.3 View layout: as wide as the intensity step (`max-w-5xl`); below the chart only the focus points and the new macrocycle plan. Verify with component tests (sections, no historical data, deficits or injuries) and English and German texts.
+- [ ] 6.4 Browser check on the dev server and Docker (coach and athlete, phone and desktop, light and dark), screenshots reviewed; update the memory with the colour rule.
+
 ## Workflow follow-up
 
 - User acceptance, archive (sync specs), PR into main. Next: weekly plans (features 9 and 10), then athlete details (feature 5) with the intensity and volume chart.

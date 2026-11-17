@@ -15,34 +15,23 @@ athlete cannot see it at all.
   step 1) and a way back to the athlete details page.
 - **Athlete access:** the same view, read-only, for the athlete linked to
   the Athlete, reached from "My training".
-- **Content, top to bottom:**
-  - **Exercise chart:** for one exercise, the planned best value
-    ("Bestwert") and average weight ("mHG") in kg and the set size and
-    weekly reps.
-    - **Axes:** one plot with a kg axis on the left and a reps axis on the
-      right; the x-axis shows week numbers only.
-    - **Colours:** each curve in its value colour.
-    - **Legend:** names each curve with its unit, and the current week.
-    - **Exercise:** the only control above the chart is the exercise picker.
-      Snatch by default; any catalog exercise 1–29 can be chosen, and the
-      choice is not saved.
+- **Content, top to bottom** (as wide as the intensity step in planning):
+  - **Exercise chart:** one planned value of one exercise per week, as a
+    single curve on one y-axis with its unit.
+    - **Selections above the chart:** the exercise (catalog exercises 1–29,
+      snatch by default) and the value (best value by default, average
+      weight, set size, weekly reps). The choices are not saved.
     - **Values:** calculated for every week, also where the exercise is not
       planned in the block.
-    - **Markers:** grey mesocycle bands, the main competition marker, and a
-      solid line at the current week.
+    - **x-axis:** week numbers only.
+    - **Markers:** mesocycle bands in their colours, the main competition
+      marker, and a solid line at the current week.
   - **Focus points** in their order.
-  - **Base data:**
-    - Historical data: personal bests, body weight, body fat and muscle
-      mass if entered.
-    - New macrocycle plan: period, duration, main competition, entry value,
-      goals, target body weight, sessions per week.
-  - **Deficits** (snatch, clean, jerk, other) and injuries and illnesses.
-- **App-wide colours** (user decision):
-  - **Values:** best value #6f3ab1 (also the intensity in the planning
-    chart), average weight #ba2db3, set size #3bc8c8, weekly reps #d7f212.
-  - **Mesocycles:** three shades of grey everywhere, replacing the palette
-    colours in the planning chart, its legend and the exercise table
-    headers.
+  - **New macrocycle plan:** period, duration, main competition, entry
+    value, goals, target body weight, sessions per week.
+- **App-wide mesocycle colours** (user decision): general preparation
+  #6f3ab1, special preparation #ba2db3, competition preparation #d7f212,
+  in the planning chart, the exercise table and the view.
 - **Athlete details page:** the planned macrocycle links to the view; "Plan
   macrocycle" and "Change planning" stay.
 - **Read access:** the linked athlete may read the macrocycle (page and
@@ -53,7 +42,8 @@ athlete cannot see it at all.
 Out of scope:
 - The intensity and volume chart on the athlete details page (feature 5).
 - Intensity curve, volume and high/low markers in this view.
-- Strengths, experience and the chosen exercises in the view.
+- Historical data, strengths, deficits, experience, injuries and the
+  chosen exercises in the view.
 - Any editing in the view, and remembering the chosen exercise.
 - Weekly plans (features 9 and 10).
 
@@ -62,16 +52,15 @@ Out of scope:
 ### New Capabilities
 - `macrocycle-view`: read-only view of a planned macrocycle for the coach and
   the linked athlete: the exercise chart with exercise selection and
-  current-week marker, focus points, base data, deficits and injuries, and
-  the API for an exercise's weekly values.
+  current-week marker, focus points and the new macrocycle plan, and the API
+  for an exercise's weekly values.
 
 ### Modified Capabilities
 - `macrocycle-planning`:
   - "One macrocycle per athlete" and "Macrocycle API" now let the linked
     athlete read the macrocycle (writes stay coach-only).
-  - "Intensity chart with week handles" uses grey mesocycles and a purple
-    intensity curve.
-  - A new requirement fixes the colours of values and mesocycles app-wide.
+  - "Intensity chart with week handles" uses the new mesocycle colours.
+  - A new requirement fixes the mesocycle colours app-wide.
 - `athlete-details`: "Macrocycle entry point" links a planned macrocycle to
   the new view.
 - `user-roles`: "Athlete view" links to the athlete's macrocycle view.
@@ -94,11 +83,11 @@ Out of scope:
 - **Components:**
   - New: exercise chart (reusing the mesocycle bands, competition marker
     and width fitting of the macrocycle chart) and a base data summary.
-  - Colour tokens: value colours added; mesocycle bands switched to grey
-    shades, which also affects the planning chart and the exercise table.
+  - Colour tokens: mesocycle bands #6f3ab1 / #ba2db3 / #d7f212, which also
+    affects the planning chart and the exercise table.
   - Texts in English and German.
 - **Data:** no schema change.
 - **New domain terms:**
   - Macrocycle view: the read-only page.
-  - Exercise chart: the chart of one exercise's planned values per week.
+  - Exercise chart: the chart of one planned value of one exercise per week.
   - Current week: the week of the macrocycle that contains today.
