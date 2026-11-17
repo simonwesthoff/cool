@@ -1,12 +1,27 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
 import { BaseDataForm } from "./base-data-form";
 import { StepIndicator } from "./step-indicator";
+import { UnsavedChangesProvider } from "./unsaved-changes";
 
 const router = { push: vi.fn(), refresh: vi.fn(), bfcacheId: "v1" };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
@@ -363,5 +378,129 @@ describe("StepIndicator", () => {
       screen.getByRole("link", { name: "1 Stammdaten, abgeschlossen" }),
     ).toBeTruthy();
     expect(screen.getByRole("link", { name: "3 Intensität" })).toBeTruthy();
+  });
+});
+
+describe("Unsaved changes when changing the step", () => {
+  beforeAll(() => {
+    const proto = HTMLDialogElement.prototype;
+    if (!proto.showModal) {
+      proto.showModal = function (this: HTMLDialogElement) {
+        this.setAttribute("open", "");
+      };
+      proto.close = function (this: HTMLDialogElement) {
+        this.removeAttribute("open");
+        this.dispatchEvent(new Event("close"));
+      };
+    }
+  });
+
+  const renderStep = (locale: "en" | "de" = "en") =>
+    renderWith(
+      <UnsavedChangesProvider>
+        <StepIndicator athleteId="a1" current="swot" available />
+        <BaseDataForm
+          athleteId="a1"
+          part="swot"
+          macrocycle={existing}
+          defaultStartDate="2026-11-23"
+        />
+      </UnsavedChangesProvider>,
+      locale,
+    );
+  const dialog = () => document.querySelector("dialog") as HTMLDialogElement;
+  const toBaseData = () =>
+    userEvent.click(
+      screen.getByRole("link", { name: "1 Base data, completed" }),
+    );
+
+  it("asks before leaving with changes and discards them on request", async () => {
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    expect(dialog().open).toBe(true);
+    expect(
+      within(dialog()).getByRole("heading", { name: "Save changes?" }),
+    ).toBeTruthy();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Discard" }),
+    );
+    expect(dialog().open).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(router.push).toHaveBeenCalledWith(
+      "/athletes/a1/macrocycle/base-data",
+    );
+  });
+
+  it("saves the changes and then opens the chosen step", async () => {
+    respond(200, {});
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Save" }),
+    );
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("/api/athletes/a1/macrocycle/swot");
+    expect(JSON.parse(init.body)).toEqual({ ...swot, strengths: "Explosive" });
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith(
+        "/athletes/a1/macrocycle/base-data",
+      ),
+    );
+  });
+
+  it("stays on the step and shows the errors when saving fails", async () => {
+    respond(400, {
+      error: { code: "VALIDATION_FAILED", fields: { strengths: ["TOO_LONG"] } },
+    });
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Save" }),
+    );
+    await waitFor(() => expect(dialog().open).toBe(false));
+    expect(router.push).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText("Please check the marked fields."),
+    ).toBeTruthy();
+  });
+
+  it("keeps the step and the changes when cancelled", async () => {
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Cancel" }),
+    );
+    expect(dialog().open).toBe(false);
+    expect(router.push).not.toHaveBeenCalled();
+    expect(
+      (screen.getByLabelText("Strengths") as HTMLTextAreaElement).value,
+    ).toBe("Explosive");
+  });
+
+  it("does not ask without changes", async () => {
+    renderStep();
+    const link = screen.getByRole("link", { name: "1 Base data, completed" });
+    const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+    link.dispatchEvent(click);
+    expect(dialog().open).toBe(false);
+    // The link navigates as usual.
+    expect(click.defaultPrevented).toBe(false);
+  });
+
+  it("uses German texts", async () => {
+    renderStep("de");
+    await fill("Stärken", "Explosiv");
+    await userEvent.click(
+      screen.getByRole("link", { name: "1 Stammdaten, abgeschlossen" }),
+    );
+    expect(
+      within(dialog()).getByRole("heading", { name: "Änderungen speichern?" }),
+    ).toBeTruthy();
+    for (const name of ["Speichern", "Verwerfen", "Abbrechen"])
+      expect(within(dialog()).getByRole("button", { name })).toBeTruthy();
   });
 });

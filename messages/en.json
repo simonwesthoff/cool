@@ -289,6 +289,13 @@
       "deficitsLabel": "Athlete's deficits",
       "ownReasonRemove": "Remove own reason: {reason}",
       "ownReasonCancel": "Cancel own reason"
+    },
+    "unsaved": {
+      "title": "Save changes?",
+      "text": "This step has changes that are not saved yet.",
+      "save": "Save",
+      "discard": "Discard",
+      "cancel": "Cancel"
     }
   },
   "MacrocycleView": {

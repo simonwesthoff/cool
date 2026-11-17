@@ -2,9 +2,17 @@
 
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import type { MacrocycleBaseData } from "@/domain/macrocycles/macrocycle-types";
 import { FocusPointsField } from "./focus-points-field";
+import { useUnsavedChangesGuard } from "./unsaved-changes";
 
 type FieldName = Exclude<keyof MacrocycleBaseData, "focusPoints">;
 type FieldErrors = Partial<Record<string, string[]>>;
@@ -95,13 +103,22 @@ function BaseDataFormFields({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const form = useRef<HTMLFormElement>(null);
+  // The values as stored, to tell whether the form has unsaved changes.
+  const stored = useRef<string | null>(null);
+  const snapshot = () =>
+    form.current ? JSON.stringify(valuesOf(form.current)) : null;
+  useEffect(() => {
+    stored.current = snapshot();
+  }, []);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  /** Saves the form; true on success, otherwise the errors are shown. */
+  async function save(): Promise<boolean> {
+    if (!form.current) return false;
     setPending(true);
     setErrors({});
     setFormError(null);
-    const body = valuesOf(event.currentTarget);
+    const body = valuesOf(form.current);
     const api = `/api/athletes/${athleteId}/macrocycle`;
     const response = await fetch(part === "swot" ? `${api}/swot` : api, {
       method: part === "swot" ? "PUT" : macrocycle ? "PATCH" : "POST",
@@ -110,10 +127,8 @@ function BaseDataFormFields({
     }).catch(() => null);
     setPending(false);
     if (response?.ok) {
-      const next = part === "swot" ? "intensity" : "swot";
-      router.push(`/athletes/${athleteId}/macrocycle/${next}`);
-      router.refresh();
-      return;
+      stored.current = snapshot();
+      return true;
     }
     const result = (await response?.json().catch(() => null)) as {
       error?: { code?: string; fields?: FieldErrors };
@@ -124,6 +139,21 @@ function BaseDataFormFields({
     } else {
       setFormError(t("saveFailed"));
     }
+    return false;
+  }
+
+  // The stepper asks before leaving the step with unsaved changes.
+  useUnsavedChangesGuard({
+    isDirty: () => stored.current !== null && snapshot() !== stored.current,
+    save,
+  });
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!(await save())) return;
+    const next = part === "swot" ? "intensity" : "swot";
+    router.push(`/athletes/${athleteId}/macrocycle/${next}`);
+    router.refresh();
   }
 
   const message = (code: string) =>
@@ -200,7 +230,12 @@ function BaseDataFormFields({
   const m = macrocycle;
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-8">
+    <form
+      ref={form}
+      onSubmit={submit}
+      noValidate
+      className="flex flex-col gap-8"
+    >
       {formError && (
         <p
           role="alert"

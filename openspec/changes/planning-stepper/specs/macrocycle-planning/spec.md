@@ -6,7 +6,9 @@
 The planning SHALL consist of four steps the coach goes through in order
 and can revisit at any time: 1. base data, 2. SWOT, 3. intensity chart with
 week levels, 4. exercises per mesocycle. Every step SHALL show a stepper
-and the title "<first name>'s macrocycle planning". After step 4 the
+and the title "<first name>'s macrocycle planning". Choosing another step
+while the current step's form has unsaved changes SHALL ask whether to
+save or discard them. After step 4 the
 macrocycle SHALL be planned and the coach returns to the athlete's details
 page.
 
@@ -34,3 +36,17 @@ page.
 - **GIVEN** the athlete "Anna Weber"
 - **WHEN** the coach opens any planning step
 - **THEN** the page title is "Anna's macrocycle planning" ("Makrozyklusplanung für Anna" in German), and there is no separate name line above it
+
+#### Scenario: Unsaved changes when changing the step
+- **GIVEN** the coach changed the strengths in step 2 without saving
+- **WHEN** they choose step 1 in the stepper
+- **THEN** a dialog asks "Save changes?" with "Save", "Discard" and "Cancel"; "Save" stores the SWOT and opens step 1, "Discard" opens step 1 without storing, "Cancel" keeps step 2 with the changes
+
+#### Scenario: Saving fails in the dialog
+- **GIVEN** the dialog after changing step 2
+- **WHEN** the coach chooses "Save" and the input is invalid
+- **THEN** step 2 stays open and shows the marked fields
+
+#### Scenario: No unsaved changes
+- **WHEN** the coach chooses another step without changing anything
+- **THEN** the step opens without a dialog

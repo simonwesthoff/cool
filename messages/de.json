@@ -289,6 +289,13 @@
       "deficitsLabel": "Defizite des Athleten",
       "ownReasonRemove": "Eigene Begründung entfernen: {reason}",
       "ownReasonCancel": "Eigene Begründung verwerfen"
+    },
+    "unsaved": {
+      "title": "Änderungen speichern?",
+      "text": "Dieser Schritt hat Änderungen, die noch nicht gespeichert sind.",
+      "save": "Speichern",
+      "discard": "Verwerfen",
+      "cancel": "Abbrechen"
     }
   },
   "MacrocycleView": {

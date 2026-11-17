@@ -31,6 +31,17 @@ back link or the steps' content.
   (`firstName("Anna Weber") = "Anna"`), a small pure helper. German uses
   "Makrozyklusplanung für {name}" to avoid possessive rules (Max' / Annas).
 
+- **Unsaved changes:** a small context in the macrocycle layout. The form
+  of steps 1 and 2 registers a guard (whether its values differ from the
+  stored snapshot, and how to save). The stepper asks the guard before
+  following a link and opens a native `<dialog>`. Unregistering only
+  removes the own guard, because Next keeps the previous page mounted but
+  hidden and may clean it up after the next page registered. Only stepper
+  links are guarded; the back link, the tabs and closing the tab are not
+  part of this request.
+- **Stacking:** connector line `z-[1]` above the hover highlight, circles
+  `z-[2]` above the line, the user menu `z-30` above page content.
+
 ## Risks / Trade-offs
 
 - [A step reached directly by URL shows earlier steps as completed even if
