@@ -22,38 +22,24 @@ body {
 }
 
 /*
- * App-wide colour association (user decision): the four planned values keep
- * their colour on every screen; the intensity is the best value in %.
- * Mesocycles are three greys, with growing contrast to the surface.
+ * Mesocycle colours, the same on every screen and in light and dark mode
+ * (user decision): general preparation purple, special preparation
+ * magenta, competition preparation lime. Marks on them are white with a
+ * dark halo so they stay readable on dark and light bands alike.
  */
-@theme {
-  --color-value-best: #6f3ab1;
-  --color-value-average: #ba2db3;
-  --color-value-set-size: #3bc8c8;
-  --color-value-weekly-reps: #d7f212;
-}
-
 :root {
   --surface: #ffffff;
-  --value-best: var(--color-value-best);
-  --value-average: var(--color-value-average);
-  --value-set-size: var(--color-value-set-size);
-  --value-weekly-reps: var(--color-value-weekly-reps);
-  --band-1: #e4e4e7;
-  --band-2: #d4d4d8;
-  --band-3: #a1a1aa;
-  /* Lines and labels in charts; outline around coloured curves. */
+  --band-1: var(--color-palette-purple);
+  --band-2: var(--color-palette-magenta);
+  --band-3: var(--color-palette-lime);
+  --chart-halo: #09090b;
+  /* Lines and labels in charts (borders, competition, current week). */
   --chart-ink: #18181b;
-  --curve-outline: #09090b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --surface: #09090b;
-    --band-1: #27272a;
-    --band-2: #3f3f46;
-    --band-3: #52525b;
     --chart-ink: #f4f4f5;
-    --curve-outline: #d4d4d8;
   }
 }

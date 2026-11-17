@@ -307,21 +307,26 @@ export function MacrocycleChart({
           >
             {t("axisWeek")}
           </text>
-          {/* The base curve is a thin neutral line. */}
+          {/* White marks with a dark halo stay readable on every band colour. */}
           <path
             d={curvePath}
             fill="none"
-            stroke="var(--chart-ink)"
-            strokeOpacity={0.45}
+            stroke="var(--chart-halo)"
+            strokeOpacity={0.5}
+            strokeWidth={3}
+          />
+          <path
+            d={curvePath}
+            fill="none"
+            className="stroke-white/70"
             strokeWidth={1}
           />
-          {/* Intensity = best value in %: best value colour with an outline
-              that stays readable on every grey band. */}
           <path
             d={linePath}
             fill="none"
-            stroke="var(--curve-outline)"
-            strokeWidth={4.5}
+            stroke="var(--chart-halo)"
+            strokeWidth={5}
+            strokeOpacity={0.85}
             strokeLinejoin="round"
             strokeLinecap="round"
           />
@@ -329,8 +334,8 @@ export function MacrocycleChart({
             data-intensity-line
             d={linePath}
             fill="none"
-            stroke="var(--value-best)"
-            strokeWidth={2.5}
+            className="stroke-white"
+            strokeWidth={2}
             strokeLinejoin="round"
             strokeLinecap="round"
           />
@@ -355,9 +360,12 @@ export function MacrocycleChart({
                     x={p.x}
                     y={level === "high" ? p.y - radius - 6 : p.y + radius + 14}
                     textAnchor="middle"
-                    className={column < 12 ? "text-[9px]" : "text-[11px]"}
-                    fill="var(--chart-ink)"
-                    stroke="var(--surface)"
+                    className={
+                      column < 12
+                        ? "fill-white text-[9px]"
+                        : "fill-white text-[11px]"
+                    }
+                    stroke="var(--chart-halo)"
                     strokeWidth={3}
                     paintOrder="stroke"
                     aria-hidden="true"
@@ -373,14 +381,14 @@ export function MacrocycleChart({
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={(active ? radius + 1.5 : radius) + 1.5}
-                    fill="var(--curve-outline)"
+                    r={(active ? radius + 1.5 : radius) + 2.5}
+                    fill="var(--chart-halo)"
                   />
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={active ? radius + 1.5 : radius}
-                    fill="var(--value-best)"
+                    className="fill-white"
                   />
                 </g>
                 {/* The week's hit area: its whole column, centred on the point. */}

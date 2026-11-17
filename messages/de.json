@@ -295,13 +295,13 @@
   },
   "MacrocycleView": {
     "chart": {
-      "caption": "Geplante Werte der Übung je Woche",
+      "caption": "{value} der Übung je Woche",
       "legend": "Legende",
       "series": {
         "bestKg": "Bestwert (kg)",
         "averageKg": "Mittleres Hantelgewicht (kg)",
-        "setSize": "Seriengröße (Wdh.)",
-        "weeklyReps": "Wochenwiederholungen (Wdh.)"
+        "setSize": "Seriengröße",
+        "weeklyReps": "Wochenwiederholungen"
       },
       "competition": "Hauptwettkampf",
       "currentWeek": "Aktuelle Woche",
@@ -330,16 +330,8 @@
       "focusPoints": "Schwerpunkte",
       "noFocusPoints": "Noch keine Schwerpunkte eingetragen.",
       "position": "{position}.",
-      "history": "Historische Daten",
       "plan": "Neue Makrozyklusplanung",
-      "deficits": "Defizite, Verletzungen und Erkrankungen",
-      "notEntered": "Noch nicht eingetragen",
       "kg": "{value} kg",
-      "snatchBest": "Bestleistung Reißen",
-      "cleanAndJerkBest": "Bestleistung Stoßen",
-      "bodyWeight": "Körpergewicht",
-      "bodyFat": "Körperfett",
-      "muscleMass": "Muskelmasse",
       "period": "Zeitraum",
       "periodValue": "{start} – {end}",
       "duration": "Dauer",
@@ -351,6 +343,7 @@
       "cleanAndJerkGoal": "Zielleistung Stoßen",
       "targetBodyWeight": "Zielkörpergewicht",
       "trainingFrequency": "Trainingseinheiten pro Woche"
-    }
+    },
+    "value": "Wert"
   }
 }

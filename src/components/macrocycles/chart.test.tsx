@@ -265,7 +265,7 @@ describe("week positions and colours", () => {
     expect(numbers).toEqual(expect.arrayContaining([1, 4, 14]));
   });
 
-  it("colours the bands grey and the intensity in the best value colour", () => {
+  it("colours the bands with the palette and draws the intensity white", () => {
     const { container } = renderIn(
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
     );
@@ -278,10 +278,10 @@ describe("week positions and colours", () => {
       "var(--band-3)",
     ]);
     expect(
-      container.querySelector("[data-intensity-line]")!.getAttribute("stroke"),
-    ).toBe("var(--value-best)");
+      container.querySelector("[data-intensity-line]")!.getAttribute("class"),
+    ).toBe("stroke-white");
     const dot = pointOf(container, 4).querySelectorAll("circle")[1]!;
-    expect(dot.getAttribute("fill")).toBe("var(--value-best)");
+    expect(dot.getAttribute("class")).toBe("fill-white");
   });
 });
 

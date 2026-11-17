@@ -123,29 +123,36 @@ function renderView(
     </NextIntlClientProvider>,
   );
 }
-const bestValueOfWeek1 = (container: HTMLElement) =>
+const valueOfWeek1 = (container: HTMLElement) =>
   container
-    .querySelector('[data-curve="bestKg"] [data-point="1"]')!
+    .querySelector('[data-curve] [data-point="1"]')!
     .getAttribute("data-value");
 
 describe("MacrocycleView", () => {
-  it("shows the exercise picker, chart, focus points, base data and deficits in this order", () => {
+  it("shows the two selections, the chart, the focus points and the plan in this order", () => {
     const { container } = renderView({
       editHref: "/athletes/a1/macrocycle/base-data",
     });
-    const picker = screen.getByLabelText("Exercise") as HTMLSelectElement;
-    expect([...picker.options].map((o) => o.textContent)).toEqual([
+    const exercise = screen.getByLabelText("Exercise") as HTMLSelectElement;
+    const value = screen.getByLabelText("Value") as HTMLSelectElement;
+    expect([...exercise.options].map((o) => o.textContent)).toEqual([
       "1 Snatch",
       "13 Snatch pull",
     ]);
-    expect(picker.value).toBe("1");
+    expect(exercise.value).toBe("1");
+    expect([...value.options].map((o) => o.textContent)).toEqual([
+      "Best value (kg)",
+      "Average weight (kg)",
+      "Set size",
+      "Weekly reps",
+    ]);
+    expect(value.value).toBe("bestKg");
     const order = [
-      picker,
+      exercise,
+      value,
       container.querySelector("figure")!,
       screen.getByRole("heading", { name: "Focus points" }),
-      screen.getByRole("heading", { name: "Historical data" }),
       screen.getByRole("heading", { name: "New macrocycle plan" }),
-      screen.getByRole("heading", { name: "Deficits, injuries and illnesses" }),
       screen.getByRole("link", { name: "Change planning" }),
     ];
     for (let i = 1; i < order.length; i++) {
@@ -154,13 +161,27 @@ describe("MacrocycleView", () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     }
-    // The picker is the only control above the chart.
-    const chartSection = picker.closest("section")!;
+    // The selections are the only controls above the chart.
+    const chartSection = exercise.closest("section")!;
     expect(within(chartSection).queryAllByRole("button")).toHaveLength(0);
     expect(within(chartSection).queryAllByRole("link")).toHaveLength(0);
+    // No historical data, deficits or injuries.
+    expect(
+      screen.queryByRole("heading", { name: "Historical data" }),
+    ).toBeNull();
+    const text = document.body.textContent!;
+    for (const hidden of [
+      "Personal best",
+      "Body weight",
+      "Muscle mass",
+      "Slow turnover",
+      "Ankle mobility",
+      "Deficits",
+    ])
+      expect(text).not.toContain(hidden);
   });
 
-  it("shows the base data, focus points and deficits", () => {
+  it("shows the plan and the focus points", () => {
     renderView();
     const text = document.body.textContent!;
     expect(text).toContain("PeriodNov 30, 2026 – Apr 25, 2027");
@@ -169,39 +190,30 @@ describe("MacrocycleView", () => {
       "Main competitionGerman Championships, Apr 24, 2027",
     );
     expect(text).toContain("Entry value60%");
-    expect(text).toContain("Personal best snatch90 kg");
+    expect(text).toContain("Goal snatch100 kg");
     expect(text).toContain("Target body weight80.5 kg");
-    expect(text).toContain("Muscle mass45%");
-    // Body fat is not entered and left out.
-    expect(text).not.toContain("Body fat");
     const points = screen.getByRole("heading", {
       name: "Focus points",
     }).parentElement!;
     expect(
       [...points.querySelectorAll("li")].map((li) => li.textContent),
     ).toEqual(["1.Turnover", "2.Squat strength"]);
-    expect(
-      document.querySelector('[data-summary="cleanDeficits"]')!.textContent,
-    ).toBe("Deficits in the cleanNot entered yet");
-    expect(
-      document.querySelector('[data-summary="injuriesAndIllnesses"]')!
-        .textContent,
-    ).toContain("None");
   });
 
-  it("reads no focus points and not entered SWOT values for an unsaved SWOT", () => {
-    renderView({
-      macrocycle: {
-        ...macrocycle,
-        focusPoints: [],
-        snatchDeficits: "",
-        injuriesAndIllnesses: "",
-      },
-    });
+  it("says that no focus points are entered yet", () => {
+    renderView({ macrocycle: { ...macrocycle, focusPoints: [] } });
     expect(screen.getByText("No focus points entered yet.")).toBeTruthy();
+  });
+
+  it("switches the value without loading anything", async () => {
+    const { container } = renderView();
+    expect(valueOfWeek1(container)).toBe("80");
+    await userEvent.selectOptions(screen.getByLabelText("Value"), "weeklyReps");
     expect(
-      document.querySelector('[data-summary="snatchDeficits"]')!.textContent,
-    ).toContain("Not entered yet");
+      container.querySelector("[data-curve]")!.getAttribute("data-curve"),
+    ).toBe("weeklyReps");
+    expect(valueOfWeek1(container)).toBe("20");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("loads another exercise's values and keeps them for switching back", async () => {
@@ -209,16 +221,15 @@ describe("MacrocycleView", () => {
       new Response(JSON.stringify(valuesOf(13, 95)), { status: 200 }),
     );
     const { container } = renderView();
-    expect(bestValueOfWeek1(container)).toBe("80");
     await userEvent.selectOptions(screen.getByLabelText("Exercise"), "13");
     expect(fetchMock.mock.calls[0]![0]).toBe(
       "/api/athletes/a1/macrocycle/exercises/13",
     );
-    await waitFor(() => expect(bestValueOfWeek1(container)).toBe("95"));
+    await waitFor(() => expect(valueOfWeek1(container)).toBe("95"));
     await userEvent.selectOptions(screen.getByLabelText("Exercise"), "1");
-    expect(bestValueOfWeek1(container)).toBe("80");
+    expect(valueOfWeek1(container)).toBe("80");
     await userEvent.selectOptions(screen.getByLabelText("Exercise"), "13");
-    expect(bestValueOfWeek1(container)).toBe("95");
+    expect(valueOfWeek1(container)).toBe("95");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -230,7 +241,7 @@ describe("MacrocycleView", () => {
     expect((screen.getByLabelText("Exercise") as HTMLSelectElement).value).toBe(
       "1",
     );
-    expect(bestValueOfWeek1(container)).toBe("80");
+    expect(valueOfWeek1(container)).toBe("80");
   });
 
   it("offers Change planning only with an edit link", () => {
@@ -250,6 +261,7 @@ describe("MacrocycleView", () => {
     renderView({}, "de");
     const text = document.body.textContent!;
     expect(screen.getByLabelText("Übung")).toBeTruthy();
+    expect(screen.getByLabelText("Wert")).toBeTruthy();
     expect(text).toContain("Dauer21 Wochen");
     expect(text).toContain("Zielleistung Reißen100 kg");
     expect(text).toMatch(/Einstiegswert60\s%/);

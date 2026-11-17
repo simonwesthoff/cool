@@ -295,13 +295,13 @@
   },
   "MacrocycleView": {
     "chart": {
-      "caption": "Planned values of the exercise per week",
+      "caption": "{value} of the exercise per week",
       "legend": "Legend",
       "series": {
         "bestKg": "Best value (kg)",
         "averageKg": "Average weight (kg)",
-        "setSize": "Set size (reps)",
-        "weeklyReps": "Weekly reps (reps)"
+        "setSize": "Set size",
+        "weeklyReps": "Weekly reps"
       },
       "competition": "Main competition",
       "currentWeek": "Current week",
@@ -330,16 +330,8 @@
       "focusPoints": "Focus points",
       "noFocusPoints": "No focus points entered yet.",
       "position": "{position}.",
-      "history": "Historical data",
       "plan": "New macrocycle plan",
-      "deficits": "Deficits, injuries and illnesses",
-      "notEntered": "Not entered yet",
       "kg": "{value} kg",
-      "snatchBest": "Personal best snatch",
-      "cleanAndJerkBest": "Personal best clean & jerk",
-      "bodyWeight": "Body weight",
-      "bodyFat": "Body fat",
-      "muscleMass": "Muscle mass",
       "period": "Period",
       "periodValue": "{start} – {end}",
       "duration": "Duration",
@@ -351,6 +343,7 @@
       "cleanAndJerkGoal": "Goal clean & jerk",
       "targetBodyWeight": "Target body weight",
       "trainingFrequency": "Training sessions per week"
-    }
+    },
+    "value": "Value"
   }
 }

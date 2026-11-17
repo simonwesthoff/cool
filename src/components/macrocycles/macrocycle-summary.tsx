@@ -4,13 +4,6 @@ import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { MacrocycleBaseData } from "@/domain/macrocycles/macrocycle-types";
 
-const DEFICITS = [
-  "snatchDeficits",
-  "cleanDeficits",
-  "jerkDeficits",
-  "otherDeficits",
-] as const;
-
 /** A date (YYYY-MM-DD) plus some days. */
 function addDays(isoDate: string, days: number): Date {
   const date = new Date(`${isoDate}T00:00:00Z`);
@@ -41,8 +34,8 @@ function Items({ items }: { items: [string, string][] }) {
 }
 
 /**
- * Read-only summary of a macrocycle below the exercise chart: focus points,
- * base data (historical data, new macrocycle plan), deficits and injuries.
+ * Read-only summary of a macrocycle below the exercise chart: the focus
+ * points and the new macrocycle plan.
  */
 export function MacrocycleSummary({
   macrocycle: m,
@@ -50,22 +43,12 @@ export function MacrocycleSummary({
   macrocycle: MacrocycleBaseData;
 }) {
   const t = useTranslations("MacrocycleView.summary");
-  const tf = useTranslations("Macrocycle.baseData.fields");
   const format = useFormatter();
   const date = (value: Date) =>
     format.dateTime(value, { dateStyle: "medium", timeZone: "UTC" });
   const kg = (value: number) => t("kg", { value: format.number(value) });
   const pct = (value: number) =>
     format.number(value / 100, { style: "percent", maximumFractionDigits: 1 });
-
-  const history: [string, string][] = [
-    [t("snatchBest"), kg(m.snatchBestKg)],
-    [t("cleanAndJerkBest"), kg(m.cleanAndJerkBestKg)],
-    [t("bodyWeight"), kg(m.bodyWeightKg)],
-  ];
-  if (m.bodyFatPct !== null) history.push([t("bodyFat"), pct(m.bodyFatPct)]);
-  if (m.muscleMassPct !== null)
-    history.push([t("muscleMass"), pct(m.muscleMassPct)]);
 
   const plan: [string, string][] = [
     [
@@ -108,27 +91,8 @@ export function MacrocycleSummary({
           <p className="text-zinc-500 italic">{t("noFocusPoints")}</p>
         )}
       </Section>
-      <Section title={t("history")}>
-        <Items items={history} />
-      </Section>
       <Section title={t("plan")}>
         <Items items={plan} />
-      </Section>
-      <Section title={t("deficits")}>
-        <dl className="grid grid-cols-1 gap-3 rounded-xl bg-zinc-100 p-3 text-sm sm:grid-cols-2 dark:bg-zinc-900">
-          {[...DEFICITS, "injuriesAndIllnesses" as const].map((key) => (
-            <div key={key} data-summary={key} className="flex flex-col gap-0.5">
-              <dt className="font-semibold">{tf(key)}</dt>
-              <dd
-                className={
-                  m[key] ? "whitespace-pre-line" : "text-zinc-500 italic"
-                }
-              >
-                {m[key] || t("notEntered")}
-              </dd>
-            </div>
-          ))}
-        </dl>
       </Section>
     </div>
   );

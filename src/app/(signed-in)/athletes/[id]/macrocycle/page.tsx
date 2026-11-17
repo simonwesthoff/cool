@@ -15,7 +15,7 @@ export default function MacrocycleViewPage({
   params,
 }: PageProps<"/athletes/[id]/macrocycle">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-4 pb-24 sm:px-8">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pt-4 pb-24 sm:px-8">
       <Suspense fallback={<LoadingPlaceholder />}>
         <CoachMacrocycleView params={params} />
       </Suspense>

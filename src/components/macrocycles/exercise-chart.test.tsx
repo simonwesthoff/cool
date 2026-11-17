@@ -76,6 +76,7 @@ function renderChart(
         weeks={weeks}
         mesocycles={mesocycles}
         values={snatch}
+        value="bestKg"
         competition={{ date: "2027-04-24", type: "German Championships" }}
         today="2027-01-06"
         {...props}
@@ -85,10 +86,12 @@ function renderChart(
 }
 
 const PLOT = { top: 28, height: 240 };
-// Width 800, margins 56 / 16 + 34 for the reps axis: 694 px for 21 weeks.
-const xOf = (index: number) => 56 + (694 / 21) * index;
-const pointOf = (container: HTMLElement, curve: string, week: number) =>
-  container.querySelector(`[data-curve="${curve}"] [data-point="${week}"]`);
+// Width 800, margins 56 / 16: 728 px for 21 weeks.
+const xOf = (index: number) => 56 + (728 / 21) * index;
+const pointOf = (container: HTMLElement, week: number) =>
+  container.querySelector(`[data-curve] [data-point="${week}"]`);
+const yOf = (d: { min: number; max: number }, v: number) =>
+  PLOT.top + PLOT.height * (1 - (v - d.min) / (d.max - d.min));
 
 describe("ExerciseChart", () => {
   it("has the snatch values of the spec in week 11", () => {
@@ -101,85 +104,65 @@ describe("ExerciseChart", () => {
     });
   });
 
-  it("names the four curves with their units in the legend, plus blocks, competition and current week", () => {
-    renderChart();
-    const legend = screen.getByRole("list", { name: "Legend" });
-    const items = [...legend.querySelectorAll("li")].map(
-      (li) => li.textContent,
+  it("draws only the selected value as one white curve on a kg axis", () => {
+    const { container } = renderChart();
+    expect(container.querySelectorAll("[data-curve]")).toHaveLength(1);
+    expect(
+      container.querySelector("[data-curve]")!.getAttribute("data-curve"),
+    ).toBe("bestKg");
+    expect(container.querySelector("[data-line]")!.getAttribute("class")).toBe(
+      "stroke-white",
     );
-    expect(items).toEqual([
-      "Best value (kg)",
-      "Average weight (kg)",
-      "Set size (reps)",
-      "Weekly reps (reps)",
+    const kg = niceDomain(snatch.map((w) => w.bestKg!));
+    const dot = pointOf(container, 11)!.querySelectorAll("circle")[1]!;
+    expect(Number(dot.getAttribute("cy"))).toBeCloseTo(yOf(kg, 80), 5);
+    expect(Number(dot.getAttribute("cx"))).toBeCloseTo(xOf(10), 5);
+    expect(
+      [...container.querySelectorAll("[data-axis]")].map((t) =>
+        Number(t.textContent),
+      ),
+    ).toEqual(kg.ticks);
+    expect(container.querySelector("[data-axis-title]")!.textContent).toBe(
+      "kg",
+    );
+  });
+
+  it("uses a reps axis from 0 for set size and weekly reps", () => {
+    const { container } = renderChart({ value: "weeklyReps" });
+    const reps = niceDomain(
+      snatch.map((w) => w.weeklyReps!),
+      { fromZero: true },
+    );
+    expect(reps.min).toBe(0);
+    expect(pointOf(container, 11)!.getAttribute("data-value")).toBe("20");
+    expect(
+      [...container.querySelectorAll("[data-axis]")].map((t) =>
+        Number(t.textContent),
+      ),
+    ).toEqual(reps.ticks);
+    expect(container.querySelector("[data-axis-title]")!.textContent).toBe(
+      "Reps",
+    );
+  });
+
+  it("has the mesocycles, competition and current week in the legend, and only week numbers on the x-axis", () => {
+    const { container } = renderChart();
+    const legend = screen.getByRole("list", { name: "Legend" });
+    expect(
+      [...legend.querySelectorAll("li")].map((li) => li.textContent),
+    ).toEqual([
       "General preparation block",
       "Special preparation block",
       "Competition preparation block",
       "Main competition",
       "Current week",
     ]);
-  });
-
-  it("draws each curve in its value colour with its own line style", () => {
-    const { container } = renderChart();
-    const style = (curve: string) => {
-      const line = container.querySelector(
-        `[data-curve="${curve}"] [data-line]`,
-      )!;
-      return [
-        line.getAttribute("stroke"),
-        line.getAttribute("stroke-dasharray"),
-      ];
-    };
-    expect(style("bestKg")).toEqual(["var(--value-best)", null]);
-    expect(style("averageKg")).toEqual(["var(--value-average)", "7 4"]);
-    expect(style("setSize")).toEqual(["var(--value-set-size)", "1.5 4"]);
-    expect(style("weeklyReps")).toEqual([
-      "var(--value-weekly-reps)",
-      "8 3 1.5 3",
+    const bands = container.querySelectorAll("svg[role=group] > g > rect");
+    expect([0, 1, 2].map((i) => bands[i]!.getAttribute("fill"))).toEqual([
+      "var(--band-1)",
+      "var(--band-2)",
+      "var(--band-3)",
     ]);
-  });
-
-  it("places weights on the kg axis and reps on the reps axis", () => {
-    const { container } = renderChart();
-    const kg = niceDomain(snatch.flatMap((w) => [w.bestKg!, w.averageKg!]));
-    const reps = niceDomain(
-      snatch.flatMap((w) => [w.setSize!, w.weeklyReps!]),
-      { fromZero: true },
-    );
-    const yOf = (d: { min: number; max: number }, v: number) =>
-      PLOT.top + PLOT.height * (1 - (v - d.min) / (d.max - d.min));
-    const yOfPoint = (curve: string, week: number) =>
-      Number(
-        pointOf(container, curve, week)!
-          .querySelector("circle, rect, path")!
-          .getAttribute(curve === "bestKg" ? "cy" : "y") ?? NaN,
-      );
-    expect(yOfPoint("bestKg", 11)).toBeCloseTo(yOf(kg, 80), 5);
-    expect(
-      pointOf(container, "averageKg", 11)!.getAttribute("data-value"),
-    ).toBe("69");
-    expect(
-      pointOf(container, "weeklyReps", 11)!.getAttribute("data-value"),
-    ).toBe("20");
-    const best = pointOf(container, "bestKg", 11)!.querySelector("circle")!;
-    expect(Number(best.getAttribute("cx"))).toBeCloseTo(xOf(10), 5);
-    // Axis ticks on both sides.
-    expect(
-      [...container.querySelectorAll('[data-axis="kg"]')].map((t) =>
-        Number(t.textContent),
-      ),
-    ).toEqual(kg.ticks);
-    expect(
-      [...container.querySelectorAll('[data-axis="reps"]')].map((t) =>
-        Number(t.textContent),
-      ),
-    ).toEqual(reps.ticks);
-    expect(reps.ticks[0]).toBe(0);
-  });
-
-  it("shows week numbers only on the x-axis", () => {
-    const { container } = renderChart();
     const texts = [...container.querySelectorAll("svg text")].map(
       (t) => t.textContent,
     );
@@ -187,32 +170,27 @@ describe("ExerciseChart", () => {
     expect(texts).toEqual(expect.arrayContaining(["1", "4", "14"]));
   });
 
-  it("leaves gaps where a week has no value", () => {
+  it("leaves a gap where a week has no value", () => {
     const values = snatch.map((w) =>
       w.number === 5 ? { ...w, bestKg: null } : w,
     );
     const { container } = renderChart({ values });
-    const d = container
-      .querySelector('[data-curve="bestKg"] [data-line]')!
-      .getAttribute("d")!;
-    expect(d.match(/M/g)).toHaveLength(2);
-    expect(pointOf(container, "bestKg", 5)).toBeNull();
-    expect(pointOf(container, "averageKg", 5)).not.toBeNull();
+    expect(
+      container.querySelector("[data-line]")!.getAttribute("d")!.match(/M/g),
+    ).toHaveLength(2);
+    expect(pointOf(container, 5)).toBeNull();
   });
 
-  it("shows the week, its block and the four values in the tooltip", () => {
-    const { container } = renderChart();
+  it("shows the selected value, the week and its block in the tooltip", () => {
+    const { container } = renderChart({ value: "averageKg" });
     fireEvent.pointerEnter(container.querySelector('rect[data-week="11"]')!);
     const lines = [
       ...screen.getByTestId("exercise-tooltip").querySelectorAll("p"),
     ].map((p) => p.textContent);
     expect(lines).toEqual([
+      "Average weight: 69 kg",
       "Week 11 from Feb 8, 2027",
       "SPB",
-      "Best value: 80 kg",
-      "Average weight: 69 kg",
-      "Set size: 3",
-      "Weekly reps: 20",
     ]);
   });
 
@@ -222,11 +200,7 @@ describe("ExerciseChart", () => {
     const lines = [
       ...screen.getByTestId("exercise-tooltip").querySelectorAll("p"),
     ].map((p) => p.textContent);
-    expect(lines.slice(0, 3)).toEqual([
-      "Woche 11 ab 08.02.2027",
-      "ABP",
-      "Bestwert: 80 kg",
-    ]);
+    expect(lines).toEqual(["Bestwert: 80 kg", "Woche 11 ab 08.02.2027", "ABP"]);
   });
 
   it("marks the current week with a line, and none outside the cycle", () => {
@@ -245,14 +219,12 @@ describe("ExerciseChart", () => {
     expect(currentWeekIndex("2026-11-30", 21, "2027-04-26")).toBeNull();
   });
 
-  it("is read-only and dims the curves while another exercise loads", () => {
+  it("is read-only and dims the curve while another exercise loads", () => {
     const { container } = renderChart({ dimmed: true });
     expect(screen.queryAllByRole("slider")).toHaveLength(0);
     expect(container.querySelector("[data-border]")).toBeNull();
     expect(
-      container
-        .querySelector('[data-curve="bestKg"]')!
-        .parentElement!.getAttribute("opacity"),
+      container.querySelector("[data-curve]")!.getAttribute("opacity"),
     ).toBe("0.35");
   });
 });

@@ -11,7 +11,7 @@ import type {
   ExerciseWeeks,
   Macrocycle,
 } from "@/domain/macrocycles/macrocycle-types";
-import { ExerciseChart } from "./exercise-chart";
+import { ExerciseChart, VALUES, type ValueKey } from "./exercise-chart";
 import { MacrocycleSummary } from "./macrocycle-summary";
 
 export type ExerciseOption = { number: number; name: LocalizedText };
@@ -44,6 +44,8 @@ export function MacrocycleView({
   const t = useTranslations("MacrocycleView");
   const locale = useLocale();
   const selectId = useId();
+  const valueId = useId();
+  const [value, setValue] = useState<ValueKey>("bestKg");
   const [selected, setSelected] = useState(initialValues.exerciseNumber);
   // Values per exercise, so switching back to an exercise is instant.
   const [loaded, setLoaded] = useState<Record<number, ExerciseWeeks>>({
@@ -79,25 +81,44 @@ export function MacrocycleView({
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3" aria-label={t("chartTitle")}>
-        <div className="flex flex-col gap-1">
-          <label htmlFor={selectId} className="text-sm font-medium">
-            {t("exercise")}
-          </label>
-          <select
-            id={selectId}
-            value={selected}
-            onChange={(event) => choose(Number(event.target.value))}
-            className="min-h-11 w-full max-w-sm rounded-lg border border-zinc-300 bg-transparent px-3 dark:border-zinc-700 dark:bg-zinc-950"
-          >
-            {exercises.map((e) => (
-              <option key={e.number} value={e.number}>
-                {t("exerciseOption", {
-                  number: e.number,
-                  name: localized(e.name, locale),
-                })}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap gap-3">
+          <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
+            <label htmlFor={selectId} className="text-sm font-medium">
+              {t("exercise")}
+            </label>
+            <select
+              id={selectId}
+              value={selected}
+              onChange={(event) => choose(Number(event.target.value))}
+              className="min-h-11 w-full rounded-lg border border-zinc-300 bg-transparent px-3 dark:border-zinc-700 dark:bg-zinc-950"
+            >
+              {exercises.map((e) => (
+                <option key={e.number} value={e.number}>
+                  {t("exerciseOption", {
+                    number: e.number,
+                    name: localized(e.name, locale),
+                  })}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
+            <label htmlFor={valueId} className="text-sm font-medium">
+              {t("value")}
+            </label>
+            <select
+              id={valueId}
+              value={value}
+              onChange={(event) => setValue(event.target.value as ValueKey)}
+              className="min-h-11 w-full rounded-lg border border-zinc-300 bg-transparent px-3 dark:border-zinc-700 dark:bg-zinc-950"
+            >
+              {VALUES.map((v) => (
+                <option key={v.key} value={v.key}>
+                  {t(`chart.series.${v.key}`)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         {failed && (
           <p
@@ -111,6 +132,7 @@ export function MacrocycleView({
           weeks={macrocycle.weeks}
           mesocycles={macrocycle.mesocycles}
           values={loaded[shown]!.weeks}
+          value={value}
           competition={{
             date: macrocycle.competitionDate,
             type: macrocycle.competitionType,
