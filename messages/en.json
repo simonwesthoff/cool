@@ -118,8 +118,7 @@
     "macrocycleOpen": "Open macrocycle",
     "plan": "Plan macrocycle",
     "notPlanned": "No macrocycle planned yet.",
-    "editBasicData": "Edit basic data",
-    "back": "Back to athletes"
+    "editBasicData": "Edit basic data"
   },
   "Catalog": {
     "title": "Exercises",
@@ -142,6 +141,13 @@
     "athletes": "Athletes",
     "training": "My training",
     "exercises": "Exercises"
+  },
+  "Back": {
+    "athletes": "Back to athletes",
+    "athlete": "Back to {name}",
+    "macrocycle": "Back to the macrocycle",
+    "training": "Back to My training",
+    "start": "Back to the start page"
   },
   "Macrocycle": {
     "title": "Macrocycle planning",
@@ -312,8 +318,6 @@
     "exerciseOption": "{number} {name}",
     "loadFailed": "The values could not be loaded. Please try again.",
     "change": "Change planning",
-    "backAthlete": "Back to the athlete",
-    "backTraining": "Back to My training",
     "notPlanned": "Your coach has not planned a macrocycle yet.",
     "summary": {
       "focusPoints": "Focus points",

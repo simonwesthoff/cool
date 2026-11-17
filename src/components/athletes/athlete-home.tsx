@@ -5,6 +5,7 @@ import type {
   Macrocycle,
 } from "@/domain/macrocycles/macrocycle-types";
 import { Avatar } from "../avatar";
+import { BackLink } from "../back-link";
 import { ExerciseChart } from "../macrocycles/exercise-chart";
 
 export type AthleteHomeMacrocycle = {
@@ -75,6 +76,7 @@ export function AthleteHome({
   macrocycle,
 }: Props) {
   const t = useTranslations("AthleteHome");
+  const tb = useTranslations("Back");
   const coach = viewer === "coach";
   const macrocycleHref = coach
     ? `/athletes/${athleteId}/macrocycle`
@@ -82,17 +84,7 @@ export function AthleteHome({
 
   return (
     <div className="flex w-full flex-col gap-3">
-      {coach && (
-        <Link
-          href="/"
-          className="self-start text-sm font-medium text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
-        >
-          <span aria-hidden="true" className="mr-1">
-            ‹
-          </span>
-          {t("back")}
-        </Link>
-      )}
+      {coach && <BackLink href="/" label={tb("athletes")} />}
       <section
         className={`flex flex-col items-center gap-3 text-center ${coach ? "pt-4" : "pt-12"}`}
       >

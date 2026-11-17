@@ -9,6 +9,10 @@ vi.mock("../../../current-user", () => ({
     roles: { coach: { teamId: "t1" }, athlete: null },
   }),
 }));
+vi.mock("next-intl/server", () => ({
+  getTranslations: async () => (key: string, values?: Record<string, string>) =>
+    `${key}:${Object.values(values ?? {}).join(",")}`,
+}));
 class NotFound extends Error {}
 vi.mock("next/navigation", () => ({
   notFound: () => {
@@ -40,7 +44,11 @@ describe("edit athlete page", () => {
     });
     const element = await EditAthlete({ params });
     const children = element.props.children;
-    expect(children[0].props.athlete).toEqual({
+    expect(children[0].props).toEqual({
+      href: "/athletes/x",
+      label: "athlete:Anna",
+    });
+    expect(children[1].props.athlete).toEqual({
       id: "x",
       name: "Anna",
       linkedAccount: null,

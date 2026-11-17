@@ -118,8 +118,7 @@
     "macrocycleOpen": "Zum Makrozyklus",
     "plan": "Makrozyklus planen",
     "notPlanned": "Noch kein Makrozyklus geplant.",
-    "editBasicData": "Stammdaten bearbeiten",
-    "back": "Zurück zu den Athleten"
+    "editBasicData": "Stammdaten bearbeiten"
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",
@@ -142,6 +141,13 @@
     "athletes": "Athleten",
     "training": "Mein Training",
     "exercises": "Übungen"
+  },
+  "Back": {
+    "athletes": "Zurück zu den Athleten",
+    "athlete": "Zurück zu {name}",
+    "macrocycle": "Zurück zum Makrozyklus",
+    "training": "Zurück zu Mein Training",
+    "start": "Zurück zur Startseite"
   },
   "Macrocycle": {
     "title": "Makrozyklusplanung",
@@ -312,8 +318,6 @@
     "exerciseOption": "{number} {name}",
     "loadFailed": "Die Werte konnten nicht geladen werden. Bitte versuche es erneut.",
     "change": "Planung ändern",
-    "backAthlete": "Zurück zum Athleten",
-    "backTraining": "Zurück zu Mein Training",
     "notPlanned": "Dein Trainer hat noch keinen Makrozyklus geplant.",
     "summary": {
       "focusPoints": "Schwerpunkte",

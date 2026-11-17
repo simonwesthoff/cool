@@ -40,6 +40,8 @@ athlete cannot see it at all.
   to the name for the basic data; "Change planning" moves into the view.
 - **One content width** (user decision): every page uses the width of the
   intensity step (`max-w-5xl`) on desktop.
+- **Back navigation** (user decision): every sub-page of Athletes, My
+  training and Exercises has a "‹ Back to …" link at the top left.
 - **Read access:** the linked athlete may read the macrocycle (page and
   `GET` API); creating and changing it stays coach-only.
 - **API:** a new endpoint returns an exercise's planned values for every
@@ -60,7 +62,8 @@ Out of scope:
   the linked athlete: the exercise chart with exercise selection and
   current-week marker, focus points and the new macrocycle plan, and the API
   for an exercise's weekly values.
-- `app-layout`: one content width for all pages.
+- `app-layout`: one content width for all pages and one way back from
+  every sub-page.
 
 ### Modified Capabilities
 - `macrocycle-planning`:

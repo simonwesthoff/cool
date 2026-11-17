@@ -8,7 +8,9 @@ vi.mock("../../../macrocycle-view/load", () => ({ loadMacrocycleView }));
 const requireCoachPage = vi.fn();
 vi.mock("../../../current-user", () => ({ requireCoachPage }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string) => key,
+  getTranslations:
+    async (ns: string) => (key: string, values?: Record<string, string>) =>
+      `${ns}.${key}${values ? `:${Object.values(values).join(",")}` : ""}`,
 }));
 class NotFound extends Error {}
 class Redirect extends Error {
@@ -44,12 +46,15 @@ describe("coach macrocycle view page", () => {
     getAthlete.mockResolvedValue({ id: "a1", name: "Anna Weber" });
     loadMacrocycleView.mockResolvedValue(view);
     const element = await CoachMacrocycleView({ params });
-    const [heading, viewElement] = element.props.children;
+    const [back, heading, viewElement] = element.props.children;
+    expect(back.props).toEqual({
+      href: "/athletes/a1",
+      label: "Back.athlete:Anna Weber",
+    });
     expect(heading.props.children[0].props.children).toBe("Anna Weber");
     expect(viewElement.props).toMatchObject({
       ...view,
       editHref: "/athletes/a1/macrocycle/base-data",
-      back: { href: "/athletes/a1", label: "backAthlete" },
     });
     expect(loadMacrocycleView).toHaveBeenCalledWith(coach.user, "a1");
     expect(requireCoachPage).toHaveBeenCalledWith("/athletes/a1/macrocycle");

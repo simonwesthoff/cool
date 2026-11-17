@@ -10,6 +10,8 @@ import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
 import { requireCoachPage } from "../../../current-user";
+import { BackLink } from "@/components/back-link";
+import { getTranslations } from "next-intl/server";
 import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]/basic-data">["params"];
@@ -33,8 +35,13 @@ export async function EditAthlete({ params }: { params: Params }) {
     if (error instanceof DomainError && error.kind === "not_found") notFound();
     throw error;
   });
+  const tb = await getTranslations("Back");
   return (
     <div className="flex flex-col gap-8">
+      <BackLink
+        href={`/athletes/${athlete.id}`}
+        label={tb("athlete", { name: athlete.name })}
+      />
       <AthleteForm athlete={athlete} />
       {athlete.linkedAccount ? (
         <LinkedAccountSection

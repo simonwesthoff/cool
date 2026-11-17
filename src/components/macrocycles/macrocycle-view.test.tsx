@@ -117,7 +117,6 @@ function renderView(
         initialValues={valuesOf(1, 80)}
         exercises={exercises}
         today="2027-01-06"
-        back={{ href: "/athletes/a1", label: "Back to the athlete" }}
         {...props}
       />
     </NextIntlClientProvider>,
@@ -245,11 +244,10 @@ describe("MacrocycleView", () => {
   });
 
   it("offers Change planning only with an edit link", () => {
-    renderView({ back: { href: "/training", label: "Back to My training" } });
+    renderView();
     expect(screen.queryByRole("link", { name: "Change planning" })).toBeNull();
-    expect(
-      screen.getByRole("link", { name: "Back to My training" }),
-    ).toHaveProperty("pathname", "/training");
+    // The way back is at the top of the page, not in the view.
+    expect(screen.queryByRole("link", { name: /Back/ })).toBeNull();
     cleanup();
     renderView({ editHref: "/athletes/a1/macrocycle/base-data" });
     expect(

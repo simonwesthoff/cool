@@ -5,7 +5,7 @@ vi.mock("../../macrocycle-view/load", () => ({ loadMacrocycleView }));
 const requirePageRoles = vi.fn();
 vi.mock("../../current-user", () => ({ requirePageRoles }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string) => key,
+  getTranslations: async (ns: string) => (key: string) => `${ns}.${key}`,
 }));
 class Redirect extends Error {
   constructor(readonly url: string) {
@@ -44,11 +44,9 @@ describe("athlete macrocycle page", () => {
     requirePageRoles.mockResolvedValue(athlete);
     loadMacrocycleView.mockResolvedValue(view);
     const element = await AthleteMacrocycle();
-    const [, viewElement] = element.props.children;
-    expect(viewElement.props).toEqual({
-      ...view,
-      back: { href: "/training", label: "backTraining" },
-    });
+    const [back, , viewElement] = element.props.children;
+    expect(back.props).toEqual({ href: "/training", label: "Back.training" });
+    expect(viewElement.props).toEqual(view);
     expect(viewElement.props.editHref).toBeUndefined();
     expect(loadMacrocycleView).toHaveBeenCalledWith(user, "a1");
   });
@@ -57,8 +55,9 @@ describe("athlete macrocycle page", () => {
     requirePageRoles.mockResolvedValue(athlete);
     loadMacrocycleView.mockResolvedValue(null);
     const element = await AthleteMacrocycle();
-    const [, message] = element.props.children;
-    expect(message.props.children).toBe("notPlanned");
+    const [back, , message] = element.props.children;
+    expect(back.props.href).toBe("/training");
+    expect(message.props.children).toBe("MacrocycleView.notPlanned");
   });
 
   it("sends users without the athlete role to the home page", async () => {

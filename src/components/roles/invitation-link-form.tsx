@@ -40,11 +40,7 @@ export function InvitationLinkForm() {
   }
 
   return (
-    <form
-      onSubmit={submit}
-      noValidate
-      className="flex w-full flex-col gap-4 pt-12"
-    >
+    <form onSubmit={submit} noValidate className="flex w-full flex-col gap-4">
       <h1 className="text-2xl font-semibold">{t("title")}</h1>
       <p className="text-zinc-600 dark:text-zinc-400">{t("text")}</p>
       <label htmlFor={id} className="text-sm font-medium">

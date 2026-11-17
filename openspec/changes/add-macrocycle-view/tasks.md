@@ -90,6 +90,7 @@
 - [x] 6.7 One content width for all pages: a shared `PageMain` (`max-w-5xl`, the intensity step's width) on every page, inner narrow wrappers removed. Verify with screenshots at 1280 px (overview, athlete page, basic data, planning, catalog) and 390 px.
 - [x] 6.8 Macrocycle section of the athlete page = the view's `ExerciseChart` (snatch, best value) plus a right-aligned "Open macrocycle" button; no unit title next to the chart's y-axis. Drop-downs get their own chevron with the same right spacing as the text's left spacing (macOS). Verify with component and page tests and screenshots (coach desktop light, athlete phone dark, view desktop dark, basic data form).
 - [x] 6.9 Exercise chart legend hidden on screen (kept for screen readers) in both views; "Open macrocycle ›" as a text link in the style of "‹ Back to athletes", right-aligned. Verify with tests and screenshots.
+- [x] 6.10 Consistent back navigation: a shared `BackLink` at the top left of every sub-page (table in `app-layout`), replacing the macrocycle view's bottom back button. Verify with page and planning header tests, German and English texts, and screenshots of new athlete, basic data, planning (with and without macrocycle), coach and athlete view.
 
 ## Workflow follow-up
 

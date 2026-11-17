@@ -133,6 +133,23 @@
   is start + 7 × weeks − 1.
 - Historical data, deficits and injuries are not shown (user decision).
 
+## Back navigation
+
+A shared `BackLink` ("‹ Back to …") at the top left of every sub-page,
+leading one level up. The macrocycle view's back button at the bottom is
+gone; "Change planning" stays there for the coach.
+
+| Page | Back link |
+|------|-----------|
+| New athlete | Back to athletes |
+| Athlete page (coach) | Back to athletes |
+| Basic data | Back to {athlete name} |
+| Macrocycle view (coach) | Back to {athlete name} |
+| Planning steps, macrocycle exists | Back to the macrocycle |
+| Planning steps, no macrocycle yet | Back to {athlete name} |
+| Macrocycle view (athlete) | Back to My training |
+| Joining as an athlete (start page) | Back to the start page |
+
 ## Risks / Trade-offs
 
 - [Purple and magenta mesocycles are close for colour-vision deficiencies]

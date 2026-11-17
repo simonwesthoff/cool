@@ -26,7 +26,6 @@ type Props = {
   today: string;
   /** Only for the coach: link to change the planning. */
   editHref?: string;
-  back: { href: string; label: string };
 };
 
 const button =
@@ -39,7 +38,6 @@ export function MacrocycleView({
   exercises,
   today,
   editHref,
-  back,
 }: Props) {
   const t = useTranslations("MacrocycleView");
   const locale = useLocale();
@@ -142,22 +140,14 @@ export function MacrocycleView({
         />
       </section>
       <MacrocycleSummary macrocycle={macrocycle} />
-      <div className="flex flex-wrap gap-3">
-        {editHref && (
-          <Link
-            href={editHref}
-            className={`${button} bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300`}
-          >
-            {t("change")}
-          </Link>
-        )}
+      {editHref && (
         <Link
-          href={back.href}
-          className={`${button} text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900`}
+          href={editHref}
+          className={`${button} self-start bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300`}
         >
-          {back.label}
+          {t("change")}
         </Link>
-      </div>
+      )}
     </div>
   );
 }
