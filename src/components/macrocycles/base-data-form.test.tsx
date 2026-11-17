@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
 import { BaseDataForm } from "./base-data-form";
 import { StepIndicator } from "./step-indicator";
@@ -17,9 +18,12 @@ const respond = (status: number, body: unknown) =>
       headers: { "content-type": "application/json" },
     }),
   );
-const renderWith = (node: React.ReactNode) =>
+const renderWith = (node: React.ReactNode, locale: "en" | "de" = "en") =>
   render(
-    <NextIntlClientProvider locale="en" messages={en}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={locale === "de" ? de : en}
+    >
       {node}
     </NextIntlClientProvider>,
   );
@@ -309,26 +313,55 @@ describe("focus points", () => {
 });
 
 describe("StepIndicator", () => {
-  it("marks the current step and links the others once a macrocycle exists", () => {
-    const view = renderWith(
+  const stepOf = (container: HTMLElement, label: string) =>
+    [...container.querySelectorAll("li")].find((li) =>
+      li.textContent!.includes(label),
+    )!;
+
+  it("shows earlier steps as completed, the current one and later ones as links", () => {
+    const { container } = renderWith(
       <StepIndicator athleteId="a1" current="intensity" available />,
     );
-    expect(screen.getByText("3 Intensity").getAttribute("aria-current")).toBe(
-      "step",
-    );
-    expect(screen.getByRole("link", { name: "1 Base data" })).toHaveProperty(
+    expect(
+      screen.getByRole("navigation", { name: "Planning steps" }),
+    ).toBeTruthy();
+    expect(container.querySelectorAll("li")).toHaveLength(4);
+    const current = stepOf(container, "Intensity").querySelector(
+      "[aria-current=step]",
+    )!;
+    expect(current.textContent).toContain("3 Intensity");
+    expect(
+      screen.getByRole("link", { name: "1 Base data, completed" }),
+    ).toHaveProperty("pathname", "/athletes/a1/macrocycle/base-data");
+    expect(
+      screen.getByRole("link", { name: "2 SWOT, completed" }),
+    ).toHaveProperty("pathname", "/athletes/a1/macrocycle/swot");
+    expect(screen.getByRole("link", { name: "4 Exercises" })).toHaveProperty(
       "pathname",
-      "/athletes/a1/macrocycle/base-data",
+      "/athletes/a1/macrocycle/exercises",
     );
-    expect(screen.getByRole("link", { name: "2 SWOT" })).toHaveProperty(
-      "pathname",
-      "/athletes/a1/macrocycle/swot",
-    );
-    expect(screen.getByRole("link", { name: "4 Exercises" })).toBeTruthy();
-    view.unmount();
-    renderWith(
+    // Check marks for the completed steps, numbers for the others.
+    expect(stepOf(container, "Base data").querySelector("svg")).toBeTruthy();
+    expect(stepOf(container, "Exercises").querySelector("svg")).toBeNull();
+  });
+
+  it("disables steps 2 to 4 before the macrocycle exists", () => {
+    const { container } = renderWith(
       <StepIndicator athleteId="a1" current="base-data" available={false} />,
     );
     expect(screen.queryAllByRole("link")).toHaveLength(0);
+    expect(
+      stepOf(container, "SWOT").querySelector("[aria-disabled=true]")!
+        .textContent,
+    ).toContain("2 SWOT");
+    expect(container.querySelectorAll("svg")).toHaveLength(0);
+  });
+
+  it("uses German labels", () => {
+    renderWith(<StepIndicator athleteId="a1" current="swot" available />, "de");
+    expect(
+      screen.getByRole("link", { name: "1 Stammdaten, abgeschlossen" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "3 Intensität" })).toBeTruthy();
   });
 });

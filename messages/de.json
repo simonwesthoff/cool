@@ -150,13 +150,14 @@
     "start": "Zurück zur Startseite"
   },
   "Macrocycle": {
-    "title": "Makrozyklusplanung",
+    "title": "Makrozyklusplanung für {name}",
     "steps": {
       "label": "Planungsschritte",
       "base-data": "Stammdaten",
       "swot": "SWOT",
       "intensity": "Intensität",
-      "exercises": "Übungen"
+      "exercises": "Übungen",
+      "completed": "abgeschlossen"
     },
     "baseData": {
       "sections": {

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { firstName } from "@/components/first-name";
 import { BackLink } from "@/components/back-link";
 import {
   StepIndicator,
@@ -32,12 +33,9 @@ export async function PlanningHeader({
           label={tb("athlete", { name: athleteName })}
         />
       )}
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {athleteName}
-        </p>
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-      </div>
+      <h1 className="text-2xl font-semibold">
+        {t("title", { name: firstName(athleteName) })}
+      </h1>
       <StepIndicator
         athleteId={athleteId}
         current={step}

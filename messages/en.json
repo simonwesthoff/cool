@@ -150,13 +150,14 @@
     "start": "Back to the start page"
   },
   "Macrocycle": {
-    "title": "Macrocycle planning",
+    "title": "{name}'s macrocycle planning",
     "steps": {
       "label": "Planning steps",
       "base-data": "Base data",
       "swot": "SWOT",
       "intensity": "Intensity",
-      "exercises": "Exercises"
+      "exercises": "Exercises",
+      "completed": "completed"
     },
     "baseData": {
       "sections": {
