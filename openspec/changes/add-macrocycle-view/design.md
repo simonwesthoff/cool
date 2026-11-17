@@ -114,7 +114,8 @@
     reps.
   - **Data:** switching the value needs no request, since the API returns
     all four values per week; switching the exercise fetches as before.
-- **Legend:** the mesocycles, the main competition and the current week.
+- **Legend:** the mesocycles, the main competition and the current week;
+  hidden on screen for now (user decision), kept for screen readers.
   The single curve needs no legend entry; the "Value" selection names it.
 - **Missing values:** weeks with `null` leave a gap in the curve.
 - **Tooltip:** week from date, block abbreviation, and the selected value
@@ -135,8 +136,8 @@
 ## Risks / Trade-offs
 
 - [Purple and magenta mesocycles are close for colour-vision deficiencies]
-  → The blocks are also told apart by their labels, border lines and the
-  legend.
+  → The blocks are also told apart by their labels and border lines (the
+  legend is hidden for now).
 - [Values in weeks where the exercise is not planned could be taken as
   planned] → The mesocycle bands show the blocks. This matches the user's
   decision that the chart shows the exercise across the whole cycle.

@@ -138,10 +138,8 @@ export function ExerciseChart({
       <figcaption id={titleId} className="sr-only">
         {caption}
       </figcaption>
-      <ul
-        className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400"
-        aria-label={t("legend")}
-      >
+      {/* Legend hidden for now (user decision); screen readers keep it. */}
+      <ul className="sr-only" aria-label={t("legend")}>
         {mesocycles.map((m, i) => (
           <li key={m.type} className="flex items-center gap-2">
             <BandSwatch index={i} />

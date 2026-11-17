@@ -147,9 +147,12 @@ export function AthleteHome({
           />
           <Link
             href={macrocycleHref}
-            className="inline-flex min-h-11 items-center self-end rounded-full border border-zinc-300 px-5 font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+            className="self-end text-sm font-medium text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
           >
             {t("macrocycleOpen")}
+            <span aria-hidden="true" className="ml-1">
+              ›
+            </span>
           </Link>
         </section>
       ) : (

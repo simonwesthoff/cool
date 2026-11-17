@@ -144,6 +144,8 @@ describe("ExerciseChart", () => {
   it("has the mesocycles, competition and current week in the legend, and only week numbers on the x-axis", () => {
     const { container } = renderChart();
     const legend = screen.getByRole("list", { name: "Legend" });
+    // Hidden for now, but still there for screen readers.
+    expect(legend.className).toBe("sr-only");
     expect(
       [...legend.querySelectorAll("li")].map((li) => li.textContent),
     ).toEqual([

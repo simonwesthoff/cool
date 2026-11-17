@@ -110,10 +110,20 @@ body weight and sessions per week.
 - **WHEN** the coach opens the view
 - **THEN** they see the period "Nov 30, 2026 – Apr 25, 2027", 21 weeks, "German Championships" on "Apr 24, 2027" and 60 %
 
+### Requirement: Exercise chart legend
+The exercise chart's legend (mesocycles, main competition, current week)
+SHALL be hidden on screen for now (user decision) and stay available to
+screen readers. The mesocycles are still named by their labels above the
+bands.
+
+#### Scenario: No visible legend
+- **WHEN** the coach or the athlete looks at the exercise chart on the athlete's page or in the macrocycle view
+- **THEN** no legend is shown, and the bands carry the labels GPB, SPB and CPB
+
 ### Requirement: Current week
 The exercise chart SHALL mark the week of the macrocycle that contains
 today with a solid vertical line at that week's value, named "Current
-week" in the legend. Before the start and after the end of the macrocycle
+week" for screen readers. Before the start and after the end of the macrocycle
 there SHALL be no such line.
 
 #### Scenario: During the macrocycle
