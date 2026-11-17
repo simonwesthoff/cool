@@ -76,14 +76,12 @@ the Athlete SHALL see it.
 - **THEN** they are sent to the home page if they lead no Team, and see the "not found" page if they lead another Team
 
 ### Requirement: Macrocycle API
-The HTTP API SHALL let the coach of an athlete create and change the
-athlete's macrocycle, set week levels, set the exercises of each mesocycle,
-set the mesocycle borders, and read the macrocycle with mesocycles, week
-levels and all calculated values per week; the user linked to the Athlete
-SHALL be able to read it. Invalid input SHALL be answered with 400
-`VALIDATION_FAILED` and field codes; other users with 404
-`ATHLETE_NOT_FOUND`; a second macrocycle with 409 `MACROCYCLE_EXISTS`;
-reading a missing one with 404 `MACROCYCLE_NOT_FOUND`.
+The HTTP API SHALL let the coach create and change an athlete's
+macrocycle (base data, week levels, mesocycle exercises and borders) and
+read it with all calculated values per week; the linked user SHALL be able
+to read it. Errors: 400 `VALIDATION_FAILED` with field codes, 404
+`ATHLETE_NOT_FOUND` for other users, 409 `MACROCYCLE_EXISTS`, 404
+`MACROCYCLE_NOT_FOUND`.
 
 #### Scenario: Read with calculated values
 - **GIVEN** a planned macrocycle of 21 weeks with exercise 13 in the special preparation block

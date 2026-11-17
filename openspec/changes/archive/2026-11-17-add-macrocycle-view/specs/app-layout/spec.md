@@ -1,5 +1,10 @@
 # Spec Delta
 
+## Purpose
+
+App-wide page layout rules: one content width for every page and one
+consistent way back from every page below a top-level page.
+
 ## ADDED Requirements
 
 ### Requirement: Content width
