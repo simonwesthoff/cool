@@ -7,7 +7,7 @@ import { DomainError } from "@/domain/errors";
 import { requireCoachPage } from "../../current-user";
 import {
   loadMacrocycleChart,
-  loadTrainingWeeks,
+  loadCurrentWeek,
 } from "../../macrocycle-view/load";
 import { PageMain } from "@/components/page-main";
 
@@ -33,9 +33,9 @@ export async function AthleteDetails({ params }: { params: Params }) {
     if (error instanceof DomainError && error.kind === "not_found") notFound();
     throw error;
   });
-  const [macrocycle, trainingWeeks] = await Promise.all([
+  const [macrocycle, currentWeek] = await Promise.all([
     loadMacrocycleChart(user, id),
-    loadTrainingWeeks(user, id),
+    loadCurrentWeek(user, id),
   ]);
   return (
     <AthleteHome
@@ -47,7 +47,7 @@ export async function AthleteDetails({ params }: { params: Params }) {
       // getAthlete found the athlete in the user's Team.
       canEdit
       macrocycle={macrocycle}
-      trainingWeeks={trainingWeeks}
+      currentWeek={currentWeek}
     />
   );
 }

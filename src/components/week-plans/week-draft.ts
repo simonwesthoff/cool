@@ -18,6 +18,8 @@ export type DraftExercise = {
   note: string;
   /** Sets and reps as free text, for exercises without values. */
   freeText: string;
+  /** The athlete's feedback, read-only in the editor (not saved by it). */
+  feedback?: string;
   sets: DraftSet[];
 };
 export type DraftSession = {
@@ -46,6 +48,7 @@ export function draftOf(sessions: PlannedSession[]): DraftSession[] {
         exerciseNumber: e.exerciseNumber,
         note: e.note ?? "",
         freeText: e.freeText ?? "",
+        feedback: e.feedback ?? "",
         sets: e.setGroups.flatMap((g) =>
           Array.from({ length: g.sets }, () => ({
             key: newKey(),

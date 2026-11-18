@@ -22,32 +22,32 @@
 
 ## 3. UI
 
-- [ ] 3.1 Shared table basics (widths and the expansion of set groups into sets) used by the editor table and the new read-only `WeekViewTable`:
+- [x] 3.1 Shared table basics (widths and the expansion of set groups into sets) used by the editor table and the new read-only `WeekViewTable`:
   - **Columns:** exercise, kg/reps, ten sets, coach note and feedback, with fixed widths totalling 60 rem.
   - **Free text:** for exercises from 30 on.
   - **Phones:** the exercise column is sticky.
 
   Verify with component tests (cells, read-only, no indicator columns, free text, widths).
-- [ ] 3.2 Feedback field: editable for the linked user with automatic saving (600 ms, sequential, status text), plain text for others. Verify with component tests: typing saves, the status, read-only for the coach, failure shown.
-- [ ] 3.3 `TrainingWeekSection` as the week view:
+- [x] 3.2 Feedback field: editable for the linked user with automatic saving (600 ms, sequential, status text), plain text for others. Verify with component tests: typing saves, the status, read-only for the coach, failure shown.
+- [x] 3.3 `TrainingWeekSection` as the week view:
   - **Header:** start date, calendar week, "Week x of y", block and level.
   - **Coach tools:** "Edit week" / "Plan this week", and "Plan next week" / "Edit next week".
   - **States:** "No plan for this week yet", before the start, after the end.
   - **Removed:** the list of planned weeks, and the placeholder text in `AthleteHome`.
 
   Verify with component tests for the spec scenarios (coach, athlete, coach who trains themselves, states).
-- [ ] 3.4 Page loaders: the athlete details page and "My training" load the current week, with `canEdit` and `canGiveFeedback` decided in the domain. Verify with page tests.
-- [ ] 3.5 Week editor step 2 shows the feedback read-only below the coach note. Verify with a component test.
+- [x] 3.4 Page loaders: the athlete details page and "My training" load the current week, with `canEdit` and `canGiveFeedback` decided in the domain. Verify with page tests.
+- [x] 3.5 Week editor step 2 shows the feedback read-only below the coach note. Verify with a component test.
 
 ## 4. Texts and records
 
-- [ ] 4.1 English and German texts:
+- [x] 4.1 English and German texts:
   - **Section:** the header, the states, the coach tools and the feedback column.
   - **Feedback field:** the status texts.
   - **API errors:** the error texts.
 
   Verify with the message completeness test.
-- [ ] 4.2 Add "Feedback" (Rückmeldung) to `openspec/glossary.md`, keeping the user's uncommitted edits; apply the domain model change (`SessionExercise.feedback`) to `openspec/domain-model.md`. Verify the entries.
+- [x] 4.2 Add "Feedback" (Rückmeldung) to `openspec/glossary.md`, keeping the user's uncommitted edits; apply the domain model change (`SessionExercise.feedback`) to `openspec/domain-model.md`. Verify the entries.
 
 ## 5. Integration check
 

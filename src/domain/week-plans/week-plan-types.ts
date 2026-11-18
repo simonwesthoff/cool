@@ -68,13 +68,6 @@ export type InitialSource = "stored" | "previous" | "schedule";
 /** A week of the athlete page's entry points. */
 export type TrainingWeek = { weekNumber: number; planned: boolean };
 
-/** Entry points of the athlete page: current and next week, planned weeks. */
-export type TrainingWeeks = {
-  current: TrainingWeek | null;
-  next: TrainingWeek | null;
-  planned: PlannedWeekSummary[];
-};
-
 /** The athlete page's current week. */
 export type CurrentWeek =
   | { state: "before"; startDate: string }

@@ -33,7 +33,6 @@ import type {
   PlannedSession,
   PlannedWeekSummary,
   CurrentWeek,
-  TrainingWeeks,
   WeekPlan,
 } from "./week-plan-types";
 
@@ -470,30 +469,13 @@ export async function getWeekProjections(
   );
 }
 
-/**
- * The entry points of the athlete page: current and next week and the
- * planned weeks (coach and linked athlete); null without a macrocycle.
- */
-export async function getTrainingWeeks(
+/** Whether the user is linked to the Athlete and may give feedback. */
+export async function isLinkedAthlete(
   user: CurrentUser,
   athleteId: string,
-  today: string,
-): Promise<TrainingWeeks | null> {
-  await requireViewableAthlete(user, athleteId);
-  const row = await findMacrocycleRow(athleteId);
-  if (!row) return null;
-  const planned = await listWeekPlans(user, athleteId);
-  const numbers = new Set(planned.map((p) => p.weekNumber));
-  const { current, next } = currentAndNextWeek(
-    row.startDate,
-    row.durationWeeks,
-    today,
-  );
-  const of = (weekNumber: number | null) =>
-    weekNumber === null
-      ? null
-      : { weekNumber, planned: numbers.has(weekNumber) };
-  return { current: of(current), next: of(next), planned };
+): Promise<boolean> {
+  const roles = await getRoles(user);
+  return roles.athlete?.athleteId === athleteId;
 }
 
 const feedbackSchema = z.strictObject({
@@ -518,8 +500,7 @@ export async function setFeedback(
   input: unknown,
 ): Promise<WeekPlan> {
   await requireViewableAthlete(user, athleteId);
-  const roles = await getRoles(user);
-  if (roles.athlete?.athleteId !== athleteId)
+  if (!(await isLinkedAthlete(user, athleteId)))
     throw new DomainError("forbidden", "NOT_THE_ATHLETE");
   const { row, week } = await macrocycleAndWeek(athleteId, weekParam);
   const data = parseInput(feedbackSchema, input);

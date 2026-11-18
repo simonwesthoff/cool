@@ -14,12 +14,12 @@ const { eq } = await import("drizzle-orm");
 const {
   getWeekPlan,
   getCurrentWeek,
-  getTrainingWeeks,
   getWeekProjections,
   initialWeekContent,
   listWeekPlans,
   saveWeekPlan,
   setFeedback,
+  isLinkedAthlete,
 } = await import("./index");
 
 /** 21 weeks from Monday 2026-11-30, entry 60 %, snatch goal 100 kg. */
@@ -440,32 +440,6 @@ describe("duration guard", () => {
   });
 });
 
-describe("getTrainingWeeks", () => {
-  it("names the current and next week and the planned weeks", async () => {
-    const { coach, athlete } = await setup();
-    await saveWeekPlan(coach, athlete.id, "5", week11);
-    await saveWeekPlan(coach, athlete.id, "6", week11);
-    expect(await getTrainingWeeks(coach, athlete.id, "2027-01-06")).toEqual({
-      current: { weekNumber: 6, planned: true },
-      next: { weekNumber: 7, planned: false },
-      planned: [
-        { weekNumber: 5, startDate: "2026-12-28" },
-        { weekNumber: 6, startDate: "2027-01-04" },
-      ],
-    });
-    expect(
-      (await getTrainingWeeks(coach, athlete.id, "2026-11-20"))?.next,
-    ).toEqual({ weekNumber: 1, planned: false });
-  });
-
-  it("is null without a macrocycle", async () => {
-    const coach = await createUser(testDb.db);
-    await startAsCoach(coach);
-    const athlete = await createAthlete(coach, { name: "No Plan" });
-    expect(await getTrainingWeeks(coach, athlete.id, "2027-01-06")).toBeNull();
-  });
-});
-
 describe("feedback", () => {
   async function linkedSetup() {
     const { coach, athlete } = await setup();
@@ -547,6 +521,12 @@ describe("feedback", () => {
     expect(
       await codeOf(setFeedback(stranger, athlete.id, "11", mondaySnatch("x"))),
     ).toBe("ATHLETE_NOT_FOUND");
+  });
+
+  it("knows who may give feedback", async () => {
+    const { coach, athlete, linked } = await linkedSetup();
+    expect(await isLinkedAthlete(linked, athlete.id)).toBe(true);
+    expect(await isLinkedAthlete(coach, athlete.id)).toBe(false);
   });
 
   it("lets a coach who trains themselves write feedback", async () => {

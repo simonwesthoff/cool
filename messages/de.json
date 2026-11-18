@@ -113,24 +113,13 @@
   "AthleteHome": {
     "pictureAlt": "Profilbild von {name}",
     "coach": "Trainer: {name}",
-    "placeholder": "Hier erscheint bald dein Trainingsplan.",
-    "placeholderCoach": "Hier erscheint bald der Trainingsplan.",
     "macrocycle": "Makrozyklus",
     "macrocycleOpen": "Zum Makrozyklus",
     "plan": "Makrozyklus planen",
     "notPlanned": "Noch kein Makrozyklus geplant.",
     "editBasicData": "Stammdaten bearbeiten",
     "trainingWeek": {
-      "title": "Trainingswoche",
-      "planNext": "Nächste Woche planen (Woche {week})",
-      "editNext": "Nächste Woche bearbeiten (Woche {week})",
-      "planThis": "Diese Woche planen (Woche {week})",
-      "none": "Noch keine Woche geplant.",
-      "week": "Woche {week}",
-      "from": "ab {date}",
-      "current": "Aktuelle Woche",
-      "edit": "Bearbeiten",
-      "editWeek": "Woche {week} bearbeiten"
+      "title": "Trainingswoche"
     }
   },
   "Catalog": {
@@ -412,7 +401,8 @@
       "freeText": "Sätze und Wiederholungen, z. B. 3 × 12",
       "freeTextOf": "Sätze und Wiederholungen von {name}",
       "exercise": "Übung",
-      "row": "Zeile"
+      "row": "Zeile",
+      "feedback": "Rückmeldung: {text}"
     },
     "totals": {
       "title": "Diese Woche (alle Einheiten)",
@@ -446,5 +436,26 @@
     "retry": "Erneut versuchen",
     "finish": "Wochenplanung abschließen",
     "offPlan": "{count, plural, one {# Wert weicht} other {# Werte weichen}} mehr als 5 % vom Plan ab (rot: darüber, blau: darunter). Gespeichert wird trotzdem."
+  },
+  "WeekView": {
+    "feedback": {
+      "title": "Rückmeldung",
+      "of": "Rückmeldung zu {name}",
+      "placeholder": "Wie lief es?",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert",
+      "failed": "Nicht gespeichert"
+    },
+    "weekOf": "Woche {week} von {weeks}",
+    "from": "ab {date}",
+    "calendarWeek": "KW {week}",
+    "blockAndLevel": "{block} · {level}",
+    "notPlanned": "Für diese Woche gibt es noch keinen Plan.",
+    "before": "Der Makrozyklus beginnt am {date}.",
+    "after": "Der Makrozyklus ist beendet.",
+    "editWeek": "Woche bearbeiten",
+    "planThis": "Diese Woche planen",
+    "planNext": "Nächste Woche planen (Woche {week})",
+    "editNext": "Nächste Woche bearbeiten (Woche {week})"
   }
 }

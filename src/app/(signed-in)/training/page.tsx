@@ -4,10 +4,7 @@ import { AthleteHome } from "@/components/athletes/athlete-home";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
 import { isCoachOfAthlete } from "@/domain/athletes";
 import { requirePageRoles } from "../current-user";
-import {
-  loadMacrocycleChart,
-  loadTrainingWeeks,
-} from "../macrocycle-view/load";
+import { loadMacrocycleChart, loadCurrentWeek } from "../macrocycle-view/load";
 import { PageMain } from "@/components/page-main";
 
 /** "My training": the athlete's page, as the coach sees it on the details page. */
@@ -25,14 +22,11 @@ export async function Training() {
   const { user, roles } = await requirePageRoles("/training");
   if (!roles.athlete) redirect("/");
   const athleteId = roles.athlete.athleteId;
-  const [macrocycle, canEdit] = await Promise.all([
+  const [macrocycle, canEdit, currentWeek] = await Promise.all([
     loadMacrocycleChart(user, athleteId),
     isCoachOfAthlete(user, athleteId),
+    loadCurrentWeek(user, athleteId),
   ]);
-  // The week planning entry points only for whoever may plan.
-  const trainingWeeks = canEdit
-    ? await loadTrainingWeeks(user, athleteId)
-    : null;
   return (
     <AthleteHome
       viewer="athlete"
@@ -42,7 +36,7 @@ export async function Training() {
       coachName={roles.athlete.coachName}
       canEdit={canEdit}
       macrocycle={macrocycle}
-      trainingWeeks={trainingWeeks}
+      currentWeek={currentWeek}
     />
   );
 }

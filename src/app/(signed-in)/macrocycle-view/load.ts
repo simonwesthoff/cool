@@ -1,7 +1,7 @@
 import { today } from "@/domain/athletes/basic-data";
 import type { CurrentUser } from "@/domain/auth";
-import { getExercisesWithValues } from "@/domain/exercises";
-import { getTrainingWeeks } from "@/domain/week-plans";
+import { getCatalog, getExercisesWithValues } from "@/domain/exercises";
+import { getCurrentWeek, isLinkedAthlete } from "@/domain/week-plans";
 import {
   canPlanMacrocycle,
   findMacrocycle,
@@ -56,7 +56,30 @@ export async function loadMacrocycleChart(
   return { macrocycle, values, today: today() };
 }
 
-/** The week planning entry points of the athlete page; null without a macrocycle. */
-export async function loadTrainingWeeks(user: CurrentUser, athleteId: string) {
-  return getTrainingWeeks(user, athleteId, today());
+/**
+ * The current week of the athlete page with the catalog names of its
+ * exercises and whether the user may give feedback; null without a
+ * macrocycle.
+ */
+export async function loadCurrentWeek(user: CurrentUser, athleteId: string) {
+  const [current, canGiveFeedback, catalog] = await Promise.all([
+    getCurrentWeek(user, athleteId, today()),
+    isLinkedAthlete(user, athleteId),
+    getCatalog(),
+  ]);
+  if (!current) return null;
+  const numbers = new Set(
+    current.state === "week"
+      ? current.week.sessions.flatMap((s) =>
+          s.exercises.map((e) => e.exerciseNumber),
+        )
+      : [],
+  );
+  const names = Object.fromEntries(
+    catalog
+      .flatMap((g) => g.exercises)
+      .filter((e) => numbers.has(e.number))
+      .map((e) => [e.number, e.name]),
+  );
+  return { current, names, canGiveFeedback };
 }

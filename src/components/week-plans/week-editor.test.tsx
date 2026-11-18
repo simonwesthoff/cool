@@ -648,6 +648,38 @@ describe("WeekEditor step 2 layout", () => {
   });
 });
 
+describe("WeekEditor feedback", () => {
+  it("shows the athlete's feedback read-only below the coach note, and never saves it", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    const withFeedback: PlannedSession[] = [
+      {
+        ...week11[0]!,
+        exercises: [
+          { ...week11[0]!.exercises[0]!, feedback: "Last set felt heavy" },
+        ],
+      },
+      week11[1]!,
+    ];
+    renderEditor(withFeedback);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const monday = sessionNamed("Monday");
+    expect(monday.querySelector("[data-feedback]")!.textContent).toBe(
+      "Feedback: Last set felt heavy",
+    );
+    expect(
+      within(monday).queryByRole("textbox", { name: /Feedback/ }),
+    ).toBeNull();
+    await userEvent.type(
+      within(sessionNamed("Thursday")).getByRole("textbox", {
+        name: "Reps of set 4 of 1 Snatch",
+      }),
+      "2",
+    );
+    const body = await nextSave();
+    expect(JSON.stringify(body)).not.toContain("feedback");
+  });
+});
+
 describe("WeekEditor saving", () => {
   it("saves every change on its own, as set groups of equal sets", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));

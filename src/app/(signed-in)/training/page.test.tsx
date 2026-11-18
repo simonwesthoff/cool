@@ -2,14 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 
 const requirePageRoles = vi.fn();
 const loadMacrocycleChart = vi.fn();
-const loadTrainingWeeks = vi.fn(async () => ({
-  current: null,
-  next: { weekNumber: 1, planned: false },
-  planned: [],
-}));
+const currentWeek = {
+  current: { state: "before", startDate: "2026-11-30" },
+  names: {},
+  canGiveFeedback: true,
+};
+const loadCurrentWeek = vi.fn(async () => currentWeek);
 vi.mock("../macrocycle-view/load", () => ({
   loadMacrocycleChart,
-  loadTrainingWeeks,
+  loadCurrentWeek,
 }));
 vi.mock("../current-user", () => ({ requirePageRoles }));
 const isCoachOfAthlete = vi.fn(async () => false);
@@ -60,10 +61,10 @@ describe("athlete view", () => {
       coachName: "Max Berg",
       canEdit: false,
       macrocycle: null,
-      // No week planning entry points for an athlete who may not plan.
-      trainingWeeks: null,
+      // The athlete sees the current week too.
+      currentWeek,
     });
-    expect(loadTrainingWeeks).not.toHaveBeenCalled();
+    expect(loadCurrentWeek).toHaveBeenCalledWith(user, "a1");
   });
 
   it("passes the own macrocycle chart data when one is planned", async () => {
@@ -102,11 +103,7 @@ describe("athlete view", () => {
     isCoachOfAthlete.mockResolvedValueOnce(true);
     const element = await Training();
     expect(element.props.canEdit).toBe(true);
-    expect(element.props.trainingWeeks).toEqual({
-      current: null,
-      next: { weekNumber: 1, planned: false },
-      planned: [],
-    });
+    expect(element.props.currentWeek).toEqual(currentWeek);
     expect(isCoachOfAthlete).toHaveBeenCalledWith(user, "a1");
   });
 });

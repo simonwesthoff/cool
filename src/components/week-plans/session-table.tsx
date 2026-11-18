@@ -9,6 +9,13 @@ import {
 } from "@/domain/week-plans/calculation";
 import { usesFreeText } from "@/domain/week-plans/week-plan-types";
 import {
+  EDITOR_TABLE_WIDTH,
+  EDITOR_WIDTH,
+  fill,
+  line,
+  SETS,
+} from "./table-layout";
+import {
   MAX_SETS,
   setErrors,
   type DraftExercise,
@@ -29,33 +36,8 @@ type Handlers = {
 const INDICATORS = ["heaviest", "average", "setSize", "reps"] as const;
 type Indicator = (typeof INDICATORS)[number];
 
-const SETS = Array.from({ length: MAX_SETS }, (_, i) => i);
-
-/**
- * Fixed column widths (rem); the four indicator columns share one width.
- * Together they fit the content width of 60 rem.
- */
-const WIDTH = {
-  exercise: 8,
-  rowLabel: 2.25,
-  set: 2.5,
-  note: 7.75,
-  valueLabel: 2.75,
-  indicator: 3.5,
-} as const;
-const TABLE_WIDTH =
-  WIDTH.exercise +
-  WIDTH.rowLabel +
-  MAX_SETS * WIDTH.set +
-  WIDTH.note +
-  WIDTH.valueLabel +
-  4 * WIDTH.indicator;
-
-/** Grid lines of the table. */
-const line = "border border-zinc-200 dark:border-zinc-800";
-/** An input that fills its cell, like a spreadsheet. */
-const fill =
-  "block h-8 w-full min-w-0 bg-transparent px-1 tabular-nums outline-none focus:bg-zinc-100 aria-invalid:bg-red-50 aria-invalid:text-red-700 dark:focus:bg-zinc-900 dark:aria-invalid:bg-red-950 dark:aria-invalid:text-red-400";
+const WIDTH = EDITOR_WIDTH;
+const TABLE_WIDTH = EDITOR_TABLE_WIDTH;
 
 /**
  * A session in step 2 as a compact table. Each exercise takes two rows:
@@ -250,11 +232,21 @@ function ExerciseRows({
             onChange={(event) =>
               handlers.onChangeNote(exercise.key, event.target.value)
             }
-            rows={2}
+            rows={exercise.feedback ? 1 : 2}
             maxLength={500}
             aria-label={t("noteOf", { name })}
-            className={`${fill} h-16 resize-none py-1`}
+            className={`${fill} ${exercise.feedback ? "h-8" : "h-16"} resize-none py-1`}
           />
+          {exercise.feedback && (
+            // The athlete's feedback, read-only for the coach.
+            <p
+              data-feedback
+              title={exercise.feedback}
+              className="truncate border-t border-zinc-200 px-1 py-1 text-xs text-zinc-600 italic dark:border-zinc-800 dark:text-zinc-400"
+            >
+              {t("feedback", { text: exercise.feedback })}
+            </p>
+          )}
         </td>
         {free ? (
           // Exercises without values have no indicators.
