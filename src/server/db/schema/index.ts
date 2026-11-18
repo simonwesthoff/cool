@@ -3,3 +3,4 @@ export * from "./athletes";
 export * from "./auth";
 export * from "./exercises";
 export * from "./macrocycles";
+export * from "./week-plans";

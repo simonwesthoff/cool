@@ -16,13 +16,13 @@
 
 ## 2. Week plan data and domain
 
-- [ ] 2.1 Add the tables `week_plan`, `training_session`, `session_exercise` and `set_group` with their keys, uniqueness and cascades, and the migration. Verify: migrations apply on the dev database and in the PGlite setup.
-- [ ] 2.2 `week-plan/calculation.ts`:
+- [x] 2.1 Add the tables `week_plan`, `training_session`, `session_exercise` and `set_group` with their keys, uniqueness and cascades, and the migration. Verify: migrations apply on the dev database and in the PGlite setup.
+- [x] 2.2 `week-plan/calculation.ts`:
   - **Actual values:** heaviest weight, mHG, set size and weekly reps per exercise over all sessions.
   - **Deviation:** `deviation()` with the strict 5 % band.
 
   Verify with unit tests: the spec's week 11 snatch example (80 kg, 69.5 kg, set size 2 below, 20 reps), 85 kg above, 72.45 vs 69 within, set groups without weight, and null projections.
-- [ ] 2.3 Week plan domain:
+- [x] 2.3 Week plan domain:
   - **Read:** `getWeekPlan` (coach and linked athlete), with the mesocycle check (chosen, missing and not planned).
   - **List:** `listWeekPlans`.
   - **Save:** `saveWeekPlan` (coach only, replaces the week; an empty body deletes it).
@@ -33,7 +33,7 @@
   - **Save and read:** with the order kept; validation codes (0 sets, 82.3 kg, a duplicate exercise in a session, more than 14 sessions, a 4th slot); an empty save deletes.
   - **Access:** week 22 of 21; linked-athlete read and refused write; stranger.
   - **Content:** the mesocycle check with the spec example; initial content in all three cases.
-- [ ] 2.4 Duration guard: `updateBaseData` refuses a duration below the highest planned week with `WEEKS_PLANNED`. Verify with a PGlite test (week 20 planned: 18 is refused, 20 is allowed) and the form message.
+- [x] 2.4 Duration guard: `updateBaseData` refuses a duration below the highest planned week with `WEEKS_PLANNED`. Verify with a PGlite test (week 20 planned: 18 is refused, 20 is allowed) and the form message.
 
 ## 3. API
 

@@ -205,7 +205,8 @@
         "INVALID_FORMAT": "Please enter a valid date.",
         "TOO_LONG": "Too long.",
         "INVALID": "Invalid value.",
-        "TOO_MANY": "At most 3 focus points."
+        "TOO_MANY": "At most 3 focus points.",
+        "WEEKS_PLANNED": "Weeks with a week plan would be removed."
       },
       "focusPoints": {
         "title": "Focus points",

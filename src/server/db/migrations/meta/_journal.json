@@ -120,6 +120,13 @@
       "when": 1795006931947,
       "tag": "0016_drop_training_frequency",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795007188179,
+      "tag": "0017_week_plans",
+      "breakpoints": true
     }
   ]
 }

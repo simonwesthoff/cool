@@ -242,6 +242,29 @@ describe("BaseDataForm", () => {
     ]);
   });
 
+  it("explains that planned weeks block a shorter duration", async () => {
+    respond(400, {
+      error: {
+        code: "VALIDATION_FAILED",
+        fields: { durationWeeks: ["WEEKS_PLANNED"] },
+      },
+    });
+    renderWith(
+      <BaseDataForm
+        athleteId="a1"
+        part="base"
+        macrocycle={existing}
+        defaultStartDate="2026-11-23"
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save and continue" }),
+    );
+    expect(
+      await screen.findByText("Weeks with a week plan would be removed."),
+    ).toBeTruthy();
+  });
+
   it("explains a missing schedule", async () => {
     respond(400, {
       error: { code: "VALIDATION_FAILED", fields: { sessions: ["REQUIRED"] } },

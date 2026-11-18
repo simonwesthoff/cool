@@ -205,7 +205,8 @@
         "INVALID_FORMAT": "Bitte ein gültiges Datum eingeben.",
         "TOO_LONG": "Zu lang.",
         "INVALID": "Ungültiger Wert.",
-        "TOO_MANY": "Höchstens 3 Schwerpunkte."
+        "TOO_MANY": "Höchstens 3 Schwerpunkte.",
+        "WEEKS_PLANNED": "Wochen mit Wochenplan würden entfernt."
       },
       "focusPoints": {
         "title": "Schwerpunkte",

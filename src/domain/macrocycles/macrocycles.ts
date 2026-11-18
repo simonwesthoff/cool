@@ -1,8 +1,7 @@
-import { and, asc, eq, gt, inArray } from "drizzle-orm";
-import { findAthleteInTeam, isCoachOfAthlete } from "@/domain/athletes";
+import { and, asc, eq, gt, inArray, max } from "drizzle-orm";
+import { isCoachOfAthlete } from "@/domain/athletes";
 import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
-import { getRoles, requireCoachTeam } from "@/domain/roles";
 import { DomainValidationError, parseInput } from "@/domain/validation";
 import { z } from "zod";
 import { getDb } from "@/server/db";
@@ -14,7 +13,13 @@ import {
   macrocycleWeek,
   mesocycle,
   mesocycleExercise,
+  weekPlan,
 } from "@/server/db/schema";
+import {
+  findMacrocycleRow,
+  requireOwnAthlete,
+  requireViewableAthlete,
+} from "./access";
 import {
   completeBaseDataSchema,
   createBaseDataSchema,
@@ -48,25 +53,6 @@ import type {
 
 const notFound = () => new DomainError("not_found", "MACROCYCLE_NOT_FOUND");
 
-async function requireOwnAthlete(coach: CurrentUser, athleteId: string) {
-  const { id: teamId } = await requireCoachTeam(coach);
-  const found = await findAthleteInTeam(teamId, athleteId);
-  if (!found) throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
-  return found;
-}
-
-/**
- * Read access: the coach of the athlete's Team or the user linked to the
- * Athlete. Everyone else gets `ATHLETE_NOT_FOUND`, as for writes.
- */
-async function requireViewableAthlete(user: CurrentUser, athleteId: string) {
-  const roles = await getRoles(user);
-  if (roles.athlete?.athleteId === athleteId) return;
-  if (roles.coach && (await findAthleteInTeam(roles.coach.teamId, athleteId)))
-    return;
-  throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
-}
-
 /**
  * Whether the user may plan (create and change) the athlete's macrocycle:
  * they lead the athlete's Team. The same rule as for all writes.
@@ -76,14 +62,6 @@ export async function canPlanMacrocycle(
   athleteId: string,
 ): Promise<boolean> {
   return isCoachOfAthlete(user, athleteId);
-}
-
-async function findMacrocycleRow(athleteId: string) {
-  const [row] = await getDb()
-    .select()
-    .from(macrocycle)
-    .where(eq(macrocycle.athleteId, athleteId));
-  return row;
 }
 
 function isUniqueViolation(error: unknown): boolean {
@@ -428,6 +406,15 @@ export async function updateBaseData(
     if (value !== undefined) Object.assign(next, { [key]: value });
   }
   parseInput(completeBaseDataSchema, next);
+  // Weeks with a week plan must stay part of the macrocycle.
+  if (next.durationWeeks < row.durationWeeks) {
+    const [last] = await getDb()
+      .select({ week: max(weekPlan.weekNumber) })
+      .from(weekPlan)
+      .where(eq(weekPlan.macrocycleId, row.id));
+    if (last?.week && next.durationWeeks < last.week)
+      throw new DomainValidationError({ durationWeeks: ["WEEKS_PLANNED"] });
+  }
 
   await getDb().transaction(async (tx) => {
     await tx.update(macrocycle).set(next).where(eq(macrocycle.id, row.id));

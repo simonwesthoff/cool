@@ -9,13 +9,12 @@ editor and checked against the macrocycle planning.
 ## ADDED Requirements
 
 ### Requirement: Week plan content
-A week plan SHALL belong to one week of an athlete's macrocycle and consist
-of training sessions. Each session SHALL have a weekday (Monday–Sunday) and
-a slot within that day (1–3), and contain exercises from the exercise
-catalog, each exercise at most once per session. Each exercise SHALL have
-one or more set groups (sets 1–20, reps per set 1–30, weight 0–500 kg in
-0.5 kg steps, or no weight) and an optional coach note (up to 500
-characters). A week SHALL have at most 14 sessions.
+A week plan SHALL belong to one week of an athlete's macrocycle and have
+at most 14 training sessions, each with a weekday (Monday–Sunday), a slot
+(1–3) and exercises from the catalog, each at most once per session. An
+exercise SHALL have set groups (sets 1–20, reps 1–30, weight 0–500 kg in
+0.5 kg steps or none), possibly none yet after step 1, and an optional
+coach note of up to 500 characters.
 
 #### Scenario: Ramping up in a session
 - **GIVEN** the coach plans Monday with exercise 1 (snatch)

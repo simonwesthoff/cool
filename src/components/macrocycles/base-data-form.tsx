@@ -30,6 +30,7 @@ const errorCodes = [
   "INVALID_FORMAT",
   "TOO_LONG",
   "TOO_MANY",
+  "WEEKS_PLANNED",
 ] as const;
 type ErrorCode = (typeof errorCodes)[number];
 
