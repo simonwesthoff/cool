@@ -65,6 +65,14 @@ const sessionExerciseSchema = z.strictObject({
     .nullable()
     .optional()
     .transform((v) => (v ? v : null)),
+  // Exercises from 30 on have no values: their sets are free text.
+  freeText: z
+    .string()
+    .trim()
+    .refine((v) => v.length <= NOTE_MAX_LENGTH, code("TOO_LONG"))
+    .nullable()
+    .optional()
+    .transform((v) => (v ? v : null)),
   // Set groups are entered in step 2; a week can be saved before. At most
   // 10 sets per exercise in a session.
   setGroups: z
@@ -175,6 +183,7 @@ async function storedSessions(
         .map((e) => ({
           exerciseNumber: e.exerciseNumber,
           note: e.note,
+          freeText: e.freeText,
           setGroups: groups
             .filter((g) => g.sessionExerciseId === e.id)
             .map((g) => ({ sets: g.sets, reps: g.reps, weightKg: g.weightKg })),
@@ -326,6 +335,7 @@ export async function saveWeekPlan(
             position,
             exerciseNumber: e.exerciseNumber,
             note: e.note,
+            freeText: e.freeText,
           })
           .returning({ id: sessionExercise.id });
         if (e.setGroups.length)

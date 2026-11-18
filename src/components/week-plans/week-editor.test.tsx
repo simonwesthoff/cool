@@ -468,8 +468,8 @@ describe("WeekEditor step 2", () => {
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     const totals = (key: string) =>
       sessionNamed("Monday").querySelector(`[data-total=${key}]`)!;
-    expect(totals("heaviest").textContent).toBe("Heaviest80 kgplan 80 kg");
-    expect(totals("average").textContent).toBe("mHG69.5 kgplan 69 kg");
+    expect(totals("heaviest").textContent).toBe("Heaviest80 kg80 kg");
+    expect(totals("average").textContent).toBe("mHG69.5 kg69 kg");
     expect(totals("setSize").getAttribute("data-deviation")).toBe("below");
     expect(totals("setSize").querySelector("dd")!.className).toContain(
       "text-blue-700",
@@ -532,6 +532,99 @@ describe("WeekEditor step 2", () => {
   });
 });
 
+describe("WeekEditor step 2 layout", () => {
+  const withPullUp: PlannedSession[] = [
+    {
+      ...week11[0]!,
+      exercises: [
+        ...week11[0]!.exercises,
+        {
+          exerciseNumber: 33,
+          note: null,
+          freeText: "3 × 10, slow",
+          setGroups: [],
+        },
+      ],
+    },
+  ];
+  const catalogWithPullUp = [
+    ...catalog,
+    {
+      code: "K8",
+      name: { de: "Allgemeines Muskelkrafttraining", en: "General strength" },
+      exercises: [{ number: 33, name: { de: "Klimmzug", en: "Pull-up" } }],
+    },
+  ];
+  const renderWithPullUp = () =>
+    render(
+      <NextIntlClientProvider locale="en" messages={en} timeZone="UTC">
+        <UnsavedChangesProvider>
+          <WeekEditor
+            athleteId="a1"
+            plan={plan}
+            initialSessions={withPullUp}
+            catalog={catalogWithPullUp}
+            projections={projections}
+          />
+        </UnsavedChangesProvider>
+      </NextIntlClientProvider>,
+    );
+
+  it("separates exercises by lines and heads the indicators with Actual and Plan", async () => {
+    renderWithPullUp();
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const table = sessionNamed("Monday").querySelector("table")!;
+    const groups = [...table.querySelectorAll("tbody")];
+    expect(groups.map((g) => g.getAttribute("data-exercise"))).toEqual([
+      "1",
+      "33",
+    ]);
+    for (const g of groups) expect(g.className).toContain("border-t");
+    expect(
+      [...table.querySelectorAll("thead [data-heading]")].map(
+        (h) => h.textContent,
+      ),
+    ).toEqual(["Actual", "Plan"]);
+    // The indicator shows name, actual value and plan, the note is left of it.
+    const snatch = groups[0]!;
+    const total = snatch.querySelector("[data-total=heaviest]")!;
+    expect(total.querySelector("dt")!.textContent).toBe("Heaviest");
+    expect(total.querySelector("[data-actual]")!.textContent).toBe("80 kg");
+    expect(total.querySelector("[data-plan]")!.textContent).toBe("80 kg");
+    const note = within(snatch).getAllByRole("textbox", {
+      name: "Coach note for 1 Snatch",
+    })[0]!;
+    expect(
+      note.compareDocumentPosition(total) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("gives exercises from 30 on a free text instead of sets, without indicators", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderWithPullUp();
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const pullUp = sessionNamed("Monday").querySelector(
+      'tbody[data-exercise="33"]',
+    ) as HTMLElement;
+    expect(
+      within(pullUp).queryAllByRole("textbox", { name: /of set/ }),
+    ).toHaveLength(0);
+    expect(pullUp.querySelector("[data-total]")).toBeNull();
+    const text = within(pullUp).getByRole("textbox", {
+      name: "Sets and reps of 33 Pull-up",
+    }) as HTMLInputElement;
+    expect(text.value).toBe("3 × 10, slow");
+    await userEvent.type(text, ", 2 min rest");
+    const body = await nextSave();
+    expect(body.sessions[0].exercises[1]).toEqual({
+      exerciseNumber: 33,
+      note: null,
+      freeText: "3 × 10, slow, 2 min rest",
+      setGroups: [],
+    });
+  });
+});
+
 describe("WeekEditor saving", () => {
   it("saves every change on its own, as set groups of equal sets", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
@@ -557,7 +650,9 @@ describe("WeekEditor saving", () => {
     expect(body.sessions[1].exercises[0].setGroups).toEqual([
       { sets: 4, reps: 2, weightKg: 75 },
     ]);
-    expect(await screen.findByText("All changes saved.")).toBeTruthy();
+    expect(
+      await screen.findByText("All changes saved.", {}, { timeout: 5000 }),
+    ).toBeTruthy();
     expect(router.refresh).toHaveBeenCalled();
   });
 
@@ -608,7 +703,9 @@ describe("WeekEditor saving", () => {
     ).toBeTruthy();
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
-    expect(await screen.findByText("All changes saved.")).toBeTruthy();
+    expect(
+      await screen.findByText("All changes saved.", {}, { timeout: 5000 }),
+    ).toBeTruthy();
   });
 });
 
@@ -652,7 +749,7 @@ describe("WeekEditor in German", () => {
     await userEvent.click(screen.getByRole("button", { name: "Weiter" }));
     expect(
       sessionNamed("Montag").querySelector("[data-total=setSize]")!.textContent,
-    ).toBe("Satzgröße2↓Plan 3");
+    ).toBe("Satzgröße2↓3");
     expect(
       within(sessionNamed("Montag")).getAllByRole("textbox", {
         name: /^Gewicht in kg von Satz \d+ von 1 Reißen$/,

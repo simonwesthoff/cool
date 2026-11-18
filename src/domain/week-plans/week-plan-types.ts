@@ -15,6 +15,8 @@ export type PlannedSessionExercise = {
   exerciseNumber: number;
   /** Coach note; null without one. */
   note: string | null;
+  /** Sets and reps as free text (exercises without values); null without. */
+  freeText?: string | null;
   setGroups: PlannedSetGroup[];
 };
 
@@ -50,6 +52,11 @@ export type WeekPlan = {
   /** Variations of the mesocycle's chosen exercises, by exercise number. */
   variations: Record<number, string>;
 };
+
+/** Exercises from this number on have no values: sets are free text. */
+export const FREE_TEXT_FROM = 30;
+export const usesFreeText = (exerciseNumber: number) =>
+  exerciseNumber >= FREE_TEXT_FROM;
 
 export type PlannedWeekSummary = { weekNumber: number; startDate: string };
 

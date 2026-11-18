@@ -7,6 +7,7 @@ import {
   type Deviation,
   type WeekActuals,
 } from "@/domain/week-plans/calculation";
+import { usesFreeText } from "@/domain/week-plans/week-plan-types";
 import { MinusIcon, PlusIcon } from "../icons";
 import {
   MAX_SETS,
@@ -15,28 +16,10 @@ import {
   type DraftSession,
 } from "./week-draft";
 
-/**
- * A session in step 2 as a table: each exercise two rows high (weight on
- * top, reps below), one column per set (at most 10), and on the right the
- * coach note and the week's totals against the projection.
- */
-export function SessionTable({
-  session,
-  label,
-  exerciseName,
-  actualsOf,
-  projectionOf,
-  onChangeSet,
-  onAddSet,
-  onRemoveSet,
-  onChangeNote,
-}: {
-  session: DraftSession;
-  /** "Monday" or "Monday 1". */
-  label: string;
-  exerciseName: (exerciseNumber: number) => string;
-  actualsOf: (exerciseNumber: number) => WeekActuals | undefined;
-  projectionOf: (exerciseNumber: number) => PlannedExercise | undefined;
+/** Fixed widths, so "Actual" and "Plan" line up over every exercise. */
+const INDICATOR_GRID = "grid grid-cols-[4.5rem_4rem_3.5rem] gap-x-1";
+
+type Handlers = {
   onChangeSet: (
     exerciseKey: string,
     index: number,
@@ -46,13 +29,42 @@ export function SessionTable({
   onAddSet: (exerciseKey: string) => void;
   onRemoveSet: (exerciseKey: string) => void;
   onChangeNote: (exerciseKey: string, note: string) => void;
-}) {
+  onChangeFreeText: (exerciseKey: string, text: string) => void;
+};
+
+/**
+ * A session in step 2 as a table: each exercise two rows high (weight on
+ * top, reps below) with one column per set (at most 10), separated by
+ * lines; exercises from 30 on get a free text instead. On the right the
+ * coach note and, for exercises with values, the week's actual values
+ * next to the plan.
+ */
+export function SessionTable({
+  session,
+  label,
+  exerciseName,
+  actualsOf,
+  projectionOf,
+  ...handlers
+}: {
+  session: DraftSession;
+  /** "Monday" or "Monday 1". */
+  label: string;
+  exerciseName: (exerciseNumber: number) => string;
+  actualsOf: (exerciseNumber: number) => WeekActuals | undefined;
+  projectionOf: (exerciseNumber: number) => PlannedExercise | undefined;
+} & Handlers) {
   const t = useTranslations("WeekEditor.values");
-  // Columns for the sets: the most sets of an exercise, plus one for "+".
+  const withSets = session.exercises.filter(
+    (e) => !usesFreeText(e.exerciseNumber),
+  );
+  // Columns for the sets: the most sets of an exercise.
   const columns = Math.min(
     MAX_SETS,
-    Math.max(1, ...session.exercises.map((e) => e.sets.length)),
+    Math.max(1, ...withSets.map((e) => e.sets.length)),
   );
+  // Name, label, sets, +/−, free space, note, indicators.
+  const span = columns + 6;
 
   return (
     <section
@@ -60,30 +72,40 @@ export function SessionTable({
       data-session={`${session.weekday}.${session.slot}`}
       className="flex flex-col gap-2 rounded-2xl border border-zinc-200 p-3 dark:border-zinc-800"
     >
-      <h3 className="font-semibold">{label}</h3>
       {session.exercises.length === 0 ? (
-        <p className="text-sm text-zinc-500">{t("noExercises")}</p>
+        <>
+          <h3 className="font-semibold">{label}</h3>
+          <p className="text-sm text-zinc-500">{t("noExercises")}</p>
+        </>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-separate border-spacing-x-1 border-spacing-y-0 text-sm">
-            <tbody>
-              {session.exercises.map((e) => (
-                <ExerciseRows
-                  key={e.key}
-                  exercise={e}
-                  name={exerciseName(e.exerciseNumber)}
-                  columns={columns}
-                  actuals={actualsOf(e.exerciseNumber)}
-                  projection={projectionOf(e.exerciseNumber)}
-                  onChangeSet={(i, field, value) =>
-                    onChangeSet(e.key, i, field, value)
-                  }
-                  onAddSet={() => onAddSet(e.key)}
-                  onRemoveSet={() => onRemoveSet(e.key)}
-                  onChangeNote={(note) => onChangeNote(e.key, note)}
-                />
-              ))}
-            </tbody>
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th
+                  colSpan={columns + 5}
+                  scope="colgroup"
+                  className="pb-1 text-left text-base font-semibold"
+                >
+                  <h3>{label}</h3>
+                </th>
+                <th className="hidden pb-1 align-bottom lg:table-cell">
+                  {withSets.length > 0 && <IndicatorHeader />}
+                </th>
+              </tr>
+            </thead>
+            {session.exercises.map((e) => (
+              <ExerciseRows
+                key={e.key}
+                exercise={e}
+                name={exerciseName(e.exerciseNumber)}
+                columns={columns}
+                span={span}
+                actuals={actualsOf(e.exerciseNumber)}
+                projection={projectionOf(e.exerciseNumber)}
+                handlers={handlers}
+              />
+            ))}
           </table>
         </div>
       )}
@@ -91,46 +113,89 @@ export function SessionTable({
   );
 }
 
+function IndicatorHeader() {
+  const t = useTranslations("WeekEditor.totals");
+  return (
+    <div
+      className={`${INDICATOR_GRID} text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400`}
+    >
+      <span />
+      <span data-heading="actual">{t("actual")}</span>
+      <span data-heading="plan">{t("plan")}</span>
+    </div>
+  );
+}
+
 function ExerciseRows({
   exercise,
   name,
   columns,
+  span,
   actuals,
   projection,
-  onChangeSet,
-  onAddSet,
-  onRemoveSet,
-  onChangeNote,
+  handlers,
 }: {
   exercise: DraftExercise;
   name: string;
   columns: number;
+  span: number;
   actuals: WeekActuals | undefined;
   projection: PlannedExercise | undefined;
-  onChangeSet: (index: number, field: "weight" | "reps", value: string) => void;
-  onAddSet: () => void;
-  onRemoveSet: () => void;
-  onChangeNote: (note: string) => void;
+  handlers: Handlers;
 }) {
   const t = useTranslations("WeekEditor.values");
+  const free = usesFreeText(exercise.exerciseNumber);
+  const note = (
+    <input
+      value={exercise.note}
+      onChange={(event) =>
+        handlers.onChangeNote(exercise.key, event.target.value)
+      }
+      maxLength={500}
+      aria-label={t("noteOf", { name })}
+      placeholder={t("note")}
+      className="h-9 w-full rounded-md border border-zinc-300 bg-transparent px-2 dark:border-zinc-700"
+    />
+  );
+  const indicators = free ? null : (
+    <Indicators actuals={actuals} projection={projection} />
+  );
   const cell =
-    "h-9 w-12 rounded-md border bg-transparent px-1.5 text-right tabular-nums aria-invalid:border-red-600 dark:bg-zinc-950";
+    "h-9 w-12 rounded-md border bg-transparent px-1.5 text-right tabular-nums dark:bg-zinc-950";
   const border = (invalid: boolean) =>
     invalid ? "border-red-600" : "border-zinc-300 dark:border-zinc-700";
-  const extra = (
-    <ExerciseSide
-      name={name}
-      note={exercise.note}
-      onChangeNote={onChangeNote}
-      actuals={actuals}
-      projection={projection}
-    />
+  const icon =
+    "inline-flex size-8 items-center justify-center rounded-full text-zinc-600 hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-900";
+  const nameCell = (rows: number) => (
+    <th
+      scope="rowgroup"
+      rowSpan={rows}
+      className="min-w-32 py-2 pr-2 text-left align-middle font-medium"
+    >
+      {name}
+    </th>
+  );
+  const side = (rows: number) => (
+    <>
+      <td
+        rowSpan={rows}
+        className="hidden w-44 min-w-44 py-2 pl-2 align-middle lg:table-cell"
+      >
+        {note}
+      </td>
+      <td
+        rowSpan={rows}
+        className="hidden py-2 pl-2 align-middle lg:table-cell"
+      >
+        {indicators}
+      </td>
+    </>
   );
   const row = (field: "weight" | "reps") => (
     <>
       <th
         scope="row"
-        className={`w-10 pr-1 text-right text-xs font-normal text-zinc-500 ${field === "weight" ? "pt-3" : "pt-1"}`}
+        className={`w-10 pr-1 text-right text-xs font-normal text-zinc-500 ${field === "weight" ? "pt-2" : "pb-2"}`}
       >
         {field === "weight" ? t("kg") : t("reps")}
       </th>
@@ -139,11 +204,16 @@ function ExerciseRows({
         if (!set) return <td key={i} />;
         const invalid = setErrors(set).includes(field);
         return (
-          <td key={set.key} className={field === "weight" ? "pt-3" : "pt-1"}>
+          <td
+            key={set.key}
+            className={`px-0.5 ${field === "weight" ? "pt-2" : "pt-1 pb-2"}`}
+          >
             <input
               inputMode={field === "weight" ? "decimal" : "numeric"}
               value={set[field]}
-              onChange={(event) => onChangeSet(i, field, event.target.value)}
+              onChange={(event) =>
+                handlers.onChangeSet(exercise.key, i, field, event.target.value)
+              }
               aria-label={t(field === "weight" ? "weightOf" : "repsOf", {
                 n: i + 1,
                 name,
@@ -156,92 +226,82 @@ function ExerciseRows({
       })}
     </>
   );
-  const icon =
-    "inline-flex size-8 items-center justify-center rounded-full text-zinc-600 hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-900";
-
-  return (
-    <>
-      <tr data-exercise={exercise.exerciseNumber} data-row="weight">
-        <th
-          scope="rowgroup"
-          rowSpan={2}
-          className="min-w-32 pt-3 pr-2 text-left align-middle font-medium"
-        >
-          {name}
-        </th>
-        {row("weight")}
-        <td rowSpan={2} className="w-16 align-middle">
-          <div className="flex flex-col items-center">
-            <button
-              type="button"
-              disabled={exercise.sets.length >= MAX_SETS}
-              onClick={onAddSet}
-              aria-label={t("addSetTo", { name })}
-              className={icon}
-            >
-              <PlusIcon />
-            </button>
-            <button
-              type="button"
-              disabled={exercise.sets.length === 0}
-              onClick={onRemoveSet}
-              aria-label={t("removeSetOf", { name })}
-              className={icon}
-            >
-              <MinusIcon />
-            </button>
-          </div>
-        </td>
-        {/* Free space after the sets, so short exercises stay compact. */}
-        <td rowSpan={2} aria-hidden="true" className="w-full" />
-        {/* Note and totals on the right on wide screens. */}
-        <td
-          rowSpan={2}
-          className="hidden w-72 min-w-72 pt-3 pl-2 align-top lg:table-cell"
-        >
-          {extra}
-        </td>
-      </tr>
-      <tr data-row="reps">{row("reps")}</tr>
-      {/* On phones below the sets. */}
-      <tr className="lg:hidden">
-        <td colSpan={columns + 4} className="pb-2">
-          {/* Stays in view while the sets scroll sideways. */}
-          <div className="sticky left-0 w-[calc(100vw-4rem)] max-w-full">
-            {extra}
-          </div>
-        </td>
-      </tr>
-    </>
+  // Note and indicators below the sets on phones.
+  const phoneRow = (
+    <tr className="lg:hidden">
+      <td colSpan={span} className="pb-2">
+        <div className="sticky left-0 flex w-[calc(100vw-4rem)] max-w-full flex-col gap-1">
+          {note}
+          {indicators && (
+            <>
+              <IndicatorHeader />
+              {indicators}
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
   );
-}
 
-function ExerciseSide({
-  name,
-  note,
-  onChangeNote,
-  actuals,
-  projection,
-}: {
-  name: string;
-  note: string;
-  onChangeNote: (note: string) => void;
-  actuals: WeekActuals | undefined;
-  projection: PlannedExercise | undefined;
-}) {
-  const t = useTranslations("WeekEditor.values");
   return (
-    <div data-values className="flex flex-col gap-1">
-      <input
-        value={note}
-        onChange={(event) => onChangeNote(event.target.value)}
-        maxLength={500}
-        aria-label={t("noteOf", { name })}
-        placeholder={t("note")}
-        className="h-9 rounded-md border border-zinc-300 bg-transparent px-2 dark:border-zinc-700"
-      />
-      <Totals actuals={actuals} projection={projection} />
-    </div>
+    <tbody
+      data-exercise={exercise.exerciseNumber}
+      className="border-t border-zinc-200 dark:border-zinc-800"
+    >
+      {free ? (
+        <tr data-row="free-text">
+          {nameCell(1)}
+          <td colSpan={columns + 2} className="py-2">
+            <input
+              value={exercise.freeText}
+              onChange={(event) =>
+                handlers.onChangeFreeText(exercise.key, event.target.value)
+              }
+              maxLength={500}
+              aria-label={t("freeTextOf", { name })}
+              placeholder={t("freeText")}
+              className="h-9 w-full min-w-48 rounded-md border border-zinc-300 bg-transparent px-2 dark:border-zinc-700"
+            />
+          </td>
+          <td aria-hidden="true" className="w-full" />
+          {side(1)}
+        </tr>
+      ) : (
+        <>
+          <tr data-row="weight">
+            {nameCell(2)}
+            {row("weight")}
+            <td rowSpan={2} className="w-10 align-middle">
+              <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  disabled={exercise.sets.length >= MAX_SETS}
+                  onClick={() => handlers.onAddSet(exercise.key)}
+                  aria-label={t("addSetTo", { name })}
+                  className={icon}
+                >
+                  <PlusIcon />
+                </button>
+                <button
+                  type="button"
+                  disabled={exercise.sets.length === 0}
+                  onClick={() => handlers.onRemoveSet(exercise.key)}
+                  aria-label={t("removeSetOf", { name })}
+                  className={icon}
+                >
+                  <MinusIcon />
+                </button>
+              </div>
+            </td>
+            {/* Free space after the sets, so short exercises stay compact. */}
+            <td rowSpan={2} aria-hidden="true" className="w-full" />
+            {side(2)}
+          </tr>
+          <tr data-row="reps">{row("reps")}</tr>
+        </>
+      )}
+      {phoneRow}
+    </tbody>
   );
 }
 
@@ -251,8 +311,8 @@ const colour: Record<Deviation, string> = {
   within: "",
 };
 
-/** The week's totals of the exercise against the projection. */
-function Totals({
+/** The week's actual values of the exercise next to the plan. */
+function Indicators({
   actuals,
   projection,
 }: {
@@ -289,10 +349,7 @@ function Totals({
     },
   ] as const;
   return (
-    <dl
-      aria-label={t("title")}
-      className="grid grid-cols-[auto_1fr] gap-x-2 text-xs"
-    >
+    <dl aria-label={t("title")} className="flex flex-col text-xs">
       {rows.map((row) => {
         const d = deviation(row.actual, row.projected);
         return (
@@ -300,13 +357,14 @@ function Totals({
             key={row.key}
             data-total={row.key}
             data-deviation={d ?? "none"}
-            className="col-span-2 grid grid-cols-subgrid items-baseline whitespace-nowrap"
+            className={`${INDICATOR_GRID} items-baseline whitespace-nowrap`}
           >
             <dt className="text-zinc-500">{t(row.key)}</dt>
-            <dd className={`tabular-nums ${d ? colour[d] : ""}`}>
-              <span className="font-semibold">
-                {row.actual === null ? t("none") : row.text(row.actual)}
-              </span>
+            <dd
+              data-actual
+              className={`font-semibold tabular-nums ${d ? colour[d] : ""}`}
+            >
+              {row.actual === null ? t("none") : row.text(row.actual)}
               {d === "above" && (
                 <span aria-label={t("above")} className="ml-0.5">
                   ↑
@@ -317,11 +375,9 @@ function Totals({
                   ↓
                 </span>
               )}
-              {row.projected !== null && (
-                <span className="ml-1 text-zinc-500">
-                  {t("projected", { value: row.text(row.projected) })}
-                </span>
-              )}
+            </dd>
+            <dd data-plan className="text-zinc-500 tabular-nums">
+              {row.projected === null ? t("none") : row.text(row.projected)}
             </dd>
           </div>
         );

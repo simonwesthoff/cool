@@ -115,6 +115,7 @@ describe("saveWeekPlan and getWeekPlan", () => {
           {
             exerciseNumber: 1,
             note: "Fast turnover",
+            freeText: null,
             setGroups: [
               { sets: 2, reps: 3, weightKg: 60 },
               { sets: 3, reps: 2, weightKg: 70 },
@@ -124,6 +125,7 @@ describe("saveWeekPlan and getWeekPlan", () => {
           {
             exerciseNumber: 33,
             note: null,
+            freeText: null,
             setGroups: [{ sets: 3, reps: 8, weightKg: null }],
           },
         ],
@@ -135,6 +137,7 @@ describe("saveWeekPlan and getWeekPlan", () => {
           {
             exerciseNumber: 1,
             note: null,
+            freeText: null,
             setGroups: [{ sets: 3, reps: 2, weightKg: 75 }],
           },
         ],
@@ -146,6 +149,26 @@ describe("saveWeekPlan and getWeekPlan", () => {
       sessions: [{ weekday: 2, slot: 1, exercises: [] }],
     });
     expect(replaced.sessions).toEqual([{ weekday: 2, slot: 1, exercises: [] }]);
+  });
+
+  it("stores free text for exercises without values", async () => {
+    const { coach, athlete } = await setup();
+    const saved = await saveWeekPlan(coach, athlete.id, "11", {
+      sessions: [
+        {
+          weekday: 1,
+          slot: 1,
+          exercises: [
+            { exerciseNumber: 33, freeText: " 3 × 10, slow ", setGroups: [] },
+          ],
+        },
+      ],
+    });
+    expect(saved.sessions[0]!.exercises[0]).toMatchObject({
+      exerciseNumber: 33,
+      freeText: "3 × 10, slow",
+      setGroups: [],
+    });
   });
 
   it("makes a week unplanned when saved without sessions", async () => {

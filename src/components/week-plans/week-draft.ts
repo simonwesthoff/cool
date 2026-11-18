@@ -16,6 +16,8 @@ export type DraftExercise = {
   key: string;
   exerciseNumber: number;
   note: string;
+  /** Sets and reps as free text, for exercises without values. */
+  freeText: string;
   sets: DraftSet[];
 };
 export type DraftSession = {
@@ -43,6 +45,7 @@ export function draftOf(sessions: PlannedSession[]): DraftSession[] {
         key: newKey(),
         exerciseNumber: e.exerciseNumber,
         note: e.note ?? "",
+        freeText: e.freeText ?? "",
         sets: e.setGroups.flatMap((g) =>
           Array.from({ length: g.sets }, () => ({
             key: newKey(),
@@ -138,6 +141,7 @@ export function payloadOf(sessions: DraftSession[]) {
       exercises: s.exercises.map((e) => ({
         exerciseNumber: e.exerciseNumber,
         note: e.note.trim() === "" ? null : e.note,
+        freeText: e.freeText.trim() === "" ? null : e.freeText,
         setGroups: groupsOf(e.sets),
       })),
     })),

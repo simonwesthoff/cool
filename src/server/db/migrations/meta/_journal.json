@@ -127,6 +127,13 @@
       "when": 1795007188179,
       "tag": "0017_week_plans",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795017712361,
+      "tag": "0018_session_exercise_free_text",
+      "breakpoints": true
     }
   ]
 }

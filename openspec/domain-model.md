@@ -97,6 +97,7 @@ erDiagram
     SessionExercise {
         int position
         string coachNote
+        string freeText
     }
     SetGroup {
         int position
@@ -141,7 +142,8 @@ erDiagram
   the athlete's Team and readable by the linked athlete. It consists of
   training sessions (weekday and slot), each with exercises from the
   catalog (at most once per session, in order, with an optional coach note)
-  and their set groups (sets × reps @ weight, the weight optional). A new
+  and their set groups (sets × reps @ weight, the weight optional, at most
+  10 sets), or a free text for exercises without values (30 and up). A new
   Week plan starts with the weekly schedule or a copy of the previous week.
   The week's actual values per exercise and their deviation from the
   macrocycle projection are calculated, not stored. Shortening a

@@ -410,7 +410,9 @@
       "addSetTo": "Add a set to {name}",
       "removeSetOf": "Remove the last set of {name}",
       "note": "Coach note",
-      "noteOf": "Coach note for {name}"
+      "noteOf": "Coach note for {name}",
+      "freeText": "Sets and reps, e.g. 3 × 12",
+      "freeTextOf": "Sets and reps of {name}"
     },
     "totals": {
       "title": "This week (all sessions)",
@@ -420,9 +422,10 @@
       "reps": "Reps",
       "kg": "{value} kg",
       "none": "–",
-      "projected": "plan {value}",
       "above": "more than 5 % above the plan",
-      "below": "more than 5 % below the plan"
+      "below": "more than 5 % below the plan",
+      "actual": "Actual",
+      "plan": "Plan"
     },
     "blockAndLevel": "{block} · {level}",
     "dates": "{start} – {end}",

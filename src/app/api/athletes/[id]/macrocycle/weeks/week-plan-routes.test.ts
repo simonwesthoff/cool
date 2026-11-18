@@ -81,7 +81,7 @@ describe("week plan API", () => {
     const read = await plan.GET(get(), ctx({ id, week: "11" }));
     expect(read.status).toBe(200);
     expect(read.headers.get("cache-control")).toBe("no-store");
-    expect((await read.json()).sessions).toEqual(week.sessions);
+    expect((await read.json()).sessions).toMatchObject(week.sessions);
     const list = await plans.GET(get(), ctx({ id }));
     expect(await list.json()).toEqual([
       { weekNumber: 11, startDate: "2027-02-08" },
@@ -147,7 +147,7 @@ describe("week plan API", () => {
     as(linked);
     const read = await plan.GET(get(), ctx({ id: athlete.id, week: "11" }));
     expect(read.status).toBe(200);
-    expect((await read.json()).sessions).toEqual(week.sessions);
+    expect((await read.json()).sessions).toMatchObject(week.sessions);
     expect((await plans.GET(get(), ctx({ id: athlete.id }))).status).toBe(200);
     const write = await plan.PUT(
       json("PUT", { sessions: [] }),

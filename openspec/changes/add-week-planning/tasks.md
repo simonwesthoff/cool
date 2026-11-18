@@ -117,6 +117,7 @@
 - [x] 8.2 No block check text below the stepper, no drag hint, no "not planned" text under exercises; an icon at the right of each session exercise not planned for the mesocycle. Verify with component tests (icon only for not planned exercises, texts gone) and a screenshot.
 - [x] 8.3 First step "Exercises & sessions"; column titles Exercises, Sessions, Weights (moving with the columns); variation of the mesocycle's exercise in brackets after its name (domain returns the variations). Verify with component and PGlite tests and screenshots of both steps.
 - [x] 8.4 Automatic saving of every change (debounced, sequential, invalid cells block, retry; leave guard while not saved), no Save button. Step 2 as one full-width table per session: exercise two rows high, one column per set (weight above reps, at most 10, new set copies the last), note and totals on the right (below on phones). Sets stored as set groups of equal neighbours; API limit of 10 sets. Verify with component, draft and PGlite tests and the browser flow on the dev server (desktop and phone) with screenshots.
+- [x] 8.5 Dividing lines between exercises; free text instead of sets (and no indicators) for exercises from 30 on, stored in a new `free_text` column; coach note left of the indicators; indicators as name, actual and plan under "Actual" / "Plan" headings per session. Verify with component, PGlite and route tests and screenshots (desktop light, phone dark).
 
 ## Workflow follow-up
 

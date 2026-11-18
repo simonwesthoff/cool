@@ -141,6 +141,7 @@ export function WeekEditor({
         key: newKey(),
         exerciseNumber,
         note: "",
+        freeText: "",
         sets: [],
       });
       return { ...s, exercises: list };
@@ -441,6 +442,12 @@ export function WeekEditor({
                   }
                   onChangeNote={(exerciseKey, note) =>
                     updateExercise(s.key, exerciseKey, (y) => ({ ...y, note }))
+                  }
+                  onChangeFreeText={(exerciseKey, freeText) =>
+                    updateExercise(s.key, exerciseKey, (y) => ({
+                      ...y,
+                      freeText,
+                    }))
                   }
                 />
               </div>

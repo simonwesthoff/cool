@@ -13,8 +13,8 @@ A week plan SHALL belong to one week of an athlete's macrocycle and have
 at most 14 training sessions, each with a weekday (Monday–Sunday), a slot
 (1–3) and exercises from the catalog, each at most once per session. An
 exercise SHALL have at most 10 sets (reps 1–30, weight 0–500 kg in 0.5 kg
-steps or none), stored as set groups of equal consecutive sets, possibly
-none yet after step 1, and an optional coach note of up to 500 characters.
+steps or none) stored as set groups of equal consecutive sets, or a free
+text for its sets, and an optional coach note (each up to 500 characters).
 
 #### Scenario: Ramping up in a session
 - **GIVEN** the coach plans Monday with exercise 1 (snatch)
@@ -125,20 +125,41 @@ session SHALL open the exercise selection.
 
 ### Requirement: Step 2 values
 Step 2 SHALL show one column over the whole width with a table per
-session: each exercise on the left, two rows high, one column per set with
-the weight on top and the reps below (at most 10 sets), and on the right
-the coach note and the week's totals with the deviation indicators. A new
-set SHALL start as a copy of the last one. On phones the sets SHALL scroll
-sideways and the note and totals are shown below the sets.
+session, its exercises separated by lines: each exercise on the left, two
+rows high, one column per set with the weight on top and the reps below
+(at most 10 sets; a new set copies the last one), then the coach note and,
+on the right, the week's indicators. On phones the sets SHALL scroll
+sideways with the note and indicators below them.
 
 #### Scenario: Sets of the snatch on Monday
 - **GIVEN** Monday's snatch with 2 × 3 @ 60 kg, 3 × 2 @ 70 kg and 2 × 1 @ 80 kg
 - **WHEN** the coach opens step 2
-- **THEN** Monday's table shows the snatch with seven set columns: 60/3, 60/3, 70/2, 70/2, 70/2, 80/1, 80/1
+- **THEN** Monday's table shows the snatch with seven set columns: 60/3, 60/3, 70/2, 70/2, 70/2, 80/1, 80/1, separated by a line from the next exercise
 
 #### Scenario: Add and remove sets
 - **WHEN** the coach adds a set to the snatch and then removes the last set
 - **THEN** the new set first copies 80/1, and removing takes away the last column
+
+### Requirement: Exercises without values
+Exercises from number 30 on (general strength exercises without reference
+values) SHALL have a free text field for their sets and reps in step 2
+instead of set columns, and no indicators; their coach note stays.
+
+#### Scenario: Pull-up as free text
+- **GIVEN** exercise 33 (pull-up) on Monday
+- **WHEN** the coach enters "3 × 10, slow" in step 2
+- **THEN** the text is saved with the exercise, and no weights, reps or indicators are shown for it
+
+### Requirement: Indicator layout
+Each session table SHALL head the indicators with "Actual" and "Plan"
+("Ist", "Plan"); every indicator SHALL show its name, the week's actual
+value and the planned value, aligned under these headings for all
+exercises of the session.
+
+#### Scenario: Heaviest weight of the snatch
+- **GIVEN** the week 11 snatch with its heaviest set at 80 kg
+- **WHEN** the coach looks at Monday's table
+- **THEN** the row "Heaviest" shows 80 kg under "Actual" and 80 kg under "Plan", without the word "plan"
 
 ### Requirement: Step animation
 When switching to step 2, only the sessions column SHALL slide from right
@@ -231,8 +252,7 @@ summed over all sessions of the week:
 
 ### Requirement: Deviation from the projection
 An actual value more than 5 % above its projection SHALL be shown red with
-↑, a value more than 5 % below in blue with ↓, both together with the
-projected value. Values within 5 % SHALL be shown without colour. Values
+↑, a value more than 5 % below in blue with ↓, next to the planned value. Values within 5 % SHALL be shown without colour. Values
 without a projection or without data SHALL not be compared. The
 indicators SHALL be shown only in step 2.
 

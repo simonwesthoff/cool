@@ -410,7 +410,9 @@
       "addSetTo": "Satz zu {name} hinzufügen",
       "removeSetOf": "Letzten Satz von {name} entfernen",
       "note": "Trainerhinweis",
-      "noteOf": "Trainerhinweis zu {name}"
+      "noteOf": "Trainerhinweis zu {name}",
+      "freeText": "Sätze und Wiederholungen, z. B. 3 × 12",
+      "freeTextOf": "Sätze und Wiederholungen von {name}"
     },
     "totals": {
       "title": "Diese Woche (alle Einheiten)",
@@ -420,9 +422,10 @@
       "reps": "Wdh.",
       "kg": "{value} kg",
       "none": "–",
-      "projected": "Plan {value}",
       "above": "mehr als 5 % über dem Plan",
-      "below": "mehr als 5 % unter dem Plan"
+      "below": "mehr als 5 % unter dem Plan",
+      "actual": "Ist",
+      "plan": "Plan"
     },
     "blockAndLevel": "{block} · {level}",
     "dates": "{start} – {end}",

@@ -63,7 +63,7 @@ the count shown below.
 
 The tables are `week_plan` (macrocycle_id, week_number, created/updated),
 `training_session` (week_plan_id, weekday 1–7, slot 1–3),
-`session_exercise` (session_id, position, exercise_number, note) and
+`session_exercise` (session_id, position, exercise_number, note, free_text) and
 `set_group` (session_exercise_id, position, sets, reps, weight_kg
 numeric(4,1) nullable).
 - **Week plan:** its key is (macrocycle_id, week_number), and it is deleted
@@ -183,10 +183,17 @@ prompt happens between them.
   buttons.
   - **Alternatives:** a drag & drop library was rejected; it adds a
     dependency, and touch is covered by the click path.
-- **Step 2 table:** one `<table>` per session over the full width. Each
-  exercise is a `rowgroup` header with two rows (weight, reps) and one
-  column per set, then "+"/"−" for sets, a spacer, and a right cell with
-  the coach note and the totals. On phones the sets scroll sideways and
+- **Step 2 table:** one `<table>` (border-collapse) per session over the
+  full width, each exercise its own `<tbody>` with a top border as the
+  dividing line.
+  - **Columns:** a `rowgroup` header with two rows (weight, reps) and one
+    column per set, then "+"/"−", a spacer, the coach note, and the
+    indicators.
+  - **Indicators:** a fixed three-column grid (name, actual, plan) that
+    lines up with the "Actual" / "Plan" header in the table head.
+  - **Free text:** exercises from 30 on (`usesFreeText`) have one
+    free-text cell instead of sets, and no indicators. It is stored in
+    `session_exercise.free_text` (migration 0018). On phones the sets scroll sideways and
   the note and totals sit in an extra row that stays in view (sticky).
 - **Values column (replaced by the step 2 table):**
   - **Rows:** one block per session exercise, aligned with the sessions
@@ -249,6 +256,7 @@ erDiagram
     SessionExercise {
         int position
         string coachNote
+        string freeText
     }
     SetGroup {
         int position

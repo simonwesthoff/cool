@@ -69,6 +69,8 @@ export const sessionExercise = pgTable(
       .notNull()
       .references(() => exercise.number),
     note: text("note"),
+    /** Sets and reps as free text, for exercises without values (30 and up). */
+    freeText: text("free_text"),
   },
   (table) => [
     unique("session_exercise_unique").on(table.sessionId, table.exerciseNumber),
