@@ -68,7 +68,7 @@
   - **Editing:** a day change; highlighting in both lists; labels "Monday" / "Monday 1"; no indicators in step 1.
 - [x] 4.4 Step 2:
   - **Layout:** the sessions column (day, slot and exercises only) and the values column with set groups ("sets × reps @ kg", add and remove) and coach notes, aligned per exercise.
-  - **Indicators:** the week totals with the projection and red ↑ / blue ↓ per exercise.
+  - **Indicators:** the week totals with the projection and red / blue per exercise.
   - **Mesocycle check:** missing and not-planned exercises.
   - **Phones:** set groups below each exercise.
 
@@ -119,6 +119,7 @@
 - [x] 8.4 Automatic saving of every change (debounced, sequential, invalid cells block, retry; leave guard while not saved), no Save button. Step 2 as one full-width table per session: exercise two rows high, one column per set (weight above reps, at most 10, new set copies the last), note and totals on the right (below on phones). Sets stored as set groups of equal neighbours; API limit of 10 sets. Verify with component, draft and PGlite tests and the browser flow on the dev server (desktop and phone) with screenshots.
 - [x] 8.5 Dividing lines between exercises; free text instead of sets (and no indicators) for exercises from 30 on, stored in a new `free_text` column; coach note left of the indicators; indicators as name, actual and plan under "Actual" / "Plan" headings per session. Verify with component, PGlite and route tests and screenshots (desktop light, phone dark).
 - [x] 8.6 Compact table per session: exercise in two rows (name and note merged), ten set cells (no +/−), weight without reps marked; indicator columns Best value, mHG, Set size, Reps with Actual and Plan as rows; sticky exercise column on phones. Verify with component and draft tests, the browser flow (desktop and phone) and screenshots.
+- [x] 8.7 No arrows for deviations: only red / blue numbers, with a spoken hint for screen readers. Verify with a component test (colour, no arrow, spoken text).
 
 ## Workflow follow-up
 

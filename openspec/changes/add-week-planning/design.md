@@ -201,8 +201,8 @@ prompt happens between them.
     column, with set group inputs ("sets × reps @ kg", add and remove) and
     the coach note.
   - **Indicators:** each exercise block ends with the week totals
-    (heaviest, mHG, set size, reps), each with the projection and red ↑ /
-    blue ↓. They are repeated on every block of the same exercise and
+    (heaviest, mHG, set size, reps), each with the projection and red /
+    blue. They are repeated on every block of the same exercise and
     update live.
 - **Unsaved changes:** the editor registers a guard with the existing
   provider; the back link gets the same guarded click as the planning

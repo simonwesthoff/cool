@@ -252,19 +252,21 @@ summed over all sessions of the week:
 - **THEN** its actual values are shown without a projection
 
 ### Requirement: Deviation from the projection
-An actual value more than 5 % above its projection SHALL be shown red with
-↑, a value more than 5 % below in blue with ↓, next to the planned value. Values within 5 % SHALL be shown without colour. Values
+An actual value more than 5 % above its projection SHALL be shown in red,
+a value more than 5 % below in blue, next to the planned value, without
+arrows (user decision); screen readers SHALL hear "more than 5 % above/below
+the plan". Values within 5 % SHALL be shown without colour. Values
 without a projection or without data SHALL not be compared. The
 indicators SHALL be shown only in step 2.
 
 #### Scenario: Snatch in week 11
 - **GIVEN** the snatch week 11 from "Projection per exercise"
 - **WHEN** the editor shows it
-- **THEN** heaviest weight, mHG and reps are shown without colour, and set size 2 is blue with ↓ and the projection 3
+- **THEN** heaviest weight, mHG and reps are shown without colour, and set size 2 is blue next to the plan 3
 
 #### Scenario: Too heavy
 - **WHEN** the heaviest snatch of week 11 is 85 kg
-- **THEN** the heaviest weight is shown red with ↑ and the projection 80 kg
+- **THEN** the heaviest weight 85 kg is shown in red next to the plan 80 kg, without an arrow
 
 #### Scenario: Not in step 1
 - **WHEN** the coach is in step 1

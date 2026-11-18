@@ -38,7 +38,7 @@ whether a week fits the plan.
     with a table per session. Each exercise is two rows high on the left,
     each set is a column with the weight on top and the reps below (at
     most 10 sets), and on the right are the coach note and the week's
-    totals against the projection (red ↑ / blue ↓ beyond 5 %, with the
+    totals against the projection (red / blue beyond 5 %, no arrows, with the
     projected value).
   - **Switching steps:** stays on the page. Going to step 2, only the
     sessions column slides from right to left; the catalog makes room and

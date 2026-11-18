@@ -513,6 +513,11 @@ describe("WeekEditor step 2", () => {
       "above",
     );
     expect(cell("actual", "heaviest").className).toContain("text-red-700");
+    // Only the colour marks the deviation; no arrows.
+    expect(cell("actual", "heaviest").textContent).toBe(
+      "85 kgmore than 5 % above the plan",
+    );
+    expect(sessionNamed("Monday").textContent).not.toMatch(/[↑↓]/);
   });
 
   it("does not compare values without data or projection", async () => {

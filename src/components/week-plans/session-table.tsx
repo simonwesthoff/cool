@@ -315,16 +315,9 @@ function Values({
         } ${d ? colour[d] : ""}`}
       >
         {text}
-        {d === "above" && (
-          <span aria-label={t("above")} className="ml-0.5">
-            ↑
-          </span>
-        )}
-        {d === "below" && (
-          <span aria-label={t("below")} className="ml-0.5">
-            ↓
-          </span>
-        )}
+        {/* Only the colour shows the deviation; screen readers hear it. */}
+        {d === "above" && <span className="sr-only">{t("above")}</span>}
+        {d === "below" && <span className="sr-only">{t("below")}</span>}
       </td>
     );
   });
