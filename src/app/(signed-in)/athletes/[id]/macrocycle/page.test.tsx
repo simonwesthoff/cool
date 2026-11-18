@@ -38,6 +38,7 @@ const view = {
   initialValues: { exerciseNumber: 1, weeks: [] },
   exercises: [],
   today: "2027-01-06",
+  editHref: "/athletes/a1/macrocycle/base-data",
 };
 
 describe("coach macrocycle view page", () => {
@@ -52,10 +53,8 @@ describe("coach macrocycle view page", () => {
       label: "Back.athlete:Anna Weber",
     });
     expect(heading.props.children[0].props.children).toBe("Anna Weber");
-    expect(viewElement.props).toMatchObject({
-      ...view,
-      editHref: "/athletes/a1/macrocycle/base-data",
-    });
+    // The loader decides about "Change planning"; the page passes it on.
+    expect(viewElement.props).toEqual(view);
     expect(loadMacrocycleView).toHaveBeenCalledWith(coach.user, "a1");
     expect(requireCoachPage).toHaveBeenCalledWith("/athletes/a1/macrocycle");
   });

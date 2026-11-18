@@ -26,6 +26,11 @@ name in the title.
   <first name>" in German) replaces the small name line and the generic
   title. The first name is the first word of the athlete's name.
 
+- **Change planning by permission** (user decision): the macrocycle view
+  shows "Change planning" exactly when the user leads the athlete's Team,
+  whether it is opened from "My training" or from the athlete details page
+  (a coach who trains themselves sees it on both).
+
 Out of scope: changes to the steps themselves, the back link, and the
 macrocycle view's title.
 
@@ -39,6 +44,8 @@ None.
 
 - `macrocycle-planning`: "Planning in four steps" describes the stepper and
   the title with the athlete's first name.
+- `macrocycle-view`: "Macrocycle view access" decides "Change planning" by
+  permission on both entry points.
 
 ## Impact
 
@@ -48,4 +55,6 @@ None.
   title. New helper `firstName`.
 - **Messages:** `Macrocycle.title` takes `{name}`; new stepper texts for
   screen readers (completed and current step), in English and German.
-- **No changes:** domain, API and database.
+- **Domain:** new `canPlanMacrocycle(user, athleteId)` (same rule as all
+  writes); the view loader passes the edit link.
+- **No changes:** API and database.

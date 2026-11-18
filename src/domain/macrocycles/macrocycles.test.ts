@@ -11,6 +11,7 @@ const { athlete: athleteTable } = await import("@/server/db/schema");
 const { eq } = await import("drizzle-orm");
 const { createAthlete } = await import("@/domain/athletes");
 const {
+  canPlanMacrocycle,
   createMacrocycle,
   findMacrocycle,
   getExerciseWeeks,
@@ -738,6 +739,33 @@ describe("read access for the linked athlete", () => {
     await createMacrocycle(linked, theirs.id, baseData);
     expect((await getMacrocycle(linked, own.id)).athleteId).toBe(own.id);
     expect((await getMacrocycle(linked, theirs.id)).athleteId).toBe(theirs.id);
+  });
+});
+
+describe("canPlanMacrocycle", () => {
+  it("is true only for the coach of the athlete's Team", async () => {
+    const { coach, athlete } = await setup();
+    expect(await canPlanMacrocycle(coach, athlete.id)).toBe(true);
+    // The linked athlete, first without a Team, then leading another one.
+    const linked = await createUser(testDb.db);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: linked.id })
+      .where(eq(athleteTable.id, athlete.id));
+    expect(await canPlanMacrocycle(linked, athlete.id)).toBe(false);
+    await startAsCoach(linked);
+    expect(await canPlanMacrocycle(linked, athlete.id)).toBe(false);
+    const stranger = await createUser(testDb.db);
+    expect(await canPlanMacrocycle(stranger, athlete.id)).toBe(false);
+  });
+
+  it("is true for a coach who trains themselves", async () => {
+    const { coach, athlete } = await setup();
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: coach.id })
+      .where(eq(athleteTable.id, athlete.id));
+    expect(await canPlanMacrocycle(coach, athlete.id)).toBe(true);
   });
 });
 

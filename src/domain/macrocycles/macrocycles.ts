@@ -64,6 +64,19 @@ async function requireViewableAthlete(user: CurrentUser, athleteId: string) {
   throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
 }
 
+/**
+ * Whether the user may plan (create and change) the athlete's macrocycle:
+ * they lead the athlete's Team. The same rule as for all writes.
+ */
+export async function canPlanMacrocycle(
+  user: CurrentUser,
+  athleteId: string,
+): Promise<boolean> {
+  const roles = await getRoles(user);
+  if (!roles.coach) return false;
+  return Boolean(await findAthleteInTeam(roles.coach.teamId, athleteId));
+}
+
 async function findMacrocycleRow(athleteId: string) {
   const [row] = await getDb()
     .select()

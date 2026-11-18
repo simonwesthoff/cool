@@ -49,10 +49,7 @@ export async function CoachMacrocycleView({ params }: { params: Params }) {
         </p>
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
       </div>
-      <MacrocycleView
-        {...view}
-        editHref={`/athletes/${id}/macrocycle/base-data`}
-      />
+      <MacrocycleView {...view} />
     </div>
   );
 }
