@@ -121,6 +121,7 @@
 - [x] 8.6 Compact table per session: exercise in two rows (name and note merged), ten set cells (no +/−), weight without reps marked; indicator columns Best value, mHG, Set size, Reps with Actual and Plan as rows; sticky exercise column on phones. Verify with component and draft tests, the browser flow (desktop and phone) and screenshots.
 - [x] 8.7 No arrows for deviations: only red / blue numbers, with a spoken hint for screen readers. Verify with a component test (colour, no arrow, spoken text).
 - [x] 8.8 Values beyond the plan are saved and warned (count of off-plan values in step 2); "Finish week planning" saves and returns to the athlete page, staying open on invalid entries. Verify with component tests (95 kg saved and warned, finish right after a change, finish blocked by 82.3 kg) and a screenshot.
+- [x] 8.9 Fixed column widths (`table-fixed` with a colgroup, 60 rem in total), the four indicator columns equally wide. Verify with a component test and a screenshot.
 
 ## Workflow follow-up
 

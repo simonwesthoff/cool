@@ -520,6 +520,25 @@ describe("WeekEditor step 2", () => {
     expect(sessionNamed("Monday").textContent).not.toMatch(/[↑↓]/);
   });
 
+  it("gives every column a fixed width, the same for the four indicator columns", async () => {
+    renderEditor(week11);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const table = sessionNamed("Monday").querySelector("table")!;
+    expect(table.className).toContain("table-fixed");
+    const cols = [...table.querySelectorAll("col")];
+    expect(cols).toHaveLength(18);
+    expect(cols.every((c) => /^\d+(\.\d+)?rem$/.test(c.style.width))).toBe(
+      true,
+    );
+    expect(
+      new Set(
+        [...table.querySelectorAll("col[data-col]")].map(
+          (c) => (c as HTMLElement).style.width,
+        ),
+      ).size,
+    ).toBe(1);
+  });
+
   it("does not compare values without data or projection", async () => {
     renderEditor([
       {

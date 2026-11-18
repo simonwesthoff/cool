@@ -166,6 +166,16 @@ view.
 - **WHEN** the coach types 70 kg and 2 reps into the empty eighth set cells of the snatch
 - **THEN** the snatch has eight sets and the change is saved
 
+### Requirement: Fixed column widths
+Every column of the step 2 tables SHALL have a fixed width, the same in
+every session, so the columns line up from day to day. The four indicator
+columns (best value, mHG, set size, reps) SHALL be equally wide.
+
+#### Scenario: Columns line up
+- **GIVEN** sessions on Monday and Thursday with different numbers of sets
+- **WHEN** the coach looks at step 2
+- **THEN** every column starts and ends at the same place in both tables, and "Best value", "mHG", "Set size" and "Reps" are equally wide
+
 ### Requirement: Exercises without values
 Exercises from number 30 on (general strength exercises without reference
 values) SHALL have a free text field for their sets and reps in step 2

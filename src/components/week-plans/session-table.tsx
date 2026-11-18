@@ -31,6 +31,26 @@ type Indicator = (typeof INDICATORS)[number];
 
 const SETS = Array.from({ length: MAX_SETS }, (_, i) => i);
 
+/**
+ * Fixed column widths (rem); the four indicator columns share one width.
+ * Together they fit the content width of 60 rem.
+ */
+const WIDTH = {
+  exercise: 8,
+  rowLabel: 2.25,
+  set: 2.5,
+  note: 7.75,
+  valueLabel: 2.75,
+  indicator: 3.5,
+} as const;
+const TABLE_WIDTH =
+  WIDTH.exercise +
+  WIDTH.rowLabel +
+  MAX_SETS * WIDTH.set +
+  WIDTH.note +
+  WIDTH.valueLabel +
+  4 * WIDTH.indicator;
+
 /** Grid lines of the table. */
 const line = "border border-zinc-200 dark:border-zinc-800";
 /** An input that fills its cell, like a spreadsheet. */
@@ -75,23 +95,42 @@ export function SessionTable({
         <p className="text-sm text-zinc-500">{t("noExercises")}</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[56rem] border-collapse text-sm">
+          <table
+            className="table-fixed border-collapse text-sm"
+            style={{ width: `${TABLE_WIDTH}rem` }}
+          >
+            <colgroup>
+              <col style={{ width: `${WIDTH.exercise}rem` }} />
+              <col style={{ width: `${WIDTH.rowLabel}rem` }} />
+              {SETS.map((i) => (
+                <col key={i} style={{ width: `${WIDTH.set}rem` }} />
+              ))}
+              <col style={{ width: `${WIDTH.note}rem` }} />
+              <col style={{ width: `${WIDTH.valueLabel}rem` }} />
+              {INDICATORS.map((key) => (
+                <col
+                  key={key}
+                  data-col={key}
+                  style={{ width: `${WIDTH.indicator}rem` }}
+                />
+              ))}
+            </colgroup>
             <thead>
               <tr className="bg-zinc-50 dark:bg-zinc-900">
                 <th
                   scope="col"
-                  className={`${line} ${head} sticky left-0 z-[1] w-36 bg-zinc-50 text-left dark:bg-zinc-900`}
+                  className={`${line} ${head} sticky left-0 z-[1] bg-zinc-50 text-left dark:bg-zinc-900`}
                 >
                   {t("exercise")}
                 </th>
-                <th scope="col" className={`${line} w-10`}>
+                <th scope="col" className={line}>
                   <span className="sr-only">{t("row")}</span>
                 </th>
                 {SETS.map((i) => (
                   <th
                     key={i}
                     scope="col"
-                    className={`${line} ${head} w-11 text-right`}
+                    className={`${line} ${head} text-right`}
                   >
                     {i + 1}
                   </th>
@@ -99,7 +138,7 @@ export function SessionTable({
                 <th scope="col" className={`${line} ${head} text-left`}>
                   {t("note")}
                 </th>
-                <th scope="col" className={`${line} w-10`}>
+                <th scope="col" className={line}>
                   <span className="sr-only">{tt("row")}</span>
                 </th>
                 {INDICATORS.map((key) => (
@@ -107,7 +146,7 @@ export function SessionTable({
                     key={key}
                     scope="col"
                     data-heading={key}
-                    className={`${line} ${head} w-16 text-right`}
+                    className={`${line} ${head} text-right break-words`}
                   >
                     {tt(key)}
                   </th>
@@ -205,7 +244,7 @@ function ExerciseRows({
             {setCells("weight")}
           </>
         )}
-        <td rowSpan={2} className={`${line} min-w-40 p-0 align-top`}>
+        <td rowSpan={2} className={`${line} p-0 align-top`}>
           <textarea
             value={exercise.note}
             onChange={(event) =>
