@@ -1,11 +1,27 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
 import { BaseDataForm } from "./base-data-form";
 import { StepIndicator } from "./step-indicator";
+import { UnsavedChangesProvider } from "./unsaved-changes";
 
 const router = { push: vi.fn(), refresh: vi.fn(), bfcacheId: "v1" };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
@@ -17,9 +33,12 @@ const respond = (status: number, body: unknown) =>
       headers: { "content-type": "application/json" },
     }),
   );
-const renderWith = (node: React.ReactNode) =>
+const renderWith = (node: React.ReactNode, locale: "en" | "de" = "en") =>
   render(
-    <NextIntlClientProvider locale="en" messages={en}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={locale === "de" ? de : en}
+    >
       {node}
     </NextIntlClientProvider>,
   );
@@ -309,26 +328,184 @@ describe("focus points", () => {
 });
 
 describe("StepIndicator", () => {
-  it("marks the current step and links the others once a macrocycle exists", () => {
-    const view = renderWith(
+  const stepOf = (container: HTMLElement, label: string) =>
+    [...container.querySelectorAll("li")].find((li) =>
+      li.textContent!.includes(label),
+    )!;
+
+  it("shows earlier steps as completed, the current one and later ones as links", () => {
+    const { container } = renderWith(
       <StepIndicator athleteId="a1" current="intensity" available />,
     );
-    expect(screen.getByText("3 Intensity").getAttribute("aria-current")).toBe(
-      "step",
-    );
-    expect(screen.getByRole("link", { name: "1 Base data" })).toHaveProperty(
+    expect(
+      screen.getByRole("navigation", { name: "Planning steps" }),
+    ).toBeTruthy();
+    expect(container.querySelectorAll("li")).toHaveLength(4);
+    const current = stepOf(container, "Intensity").querySelector(
+      "[aria-current=step]",
+    )!;
+    expect(current.textContent).toContain("3 Intensity");
+    expect(
+      screen.getByRole("link", { name: "1 Base data, completed" }),
+    ).toHaveProperty("pathname", "/athletes/a1/macrocycle/base-data");
+    expect(
+      screen.getByRole("link", { name: "2 SWOT, completed" }),
+    ).toHaveProperty("pathname", "/athletes/a1/macrocycle/swot");
+    expect(screen.getByRole("link", { name: "4 Exercises" })).toHaveProperty(
       "pathname",
-      "/athletes/a1/macrocycle/base-data",
+      "/athletes/a1/macrocycle/exercises",
     );
-    expect(screen.getByRole("link", { name: "2 SWOT" })).toHaveProperty(
-      "pathname",
-      "/athletes/a1/macrocycle/swot",
-    );
-    expect(screen.getByRole("link", { name: "4 Exercises" })).toBeTruthy();
-    view.unmount();
-    renderWith(
+    // Check marks for the completed steps, numbers for the others.
+    expect(stepOf(container, "Base data").querySelector("svg")).toBeTruthy();
+    expect(stepOf(container, "Exercises").querySelector("svg")).toBeNull();
+  });
+
+  it("disables steps 2 to 4 before the macrocycle exists", () => {
+    const { container } = renderWith(
       <StepIndicator athleteId="a1" current="base-data" available={false} />,
     );
     expect(screen.queryAllByRole("link")).toHaveLength(0);
+    expect(
+      stepOf(container, "SWOT").querySelector("[aria-disabled=true]")!
+        .textContent,
+    ).toContain("2 SWOT");
+    expect(container.querySelectorAll("svg")).toHaveLength(0);
+  });
+
+  it("uses German labels", () => {
+    renderWith(<StepIndicator athleteId="a1" current="swot" available />, "de");
+    expect(
+      screen.getByRole("link", { name: "1 Stammdaten, abgeschlossen" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "3 Intensität" })).toBeTruthy();
+  });
+});
+
+describe("Unsaved changes when changing the step", () => {
+  beforeAll(() => {
+    const proto = HTMLDialogElement.prototype;
+    if (!proto.showModal) {
+      proto.showModal = function (this: HTMLDialogElement) {
+        this.setAttribute("open", "");
+      };
+      proto.close = function (this: HTMLDialogElement) {
+        this.removeAttribute("open");
+        this.dispatchEvent(new Event("close"));
+      };
+    }
+  });
+
+  const renderStep = (locale: "en" | "de" = "en") =>
+    renderWith(
+      <UnsavedChangesProvider>
+        <StepIndicator athleteId="a1" current="swot" available />
+        <BaseDataForm
+          athleteId="a1"
+          part="swot"
+          macrocycle={existing}
+          defaultStartDate="2026-11-23"
+        />
+      </UnsavedChangesProvider>,
+      locale,
+    );
+  const dialog = () => document.querySelector("dialog") as HTMLDialogElement;
+  const toBaseData = () =>
+    userEvent.click(
+      screen.getByRole("link", { name: "1 Base data, completed" }),
+    );
+
+  it("asks before leaving with changes and discards them on request", async () => {
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    expect(dialog().open).toBe(true);
+    expect(
+      within(dialog()).getByRole("heading", { name: "Save changes?" }),
+    ).toBeTruthy();
+    expect(
+      within(dialog())
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["Save", "Discard", "Cancel"]);
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Discard" }),
+    );
+    expect(dialog().open).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(router.push).toHaveBeenCalledWith(
+      "/athletes/a1/macrocycle/base-data",
+    );
+  });
+
+  it("saves the changes and then opens the chosen step", async () => {
+    respond(200, {});
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Save" }),
+    );
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("/api/athletes/a1/macrocycle/swot");
+    expect(JSON.parse(init.body)).toEqual({ ...swot, strengths: "Explosive" });
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith(
+        "/athletes/a1/macrocycle/base-data",
+      ),
+    );
+  });
+
+  it("stays on the step and shows the errors when saving fails", async () => {
+    respond(400, {
+      error: { code: "VALIDATION_FAILED", fields: { strengths: ["TOO_LONG"] } },
+    });
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Save" }),
+    );
+    await waitFor(() => expect(dialog().open).toBe(false));
+    expect(router.push).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText("Please check the marked fields."),
+    ).toBeTruthy();
+  });
+
+  it("keeps the step and the changes when cancelled", async () => {
+    renderStep();
+    await fill("Strengths", "Explosive");
+    await toBaseData();
+    await userEvent.click(
+      within(dialog()).getByRole("button", { name: "Cancel" }),
+    );
+    expect(dialog().open).toBe(false);
+    expect(router.push).not.toHaveBeenCalled();
+    expect(
+      (screen.getByLabelText("Strengths") as HTMLTextAreaElement).value,
+    ).toBe("Explosive");
+  });
+
+  it("does not ask without changes", async () => {
+    renderStep();
+    const link = screen.getByRole("link", { name: "1 Base data, completed" });
+    const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+    link.dispatchEvent(click);
+    expect(dialog().open).toBe(false);
+    // The link navigates as usual.
+    expect(click.defaultPrevented).toBe(false);
+  });
+
+  it("uses German texts", async () => {
+    renderStep("de");
+    await fill("Stärken", "Explosiv");
+    await userEvent.click(
+      screen.getByRole("link", { name: "1 Stammdaten, abgeschlossen" }),
+    );
+    expect(
+      within(dialog()).getByRole("heading", { name: "Änderungen speichern?" }),
+    ).toBeTruthy();
+    for (const name of ["Speichern", "Verwerfen", "Abbrechen"])
+      expect(within(dialog()).getByRole("button", { name })).toBeTruthy();
   });
 });

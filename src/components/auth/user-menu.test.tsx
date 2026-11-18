@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
-import { firstName, UserMenu } from "./user-menu";
+import { UserMenu } from "./user-menu";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => {} }),
@@ -57,16 +57,5 @@ describe("UserMenu", () => {
     await userEvent.click(screen.getByText("outside"));
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
     expect(account.getAttribute("aria-expanded")).toBe("false");
-  });
-});
-
-describe("firstName", () => {
-  it.each([
-    ["Ada Lovelace", "Ada"],
-    ["Anna-Lena Weber", "Anna-Lena"],
-    ["  Max  ", "Max"],
-    ["Cher", "Cher"],
-  ])("%s -> %s", (name, expected) => {
-    expect(firstName(name)).toBe(expected);
   });
 });

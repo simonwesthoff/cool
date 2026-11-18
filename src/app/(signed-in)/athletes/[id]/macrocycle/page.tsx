@@ -8,6 +8,7 @@ import { DomainError } from "@/domain/errors";
 import { requireCoachPage } from "../../../current-user";
 import { loadMacrocycleView } from "../../../macrocycle-view/load";
 import { BackLink } from "@/components/back-link";
+import { firstName } from "@/components/first-name";
 import { PageMain } from "@/components/page-main";
 
 type Params = PageProps<"/athletes/[id]/macrocycle">["params"];
@@ -43,16 +44,10 @@ export async function CoachMacrocycleView({ params }: { params: Params }) {
         href={`/athletes/${id}`}
         label={tb("athlete", { name: athlete.name })}
       />
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {athlete.name}
-        </p>
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-      </div>
-      <MacrocycleView
-        {...view}
-        editHref={`/athletes/${id}/macrocycle/base-data`}
-      />
+      <h1 className="text-2xl font-semibold">
+        {t("title", { name: firstName(athlete.name) })}
+      </h1>
+      <MacrocycleView {...view} />
     </div>
   );
 }

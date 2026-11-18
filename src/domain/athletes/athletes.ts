@@ -3,7 +3,7 @@ import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
 import { parseInput } from "@/domain/validation";
 import { getDb } from "@/server/db";
-import { requireCoachTeam } from "@/domain/roles";
+import { getRoles, requireCoachTeam } from "@/domain/roles";
 import { athlete, userAccount } from "@/server/db/schema";
 import {
   completeBasicDataSchema,
@@ -75,6 +75,19 @@ export async function findAthleteInTeam(
     and(eq(athlete.id, id), eq(athlete.teamId, teamId)),
   );
   return row ? toAthlete(row) : undefined;
+}
+
+/**
+ * Whether the user leads the athlete's Team, which allows changing the
+ * athlete's data and planning (also for a coach who trains themselves).
+ */
+export async function isCoachOfAthlete(
+  user: CurrentUser,
+  athleteId: string,
+): Promise<boolean> {
+  const roles = await getRoles(user);
+  if (!roles.coach) return false;
+  return Boolean(await findAthleteInTeam(roles.coach.teamId, athleteId));
 }
 
 /** One athlete of the coach's Team; `ATHLETE_NOT_FOUND` otherwise. */

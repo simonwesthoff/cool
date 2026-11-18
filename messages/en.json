@@ -17,7 +17,8 @@
   "UserMenu": {
     "pictureAlt": "Profile picture of {name}",
     "signOut": "Sign out",
-    "accountLabel": "Account of {name}"
+    "accountLabel": "Account of {name}",
+    "language": "Language"
   },
   "Athletes": {
     "title": "Athletes",
@@ -150,13 +151,14 @@
     "start": "Back to the start page"
   },
   "Macrocycle": {
-    "title": "Macrocycle planning",
+    "title": "{name}'s macrocycle planning",
     "steps": {
       "label": "Planning steps",
       "base-data": "Base data",
       "swot": "SWOT",
       "intensity": "Intensity",
-      "exercises": "Exercises"
+      "exercises": "Exercises",
+      "completed": "completed"
     },
     "baseData": {
       "sections": {
@@ -288,6 +290,13 @@
       "deficitsLabel": "Athlete's deficits",
       "ownReasonRemove": "Remove own reason: {reason}",
       "ownReasonCancel": "Cancel own reason"
+    },
+    "unsaved": {
+      "title": "Save changes?",
+      "text": "This step has changes that are not saved yet.",
+      "save": "Save",
+      "discard": "Discard",
+      "cancel": "Cancel"
     }
   },
   "MacrocycleView": {
@@ -312,7 +321,7 @@
         "weeklyReps": "Weekly reps: {value}"
       }
     },
-    "title": "Macrocycle",
+    "title": "{name}'s macrocycle",
     "chartTitle": "Planned values",
     "exercise": "Exercise",
     "exerciseOption": "{number} {name}",

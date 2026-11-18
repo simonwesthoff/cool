@@ -17,7 +17,8 @@
   "UserMenu": {
     "pictureAlt": "Profilbild von {name}",
     "signOut": "Abmelden",
-    "accountLabel": "Konto von {name}"
+    "accountLabel": "Konto von {name}",
+    "language": "Sprache"
   },
   "Athletes": {
     "title": "Athleten",
@@ -150,13 +151,14 @@
     "start": "Zurück zur Startseite"
   },
   "Macrocycle": {
-    "title": "Makrozyklusplanung",
+    "title": "Makrozyklusplanung für {name}",
     "steps": {
       "label": "Planungsschritte",
       "base-data": "Stammdaten",
       "swot": "SWOT",
       "intensity": "Intensität",
-      "exercises": "Übungen"
+      "exercises": "Übungen",
+      "completed": "abgeschlossen"
     },
     "baseData": {
       "sections": {
@@ -288,6 +290,13 @@
       "deficitsLabel": "Defizite des Athleten",
       "ownReasonRemove": "Eigene Begründung entfernen: {reason}",
       "ownReasonCancel": "Eigene Begründung verwerfen"
+    },
+    "unsaved": {
+      "title": "Änderungen speichern?",
+      "text": "Dieser Schritt hat Änderungen, die noch nicht gespeichert sind.",
+      "save": "Speichern",
+      "discard": "Verwerfen",
+      "cancel": "Abbrechen"
     }
   },
   "MacrocycleView": {
@@ -312,7 +321,7 @@
         "weeklyReps": "Wochenwdh.: {value}"
       }
     },
-    "title": "Makrozyklus",
+    "title": "Makrozyklus von {name}",
     "chartTitle": "Geplante Werte",
     "exercise": "Übung",
     "exerciseOption": "{number} {name}",

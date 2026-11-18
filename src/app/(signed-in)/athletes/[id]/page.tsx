@@ -38,6 +38,8 @@ export async function AthleteDetails({ params }: { params: Params }) {
       name={athlete.name}
       image={athlete.linkedAccount?.image ?? null}
       coachName={user.name}
+      // getAthlete found the athlete in the user's Team.
+      canEdit
       macrocycle={macrocycle}
     />
   );

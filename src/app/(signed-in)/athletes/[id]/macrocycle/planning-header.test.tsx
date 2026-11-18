@@ -16,11 +16,14 @@ describe("PlanningHeader", () => {
       step: "swot",
       hasMacrocycle: true,
     });
-    const [back] = element.props.children;
+    const [back, title] = element.props.children;
     expect(back.props).toEqual({
       href: "/athletes/a1/macrocycle",
       label: "Back.macrocycle",
     });
+    // The first name is in the title; there is no separate name line.
+    expect(title.type).toBe("h1");
+    expect(title.props.children).toBe("Macrocycle.title:Anna");
   });
 
   it("leads back to the athlete before the macrocycle exists", async () => {

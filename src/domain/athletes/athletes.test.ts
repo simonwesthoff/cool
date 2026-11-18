@@ -7,8 +7,15 @@ const testDb = await createTestDb();
 vi.mock("@/server/db", () => ({ getDb: () => testDb.db }));
 afterAll(() => testDb.close());
 
-const { createAthlete, getAthlete, listAthletes, updateAthlete } =
-  await import("./athletes");
+const {
+  createAthlete,
+  getAthlete,
+  isCoachOfAthlete,
+  listAthletes,
+  updateAthlete,
+} = await import("./athletes");
+const { athlete: athleteTable } = await import("@/server/db/schema");
+const { eq } = await import("drizzle-orm");
 const { startAsCoach } = await import("@/domain/roles");
 
 async function createCoach() {
@@ -168,5 +175,31 @@ describe("users without a Team", () => {
     await expect(errorOf(requireCoachTeam(user))).resolves.toMatchObject({
       code: "NOT_A_COACH",
     });
+  });
+});
+
+describe("isCoachOfAthlete", () => {
+  it("is true for the coach of the athlete's Team, also when they train themselves", async () => {
+    const coach = await createCoach();
+    const own = await createAthlete(coach, { name: "Max Berg" });
+    expect(await isCoachOfAthlete(coach, own.id)).toBe(true);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: coach.id })
+      .where(eq(athleteTable.id, own.id));
+    expect(await isCoachOfAthlete(coach, own.id)).toBe(true);
+  });
+
+  it("is false for the linked athlete, other coaches and malformed ids", async () => {
+    const coach = await createCoach();
+    const anna = await createAthlete(coach, { name: "Anna Weber" });
+    const linked = await createUser(testDb.db);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: linked.id })
+      .where(eq(athleteTable.id, anna.id));
+    expect(await isCoachOfAthlete(linked, anna.id)).toBe(false);
+    expect(await isCoachOfAthlete(await createCoach(), anna.id)).toBe(false);
+    expect(await isCoachOfAthlete(coach, "not-a-uuid")).toBe(false);
   });
 });

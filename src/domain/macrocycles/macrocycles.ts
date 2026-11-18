@@ -1,5 +1,5 @@
 import { and, asc, eq, gt, inArray } from "drizzle-orm";
-import { findAthleteInTeam } from "@/domain/athletes";
+import { findAthleteInTeam, isCoachOfAthlete } from "@/domain/athletes";
 import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
 import { getRoles, requireCoachTeam } from "@/domain/roles";
@@ -62,6 +62,17 @@ async function requireViewableAthlete(user: CurrentUser, athleteId: string) {
   if (roles.coach && (await findAthleteInTeam(roles.coach.teamId, athleteId)))
     return;
   throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
+}
+
+/**
+ * Whether the user may plan (create and change) the athlete's macrocycle:
+ * they lead the athlete's Team. The same rule as for all writes.
+ */
+export async function canPlanMacrocycle(
+  user: CurrentUser,
+  athleteId: string,
+): Promise<boolean> {
+  return isCoachOfAthlete(user, athleteId);
 }
 
 async function findMacrocycleRow(athleteId: string) {

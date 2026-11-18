@@ -4,6 +4,8 @@ const requirePageRoles = vi.fn();
 const loadMacrocycleChart = vi.fn();
 vi.mock("../macrocycle-view/load", () => ({ loadMacrocycleChart }));
 vi.mock("../current-user", () => ({ requirePageRoles }));
+const isCoachOfAthlete = vi.fn(async () => false);
+vi.mock("@/domain/athletes", () => ({ isCoachOfAthlete }));
 class Redirect extends Error {
   constructor(readonly url: string) {
     super(url);
@@ -48,6 +50,7 @@ describe("athlete view", () => {
       name: "Anna Weber",
       image: null,
       coachName: "Max Berg",
+      canEdit: false,
       macrocycle: null,
     });
   });
@@ -69,5 +72,25 @@ describe("athlete view", () => {
     const element = await Training();
     expect(element.props.macrocycle).toEqual({ athleteId: "a1" });
     expect(loadMacrocycleChart).toHaveBeenCalledWith(user, "a1");
+  });
+
+  it("lets a coach who trains themselves edit on My training", async () => {
+    requirePageRoles.mockResolvedValue({
+      user,
+      roles: {
+        coach: { teamId: "t1" },
+        athlete: {
+          athleteId: "a1",
+          athleteName: "Anna Weber",
+          teamId: "t1",
+          coachName: "Anna Weber",
+        },
+      },
+    });
+    loadMacrocycleChart.mockResolvedValue(null);
+    isCoachOfAthlete.mockResolvedValueOnce(true);
+    const element = await Training();
+    expect(element.props.canEdit).toBe(true);
+    expect(isCoachOfAthlete).toHaveBeenCalledWith(user, "a1");
   });
 });
