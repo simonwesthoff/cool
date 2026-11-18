@@ -1,80 +1,109 @@
 # Tasks
 
-## 1. Data and domain
+## 1. Weekly schedule
 
-- [ ] 1.1 Add the tables `week_plan`, `training_session`, `session_exercise` and `set_group` with their keys, uniqueness and cascades, and generate the migration. Verify: `npm run db:migrate` on the dev database and the PGlite test setup apply it; the schema test lists the tables.
-- [ ] 1.2 Add `week-plan/calculation.ts`:
+- [ ] 1.1 Add the table `macrocycle_session` and the migrations. First add the table and fill it from `training_frequency` (spread over Monday–Saturday, then second and third slots from Monday), then drop the column. Verify: a migration test on PGlite converts 1, 6, 8 and 14 to the expected schedules; `npm run db:migrate` runs on the dev database.
+- [ ] 1.2 Domain:
+  - **Input:** the base data takes `sessions: [{ weekday, slot }]` (1–14, at most 3 per day, contiguous slots).
+  - **Responses:** they return `sessions` and `trainingFrequency` as the count; the summary and calculations use the count.
+
+  Verify with PGlite tests: create and update with a schedule; field codes for no session, a 4th slot and more than 14; the count in `getMacrocycle`.
+- [ ] 1.3 Base data form:
+  - **Picker:** the weekly schedule picker replaces the number input, with seven day columns, "+" up to 3 sessions per day, remove, and the count shown below.
+  - **Accessibility:** it is keyboard reachable.
+
+  Verify with component tests (pick, remove, the 4th slot not offered, the required error, German labels) and the base data form payload.
+
+## 2. Week plan data and domain
+
+- [ ] 2.1 Add the tables `week_plan`, `training_session`, `session_exercise` and `set_group` with their keys, uniqueness and cascades, and the migration. Verify: migrations apply on the dev database and in the PGlite setup.
+- [ ] 2.2 `week-plan/calculation.ts`:
   - **Actual values:** heaviest weight, mHG, set size and weekly reps per exercise over all sessions.
-  - **Deviation:** `deviation(actual, projected)` with the strict 5 % band.
+  - **Deviation:** `deviation()` with the strict 5 % band.
 
-  Verify with unit tests: the spec's week 11 snatch example (80 kg, 69.5 kg, set size 2, 20 reps; set size below, the rest within), 85 kg above, 72.45 vs 69 within, set groups without weight, and null projections.
-- [ ] 1.3 Add the week plan domain:
-  - **Read:** `getWeekPlan(user, athleteId, week)` (coach and linked athlete), with the mesocycle check (missing and not-planned exercises).
-  - **List:** `listWeekPlans` with the numbers and start dates of the planned weeks.
-  - **Save:** `saveWeekPlan` (coach only), which validates and replaces the week; an empty body deletes the plan.
+  Verify with unit tests: the spec's week 11 snatch example (80 kg, 69.5 kg, set size 2 below, 20 reps), 85 kg above, 72.45 vs 69 within, set groups without weight, and null projections.
+- [ ] 2.3 Week plan domain:
+  - **Read:** `getWeekPlan` (coach and linked athlete), with the mesocycle check (chosen, missing and not planned).
+  - **List:** `listWeekPlans`.
+  - **Save:** `saveWeekPlan` (coach only, replaces the week; an empty body deletes it).
+  - **Initial content:** `initialWeekContent` (stored plan → copy of week−1 with notes when asked → weekly schedule without exercises).
   - **Errors:** `WEEK_NOT_FOUND` and `ATHLETE_NOT_FOUND`.
-  - **Prefill:** `prefillFromPreviousWeek`, a copy of week−1 without notes.
 
-  Verify with PGlite tests: save and read back with order kept; validation codes for sets 0 and a weight of 82.3 kg; duplicate exercise in a session; more than 14 sessions; an empty save deletes; week 22 of 21; linked-athlete read and refused write; stranger; mesocycle check with the spec example; prefill with and without a previous plan.
-- [ ] 1.4 Duration guard: `updateBaseData` refuses a duration below the highest planned week with `WEEKS_PLANNED` on `durationWeeks`. Verify with a PGlite test (21 weeks with week 20 planned → 18 is refused, 20 is allowed) and the base data form showing the message.
+  Verify with PGlite tests:
+  - **Save and read:** with the order kept; validation codes (0 sets, 82.3 kg, a duplicate exercise in a session, more than 14 sessions, a 4th slot); an empty save deletes.
+  - **Access:** week 22 of 21; linked-athlete read and refused write; stranger.
+  - **Content:** the mesocycle check with the spec example; initial content in all three cases.
+- [ ] 2.4 Duration guard: `updateBaseData` refuses a duration below the highest planned week with `WEEKS_PLANNED`. Verify with a PGlite test (week 20 planned: 18 is refused, 20 is allowed) and the form message.
 
-## 2. API
+## 3. API
 
-- [ ] 2.1 Add the routes:
-  - **Week plan:** `GET`/`PUT /api/athletes/{id}/macrocycle/weeks/{week}/plan`.
-  - **List:** `GET /api/athletes/{id}/macrocycle/weeks/plans`.
+- [ ] 3.1 Routes:
+  - **Base data:** the macrocycle routes take and return the schedule.
+  - **Week plans:** `GET`/`PUT …/weeks/{week}/plan` and `GET …/weeks/plans`.
 
-  Verify with route tests: 200 for coach and linked athlete on GET, 200/400 on PUT, 404 codes, 401 without a session, and the linked athlete's PUT refused.
+  Verify with route tests: 200 for coach and linked athlete on GET, 200/400 on PUT, 404 codes, 401 without a session, and the linked athlete's writes refused.
 
-## 3. Week editor
+## 4. Week editor
 
-- [ ] 3.1 Page `/athletes/{id}/macrocycle/weeks/{week}` (coach only):
-  - **Loads:** the macrocycle, the week's projections for all catalog exercises, the stored plan or the prefill with `?prefill=previous`, and the catalog list.
+- [ ] 4.1 Page `/athletes/{id}/macrocycle/weeks/{week}`:
+  - **Access:** coach only.
+  - **Loads:** the macrocycle, the week's projections for all catalog exercises, the initial content (`?prefill=previous`) and the catalog.
   - **Back link:** to the athlete page.
 
-  Verify with page tests: stored plan, prefill only when unplanned, "not found" for other users and the linked athlete, and a week outside the macrocycle.
-- [ ] 3.2 Client editor:
-  - **Header:** "Week x of y", dates, mesocycle and level.
-  - **Sessions:** weekday and number (labels "Monday" / "Monday 1").
-  - **Exercises:** an exercise picker with the mesocycle's exercises first, then the catalog; add, remove and reorder.
-  - **Set groups:** "sets × reps @ kg" with add and remove.
-  - **Coach note:** per exercise.
-  - **Saving:** "Save" with field errors.
+  Verify with page tests: stored plan, prefill only when unplanned, the schedule otherwise, and "not found" for other users, the linked athlete and a week outside the macrocycle.
+- [ ] 4.2 Editor shell:
+  - **Header and stepper:** "Week x of y", dates, mesocycle and level; a two-step stepper sharing the planning stepper's look.
+  - **Navigation:** "Continue" and "Back" between the steps without a route change; "Save" from both steps.
+  - **Unsaved changes:** the guard on the back link.
 
-  Verify with component tests: build the spec's week, save the payload, remove all sessions, field errors, and German labels.
-- [ ] 3.3 Checks in the editor:
+  Verify with component tests: step switching keeps the draft and never calls the router; save payload; dialog choices; no dialog when switching steps.
+- [ ] 4.3 Step 1:
+  - **Desktop:** the catalog column (all exercises, the mesocycle's highlighted) left of the session cards.
+  - **Sessions:** day and slot change, add and remove a session, add, remove and reorder exercises.
+  - **Adding exercises:** drag & drop from the catalog onto a session; clicking into a session opens the selection sheet (highlighted the same way).
+  - **Phones:** the catalog column hidden.
+
+  Verify with component tests:
+  - **Adding:** a drop event adds the exercise; the click path adds it.
+  - **Editing:** a day change; highlighting in both lists; labels "Monday" / "Monday 1"; no indicators in step 1.
+- [ ] 4.4 Step 2:
+  - **Layout:** the sessions column (day, slot and exercises only) and the values column with set groups ("sets × reps @ kg", add and remove) and coach notes, aligned per exercise.
+  - **Indicators:** the week totals with the projection and red ↑ / blue ↓ per exercise.
   - **Mesocycle check:** missing and not-planned exercises.
-  - **Projection table:** projection vs actual values per exercise, with red ↑ / blue ↓ and the projected value.
+  - **Phones:** set groups below each exercise.
 
-  Verify with component tests using the spec examples, and that values without a projection are not compared.
-- [ ] 3.4 Unsaved changes: the editor registers the guard; the back link asks "Save changes?" like the stepper (Save, Discard, Cancel). Verify with component tests for all three choices and no dialog without changes.
+  Verify with component tests: the spec's week 11 example (colours, arrows, projected values), live update while typing, values without a projection not compared, and German texts.
+- [ ] 4.5 Step animation: on desktop, only the sessions column slides right→left to step 2 and back left→right; the catalog and values columns fade; `prefers-reduced-motion` switches instantly. Verify with component tests (classes and transforms per step, reduced-motion class) and a browser recording/screenshots of both directions.
 
-## 4. Entry points
+## 5. Entry points
 
-- [ ] 4.1 "Training week" section in `AthleteHome` (only with `canEdit` and a macrocycle):
-  - **Next week:** "Plan next week" with prefill, or "Edit next week" when it is planned; no button after the last week.
+- [ ] 5.1 "Training week" section in `AthleteHome` (only with `canEdit` and a macrocycle):
+  - **Next week:** "Plan next week" with prefill, "Edit next week" when it is planned; none after the last week.
   - **Current week:** "Plan this week" when it is unplanned.
   - **Planned weeks:** listed with dates and edit buttons.
 
-  Loaded on the athlete details page and on "My training". Verify with component and page tests for the spec scenarios, including the linked athlete without the section.
+  Shown on the athlete details page and on "My training". Verify with component and page tests for the spec scenarios, including the linked athlete without the section.
 
-## 5. Texts and records
+## 6. Texts and records
 
-- [ ] 5.1 English and German texts for all new strings:
-  - **Editor:** header, weekdays, session labels, set group fields, coach note.
-  - **Checks:** mesocycle check, projection table and deviation hints.
-  - **Entry points and dialog:** entry points, errors and the dialog.
+- [ ] 6.1 English and German texts for all new strings:
+  - **Schedule picker:** days and slots.
+  - **Editor:** header and stepper, catalog column, selection sheet, session labels, set group fields, coach note.
+  - **Checks:** mesocycle check, totals and deviation hints.
+  - **Entry points, errors and dialog.**
 
   Verify with the message completeness test.
-- [ ] 5.2 Add "Week plan", "Set group" and "Coach note" to `openspec/glossary.md`, keeping the user's uncommitted edits. Verify the entries are in the table.
-- [ ] 5.3 Apply the "Domain model changes" to `openspec/domain-model.md` (current model and notes). Verify the diagram contains WeekPlan, TrainingSession, SessionExercise and SetGroup.
+- [ ] 6.2 Add "Weekly schedule", "Week plan", "Set group" and "Coach note" to `openspec/glossary.md`, keeping the user's uncommitted edits. Verify the entries are in the table.
+- [ ] 6.3 Apply the "Domain model changes" to `openspec/domain-model.md` (schedule instead of frequency, week plan entities, notes). Verify the diagram and notes.
 
-## 6. Integration check
+## 7. Integration check
 
-- [ ] 6.1 Browser check on the dev server and the Docker build, at phone and desktop width, in light and dark mode:
-  - **First week:** plan it empty from "Plan next week".
-  - **Snatch example:** build the week 11 example and check the colours.
-  - **Prefill:** plan the following week prefilled.
+- [ ] 7.1 Browser check on the dev server and the Docker build, at phone and desktop width, in light and dark mode:
+  - **Schedule:** set a weekly schedule in the base data.
+  - **First week:** plan week 1 from "Plan next week" (schedule sessions, no exercises).
+  - **Exercises:** drag and click exercises into sessions, and change a day.
+  - **Values:** continue to step 2 (slide), enter the week 11 snatch example and check the colours; go back (slide back).
+  - **Prefill:** plan the next week prefilled with the notes.
   - **Editing:** edit a planned week from the list.
   - **Unsaved changes:** the dialog on the back link.
   - **Duration guard:** shortening below a planned week is refused.
