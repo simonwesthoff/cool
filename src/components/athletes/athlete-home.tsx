@@ -26,6 +26,8 @@ type Props = {
   name: string;
   image: string | null;
   coachName: string;
+  /** Whether the user may change the athlete's data and planning. */
+  canEdit: boolean;
   /** The planned macrocycle with the chart data, or null. */
   macrocycle: AthleteHomeMacrocycle | null;
 };
@@ -64,8 +66,9 @@ function PencilIcon() {
  * The athlete's page, shared by "My training" (athlete) and the athlete
  * details page (coach): picture, name and coach on top, then the
  * macrocycle chart with a button to the macrocycle view.
- * The coach additionally gets the way back, a pencil next to the name for
- * the basic data, and planning.
+ * The coach view adds the way back; whoever may change the athlete (the
+ * coach of the Team, also on their own "My training") gets the pencil for
+ * the basic data and "Plan macrocycle".
  */
 export function AthleteHome({
   viewer,
@@ -73,6 +76,7 @@ export function AthleteHome({
   name,
   image,
   coachName,
+  canEdit,
   macrocycle,
 }: Props) {
   const t = useTranslations("AthleteHome");
@@ -96,9 +100,9 @@ export function AthleteHome({
         />
         <div className="flex items-center gap-2">
           {/* Same width as the pencil, so the name stays centred. */}
-          {coach && <span aria-hidden="true" className="size-11 shrink-0" />}
+          {canEdit && <span aria-hidden="true" className="size-11 shrink-0" />}
           <h1 className="text-2xl font-semibold break-words">{name}</h1>
-          {coach && (
+          {canEdit && (
             <Link
               href={`/athletes/${athleteId}/basic-data`}
               aria-label={t("editBasicData")}
@@ -148,7 +152,7 @@ export function AthleteHome({
           </Link>
         </section>
       ) : (
-        coach && (
+        canEdit && (
           <Link
             href={`/athletes/${athleteId}/macrocycle/base-data`}
             className={`mt-4 ${card}`}

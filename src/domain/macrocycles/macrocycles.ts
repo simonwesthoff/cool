@@ -1,5 +1,5 @@
 import { and, asc, eq, gt, inArray } from "drizzle-orm";
-import { findAthleteInTeam } from "@/domain/athletes";
+import { findAthleteInTeam, isCoachOfAthlete } from "@/domain/athletes";
 import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
 import { getRoles, requireCoachTeam } from "@/domain/roles";
@@ -72,9 +72,7 @@ export async function canPlanMacrocycle(
   user: CurrentUser,
   athleteId: string,
 ): Promise<boolean> {
-  const roles = await getRoles(user);
-  if (!roles.coach) return false;
-  return Boolean(await findAthleteInTeam(roles.coach.teamId, athleteId));
+  return isCoachOfAthlete(user, athleteId);
 }
 
 async function findMacrocycleRow(athleteId: string) {

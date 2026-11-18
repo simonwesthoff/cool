@@ -77,6 +77,7 @@ function renderHome(
         name="Anna Weber"
         image={null}
         coachName="Max Berg"
+        canEdit={false}
         macrocycle={macrocycle}
         {...props}
       />
@@ -130,7 +131,7 @@ describe("AthleteHome", () => {
   });
 
   it("gives the coach the same chart plus the way back, the basic data pencil and planning", () => {
-    renderHome({ viewer: "coach" });
+    renderHome({ viewer: "coach", canEdit: true });
     expect(links()).toEqual([
       "/",
       "/athletes/a1/basic-data",
@@ -139,7 +140,7 @@ describe("AthleteHome", () => {
     const pencil = screen.getByRole("link", { name: "Edit basic data" });
     expect(pencil.previousElementSibling?.textContent).toBe("Anna Weber");
     cleanup();
-    renderHome({ viewer: "coach", macrocycle: null });
+    renderHome({ viewer: "coach", canEdit: true, macrocycle: null });
     expect(links()).toEqual([
       "/",
       "/athletes/a1/basic-data",
@@ -150,8 +151,25 @@ describe("AthleteHome", () => {
     ).toContain("No macrocycle planned yet.");
   });
 
+  it("gives a coach who trains themselves the pencil and planning on My training", () => {
+    renderHome({ canEdit: true });
+    expect(links()).toEqual([
+      "/athletes/a1/basic-data",
+      "/training/macrocycle",
+    ]);
+    expect(screen.getByRole("link", { name: "Edit basic data" })).toBeTruthy();
+    cleanup();
+    renderHome({ canEdit: true, macrocycle: null });
+    expect(links()).toEqual([
+      "/athletes/a1/basic-data",
+      "/athletes/a1/macrocycle/base-data",
+    ]);
+    // No way back on a top-level page.
+    expect(screen.queryByRole("link", { name: /Back/ })).toBeNull();
+  });
+
   it("is translated to German", () => {
-    renderHome({ viewer: "coach" }, "de");
+    renderHome({ viewer: "coach", canEdit: true }, "de");
     expect(screen.getByText("Trainer: Max Berg")).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "Stammdaten bearbeiten" }),

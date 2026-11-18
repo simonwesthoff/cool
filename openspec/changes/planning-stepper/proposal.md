@@ -31,6 +31,12 @@ name in the title.
   whether it is opened from "My training" or from the athlete details page
   (a coach who trains themselves sees it on both).
 
+- **Editing on "My training"** (user decision): the athlete page shows the
+  edit icon and "Plan macrocycle" by the same permission, so a coach who
+  trains themselves can edit on their own "My training".
+- **View title:** the macrocycle view's title becomes "<first name>'s
+  macrocycle" ("Makrozyklus von <first name>"), replacing the name line.
+
 Out of scope: changes to the steps themselves, the back link, and the
 macrocycle view's title.
 
@@ -45,7 +51,9 @@ None.
 - `macrocycle-planning`: "Planning in four steps" describes the stepper and
   the title with the athlete's first name.
 - `macrocycle-view`: "Macrocycle view access" decides "Change planning" by
-  permission on both entry points.
+  permission on both entry points; "Layout of the view" adds the title.
+- `user-roles`: "Athlete view" shows the edit icon and "Plan macrocycle"
+  by permission.
 
 ## Impact
 
@@ -55,6 +63,7 @@ None.
   title. New helper `firstName`.
 - **Messages:** `Macrocycle.title` takes `{name}`; new stepper texts for
   screen readers (completed and current step), in English and German.
-- **Domain:** new `canPlanMacrocycle(user, athleteId)` (same rule as all
-  writes); the view loader passes the edit link.
+- **Domain:** new `isCoachOfAthlete(user, athleteId)` and
+  `canPlanMacrocycle` (same rule as all writes); the view loader passes the
+  edit link, "My training" passes `canEdit`.
 - **No changes:** API and database.

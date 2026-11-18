@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AthleteHome } from "@/components/athletes/athlete-home";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
+import { isCoachOfAthlete } from "@/domain/athletes";
 import { requirePageRoles } from "../current-user";
 import { loadMacrocycleChart } from "../macrocycle-view/load";
 import { PageMain } from "@/components/page-main";
@@ -20,7 +21,10 @@ export default function TrainingPage() {
 export async function Training() {
   const { user, roles } = await requirePageRoles("/training");
   if (!roles.athlete) redirect("/");
-  const macrocycle = await loadMacrocycleChart(user, roles.athlete.athleteId);
+  const [macrocycle, canEdit] = await Promise.all([
+    loadMacrocycleChart(user, roles.athlete.athleteId),
+    isCoachOfAthlete(user, roles.athlete.athleteId),
+  ]);
   return (
     <AthleteHome
       viewer="athlete"
@@ -28,6 +32,7 @@ export async function Training() {
       name={roles.athlete.athleteName}
       image={user.image}
       coachName={roles.athlete.coachName}
+      canEdit={canEdit}
       macrocycle={macrocycle}
     />
   );

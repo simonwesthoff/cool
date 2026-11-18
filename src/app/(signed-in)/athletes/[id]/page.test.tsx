@@ -45,6 +45,7 @@ describe("athlete details page", () => {
       name: "Anna Weber",
       image: "https://img/a.png",
       coachName: "Max",
+      canEdit: true,
       macrocycle: null,
     });
     expect(getAthlete).toHaveBeenCalledWith(coach.user, "a1");

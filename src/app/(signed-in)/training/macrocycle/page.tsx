@@ -6,6 +6,7 @@ import { MacrocycleView } from "@/components/macrocycles/macrocycle-view";
 import { requirePageRoles } from "../../current-user";
 import { loadMacrocycleView } from "../../macrocycle-view/load";
 import { BackLink } from "@/components/back-link";
+import { firstName } from "@/components/first-name";
 import { PageMain } from "@/components/page-main";
 
 /** The athlete's own macrocycle, read-only. */
@@ -28,12 +29,9 @@ export async function AthleteMacrocycle() {
   return (
     <div className="flex flex-col gap-6">
       <BackLink href="/training" label={tb("training")} />
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {roles.athlete.athleteName}
-        </p>
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-      </div>
+      <h1 className="text-2xl font-semibold">
+        {t("title", { name: firstName(roles.athlete.athleteName) })}
+      </h1>
       {view ? (
         <MacrocycleView {...view} />
       ) : (

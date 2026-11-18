@@ -34,3 +34,23 @@ planning, and the athlete SHALL see that no macrocycle is planned yet.
 - **GIVEN** an athlete without a macrocycle
 - **WHEN** the coach opens the view, or the linked athlete opens their macrocycle
 - **THEN** the coach is sent to step 1 of the planning, and the athlete sees that their coach has not planned a macrocycle yet
+
+### Requirement: Layout of the view
+The view SHALL have the title "<first name>'s macrocycle" ("Makrozyklus von
+<first name>" in German) and show, from top to bottom: the exercise chart,
+the focus points in their order, and the new macrocycle plan. It SHALL be
+as wide as the planning step with the intensity chart.
+
+#### Scenario: Order
+- **WHEN** the coach opens the view
+- **THEN** the exercise chart is at the top, followed by the focus points and the new macrocycle plan, and the historical data, deficits and injuries are not shown
+
+#### Scenario: Width
+- **WHEN** the coach opens the view on a desktop screen
+- **THEN** the exercise chart is as wide as the intensity chart in planning step 3
+
+#### Scenario: Title with the first name
+- **GIVEN** the athlete "Anna Weber"
+- **WHEN** the coach or Anna opens the macrocycle view
+- **THEN** the title is "Anna's macrocycle", without a separate name line above it
+

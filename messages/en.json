@@ -321,7 +321,7 @@
         "weeklyReps": "Weekly reps: {value}"
       }
     },
-    "title": "Macrocycle",
+    "title": "{name}'s macrocycle",
     "chartTitle": "Planned values",
     "exercise": "Exercise",
     "exerciseOption": "{number} {name}",

@@ -52,7 +52,9 @@ describe("coach macrocycle view page", () => {
       href: "/athletes/a1",
       label: "Back.athlete:Anna Weber",
     });
-    expect(heading.props.children[0].props.children).toBe("Anna Weber");
+    // The athlete's first name is in the title.
+    expect(heading.type).toBe("h1");
+    expect(heading.props.children).toBe("MacrocycleView.title:Anna");
     // The loader decides about "Change planning"; the page passes it on.
     expect(viewElement.props).toEqual(view);
     expect(loadMacrocycleView).toHaveBeenCalledWith(coach.user, "a1");

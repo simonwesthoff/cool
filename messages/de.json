@@ -321,7 +321,7 @@
         "weeklyReps": "Wochenwdh.: {value}"
       }
     },
-    "title": "Makrozyklus",
+    "title": "Makrozyklus von {name}",
     "chartTitle": "Geplante Werte",
     "exercise": "Übung",
     "exerciseOption": "{number} {name}",
