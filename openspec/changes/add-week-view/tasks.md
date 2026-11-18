@@ -51,7 +51,7 @@
 
 ## 5. Integration check
 
-- [ ] 5.1 Browser check on the dev server and the Docker build, at phone and desktop width, in light and dark mode:
+- [x] 5.1 Browser check on the dev server and the Docker build, at phone and desktop width, in light and dark mode:
   - **Coach:** plans the current week; the athlete page shows the tables.
   - **Athlete:** writes feedback on "My training" (saved and kept after reload).
   - **Coach reads:** sees the feedback read-only on the athlete page and in the editor.
