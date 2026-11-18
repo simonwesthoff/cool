@@ -382,16 +382,8 @@
     "saved": "Saved.",
     "saveFailed": "Could not save. Please try again.",
     "checkFields": "Please check the marked fields.",
-    "check": {
-      "label": "Exercises of the block",
-      "none": "No exercises are chosen for the {block}.",
-      "match": "The week matches the exercises of the {block}.",
-      "missing": "Missing from the {block}: {list}",
-      "notPlanned": "Not planned for the {block}: {list}"
-    },
     "catalog": {
       "title": "Exercises",
-      "dragHint": "Drag an exercise onto a session.",
       "close": "Close",
       "addTo": "Add an exercise to {session}",
       "group": "{code} · {name}",

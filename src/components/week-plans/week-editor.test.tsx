@@ -357,7 +357,7 @@ describe("WeekEditor step 1", () => {
     expect(sessionNamed("Tuesday")).toBeTruthy();
   });
 
-  it("checks the week against the mesocycle's exercises", async () => {
+  it("marks exercises not planned for the mesocycle with an icon instead of a text block", () => {
     renderEditor([
       {
         weekday: 1,
@@ -368,14 +368,20 @@ describe("WeekEditor step 1", () => {
         ],
       },
     ]);
-    const check = screen.getByRole("region", {
-      name: "Exercises of the block",
-    });
-    expect(check.querySelector("[data-check=missing]")!.textContent).toBe(
-      "Missing from the Special preparation block: 13 Snatch pull",
+    const monday = sessionNamed("Monday");
+    const marker = (n: number) =>
+      monday.querySelector(`li[data-exercise="${n}"] [data-not-planned]`);
+    expect(marker(1)).toBeNull();
+    expect(marker(20)!.getAttribute("title")).toBe(
+      "Not planned for the Special preparation block",
     );
-    expect(check.querySelector("[data-check=not-planned]")!.textContent).toBe(
-      "Not planned for the Special preparation block: 20 Back squat",
+    // No block check below the stepper and no drag hint.
+    expect(
+      screen.queryByRole("region", { name: "Exercises of the block" }),
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain("Missing from the");
+    expect(document.body.textContent).not.toContain(
+      "Drag an exercise onto a session.",
     );
   });
 });

@@ -45,9 +45,11 @@ whether a week fits the plan.
     sessions column slides from right to left; the catalog makes room and
     the values column appears on the right. Going back, it slides from
     left to right.
-- **Block check:** the editor shows which exercises chosen for the week's
-  mesocycle are missing from the week, and which exercises on the week are
-  not chosen for it.
+- **Block check:** exercises of the week's mesocycle that are not in the
+  week yet show it by their status icon in the exercise list; exercises in
+  a session that are not chosen for the mesocycle get an icon at the right
+  of their row (user decision; no separate text). The API also returns the
+  missing and not planned exercises.
 - **Entry points** on the athlete page, for whoever may plan, in a new
   "Training week" section below the macrocycle chart:
   - **Plan / Edit next week:** "Plan next week" opens the week after the

@@ -211,8 +211,6 @@ export function WeekEditor({
 
   const actuals = actualsOf(sessions);
   const onWeek = exercisesOf(sessions);
-  const missing = plan.chosen.filter((n) => !onWeek.includes(n));
-  const notPlanned = onWeek.filter((n) => !plan.chosen.includes(n));
   const end = new Date(`${plan.startDate}T00:00:00Z`);
   end.setUTCDate(end.getUTCDate() + 6);
   const pickingSession = sessions.find((s) => s.key === picking);
@@ -268,36 +266,6 @@ export function WeekEditor({
           },
         ]}
       />
-
-      <section
-        aria-label={t("check.label")}
-        className="rounded-2xl bg-zinc-50 p-3 text-sm dark:bg-zinc-900"
-      >
-        {plan.chosen.length === 0 ? (
-          <p>{t("check.none", { block: blockName })}</p>
-        ) : missing.length === 0 && notPlanned.length === 0 ? (
-          <p>{t("check.match", { block: blockName })}</p>
-        ) : (
-          <>
-            {missing.length > 0 && (
-              <p data-check="missing">
-                {t("check.missing", {
-                  block: blockName,
-                  list: missing.map(exerciseName).join(", "),
-                })}
-              </p>
-            )}
-            {notPlanned.length > 0 && (
-              <p data-check="not-planned">
-                {t("check.notPlanned", {
-                  block: blockName,
-                  list: notPlanned.map(exerciseName).join(", "),
-                })}
-              </p>
-            )}
-          </>
-        )}
-      </section>
 
       {/* Desktop: the catalog fills the left half in step 1; the sessions
           block is shifted right by half its width, so its values half is

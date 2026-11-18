@@ -382,16 +382,8 @@
     "saved": "Gespeichert.",
     "saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
     "checkFields": "Bitte prüfe die markierten Felder.",
-    "check": {
-      "label": "Übungen des Mesozyklus",
-      "none": "Für die {block} sind keine Übungen gewählt.",
-      "match": "Die Woche passt zu den Übungen der {block}.",
-      "missing": "Fehlt aus der {block}: {list}",
-      "notPlanned": "Nicht für die {block} geplant: {list}"
-    },
     "catalog": {
       "title": "Übungen",
-      "dragHint": "Ziehe eine Übung auf eine Einheit.",
       "close": "Schließen",
       "addTo": "Übung zu {session} hinzufügen",
       "group": "{code} · {name}",

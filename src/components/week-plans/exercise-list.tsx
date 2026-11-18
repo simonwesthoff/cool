@@ -89,11 +89,6 @@ export function ExerciseList({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      {draggable && (
-        <p className="text-xs text-zinc-600 dark:text-zinc-400">
-          {t("dragHint")}
-        </p>
-      )}
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         {groups.length === 0 && (
           <p className="py-2 text-sm text-zinc-600 dark:text-zinc-400">

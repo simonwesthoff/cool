@@ -143,18 +143,21 @@ reduced motion the switch SHALL happen without animation.
 
 ### Requirement: Exercises of the mesocycle
 The editor SHALL compare the exercises of the week with the exercises
-chosen for the week's mesocycle in the macrocycle planning. It SHALL list
-the chosen exercises that are missing from the week, and mark every
-exercise on the week that is not chosen for that mesocycle.
+chosen for the week's mesocycle in the macrocycle planning: chosen
+exercises not yet in the week are shown by their status icon in the
+exercise list, and every exercise of a session that is not chosen for the
+mesocycle SHALL get an icon at the right of its row saying so. There SHALL
+be no separate text listing missing or not planned exercises. The API
+SHALL return the chosen, missing and not planned exercises with the week.
 
-#### Scenario: Missing and unplanned exercises
+#### Scenario: Not planned exercise in a session
 - **GIVEN** week 11 in the special preparation block, which has exercises 1 (snatch) and 13 chosen
-- **WHEN** the week contains exercises 1 and 20
-- **THEN** the editor lists exercise 13 as missing, and marks exercise 20 as not planned for the special preparation block
+- **WHEN** Monday contains exercises 1 and 20
+- **THEN** the row of exercise 20 shows the "not planned for the special preparation block" icon, exercise 1 none, and the exercise list shows exercise 13 as not in the week yet
 
-#### Scenario: All exercises match
-- **WHEN** the week contains exactly the chosen exercises of its mesocycle
-- **THEN** the editor shows that the week matches the mesocycle
+#### Scenario: Check in the API
+- **WHEN** the week with exercises 1 and 20 is read through the API
+- **THEN** it reports exercise 13 as missing and exercise 20 as not planned
 
 ### Requirement: Exercise list of the week
 The exercise list (catalog column and exercise selection) SHALL list only

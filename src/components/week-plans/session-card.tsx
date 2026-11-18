@@ -8,6 +8,24 @@ import { MAX_PER_DAY, sessionsOnDay, type DraftSession } from "./week-draft";
 /** Drag data of an exercise moved within the week. */
 export const MOVE_TYPE = "application/x-week-exercise";
 
+/** Circle with an exclamation mark: not planned for the mesocycle. */
+function OffPlanIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+    >
+      <circle cx="8" cy="8" r="6.25" />
+      <path d="M8 4.75v3.75M8 11.1v.15" />
+    </svg>
+  );
+}
+
 /** Six dots: the handle to drag an exercise. */
 function GripIcon() {
   return (
@@ -235,14 +253,20 @@ export function SessionCard({
                 >
                   <GripIcon />
                 </button>
-                <span className="min-w-0 flex-1 text-sm">
-                  <span className="block truncate">{name}</span>
-                  {!planned && (
-                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="min-w-0 flex-1 truncate text-sm">{name}</span>
+                {!planned && (
+                  // Not planned for the week's mesocycle.
+                  <span
+                    data-not-planned
+                    title={t("notPlanned", { block: blockName })}
+                    className="inline-flex size-9 shrink-0 items-center justify-center text-zinc-600 dark:text-zinc-400"
+                  >
+                    <OffPlanIcon />
+                    <span className="sr-only">
                       {t("notPlanned", { block: blockName })}
                     </span>
-                  )}
-                </span>
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => onRemoveExercise(index)}
