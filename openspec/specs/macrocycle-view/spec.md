@@ -10,12 +10,11 @@ week by week, the focus points and the plan towards the main competition.
 
 ### Requirement: Macrocycle view access
 The coach of the athlete's Team SHALL open the macrocycle view from the
-athlete details page; the athlete linked to the Athlete SHALL open the same
-view from "My training". Whichever way it is opened, the view SHALL offer
-"Change planning" exactly when the user may plan the macrocycle, which is
-when they lead the athlete's Team. Other users SHALL get the "not found"
-page. Without a macrocycle, the coach SHALL be sent to step 1 of the
-planning, and the athlete SHALL see that no macrocycle is planned yet.
+athlete details page, and the linked athlete from "My training". The view
+SHALL offer "Change planning" exactly when the user leads the athlete's
+Team. Other users SHALL get the "not found" page. Without a macrocycle, the
+coach SHALL be sent to step 1 of the planning and the athlete SHALL see that
+none is planned yet.
 
 #### Scenario: Coach opens the view
 - **GIVEN** an athlete of the coach's Team with a planned macrocycle
