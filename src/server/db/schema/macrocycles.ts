@@ -51,7 +51,6 @@ export const macrocycle = pgTable("macrocycle", {
   injuriesAndIllnesses: text("injuries_and_illnesses").notNull(),
   strengths: text("strengths").notNull(),
   experience: text("experience").notNull(),
-  trainingFrequency: smallint("training_frequency").notNull(),
   /** Ordered list of 1–3 focus points. */
   focusPoints: text("focus_points").array().notNull(),
   competitionDate: date("competition_date", { mode: "string" }).notNull(),
@@ -117,5 +116,26 @@ export const mesocycleExercise = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.mesocycleId, table.exerciseNumber] }),
+  ],
+);
+
+/**
+ * Weekly schedule: the training sessions of a usual week (weekday 1 =
+ * Monday … 7 = Sunday, slot 1–3 per day). New week plans start with it; the
+ * training frequency is its count.
+ */
+export const macrocycleSession = pgTable(
+  "macrocycle_session",
+  {
+    macrocycleId: uuid("macrocycle_id")
+      .notNull()
+      .references(() => macrocycle.id, { onDelete: "cascade" }),
+    weekday: smallint("weekday").notNull(),
+    slot: smallint("slot").notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.macrocycleId, table.weekday, table.slot],
+    }),
   ],
 );

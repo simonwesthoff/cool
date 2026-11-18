@@ -29,7 +29,11 @@ const baseData = {
   targetBodyWeightKg: 80.5,
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
-  trainingFrequency: 8,
+  sessions: [
+    { weekday: 1, slot: 1 },
+    { weekday: 3, slot: 1 },
+    { weekday: 5, slot: 1 },
+  ],
 };
 const swotData = {
   strengths: "Fast under the bar",

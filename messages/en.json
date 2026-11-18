@@ -185,9 +185,9 @@
         "jerkDeficits": "Deficits in the jerk",
         "otherDeficits": "Other deficits",
         "injuriesAndIllnesses": "Current and chronic injuries and illnesses",
-        "trainingFrequency": "Training sessions per week",
         "strengths": "Strengths",
-        "experience": "Weightlifting experience"
+        "experience": "Weightlifting experience",
+        "sessions": "Training sessions per week"
       },
       "optional": "(optional)",
       "mondayHint": "Macrocycles start on a Monday.",
@@ -207,7 +207,6 @@
         "INVALID": "Invalid value.",
         "TOO_MANY": "At most 3 focus points."
       },
-      "trainingFrequencyHint": "1 to 14 sessions.",
       "focusPoints": {
         "title": "Focus points",
         "help": "1 to 3 focus points for this macrocycle, the most important first.",
@@ -218,7 +217,14 @@
         "remove": "Remove focus point {position}",
         "add": "Add focus point"
       },
-      "deficitsHint": "Shown when choosing exercises: snatch deficits for snatch exercises, clean and jerk deficits for clean & jerk exercises."
+      "deficitsHint": "Shown when choosing exercises: snatch deficits for snatch exercises, clean and jerk deficits for clean & jerk exercises.",
+      "schedule": {
+        "add": "Add a session on {day}",
+        "remove": "Remove session {slot} on {day}",
+        "count": "{count, plural, =0 {No sessions} one {# session} other {# sessions}} per week · up to 3 per day",
+        "required": "Choose at least one training session.",
+        "tooMany": "At most 14 sessions per week."
+      }
     },
     "mesocycles": {
       "general_preparation": "General preparation block",

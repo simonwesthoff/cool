@@ -44,3 +44,73 @@ describe("migration remove_empty_teams", () => {
     expect(rows.map((r) => r.coach_id)).toEqual(["full"]);
   });
 });
+
+describe("migration weekly_schedule", () => {
+  it("turns the training frequency into a schedule over Monday–Saturday", async () => {
+    const db = new PGlite();
+    try {
+      const tags = journal.entries.map((e) => e.tag);
+      const target = tags.findIndex((t) => t.endsWith("weekly_schedule"));
+      expect(target).toBeGreaterThan(0);
+      for (const tag of tags.slice(0, target)) await apply(db, tag);
+      await db.exec(`
+        insert into user_account (id, name, email) values ('c', 'Coach', 'c@x.invalid');
+        insert into team (id, coach_id) values ('00000000-0000-4000-8000-000000000001', 'c');
+      `);
+      for (const [i, frequency] of [1, 6, 8, 14].entries()) {
+        const athleteId = `00000000-0000-4000-8000-00000000010${i}`;
+        await db.exec(`
+          insert into athlete (id, team_id, name) values
+            ('${athleteId}', '00000000-0000-4000-8000-000000000001', 'A${i}');
+          insert into macrocycle (id, athlete_id, start_date, duration_weeks,
+            entry_value_pct, snatch_best_kg, clean_and_jerk_best_kg,
+            snatch_goal_kg, clean_and_jerk_goal_kg, body_weight_kg,
+            target_body_weight_kg, snatch_deficits, clean_deficits,
+            jerk_deficits, other_deficits, injuries_and_illnesses, strengths,
+            experience, training_frequency, focus_points, competition_date,
+            competition_type)
+          values ('00000000-0000-4000-8000-00000000020${i}', '${athleteId}',
+            '2026-11-30', 21, 60, 90, 115, 100, 130, 81, 80, '', '', '', '',
+            '', '', '', ${frequency}, '{}', '2027-04-24', 'Championships');
+        `);
+      }
+      await apply(db, tags[target]!);
+      await apply(db, tags[target + 1]!);
+      const { rows } = await db.query<{
+        id: string;
+        weekday: number;
+        slot: number;
+      }>(
+        `select macrocycle_id as id, weekday, slot from macrocycle_session
+         order by macrocycle_id, slot, weekday`,
+      );
+      const scheduleOf = (i: number) =>
+        rows
+          .filter((r) => r.id === `00000000-0000-4000-8000-00000000020${i}`)
+          .map((r) => `${r.weekday}.${r.slot}`);
+      expect(scheduleOf(0)).toEqual(["1.1"]);
+      expect(scheduleOf(1)).toEqual(["1.1", "2.1", "3.1", "4.1", "5.1", "6.1"]);
+      expect(scheduleOf(2)).toEqual([
+        "1.1",
+        "2.1",
+        "3.1",
+        "4.1",
+        "5.1",
+        "6.1",
+        "1.2",
+        "2.2",
+      ]);
+      expect(scheduleOf(3)).toHaveLength(14);
+      expect(scheduleOf(3).slice(-2)).toEqual(["1.3", "2.3"]);
+      // No Sunday sessions, and the column is gone.
+      expect(rows.some((r) => r.weekday === 7)).toBe(false);
+      const columns = await db.query<{ column_name: string }>(
+        `select column_name from information_schema.columns
+         where table_name = 'macrocycle' and column_name = 'training_frequency'`,
+      );
+      expect(columns.rows).toHaveLength(0);
+    } finally {
+      await db.close();
+    }
+  });
+});

@@ -70,6 +70,7 @@ const macrocycle = {
   strengths: "Fast",
   experience: "6 years",
   trainingFrequency: 8,
+  sessions: [],
   focusPoints: ["Turnover", "Squat strength"],
   competitionDate: "2027-04-24",
   competitionType: "German Championships",

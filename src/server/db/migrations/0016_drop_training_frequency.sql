@@ -1,0 +1,1 @@
+ALTER TABLE "macrocycle" DROP COLUMN "training_frequency";

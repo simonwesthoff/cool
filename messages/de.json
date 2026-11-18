@@ -185,9 +185,9 @@
         "jerkDeficits": "Defizite im Ausstoßen",
         "otherDeficits": "Sonstige Defizite",
         "injuriesAndIllnesses": "Aktuelle und chronische Verletzungen und Krankheiten",
-        "trainingFrequency": "Trainingseinheiten pro Woche",
         "strengths": "Stärken",
-        "experience": "Erfahrung im Gewichtheben"
+        "experience": "Erfahrung im Gewichtheben",
+        "sessions": "Trainingseinheiten pro Woche"
       },
       "optional": "(optional)",
       "mondayHint": "Makrozyklen beginnen an einem Montag.",
@@ -207,7 +207,6 @@
         "INVALID": "Ungültiger Wert.",
         "TOO_MANY": "Höchstens 3 Schwerpunkte."
       },
-      "trainingFrequencyHint": "1 bis 14 Einheiten.",
       "focusPoints": {
         "title": "Schwerpunkte",
         "help": "1 bis 3 Schwerpunkte für diesen Makrozyklus, den wichtigsten zuerst.",
@@ -218,7 +217,14 @@
         "remove": "Schwerpunkt {position} entfernen",
         "add": "Schwerpunkt hinzufügen"
       },
-      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen."
+      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen.",
+      "schedule": {
+        "add": "Einheit am {day} hinzufügen",
+        "remove": "Einheit {slot} am {day} entfernen",
+        "count": "{count, plural, =0 {Keine Einheiten} one {# Einheit} other {# Einheiten}} pro Woche · bis zu 3 pro Tag",
+        "required": "Wähle mindestens eine Trainingseinheit.",
+        "tooMany": "Höchstens 14 Einheiten pro Woche."
+      }
     },
     "mesocycles": {
       "general_preparation": "Grundlagenphase (GLP)",

@@ -3,6 +3,9 @@ import type { MesocycleType, WeekLevel } from "./calculation";
 
 export type { MesocycleType, WeekLevel };
 
+/** A training session of a usual week: weekday 1 = Monday … 7 = Sunday, slot 1–3. */
+export type ScheduledSession = { weekday: number; slot: number };
+
 export type MacrocycleBaseData = {
   startDate: string;
   durationWeeks: number;
@@ -23,6 +26,9 @@ export type MacrocycleBaseData = {
   injuriesAndIllnesses: string;
   strengths: string;
   experience: string;
+  /** The weekly schedule, in week order. */
+  sessions: ScheduledSession[];
+  /** Sessions per week: the number of scheduled sessions. */
   trainingFrequency: number;
   /** Ordered, 1 to 3 entries. */
   focusPoints: string[];

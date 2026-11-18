@@ -2,13 +2,13 @@
 
 ## 1. Weekly schedule
 
-- [ ] 1.1 Add the table `macrocycle_session` and the migrations. First add the table and fill it from `training_frequency` (spread over Monday–Saturday, then second and third slots from Monday), then drop the column. Verify: a migration test on PGlite converts 1, 6, 8 and 14 to the expected schedules; `npm run db:migrate` runs on the dev database.
-- [ ] 1.2 Domain:
+- [x] 1.1 Add the table `macrocycle_session` and the migrations. First add the table and fill it from `training_frequency` (spread over Monday–Saturday, then second and third slots from Monday), then drop the column. Verify: a migration test on PGlite converts 1, 6, 8 and 14 to the expected schedules; `npm run db:migrate` runs on the dev database.
+- [x] 1.2 Domain:
   - **Input:** the base data takes `sessions: [{ weekday, slot }]` (1–14, at most 3 per day, contiguous slots).
   - **Responses:** they return `sessions` and `trainingFrequency` as the count; the summary and calculations use the count.
 
   Verify with PGlite tests: create and update with a schedule; field codes for no session, a 4th slot and more than 14; the count in `getMacrocycle`.
-- [ ] 1.3 Base data form:
+- [x] 1.3 Base data form:
   - **Picker:** the weekly schedule picker replaces the number input, with seven day columns, "+" up to 3 sessions per day, remove, and the count shown below.
   - **Accessibility:** it is keyboard reachable.
 
