@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deviation, weekActuals } from "./calculation";
+import { currentAndNextWeek, deviation, weekActuals } from "./calculation";
 
 /** The spec's week 11 snatch: Monday ramping up, Thursday 3 × 2 @ 75 kg. */
 const snatchWeek11 = [
@@ -63,5 +63,21 @@ describe("deviation", () => {
   it("does not compare missing values", () => {
     expect(deviation(null, 80)).toBeNull();
     expect(deviation(80, null)).toBeNull();
+  });
+});
+
+describe("currentAndNextWeek", () => {
+  // 21 weeks from Monday 2026-11-30.
+  const of = (today: string) => currentAndNextWeek("2026-11-30", 21, today);
+  it("is week 1 next before the start", () => {
+    expect(of("2026-11-25")).toEqual({ current: null, next: 1 });
+  });
+  it("follows today during the macrocycle", () => {
+    expect(of("2026-11-30")).toEqual({ current: 1, next: 2 });
+    expect(of("2027-01-06")).toEqual({ current: 6, next: 7 });
+  });
+  it("has no next week in the last week and none after the end", () => {
+    expect(of("2027-04-25")).toEqual({ current: 21, next: null });
+    expect(of("2027-04-26")).toEqual({ current: null, next: null });
   });
 });

@@ -45,13 +45,18 @@ erDiagram
     Macrocycle ||--|{ Mesocycle : "is divided into"
     Mesocycle ||--o{ MesocycleExercise : "uses"
     MesocycleExercise }o--|| Exercise : "is"
+    Macrocycle ||--|{ ScheduledSession : "has weekly schedule"
+    MacrocycleWeek ||--o| WeekPlan : "is planned in"
+    WeekPlan ||--o{ TrainingSession : "has"
+    TrainingSession ||--o{ SessionExercise : "contains"
+    SessionExercise }o--|| Exercise : "is"
+    SessionExercise ||--o{ SetGroup : "is done in"
     Macrocycle {
         date startDate
         int durationWeeks
         decimal entryValuePct
         decimal snatchGoalKg
         decimal cleanAndJerkGoalKg
-        int trainingFrequency
         date competitionDate
         string strengths
         string snatchDeficits
@@ -77,6 +82,27 @@ erDiagram
     }
     ExerciseTag {
         string name
+    }
+    ScheduledSession {
+        int weekday
+        int slot
+    }
+    WeekPlan {
+        int weekNumber
+    }
+    TrainingSession {
+        int weekday
+        int slot
+    }
+    SessionExercise {
+        int position
+        string coachNote
+    }
+    SetGroup {
+        int position
+        int sets
+        int reps
+        decimal weightKg
     }
     Exercise {
         int number
@@ -108,6 +134,18 @@ erDiagram
   (tags the exercise addresses and/or own reasons) and optionally a
   variation; the same exercise can be used in several mesocycles.
   Intensity, planned weights, reps and volume are calculated, not stored.
+- A Macrocycle has a weekly schedule: the training sessions of a usual
+  week (weekday and slot, up to 3 per day, 1–14 per week). The training
+  frequency is its count and is not stored.
+- A week of a Macrocycle has at most one Week plan, planned by the coach of
+  the athlete's Team and readable by the linked athlete. It consists of
+  training sessions (weekday and slot), each with exercises from the
+  catalog (at most once per session, in order, with an optional coach note)
+  and their set groups (sets × reps @ weight, the weight optional). A new
+  Week plan starts with the weekly schedule or a copy of the previous week.
+  The week's actual values per exercise and their deviation from the
+  macrocycle projection are calculated, not stored. Shortening a
+  Macrocycle is refused while a removed week has a Week plan.
 - Each exercise of the catalog addresses an ordered list of points (exercise
   tags, e.g. "High pull"); the same tag can be addressed by several
   exercises.

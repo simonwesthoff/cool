@@ -71,3 +71,22 @@ export function deviation(
 function round1(value: number): number {
   return Math.round(value * 10) / 10;
 }
+
+/**
+ * The current week of a macrocycle (the one containing today) and the next
+ * week to plan: the week after the current one, week 1 before the start,
+ * none after the last week.
+ */
+export function currentAndNextWeek(
+  startDate: string,
+  durationWeeks: number,
+  today: string,
+): { current: number | null; next: number | null } {
+  const days =
+    (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) /
+    86_400_000;
+  if (days < 0) return { current: null, next: 1 };
+  const current = Math.floor(days / 7) + 1;
+  if (current > durationWeeks) return { current: null, next: null };
+  return { current, next: current < durationWeeks ? current + 1 : null };
+}

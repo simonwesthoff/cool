@@ -42,9 +42,13 @@ Domain terms for the weightlifting coaching app.
 | Bestleistung | - | Personal best | An athlete's best result in snatch or clean & jerk. |
 | Zielleistung | - | Goal | The result in snatch or clean & jerk the macrocycle aims at. |
 | Hauptwettkampf | - | Main competition | The competition a macrocycle leads to. |
-| Trainingshäufigkeit | TE/Woche | Training frequency | Training sessions per week (1–14). |
+| Trainingshäufigkeit | TE/Woche | Training frequency | Training sessions per week (1–14): the number of sessions in the weekly schedule. |
+| Wochenschema | - | Weekly schedule | The training sessions of a usual week of a macrocycle (weekday and slot, up to 3 per day). New week plans start with it. |
 | Schwerpunkt | - | Focus point | One of the 1 to 3 ordered priorities of a macrocycle. |
 | Aktuelle Woche | - | Current week | The week of the macrocycle that contains today; none before the start or after the end. |
+| Wochenplan | - | Week plan | The planned training of one macrocycle week: its training sessions, each with exercises and their set groups. |
+| Satzgruppe | - | Set group | Sets of an exercise with the same repetitions and weight, written sets × reps @ weight (e.g. 3 × 2 @ 80 kg). |
+| Trainerhinweis | - | Coach note | The coach's annotation of an exercise in a training session. |
 
 ### Exercise groups
 

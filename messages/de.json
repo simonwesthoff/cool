@@ -119,7 +119,19 @@
     "macrocycleOpen": "Zum Makrozyklus",
     "plan": "Makrozyklus planen",
     "notPlanned": "Noch kein Makrozyklus geplant.",
-    "editBasicData": "Stammdaten bearbeiten"
+    "editBasicData": "Stammdaten bearbeiten",
+    "trainingWeek": {
+      "title": "Trainingswoche",
+      "planNext": "Nächste Woche planen (Woche {week})",
+      "editNext": "Nächste Woche bearbeiten (Woche {week})",
+      "planThis": "Diese Woche planen (Woche {week})",
+      "none": "Noch keine Woche geplant.",
+      "week": "Woche {week}",
+      "from": "ab {date}",
+      "current": "Aktuelle Woche",
+      "edit": "Bearbeiten",
+      "editWeek": "Woche {week} bearbeiten"
+    }
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",

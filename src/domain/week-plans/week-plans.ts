@@ -14,6 +14,7 @@ import {
   type PlannedExercise,
 } from "@/domain/macrocycles/calculation";
 import { DomainValidationError, parseInput } from "@/domain/validation";
+import { currentAndNextWeek } from "./calculation";
 import { getDb } from "@/server/db";
 import {
   exercise,
@@ -30,6 +31,7 @@ import type {
   InitialSource,
   PlannedSession,
   PlannedWeekSummary,
+  TrainingWeeks,
   WeekPlan,
 } from "./week-plan-types";
 
@@ -410,4 +412,30 @@ export async function getWeekProjections(
       ),
     ]),
   );
+}
+
+/**
+ * The entry points of the athlete page: current and next week and the
+ * planned weeks (coach and linked athlete); null without a macrocycle.
+ */
+export async function getTrainingWeeks(
+  user: CurrentUser,
+  athleteId: string,
+  today: string,
+): Promise<TrainingWeeks | null> {
+  await requireViewableAthlete(user, athleteId);
+  const row = await findMacrocycleRow(athleteId);
+  if (!row) return null;
+  const planned = await listWeekPlans(user, athleteId);
+  const numbers = new Set(planned.map((p) => p.weekNumber));
+  const { current, next } = currentAndNextWeek(
+    row.startDate,
+    row.durationWeeks,
+    today,
+  );
+  const of = (weekNumber: number | null) =>
+    weekNumber === null
+      ? null
+      : { weekNumber, planned: numbers.has(weekNumber) };
+  return { current: of(current), next: of(next), planned };
 }

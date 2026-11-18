@@ -13,6 +13,7 @@ const { athlete: athleteTable } = await import("@/server/db/schema");
 const { eq } = await import("drizzle-orm");
 const {
   getWeekPlan,
+  getTrainingWeeks,
   getWeekProjections,
   initialWeekContent,
   listWeekPlans,
@@ -359,5 +360,31 @@ describe("duration guard", () => {
     expect(await listWeekPlans(coach, athlete.id)).toEqual([
       { weekNumber: 20, startDate: "2027-04-12" },
     ]);
+  });
+});
+
+describe("getTrainingWeeks", () => {
+  it("names the current and next week and the planned weeks", async () => {
+    const { coach, athlete } = await setup();
+    await saveWeekPlan(coach, athlete.id, "5", week11);
+    await saveWeekPlan(coach, athlete.id, "6", week11);
+    expect(await getTrainingWeeks(coach, athlete.id, "2027-01-06")).toEqual({
+      current: { weekNumber: 6, planned: true },
+      next: { weekNumber: 7, planned: false },
+      planned: [
+        { weekNumber: 5, startDate: "2026-12-28" },
+        { weekNumber: 6, startDate: "2027-01-04" },
+      ],
+    });
+    expect(
+      (await getTrainingWeeks(coach, athlete.id, "2026-11-20"))?.next,
+    ).toEqual({ weekNumber: 1, planned: false });
+  });
+
+  it("is null without a macrocycle", async () => {
+    const coach = await createUser(testDb.db);
+    await startAsCoach(coach);
+    const athlete = await createAthlete(coach, { name: "No Plan" });
+    expect(await getTrainingWeeks(coach, athlete.id, "2027-01-06")).toBeNull();
   });
 });

@@ -119,7 +119,19 @@
     "macrocycleOpen": "Open macrocycle",
     "plan": "Plan macrocycle",
     "notPlanned": "No macrocycle planned yet.",
-    "editBasicData": "Edit basic data"
+    "editBasicData": "Edit basic data",
+    "trainingWeek": {
+      "title": "Training week",
+      "planNext": "Plan next week (week {week})",
+      "editNext": "Edit next week (week {week})",
+      "planThis": "Plan this week (week {week})",
+      "none": "No week is planned yet.",
+      "week": "Week {week}",
+      "from": "from {date}",
+      "current": "Current week",
+      "edit": "Edit",
+      "editWeek": "Edit week {week}"
+    }
   },
   "Catalog": {
     "title": "Exercises",

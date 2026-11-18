@@ -4,9 +4,11 @@ import type {
   ExerciseWeeks,
   Macrocycle,
 } from "@/domain/macrocycles/macrocycle-types";
+import type { TrainingWeeks } from "@/domain/week-plans/week-plan-types";
 import { Avatar } from "../avatar";
 import { BackLink } from "../back-link";
 import { ExerciseChart } from "../macrocycles/exercise-chart";
+import { TrainingWeekSection } from "./training-week-section";
 
 export type AthleteHomeMacrocycle = {
   macrocycle: Pick<
@@ -30,6 +32,8 @@ type Props = {
   canEdit: boolean;
   /** The planned macrocycle with the chart data, or null. */
   macrocycle: AthleteHomeMacrocycle | null;
+  /** Entry points of the week planning; only for whoever may plan. */
+  trainingWeeks?: TrainingWeeks | null;
 };
 
 const card =
@@ -78,6 +82,7 @@ export function AthleteHome({
   coachName,
   canEdit,
   macrocycle,
+  trainingWeeks,
 }: Props) {
   const t = useTranslations("AthleteHome");
   const tb = useTranslations("Back");
@@ -166,6 +171,9 @@ export function AthleteHome({
             <Chevron />
           </Link>
         )
+      )}
+      {canEdit && macrocycle && trainingWeeks && (
+        <TrainingWeekSection athleteId={athleteId} weeks={trainingWeeks} />
       )}
     </div>
   );

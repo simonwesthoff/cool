@@ -77,7 +77,7 @@
 
 ## 5. Entry points
 
-- [ ] 5.1 "Training week" section in `AthleteHome` (only with `canEdit` and a macrocycle):
+- [x] 5.1 "Training week" section in `AthleteHome` (only with `canEdit` and a macrocycle):
   - **Next week:** "Plan next week" with prefill, "Edit next week" when it is planned; none after the last week.
   - **Current week:** "Plan this week" when it is unplanned.
   - **Planned weeks:** listed with dates and edit buttons.
@@ -86,15 +86,15 @@
 
 ## 6. Texts and records
 
-- [ ] 6.1 English and German texts for all new strings:
+- [x] 6.1 English and German texts for all new strings:
   - **Schedule picker:** days and slots.
   - **Editor:** header and stepper, catalog column, selection sheet, session labels, set group fields, coach note.
   - **Checks:** mesocycle check, totals and deviation hints.
   - **Entry points, errors and dialog.**
 
   Verify with the message completeness test.
-- [ ] 6.2 Add "Weekly schedule", "Week plan", "Set group" and "Coach note" to `openspec/glossary.md`, keeping the user's uncommitted edits. Verify the entries are in the table.
-- [ ] 6.3 Apply the "Domain model changes" to `openspec/domain-model.md` (schedule instead of frequency, week plan entities, notes). Verify the diagram and notes.
+- [x] 6.2 Add "Weekly schedule", "Week plan", "Set group" and "Coach note" to `openspec/glossary.md`, keeping the user's uncommitted edits. Verify the entries are in the table.
+- [x] 6.3 Apply the "Domain model changes" to `openspec/domain-model.md` (schedule instead of frequency, week plan entities, notes). Verify the diagram and notes.
 
 ## 7. Integration check
 
