@@ -98,7 +98,7 @@
 
 ## 7. Integration check
 
-- [ ] 7.1 Browser check on the dev server and the Docker build, at phone and desktop width, in light and dark mode:
+- [x] 7.1 Browser check on the dev server and the Docker build, at phone and desktop width, in light and dark mode:
   - **Schedule:** set a weekly schedule in the base data.
   - **First week:** plan week 1 from "Plan next week" (schedule sessions, no exercises).
   - **Exercises:** drag and click exercises into sessions, and change a day.

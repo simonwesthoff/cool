@@ -312,7 +312,7 @@
     },
     "unsaved": {
       "title": "Änderungen speichern?",
-      "text": "Dieser Schritt hat Änderungen, die noch nicht gespeichert sind.",
+      "text": "Es gibt Änderungen, die noch nicht gespeichert sind.",
       "save": "Speichern",
       "discard": "Verwerfen",
       "cancel": "Abbrechen"

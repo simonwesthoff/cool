@@ -312,7 +312,7 @@
     },
     "unsaved": {
       "title": "Save changes?",
-      "text": "This step has changes that are not saved yet.",
+      "text": "There are changes that are not saved yet.",
       "save": "Save",
       "discard": "Discard",
       "cancel": "Cancel"
