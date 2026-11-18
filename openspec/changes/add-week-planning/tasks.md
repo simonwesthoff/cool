@@ -111,6 +111,10 @@
 
   Review the screenshots.
 
+## 8. Acceptance feedback
+
+- [x] 8.1 Exercise list: only the mesocycle's exercises with an "in the week" icon, no search and no highlight note, "Show all exercises" at the end (others greyed out, still selectable). Session cards: the day selection is the title (slot badge with several sessions); drag handles move exercises within a session and into other sessions (arrow keys on the handle); no "drag here" note. Verify with component tests (list and status, show all, handle moves within and across sessions, keyboard, title select) and the browser flow on the dev server (desktop and phone) with screenshots.
+
 ## Workflow follow-up
 
 - User acceptance, archive (sync specs), PR into main. Next: feature 9 (current week's plan view for the athlete, with feedback), then feature 5 (athlete details).

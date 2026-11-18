@@ -118,18 +118,60 @@ export function WeekEditor({
         y.key === exerciseKey ? change(y) : y,
       ),
     }));
-  const addExercise = (key: string, exerciseNumber: number) =>
-    updateSession(key, (s) =>
-      s.exercises.some((e) => e.exerciseNumber === exerciseNumber)
-        ? s
-        : {
-            ...s,
-            exercises: [
-              ...s.exercises,
-              { key: newKey(), exerciseNumber, note: "", groups: [] },
-            ],
-          },
-    );
+  /** Adds an exercise to a session (at the end, or before `index`). */
+  const addExercise = (key: string, exerciseNumber: number, index?: number) =>
+    updateSession(key, (s) => {
+      if (s.exercises.some((e) => e.exerciseNumber === exerciseNumber))
+        return s;
+      const list = [...s.exercises];
+      list.splice(index ?? list.length, 0, {
+        key: newKey(),
+        exerciseNumber,
+        note: "",
+        groups: [],
+      });
+      return { ...s, exercises: list };
+    });
+  /**
+   * Moves an exercise within the week: to another place in its session or
+   * into another session (not if that session already has the exercise).
+   */
+  const moveExercise = (
+    fromKey: string,
+    exerciseKey: string,
+    toKey: string,
+    index: number,
+  ) =>
+    update((list) => {
+      const from = list.find((x) => x.key === fromKey);
+      const moved = from?.exercises.find((e) => e.key === exerciseKey);
+      const to = list.find((x) => x.key === toKey);
+      if (!from || !moved || !to) return list;
+      if (
+        fromKey !== toKey &&
+        to.exercises.some((e) => e.exerciseNumber === moved.exerciseNumber)
+      )
+        return list;
+      return list.map((x) => {
+        if (fromKey === toKey && x.key === fromKey) {
+          const rest = x.exercises.filter((e) => e.key !== exerciseKey);
+          const old = x.exercises.indexOf(moved);
+          rest.splice(index > old ? index - 1 : index, 0, moved);
+          return { ...x, exercises: rest };
+        }
+        if (x.key === fromKey)
+          return {
+            ...x,
+            exercises: x.exercises.filter((e) => e.key !== exerciseKey),
+          };
+        if (x.key === toKey) {
+          const next = [...x.exercises];
+          next.splice(index, 0, moved);
+          return { ...x, exercises: next };
+        }
+        return x;
+      });
+    });
 
   const payload = payloadOf(sessions);
   const isDirty = () => JSON.stringify(payload) !== stored.current;
@@ -273,6 +315,7 @@ export function WeekEditor({
           <ExerciseList
             catalog={catalog}
             chosen={plan.chosen}
+            onWeek={onWeek}
             blockName={blockName}
             draggable
           />
@@ -303,7 +346,16 @@ export function WeekEditor({
                       update((list) => list.filter((x) => x.key !== s.key))
                     }
                     onAddClick={() => setPicking(s.key)}
-                    onDropExercise={(n) => addExercise(s.key, n)}
+                    onDrop={(drop) =>
+                      drop.kind === "add"
+                        ? addExercise(s.key, drop.exerciseNumber, drop.index)
+                        : moveExercise(
+                            drop.sessionKey,
+                            drop.exerciseKey,
+                            s.key,
+                            drop.index,
+                          )
+                    }
                     onMoveExercise={(index, delta) =>
                       updateSession(s.key, (x) => {
                         const list = [...x.exercises];
@@ -485,6 +537,7 @@ export function WeekEditor({
         onClose={() => setPicking(null)}
         catalog={catalog}
         chosen={plan.chosen}
+        onWeek={onWeek}
         blockName={blockName}
         disabled={pickingSession?.exercises.map((e) => e.exerciseNumber) ?? []}
         onPick={(n) => {

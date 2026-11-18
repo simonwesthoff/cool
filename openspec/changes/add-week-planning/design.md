@@ -151,10 +151,23 @@ prompt happens between them.
     exercise selection as a bottom sheet (`<dialog>`).
   - **Step 2:** the same cards with the set groups under each exercise; no
     slide.
-- **Drag & drop:** native HTML5 drag events on desktop: a catalog row is
-  draggable, a session card is a drop zone with a visible highlight. The
-  click path ("+ exercise" opening the selection) exists on all screen
-  sizes, for keyboards and screen readers.
+- **Drag & drop:** native HTML5 drag events on desktop.
+  - **Sources:** a catalog row (`text/plain`: the exercise number) and an
+    exercise's drag handle (`application/x-week-exercise`: session and
+    exercise key).
+  - **Drop zones:** a session card (append) and an exercise row (insert
+    before it).
+  - **Moves:** a move into a session that already has the exercise is
+    ignored.
+  - **Keyboard:** the arrow keys on a focused handle move an exercise up
+    or down in its session.
+  - **Click path:** "+ Exercise" opens the selection on all screen sizes,
+    for keyboards and screen readers.
+- **Exercise list:** by default only the mesocycle's chosen exercises,
+  each with an icon (dashed circle: not in the week yet; check: in the
+  week). "Show all exercises" toggles the full catalog, where the other
+  exercises are greyed out (`text-zinc-400`) but remain drag sources and
+  buttons.
   - **Alternatives:** a drag & drop library was rejected; it adds a
     dependency, and touch is covered by the click path.
 - **Values column:**

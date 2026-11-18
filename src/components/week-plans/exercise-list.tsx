@@ -13,22 +13,61 @@ export type CatalogGroup = {
   exercises: { number: number; name: LocalizedText }[];
 };
 
+/** Empty circle: chosen for the mesocycle, not in the week yet. */
+function OpenIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      className="size-4 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeDasharray="2.5 2"
+    >
+      <circle cx="8" cy="8" r="6" />
+    </svg>
+  );
+}
+
+/** Filled circle with a check: chosen for the mesocycle and in the week. */
+function DoneIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 shrink-0">
+      <circle cx="8" cy="8" r="7" className="fill-current" />
+      <path
+        d="m5 8.2 2 2 4-4.4"
+        fill="none"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="stroke-white dark:stroke-zinc-950"
+      />
+    </svg>
+  );
+}
+
 /**
- * All catalog exercises by group, with the ones chosen for the week's
- * mesocycle highlighted (bar, bold, and a spoken hint). Rows are draggable
- * (desktop catalog column) or buttons (selection dialog).
+ * The exercises of the week's mesocycle, each with whether it is in the
+ * week yet. "Show all exercises" adds the rest of the catalog, greyed out
+ * but still selectable. Rows are drag sources (desktop catalog column) or
+ * buttons (selection dialog).
  */
 export function ExerciseList({
   catalog,
   chosen,
+  onWeek,
   blockName,
   onPick,
   disabled = [],
   draggable = false,
 }: {
   catalog: CatalogGroup[];
+  /** Exercises chosen for the week's mesocycle. */
   chosen: number[];
-  /** Name of the week's mesocycle, for the highlight hint. */
+  /** Exercises that are in the week. */
+  onWeek: number[];
+  /** Name of the week's mesocycle. */
   blockName: string;
   /** Picking by click (selection dialog); without it rows are drag sources. */
   onPick?: (exerciseNumber: number) => void;
@@ -38,43 +77,29 @@ export function ExerciseList({
 }) {
   const t = useTranslations("WeekEditor.catalog");
   const locale = useLocale();
-  const [query, setQuery] = useState("");
-  const q = query.trim().toLowerCase();
+  const [showAll, setShowAll] = useState(false);
   const groups = catalog
     .map((g) => ({
       ...g,
-      exercises: g.exercises.filter(
-        (e) =>
-          !q ||
-          String(e.number).startsWith(q) ||
-          localized(e.name, locale).toLowerCase().includes(q),
-      ),
+      exercises: showAll
+        ? g.exercises
+        : g.exercises.filter((e) => chosen.includes(e.number)),
     }))
     .filter((g) => g.exercises.length > 0);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <input
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        aria-label={t("search")}
-        placeholder={t("search")}
-        className="min-h-11 rounded-lg border border-zinc-300 bg-transparent px-3 dark:border-zinc-700"
-      />
       {draggable && (
         <p className="text-xs text-zinc-600 dark:text-zinc-400">
           {t("dragHint")}
         </p>
       )}
-      <p className="text-xs text-zinc-600 dark:text-zinc-400">
-        <span
-          aria-hidden="true"
-          className="mr-1 inline-block h-3 w-1 rounded-full bg-zinc-900 align-middle dark:bg-zinc-100"
-        />
-        {t("legend", { block: blockName })}
-      </p>
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        {groups.length === 0 && (
+          <p className="py-2 text-sm text-zinc-600 dark:text-zinc-400">
+            {t("emptyBlock", { block: blockName })}
+          </p>
+        )}
         {groups.map((group) => (
           <section key={group.code} className="mb-3">
             <h3 className="sticky top-0 z-[3] bg-white py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-950 dark:text-zinc-400">
@@ -85,20 +110,29 @@ export function ExerciseList({
             </h3>
             <ul className="flex flex-col">
               {group.exercises.map((e) => {
-                const highlighted = chosen.includes(e.number);
+                const inBlock = chosen.includes(e.number);
+                const inWeek = onWeek.includes(e.number);
                 const off = disabled.includes(e.number);
                 const name = `${e.number} ${localized(e.name, locale)}`;
-                const row = `flex min-h-10 w-full items-center gap-2 rounded-md border-l-4 px-2 text-left text-sm ${
-                  highlighted
-                    ? "border-zinc-900 bg-zinc-100 font-semibold dark:border-zinc-100 dark:bg-zinc-900"
-                    : "border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+                const row = `flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 ${
+                  inBlock ? "" : "text-zinc-400 dark:text-zinc-500"
                 }`;
                 const content = (
                   <>
                     <span className="min-w-0 flex-1 truncate">{name}</span>
-                    {highlighted && (
+                    {inBlock ? (
+                      <span
+                        data-in-week={inWeek || undefined}
+                        className="text-zinc-700 dark:text-zinc-300"
+                      >
+                        {inWeek ? <DoneIcon /> : <OpenIcon />}
+                        <span className="sr-only">
+                          {inWeek ? t("inWeek") : t("notInWeek")}
+                        </span>
+                      </span>
+                    ) : (
                       <span className="sr-only">
-                        {t("inBlock", { block: blockName })}
+                        {t("notInBlock", { block: blockName })}
                       </span>
                     )}
                   </>
@@ -109,7 +143,7 @@ export function ExerciseList({
                       // Drag source for the sessions; keyboards use "+ Exercise".
                       <div
                         data-exercise={e.number}
-                        data-highlighted={highlighted || undefined}
+                        data-in-block={inBlock || undefined}
                         draggable
                         onDragStart={(event) => {
                           event.dataTransfer.setData(
@@ -126,7 +160,7 @@ export function ExerciseList({
                       <button
                         type="button"
                         data-exercise={e.number}
-                        data-highlighted={highlighted || undefined}
+                        data-in-block={inBlock || undefined}
                         disabled={off}
                         onClick={() => onPick(e.number)}
                         className={`${row} disabled:opacity-40`}
@@ -140,6 +174,14 @@ export function ExerciseList({
             </ul>
           </section>
         ))}
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-expanded={showAll}
+          className="mt-1 inline-flex min-h-10 w-full items-center justify-center rounded-full border border-zinc-300 px-4 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+        >
+          {showAll ? t("showBlock", { block: blockName }) : t("showAll")}
+        </button>
       </div>
     </div>
   );
@@ -172,10 +214,10 @@ export function ExercisePicker({
       onClick={(event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
       }}
-      className="mx-auto mt-auto mb-0 h-[85vh] w-full max-w-lg rounded-t-2xl border border-zinc-200 bg-white p-4 text-zinc-900 backdrop:bg-black/60 sm:m-auto sm:h-[80vh] sm:rounded-2xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+      className="mx-auto mt-auto mb-0 max-h-[85vh] w-full max-w-lg rounded-t-2xl border border-zinc-200 bg-white p-4 text-zinc-900 backdrop:bg-black/60 sm:m-auto sm:max-h-[80vh] sm:rounded-2xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
     >
       {open && (
-        <div className="flex h-full flex-col gap-3">
+        <div className="flex max-h-[calc(85vh-2rem)] flex-col gap-3 sm:max-h-[calc(80vh-2rem)]">
           <div className="flex items-center justify-between gap-3">
             <h2 id="exercise-picker-title" className="text-lg font-semibold">
               {title}

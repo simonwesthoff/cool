@@ -391,13 +391,16 @@
     },
     "catalog": {
       "title": "Übungen",
-      "search": "Übungen suchen",
-      "legend": "Hervorgehoben: für die {block} geplant",
-      "inBlock": "für die {block} geplant",
       "dragHint": "Ziehe eine Übung auf eine Einheit.",
       "close": "Schließen",
       "addTo": "Übung zu {session} hinzufügen",
-      "group": "{code} · {name}"
+      "group": "{code} · {name}",
+      "showAll": "Alle Übungen anzeigen",
+      "showBlock": "Nur die Übungen der {block} anzeigen",
+      "emptyBlock": "Für die {block} sind keine Übungen gewählt.",
+      "inWeek": "in der Woche",
+      "notInWeek": "noch nicht in der Woche",
+      "notInBlock": "nicht für die {block} geplant"
     },
     "session": {
       "add": "Einheit hinzufügen",
@@ -406,11 +409,9 @@
       "empty": "Noch keine Übungen.",
       "addExercise": "Übung",
       "addTo": "Übung zu {session} hinzufügen",
-      "dropHint": "oder Übungen hierher ziehen",
       "notPlanned": "Nicht für die {block} geplant",
-      "up": "{name} nach oben",
-      "down": "{name} nach unten",
-      "removeExercise": "{name} aus {session} entfernen"
+      "removeExercise": "{name} aus {session} entfernen",
+      "move": "{name} verschieben: ziehen oder Pfeiltasten"
     },
     "values": {
       "noGroups": "Noch keine Satzgruppen.",

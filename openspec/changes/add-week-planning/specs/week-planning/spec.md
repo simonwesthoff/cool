@@ -66,12 +66,13 @@ saving a week without sessions SHALL make it unplanned again.
 - **THEN** they cannot open it, as for all coach pages: without a Team of their own they are sent to the home page, otherwise they see the "not found" page; the weekly view for athletes comes with a later feature
 
 ### Requirement: Step 1 sessions and exercises
-Step 1 SHALL show the week's sessions with their day, slot and exercises.
-The coach SHALL change a session's day and slot, add and remove sessions,
-and add, remove and reorder its exercises. On wide screens the whole
-exercise catalog SHALL be shown in a column left of the sessions;
-exercises SHALL be added by dragging them onto a session or by clicking
-into a session, which opens the exercise selection.
+Step 1 SHALL show the week's sessions, each titled by its day selection
+(with the slot when a day has several sessions), and their exercises. The
+coach SHALL change a session's day, add and remove sessions, and add and
+remove exercises. On wide screens the exercise
+list SHALL be shown left of the sessions; exercises SHALL be added by
+dragging them onto a session or by clicking into a session, which opens
+the exercise selection.
 
 #### Scenario: Drag an exercise onto a session
 - **GIVEN** the editor on a desktop screen in step 1
@@ -83,13 +84,23 @@ into a session, which opens the exercise selection.
 - **THEN** exercise 20 is added to Wednesday
 
 #### Scenario: Change the day of a session
-- **WHEN** the coach changes the day of "Thursday" to Friday
+- **WHEN** the coach changes the day selection in the title of "Thursday" to Friday
 - **THEN** the session and its exercises are shown as "Friday"
 
 #### Scenario: Default sessions
 - **GIVEN** a macrocycle whose weekly schedule has sessions on Monday (2), Wednesday and Friday, and an unplanned week without a planned previous week
 - **WHEN** the coach opens the week
 - **THEN** step 1 shows the sessions "Monday 1", "Monday 2", "Wednesday" and "Friday" without exercises, and more sessions can be added
+
+### Requirement: Moving exercises
+Exercises SHALL be moved by drag handles within a session and into other
+sessions of the week; with a handle focused, the arrow keys SHALL move an
+exercise up or down in its session.
+
+#### Scenario: Move an exercise with its handle
+- **GIVEN** Monday with exercises 1 and 13, and Wednesday without exercises
+- **WHEN** the coach drags exercise 13 by its handle onto exercise 1, and then exercise 1 onto Wednesday
+- **THEN** Monday has exercise 13 and Wednesday exercise 1; with the handle focused, the arrow keys move an exercise up or down
 
 ### Requirement: Step 1 on phones
 On phones, step 1 SHALL hide the catalog column, and clicking into a
@@ -134,23 +145,32 @@ reduced motion the switch SHALL happen without animation.
 The editor SHALL compare the exercises of the week with the exercises
 chosen for the week's mesocycle in the macrocycle planning. It SHALL list
 the chosen exercises that are missing from the week, and mark every
-exercise on the week that is not chosen for that mesocycle. In the
-catalog column and in the exercise selection, the exercises chosen for the
-mesocycle SHALL be highlighted.
+exercise on the week that is not chosen for that mesocycle.
 
 #### Scenario: Missing and unplanned exercises
 - **GIVEN** week 11 in the special preparation block, which has exercises 1 (snatch) and 13 chosen
 - **WHEN** the week contains exercises 1 and 20
 - **THEN** the editor lists exercise 13 as missing, and marks exercise 20 as not planned for the special preparation block
 
-#### Scenario: Highlighted exercises
-- **GIVEN** week 11 in the special preparation block with exercises 1 and 13 chosen
-- **WHEN** the coach looks at the catalog column or opens the exercise selection
-- **THEN** all catalog exercises are listed and exercises 1 and 13 are highlighted
-
 #### Scenario: All exercises match
 - **WHEN** the week contains exactly the chosen exercises of its mesocycle
 - **THEN** the editor shows that the week matches the mesocycle
+
+### Requirement: Exercise list of the week
+The exercise list (catalog column and exercise selection) SHALL list only
+the exercises chosen for the week's mesocycle, each with an icon showing
+whether it is already in the week. A button at the end of the list SHALL
+show all catalog exercises; then the exercises not chosen for the
+mesocycle SHALL be greyed out but still be selectable.
+
+#### Scenario: Block exercises with their status
+- **GIVEN** week 11 in the special preparation block with exercises 1 and 13 chosen, and exercise 1 in the week
+- **WHEN** the coach looks at the exercise list
+- **THEN** it lists only exercises 1 and 13; exercise 1 has the icon for "in the week", exercise 13 the icon for "not in the week yet"
+
+#### Scenario: Show all exercises
+- **WHEN** the coach chooses "Show all exercises"
+- **THEN** all catalog exercises are listed, those not chosen for the special preparation block greyed out, and choosing one still adds it
 
 ### Requirement: Projection per exercise
 In step 2, for every exercise of the week, the values column SHALL show the week's

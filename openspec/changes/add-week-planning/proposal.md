@@ -18,15 +18,19 @@ whether a week fits the plan.
 - **Week editor** for any week of the macrocycle (planned, ongoing or
   future), coach only, in two steps on one page with a stepper on top
   (user decision):
-  - **Step 1 – sessions and exercises:** on desktop, the whole exercise
-    catalog is on the left and the week's sessions on the right.
-    - **Highlighting:** exercises chosen for the week's mesocycle are
-      highlighted.
+  - **Step 1 – sessions and exercises:** on desktop, the exercise list
+    is on the left and the week's sessions on the right.
+    - **Exercise list:** only the exercises chosen for the week's
+      mesocycle, each with an icon for whether it is in the week yet.
+      "Show all exercises" adds the rest of the catalog, greyed out but
+      selectable (user decision).
     - **Adding exercises:** exercises are dragged onto a session, or
       added by clicking into a session, which opens the exercise
       selection.
-    - **Sessions:** each session's day and slot can be changed, and more
-      sessions can be added or removed.
+    - **Sessions:** each session's title is its day selection, with the
+      slot when a day has several sessions. Drag handles move exercises
+      within the week (user decision), and more sessions can be added or
+      removed.
     - **On phones:** the catalog column is hidden, and clicking into a
       session opens the selection with the same highlighting.
     - **Next:** "Continue" or the stepper leads to step 2.

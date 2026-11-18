@@ -391,13 +391,16 @@
     },
     "catalog": {
       "title": "Exercises",
-      "search": "Search exercises",
-      "legend": "Highlighted: planned for the {block}",
-      "inBlock": "planned for the {block}",
       "dragHint": "Drag an exercise onto a session.",
       "close": "Close",
       "addTo": "Add an exercise to {session}",
-      "group": "{code} · {name}"
+      "group": "{code} · {name}",
+      "showAll": "Show all exercises",
+      "showBlock": "Show only the exercises of the {block}",
+      "emptyBlock": "No exercises are chosen for the {block}.",
+      "inWeek": "in the week",
+      "notInWeek": "not in the week yet",
+      "notInBlock": "not planned for the {block}"
     },
     "session": {
       "add": "Add session",
@@ -406,11 +409,9 @@
       "empty": "No exercises yet.",
       "addExercise": "Exercise",
       "addTo": "Add an exercise to {session}",
-      "dropHint": "or drag exercises here",
       "notPlanned": "Not planned for the {block}",
-      "up": "Move {name} up",
-      "down": "Move {name} down",
-      "removeExercise": "Remove {name} from {session}"
+      "removeExercise": "Remove {name} from {session}",
+      "move": "Move {name}: drag, or use the arrow keys"
     },
     "values": {
       "noGroups": "No set groups yet.",

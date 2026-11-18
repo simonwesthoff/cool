@@ -159,31 +159,132 @@ describe("WeekEditor step 1", () => {
       "1 Sessions & exercises",
     );
     expect(
-      [...column(container).querySelectorAll("section h3")].map(
-        (h) => h.textContent,
+      [...column(container).querySelectorAll("section[aria-label]")].map((h) =>
+        h.getAttribute("aria-label"),
       ),
     ).toEqual(["Monday 1", "Monday 2", "Wednesday"]);
+    // The title of a session is its day selection, with the slot when a
+    // day has several sessions.
+    const monday2 = sessionNamed("Monday 2");
+    expect(
+      (monday2.querySelector("h3 select") as HTMLSelectElement).value,
+    ).toBe("1");
+    expect(monday2.querySelector("h3")!.textContent).toMatch(/2$/);
+    expect(document.body.textContent).not.toContain("or drag exercises here");
     // No deviation indicators in step 1.
     expect(container.querySelector("[data-total]")).toBeNull();
   });
 
-  it("lists the whole catalog with the mesocycle's exercises highlighted", () => {
-    const { container } = renderEditor();
+  it("lists the mesocycle's exercises with their status, and the whole catalog on request", async () => {
+    renderEditor([
+      {
+        weekday: 1,
+        slot: 1,
+        exercises: [{ exerciseNumber: 1, note: null, setGroups: [] }],
+      },
+    ]);
     const aside = screen.getByRole("complementary", { name: "Exercises" });
-    expect(
+    const rows = () =>
       [...aside.querySelectorAll("[data-exercise]")].map((e) => [
         e.getAttribute("data-exercise"),
-        e.hasAttribute("data-highlighted"),
-      ]),
-    ).toEqual([
+        e.hasAttribute("data-in-block"),
+      ]);
+    expect(rows()).toEqual([
+      ["1", true],
+      ["13", true],
+    ]);
+    // 1 is in the week, 13 not yet.
+    expect(
+      aside.querySelector('[data-exercise="1"] [data-in-week]'),
+    ).toBeTruthy();
+    expect(aside.querySelector('[data-exercise="1"]')!.textContent).toContain(
+      "in the week",
+    );
+    expect(
+      aside.querySelector('[data-exercise="13"] [data-in-week]'),
+    ).toBeNull();
+    expect(aside.querySelector('[data-exercise="13"]')!.textContent).toContain(
+      "not in the week yet",
+    );
+    expect(aside.querySelector('input[type="search"]')).toBeNull();
+    await userEvent.click(
+      within(aside).getByRole("button", { name: "Show all exercises" }),
+    );
+    expect(rows()).toEqual([
       ["1", true],
       ["13", true],
       ["20", false],
     ]);
-    expect(
-      aside.querySelector('[data-exercise="1"]')!.getAttribute("draggable"),
-    ).toBe("true");
-    void container;
+    // Not planned for the block: greyed out, but still a drag source.
+    const squat = aside.querySelector('[data-exercise="20"]')!;
+    expect(squat.className).toContain("text-zinc-400");
+    expect(squat.getAttribute("draggable")).toBe("true");
+    await userEvent.click(
+      within(aside).getByRole("button", {
+        name: "Show only the exercises of the Special preparation block",
+      }),
+    );
+    expect(rows()).toHaveLength(2);
+  });
+
+  it("moves exercises with the handle within a session and into another", async () => {
+    renderEditor([
+      {
+        weekday: 1,
+        slot: 1,
+        exercises: [
+          { exerciseNumber: 1, note: null, setGroups: [] },
+          { exerciseNumber: 13, note: null, setGroups: [] },
+        ],
+      },
+      { weekday: 3, slot: 1, exercises: [] },
+    ]);
+    const numbers = (name: string) =>
+      [...sessionNamed(name).querySelectorAll("li[data-exercise]")].map((li) =>
+        li.getAttribute("data-exercise"),
+      );
+    const data: Record<string, string> = {};
+    const dataTransfer = {
+      setData: (type: string, value: string) => (data[type] = value),
+      getData: (type: string) => data[type] ?? "",
+      setDragImage: () => {},
+      types: [] as string[],
+      dropEffect: "",
+      effectAllowed: "",
+    };
+    const handle = (name: string) =>
+      screen.getByRole("button", {
+        name: `Move ${name}: drag, or use the arrow keys`,
+      });
+    // Drag 13 onto the row of 1: it moves before it.
+    fireEvent.dragStart(handle("13 Snatch pull"), { dataTransfer });
+    fireEvent.drop(
+      sessionNamed("Monday").querySelector('li[data-exercise="1"]')!,
+      { dataTransfer },
+    );
+    expect(numbers("Monday")).toEqual(["13", "1"]);
+    // Drag 1 into Wednesday.
+    fireEvent.dragStart(handle("1 Snatch"), { dataTransfer });
+    fireEvent.drop(sessionNamed("Wednesday"), { dataTransfer });
+    expect(numbers("Monday")).toEqual(["13"]);
+    expect(numbers("Wednesday")).toEqual(["1"]);
+    // The arrow keys move an exercise without dragging.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add an exercise to Wednesday" }),
+    );
+    await userEvent.click(
+      within(document.querySelector("dialog[open]") as HTMLElement).getByRole(
+        "button",
+        { name: /^13 Snatch pull/ },
+      ),
+    );
+    expect(numbers("Wednesday")).toEqual(["1", "13"]);
+    const wednesday13 = within(sessionNamed("Wednesday")).getByRole("button", {
+      name: "Move 13 Snatch pull: drag, or use the arrow keys",
+    });
+    wednesday13.focus();
+    await userEvent.keyboard("{ArrowUp}");
+    expect(numbers("Wednesday")).toEqual(["13", "1"]);
   });
 
   it("adds an exercise dropped onto a session", () => {
@@ -199,7 +300,7 @@ describe("WeekEditor step 1", () => {
     ).toEqual(["13"]);
   });
 
-  it("adds an exercise by clicking into a session, with the highlighting", async () => {
+  it("adds an exercise by clicking into a session; other exercises only on request, greyed out", async () => {
     renderEditor();
     await userEvent.click(
       screen.getByRole("button", { name: "Add an exercise to Wednesday" }),
@@ -210,13 +311,15 @@ describe("WeekEditor step 1", () => {
         name: "Add an exercise to Wednesday",
       }),
     ).toBeTruthy();
-    expect(
-      dialog
-        .querySelector('[data-exercise="13"]')!
-        .hasAttribute("data-highlighted"),
-    ).toBe(true);
+    expect(dialog.querySelector('[data-exercise="20"]')).toBeNull();
     await userEvent.click(
-      within(dialog).getByRole("button", { name: "20 Back squat" }),
+      within(dialog).getByRole("button", { name: "Show all exercises" }),
+    );
+    expect(dialog.querySelector('[data-exercise="20"]')!.className).toContain(
+      "text-zinc-400",
+    );
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /^20 Back squat/ }),
     );
     const wednesday = sessionNamed("Wednesday");
     expect(wednesday.textContent).toContain("20 Back squat");
@@ -226,6 +329,12 @@ describe("WeekEditor step 1", () => {
     // The same exercise cannot be added twice to a session.
     await userEvent.click(
       screen.getByRole("button", { name: "Add an exercise to Wednesday" }),
+    );
+    await userEvent.click(
+      within(document.querySelector("dialog[open]") as HTMLElement).getByRole(
+        "button",
+        { name: "Show all exercises" },
+      ),
     );
     expect(
       (
