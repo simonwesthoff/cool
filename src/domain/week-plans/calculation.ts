@@ -18,8 +18,8 @@ export type WeekActuals = {
   averageKg: number | null;
   /** Average reps per set; null without sets. */
   setSize: number | null;
-  /** Sum of all reps. */
-  weeklyReps: number;
+  /** Sum of all reps; null without sets (nothing to compare). */
+  weeklyReps: number | null;
 };
 
 /** The week's actual values of one exercise from all its set groups. */
@@ -43,7 +43,7 @@ export function weekActuals(groups: SetGroupValues[]): WeekActuals {
     heaviestKg: heaviest,
     averageKg: weightedReps > 0 ? round1(load / weightedReps) : null,
     setSize: sets > 0 ? round1(reps / sets) : null,
-    weeklyReps: reps,
+    weeklyReps: sets > 0 ? reps : null,
   };
 }
 

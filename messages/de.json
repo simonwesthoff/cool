@@ -354,5 +354,90 @@
       "trainingFrequency": "Trainingseinheiten pro Woche"
     },
     "value": "Wert"
+  },
+  "WeekEditor": {
+    "title": "Woche {week} von {weeks}",
+    "sessionLabel": "{day} {slot}",
+    "steps": {
+      "label": "Schritte der Wochenplanung",
+      "sessions": "Einheiten & Übungen",
+      "values": "Sätze & Gewichte",
+      "completed": "abgeschlossen"
+    },
+    "continue": "Weiter",
+    "back": "Zurück",
+    "save": "Speichern",
+    "saved": "Gespeichert.",
+    "saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
+    "checkFields": "Bitte prüfe die markierten Felder.",
+    "check": {
+      "label": "Übungen des Mesozyklus",
+      "none": "Für die {block} sind keine Übungen gewählt.",
+      "match": "Die Woche passt zu den Übungen der {block}.",
+      "missing": "Fehlt aus der {block}: {list}",
+      "notPlanned": "Nicht für die {block} geplant: {list}"
+    },
+    "catalog": {
+      "title": "Übungen",
+      "search": "Übungen suchen",
+      "legend": "Hervorgehoben: für die {block} geplant",
+      "inBlock": "für die {block} geplant",
+      "dragHint": "Ziehe eine Übung auf eine Einheit.",
+      "close": "Schließen",
+      "addTo": "Übung zu {session} hinzufügen",
+      "group": "{code} · {name}"
+    },
+    "session": {
+      "add": "Einheit hinzufügen",
+      "remove": "{session} entfernen",
+      "day": "Tag von {session}",
+      "empty": "Noch keine Übungen.",
+      "addExercise": "Übung",
+      "addTo": "Übung zu {session} hinzufügen",
+      "dropHint": "oder Übungen hierher ziehen",
+      "notPlanned": "Nicht für die {block} geplant",
+      "up": "{name} nach oben",
+      "down": "{name} nach unten",
+      "removeExercise": "{name} aus {session} entfernen"
+    },
+    "values": {
+      "noGroups": "Noch keine Satzgruppen.",
+      "noExercises": "Keine Übungen in dieser Einheit.",
+      "addGroup": "Satzgruppe",
+      "addGroupTo": "Satzgruppe zu {name} hinzufügen",
+      "removeGroup": "Satzgruppe {n} von {name} entfernen",
+      "setsOf": "Sätze der Satzgruppe {n} von {name}",
+      "repsOf": "Wiederholungen der Satzgruppe {n} von {name}",
+      "weightOf": "Gewicht in kg der Satzgruppe {n} von {name}",
+      "times": "×",
+      "at": "@",
+      "kg": "kg",
+      "note": "Trainerhinweis"
+    },
+    "totals": {
+      "title": "Diese Woche (alle Einheiten)",
+      "heaviest": "Höchstes",
+      "average": "mHG",
+      "setSize": "Satzgröße",
+      "reps": "Wdh.",
+      "kg": "{value} kg",
+      "none": "–",
+      "projected": "Plan {value}",
+      "above": "mehr als 5 % über dem Plan",
+      "below": "mehr als 5 % unter dem Plan"
+    },
+    "errors": {
+      "OUT_OF_RANGE": "Außerhalb des erlaubten Bereichs.",
+      "NOT_INTEGER": "Bitte gib eine ganze Zahl ein.",
+      "NOT_HALF_KG": "Bitte in Schritten von 0,5 kg.",
+      "TOO_LONG": "Zu lang.",
+      "DUPLICATE": "Schon in dieser Einheit.",
+      "TOO_MANY": "Höchstens 14 Einheiten pro Woche.",
+      "UNKNOWN_EXERCISE": "Unbekannte Übung.",
+      "REQUIRED": "Pflichtfeld.",
+      "INVALID": "Ungültiger Wert."
+    },
+    "blockAndLevel": "{block} · {level}",
+    "dates": "{start} – {end}"
   }
 }

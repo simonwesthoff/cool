@@ -37,7 +37,7 @@
 
 ## 3. API
 
-- [ ] 3.1 Routes:
+- [x] 3.1 Routes:
   - **Base data:** the macrocycle routes take and return the schedule.
   - **Week plans:** `GET`/`PUT …/weeks/{week}/plan` and `GET …/weeks/plans`.
 

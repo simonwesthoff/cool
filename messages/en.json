@@ -354,5 +354,90 @@
       "trainingFrequency": "Training sessions per week"
     },
     "value": "Value"
+  },
+  "WeekEditor": {
+    "title": "Week {week} of {weeks}",
+    "sessionLabel": "{day} {slot}",
+    "steps": {
+      "label": "Week planning steps",
+      "sessions": "Sessions & exercises",
+      "values": "Sets & weights",
+      "completed": "completed"
+    },
+    "continue": "Continue",
+    "back": "Back",
+    "save": "Save",
+    "saved": "Saved.",
+    "saveFailed": "Could not save. Please try again.",
+    "checkFields": "Please check the marked fields.",
+    "check": {
+      "label": "Exercises of the block",
+      "none": "No exercises are chosen for the {block}.",
+      "match": "The week matches the exercises of the {block}.",
+      "missing": "Missing from the {block}: {list}",
+      "notPlanned": "Not planned for the {block}: {list}"
+    },
+    "catalog": {
+      "title": "Exercises",
+      "search": "Search exercises",
+      "legend": "Highlighted: planned for the {block}",
+      "inBlock": "planned for the {block}",
+      "dragHint": "Drag an exercise onto a session.",
+      "close": "Close",
+      "addTo": "Add an exercise to {session}",
+      "group": "{code} · {name}"
+    },
+    "session": {
+      "add": "Add session",
+      "remove": "Remove {session}",
+      "day": "Day of {session}",
+      "empty": "No exercises yet.",
+      "addExercise": "Exercise",
+      "addTo": "Add an exercise to {session}",
+      "dropHint": "or drag exercises here",
+      "notPlanned": "Not planned for the {block}",
+      "up": "Move {name} up",
+      "down": "Move {name} down",
+      "removeExercise": "Remove {name} from {session}"
+    },
+    "values": {
+      "noGroups": "No set groups yet.",
+      "noExercises": "No exercises in this session.",
+      "addGroup": "Set group",
+      "addGroupTo": "Add a set group to {name}",
+      "removeGroup": "Remove set group {n} of {name}",
+      "setsOf": "Sets of set group {n} of {name}",
+      "repsOf": "Reps of set group {n} of {name}",
+      "weightOf": "Weight in kg of set group {n} of {name}",
+      "times": "×",
+      "at": "@",
+      "kg": "kg",
+      "note": "Coach note"
+    },
+    "totals": {
+      "title": "This week (all sessions)",
+      "heaviest": "Heaviest",
+      "average": "mHG",
+      "setSize": "Set size",
+      "reps": "Reps",
+      "kg": "{value} kg",
+      "none": "–",
+      "projected": "plan {value}",
+      "above": "more than 5 % above the plan",
+      "below": "more than 5 % below the plan"
+    },
+    "errors": {
+      "OUT_OF_RANGE": "Outside the allowed range.",
+      "NOT_INTEGER": "Please enter a whole number.",
+      "NOT_HALF_KG": "Please use steps of 0.5 kg.",
+      "TOO_LONG": "Too long.",
+      "DUPLICATE": "Already in this session.",
+      "TOO_MANY": "At most 14 sessions per week.",
+      "UNKNOWN_EXERCISE": "Unknown exercise.",
+      "REQUIRED": "Required.",
+      "INVALID": "Invalid value."
+    },
+    "blockAndLevel": "{block} · {level}",
+    "dates": "{start} – {end}"
   }
 }

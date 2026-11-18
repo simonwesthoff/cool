@@ -38,7 +38,7 @@ describe("weekActuals", () => {
       heaviestKg: null,
       averageKg: null,
       setSize: null,
-      weeklyReps: 0,
+      weeklyReps: null,
     });
   });
 });
