@@ -34,13 +34,12 @@ whether a week fits the plan.
     - **On phones:** the catalog column is hidden, and clicking into a
       session opens the selection with the same highlighting.
     - **Next:** "Continue" or the stepper leads to step 2.
-  - **Step 2 – values:** the sessions column shows only day, slot and
-    exercises, and a third column holds the set groups ("sets × reps @
-    weight", one or more per exercise) and the coach notes. The deviation
-    indicators appear only in this step: per exercise, the week's heaviest
-    weight, mHG, set size and weekly reps next to the projection. Values
-    more than 5 % above are red ↑, more than 5 % below are blue ↓, always
-    with the projected value (user decision).
+  - **Step 2 – values** (user decision): one column over the whole width
+    with a table per session. Each exercise is two rows high on the left,
+    each set is a column with the weight on top and the reps below (at
+    most 10 sets), and on the right are the coach note and the week's
+    totals against the projection (red ↑ / blue ↓ beyond 5 %, with the
+    projected value).
   - **Switching steps:** stays on the page. Going to step 2, only the
     sessions column slides from right to left; the catalog makes room and
     the values column appears on the right. Going back, it slides from
@@ -60,9 +59,11 @@ whether a week fits the plan.
   - **Plan this week:** shown for an unplanned current week, prefilled
     the same way.
   - **Planned weeks:** listed with their dates and an edit button.
-- **Saving:** "Save" stores the whole week. Saving a week without sessions
-  makes it unplanned again. Leaving the editor with unsaved changes asks
-  "Save changes?" (Save, Discard, Cancel), as in the planning steps.
+- **Saving** (user decision): every change is saved on its own shortly
+  after it is made, so both steps always agree; a week without sessions is
+  unplanned again. Invalid cells are marked and block saving until fixed;
+  a failed save offers "Try again". Leaving with a change that is not
+  saved yet asks "Save changes?" (Save, Discard, Cancel).
 - **Duration guard:** shortening the macrocycle is refused while weeks that
   would be removed have a week plan.
 - **API:**

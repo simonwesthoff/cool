@@ -378,10 +378,6 @@
     },
     "continue": "Continue",
     "back": "Back",
-    "save": "Save",
-    "saved": "Saved.",
-    "saveFailed": "Could not save. Please try again.",
-    "checkFields": "Please check the marked fields.",
     "catalog": {
       "title": "Exercises",
       "close": "Close",
@@ -406,18 +402,15 @@
       "move": "Move {name}: drag, or use the arrow keys"
     },
     "values": {
-      "noGroups": "No set groups yet.",
       "noExercises": "No exercises in this session.",
-      "addGroup": "Set group",
-      "addGroupTo": "Add a set group to {name}",
-      "removeGroup": "Remove set group {n} of {name}",
-      "setsOf": "Sets of set group {n} of {name}",
-      "repsOf": "Reps of set group {n} of {name}",
-      "weightOf": "Weight in kg of set group {n} of {name}",
-      "times": "×",
-      "at": "@",
       "kg": "kg",
-      "note": "Coach note"
+      "reps": "Reps",
+      "weightOf": "Weight in kg of set {n} of {name}",
+      "repsOf": "Reps of set {n} of {name}",
+      "addSetTo": "Add a set to {name}",
+      "removeSetOf": "Remove the last set of {name}",
+      "note": "Coach note",
+      "noteOf": "Coach note for {name}"
     },
     "totals": {
       "title": "This week (all sessions)",
@@ -431,17 +424,6 @@
       "above": "more than 5 % above the plan",
       "below": "more than 5 % below the plan"
     },
-    "errors": {
-      "OUT_OF_RANGE": "Outside the allowed range.",
-      "NOT_INTEGER": "Please enter a whole number.",
-      "NOT_HALF_KG": "Please use steps of 0.5 kg.",
-      "TOO_LONG": "Too long.",
-      "DUPLICATE": "Already in this session.",
-      "TOO_MANY": "At most 14 sessions per week.",
-      "UNKNOWN_EXERCISE": "Unknown exercise.",
-      "REQUIRED": "Required.",
-      "INVALID": "Invalid value."
-    },
     "blockAndLevel": "{block} · {level}",
     "dates": "{start} – {end}",
     "columns": {
@@ -449,6 +431,14 @@
       "sessions": "Sessions",
       "weights": "Weights"
     },
-    "withVariation": "{name} ({variation})"
+    "withVariation": "{name} ({variation})",
+    "status": {
+      "pending": "Saving…",
+      "saving": "Saving…",
+      "saved": "All changes saved.",
+      "invalid": "Not saved: please check the marked fields.",
+      "failed": "Could not save."
+    },
+    "retry": "Try again"
   }
 }

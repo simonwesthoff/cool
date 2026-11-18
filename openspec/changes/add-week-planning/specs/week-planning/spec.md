@@ -12,26 +12,30 @@ editor and checked against the macrocycle planning.
 A week plan SHALL belong to one week of an athlete's macrocycle and have
 at most 14 training sessions, each with a weekday (Monday–Sunday), a slot
 (1–3) and exercises from the catalog, each at most once per session. An
-exercise SHALL have set groups (sets 1–20, reps 1–30, weight 0–500 kg in
-0.5 kg steps or none), possibly none yet after step 1, and an optional
-coach note of up to 500 characters.
+exercise SHALL have at most 10 sets (reps 1–30, weight 0–500 kg in 0.5 kg
+steps or none), stored as set groups of equal consecutive sets, possibly
+none yet after step 1, and an optional coach note of up to 500 characters.
 
 #### Scenario: Ramping up in a session
 - **GIVEN** the coach plans Monday with exercise 1 (snatch)
-- **WHEN** they enter the set groups 2 × 3 @ 60 kg, 3 × 2 @ 70 kg and 2 × 1 @ 80 kg and save
-- **THEN** the week plan stores the three set groups in this order
+- **WHEN** they enter the sets 60 kg × 3, 60 kg × 3, 70 kg × 2, 70 kg × 2, 70 kg × 2, 80 kg × 1, 80 kg × 1
+- **THEN** the week plan stores the set groups 2 × 3 @ 60 kg, 3 × 2 @ 70 kg and 2 × 1 @ 80 kg in this order
 
 #### Scenario: Two sessions on one day
 - **WHEN** the coach adds a second session on Monday
 - **THEN** the sessions are shown as "Monday 1" and "Monday 2"; a single session on a day is shown as "Monday"
 
-#### Scenario: Invalid set group
-- **WHEN** the coach saves a set group with 0 sets or a weight of 82.3 kg
-- **THEN** the week is not saved and the set group is marked with the reason
+#### Scenario: Invalid set
+- **WHEN** the coach enters a weight of 82.3 kg or 0 reps
+- **THEN** the cell is marked and the week is not saved until it is corrected
+
+#### Scenario: More than 10 sets
+- **WHEN** an exercise in a session has 10 sets
+- **THEN** no further set can be added, and the API refuses more than 10 sets with `TOO_MANY`
 
 #### Scenario: Exercise without weight
-- **WHEN** the coach enters 3 × 8 for exercise 33 (pull-up) without a weight
-- **THEN** the set group is saved without a weight
+- **WHEN** the coach enters 8 reps without a weight for exercise 33 (pull-up)
+- **THEN** the set is saved without a weight
 
 ### Requirement: Week editor
 The coach of the athlete's Team SHALL edit any week of the macrocycle,
@@ -39,31 +43,39 @@ whether it is already planned, ongoing or in the future, in two steps on
 one page with a stepper on top: 1. exercises and sessions, 2. values. The
 editor SHALL show "Week x of y", the dates of the week, its mesocycle and
 its week level. "Continue" and the stepper SHALL switch steps without
-leaving the page. "Save" SHALL store the whole week, from either step;
-saving a week without sessions SHALL make it unplanned again.
+leaving the page.
 
 #### Scenario: Header
 - **GIVEN** a 21-week macrocycle from Monday 2026-11-30
 - **WHEN** the coach opens week 11
 - **THEN** the editor shows "Week 11 of 21", "Feb 8 – Feb 14, 2027", the special preparation block and the week level, and step 1 is current
 
-#### Scenario: Save the week
-- **WHEN** the coach places exercises in the sessions, enters their set groups in step 2 and chooses "Save"
-- **THEN** the week plan is stored and shown again with the same content when the week is opened later
-
-#### Scenario: Empty the week
-- **GIVEN** a planned week
-- **WHEN** the coach removes all sessions and saves
-- **THEN** the week is no longer planned
-
-#### Scenario: Unsaved changes
-- **GIVEN** the coach changed the week without saving
-- **WHEN** they choose the back link
-- **THEN** a dialog asks "Save changes?" with "Save", "Discard" and "Cancel", as in the planning steps; switching between the two steps does not ask
-
 #### Scenario: Athlete cannot edit
 - **WHEN** the linked athlete opens the week editor of their own week
 - **THEN** they cannot open it, as for all coach pages: without a Team of their own they are sent to the home page, otherwise they see the "not found" page; the weekly view for athletes comes with a later feature
+
+### Requirement: Automatic saving
+Every change in the week editor SHALL be saved on its own shortly after it
+is made, so both steps always show the stored week; a week without
+sessions SHALL be unplanned again.
+
+#### Scenario: Automatic saving
+- **WHEN** the coach adds a set in step 2 or moves an exercise in step 1
+- **THEN** the week is saved without a save button, the editor says "All changes saved.", and the week opens later with the same content
+
+#### Scenario: Empty the week
+- **GIVEN** a planned week
+- **WHEN** the coach removes all sessions
+- **THEN** the week is no longer planned
+
+#### Scenario: Saving fails
+- **WHEN** a save fails
+- **THEN** the editor says "Could not save." and offers "Try again"
+
+#### Scenario: Leaving before the change is saved
+- **GIVEN** a change that is not saved yet (just made, invalid or failed)
+- **WHEN** the coach chooses the back link
+- **THEN** a dialog asks "Save changes?" with "Save", "Discard" and "Cancel", as in the planning steps; switching between the two steps does not ask
 
 ### Requirement: Step 1 sessions and exercises
 Step 1 SHALL show the week's sessions, each titled by its day selection
@@ -112,25 +124,32 @@ session SHALL open the exercise selection.
 - **THEN** exercise 1 is added to Thursday
 
 ### Requirement: Step 2 values
-Step 2 SHALL show the sessions column with only day, slot and exercises,
-and next to it a column with each exercise's set groups and coach note,
-where the coach adds, changes and removes set groups. On phones the set
-groups SHALL be shown below each exercise of the session.
+Step 2 SHALL show one column over the whole width with a table per
+session: each exercise on the left, two rows high, one column per set with
+the weight on top and the reps below (at most 10 sets), and on the right
+the coach note and the week's totals with the deviation indicators. A new
+set SHALL start as a copy of the last one. On phones the sets SHALL scroll
+sideways and the note and totals are shown below the sets.
 
-#### Scenario: Enter set groups
-- **WHEN** the coach adds the set groups 2 × 3 @ 60 kg and 3 × 2 @ 70 kg to the snatch on Monday in step 2
-- **THEN** they are shown in the values column next to Monday's snatch in this order
+#### Scenario: Sets of the snatch on Monday
+- **GIVEN** Monday's snatch with 2 × 3 @ 60 kg, 3 × 2 @ 70 kg and 2 × 1 @ 80 kg
+- **WHEN** the coach opens step 2
+- **THEN** Monday's table shows the snatch with seven set columns: 60/3, 60/3, 70/2, 70/2, 70/2, 80/1, 80/1
+
+#### Scenario: Add and remove sets
+- **WHEN** the coach adds a set to the snatch and then removes the last set
+- **THEN** the new set first copies 80/1, and removing takes away the last column
 
 ### Requirement: Step animation
 When switching to step 2, only the sessions column SHALL slide from right
-to left: the catalog makes room and the values column appears on the
-right. When switching back, it SHALL slide from left to right. With
-reduced motion the switch SHALL happen without animation.
+to left and then take the whole width: the catalog makes room. When
+switching back, it SHALL slide from left to right. With reduced motion the
+switch SHALL happen without animation.
 
 #### Scenario: Switch to step 2
 - **GIVEN** the editor on a desktop screen in step 1
 - **WHEN** the coach chooses "Continue"
-- **THEN** the sessions column moves from the right to the left side, the catalog is no longer shown, the values column appears on the right, and the page is not reloaded
+- **THEN** the sessions column moves from the right to the left side, the catalog is no longer shown, the session tables use the whole width, and the page is not reloaded
 
 #### Scenario: Back to step 1
 - **WHEN** the coach chooses step 1 in the stepper
@@ -176,15 +195,15 @@ mesocycle SHALL be greyed out but still be selectable.
 - **THEN** all catalog exercises are listed, those not chosen for the special preparation block greyed out, and choosing one still adds it
 
 ### Requirement: Column titles and variations
-The editor's columns SHALL have the titles "Exercises", "Sessions" and
-"Weights" ("Übungen", "Einheiten", "Gewichte"); the titles move with their
-columns between the steps. The first step SHALL be called "Exercises &
+The editor's columns SHALL have the titles "Exercises" and "Sessions" in
+step 1 and "Weights" in step 2 ("Übungen", "Einheiten", "Gewichte"); the
+titles move with their columns. The first step SHALL be called "Exercises &
 sessions". An exercise chosen for the week's mesocycle with a variation
 SHALL be named with the variation in brackets everywhere in the editor.
 
 #### Scenario: Titles per step
 - **WHEN** the coach is in step 1 on a desktop screen
-- **THEN** the columns are titled "Exercises" and "Sessions"; in step 2 "Sessions" and "Weights"
+- **THEN** the columns are titled "Exercises" and "Sessions"; in step 2 the one column is titled "Weights"
 
 #### Scenario: Variation in brackets
 - **GIVEN** exercise 13 chosen for the special preparation block with the variation "From blocks"

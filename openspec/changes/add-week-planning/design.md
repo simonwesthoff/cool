@@ -74,7 +74,20 @@ numeric(4,1) nullable).
   feature 9 queries (current week, feedback per exercise) and the
   per-exercise aggregation are clearer relationally.
 
-### Save the week as a whole (PUT replace)
+### Save every change, as the whole week (PUT replace)
+
+The editor saves on its own (user decision):
+- **When:** 500 ms after the last change, as the whole week.
+- **One save at a time:** saves run one after another; a change that
+  arrives during a save is saved right after it.
+- **Invalid cells:** they block saving and are marked.
+- **Not saved:** the leave guard asks while a change is not saved yet.
+- **Sets:** the editor works with single sets (weight and reps). Equal
+  consecutive sets are stored as one set group, so the API and feature 9
+  keep compact "3 × 2 @ 80 kg" data. At most 10 sets per exercise in a
+  session.
+
+### PUT replace
 
 `PUT …/weeks/{week}/plan` validates the full week with Zod and replaces
 sessions, exercises and set groups in one transaction.
@@ -170,7 +183,12 @@ prompt happens between them.
   buttons.
   - **Alternatives:** a drag & drop library was rejected; it adds a
     dependency, and touch is covered by the click path.
-- **Values column:**
+- **Step 2 table:** one `<table>` per session over the full width. Each
+  exercise is a `rowgroup` header with two rows (weight, reps) and one
+  column per set, then "+"/"−" for sets, a spacer, and a right cell with
+  the coach note and the totals. On phones the sets scroll sideways and
+  the note and totals sit in an extra row that stays in view (sticky).
+- **Values column (replaced by the step 2 table):**
   - **Rows:** one block per session exercise, aligned with the sessions
     column, with set group inputs ("sets × reps @ kg", add and remove) and
     the coach note.

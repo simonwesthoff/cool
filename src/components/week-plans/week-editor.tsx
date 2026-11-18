@@ -2,7 +2,7 @@
 
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { localized } from "@/domain/exercises/catalog-types";
 import type { PlannedExercise } from "@/domain/macrocycles/calculation";
 import type {
@@ -18,12 +18,14 @@ import {
   type CatalogGroup,
 } from "./exercise-list";
 import { SessionCard } from "./session-card";
-import { ValuesBlock } from "./values-block";
+import { SessionTable } from "./session-table";
 import {
   actualsOf,
   dayForNewSession,
   draftOf,
   exercisesOf,
+  hasErrors,
+  MAX_SETS,
   newKey,
   normalize,
   payloadOf,
@@ -50,9 +52,10 @@ type Props = {
 const dayDate = (weekday: number) => new Date(Date.UTC(2024, 0, weekday));
 
 /**
- * Week editor in two steps on one page: 1. sessions and exercises (catalog
- * column on the left on wide screens), 2. set groups, notes and the
- * deviation from the projection. Switching steps slides only the sessions
+ * Week editor in two steps on one page: 1. exercises and sessions (catalog
+ * column on the left on wide screens), 2. one table per session with the
+ * sets, notes and the deviation from the projection. Every change is saved
+ * on its own. Switching steps slides only the sessions
  * column (right → left and back) and never leaves the page.
  */
 export function WeekEditor({
@@ -74,16 +77,19 @@ export function WeekEditor({
   );
   const [step, setStep] = useState<0 | 1>(0);
   const [picking, setPicking] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
-    "idle",
-  );
-  // The content the editor started with (or last saved), to tell whether
-  // the week has unsaved changes.
+  // Every change is saved on its own; the status line says how it went.
+  // Nothing is shown before the first change.
+  const [status, setStatus] = useState<
+    "untouched" | "pending" | "saving" | "saved" | "invalid" | "failed"
+  >("untouched");
   const [initialPayload] = useState(() =>
     JSON.stringify(payloadOf(draftOf(initialSessions))),
   );
+  /** What is stored (or what the editor started with). */
   const stored = useRef(initialPayload);
+  const latest = useRef(sessions);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlight = useRef<Promise<boolean> | null>(null);
 
   const blockName = tm(plan.mesocycle);
   const names = useMemo(() => {
@@ -106,10 +112,8 @@ export function WeekEditor({
       ? t("sessionLabel", { day: dayName(s.weekday), slot: s.slot })
       : dayName(s.weekday);
 
-  const update = (change: (list: DraftSession[]) => DraftSession[]) => {
+  const update = (change: (list: DraftSession[]) => DraftSession[]) =>
     setSessions((list) => normalize(change(list)));
-    setStatus("idle");
-  };
   const updateSession = (
     key: string,
     change: (s: DraftSession) => DraftSession,
@@ -137,7 +141,7 @@ export function WeekEditor({
         key: newKey(),
         exerciseNumber,
         note: "",
-        groups: [],
+        sets: [],
       });
       return { ...s, exercises: list };
     });
@@ -182,41 +186,74 @@ export function WeekEditor({
       });
     });
 
-  const payload = payloadOf(sessions);
-  const isDirty = () => JSON.stringify(payload) !== stored.current;
-
-  async function save(): Promise<boolean> {
-    setStatus("saving");
-    setErrors({});
-    const body = payloadOf(sessions);
-    const response = await fetch(
-      `/api/athletes/${athleteId}/macrocycle/weeks/${plan.weekNumber}/plan`,
-      {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      },
-    ).catch(() => null);
-    if (response?.ok) {
-      stored.current = JSON.stringify(body);
-      setStatus("saved");
-      router.refresh();
-      return true;
+  /**
+   * Saves the latest draft unless it is stored already or has invalid
+   * cells; saves again when changes arrived while saving.
+   */
+  const flush = useCallback(async (): Promise<boolean> => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
     }
-    const result = (await response?.json().catch(() => null)) as {
-      error?: { code?: string; fields?: Record<string, string[]> };
-    } | null;
-    if (result?.error?.code === "VALIDATION_FAILED" && result.error.fields) {
-      setErrors(result.error.fields);
-      // Values are entered in step 2; show them where the error is.
-      if (Object.keys(result.error.fields).some((k) => k.includes("setGroups")))
-        setStep(1);
+    if (inFlight.current) await inFlight.current;
+    let saved = false;
+    // Save until what is stored is the latest draft.
+    for (;;) {
+      const draft = latest.current;
+      if (hasErrors(draft)) {
+        setStatus("invalid");
+        return false;
+      }
+      const body = JSON.stringify(payloadOf(draft));
+      if (body === stored.current) break;
+      setStatus("saving");
+      const run = fetch(
+        `/api/athletes/${athleteId}/macrocycle/weeks/${plan.weekNumber}/plan`,
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body,
+        },
+      )
+        .then((response) => response.ok)
+        .catch(() => false);
+      inFlight.current = run;
+      const ok = await run;
+      inFlight.current = null;
+      if (!ok) {
+        setStatus("failed");
+        return false;
+      }
+      stored.current = body;
+      saved = true;
     }
-    setStatus("error");
-    return false;
-  }
+    setStatus((current) => (current === "untouched" ? current : "saved"));
+    if (saved) router.refresh();
+    return true;
+  }, [athleteId, plan.weekNumber, router]);
 
-  useUnsavedChangesGuard({ isDirty, save });
+  // Each change is saved shortly after the last keystroke.
+  useEffect(() => {
+    latest.current = sessions;
+    if (
+      JSON.stringify(payloadOf(sessions)) === stored.current &&
+      !hasErrors(sessions)
+    )
+      return;
+    setStatus(hasErrors(sessions) ? "invalid" : "pending");
+    timer.current = setTimeout(() => void flush(), 500);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [sessions, flush]);
+
+  // Leaving with a change that is not saved yet asks first.
+  useUnsavedChangesGuard({
+    isDirty: () =>
+      hasErrors(latest.current) ||
+      JSON.stringify(payloadOf(latest.current)) !== stored.current,
+    save: flush,
+  });
 
   const actuals = actualsOf(sessions);
   const onWeek = exercisesOf(sessions);
@@ -307,19 +344,11 @@ export function WeekEditor({
             step === 0 ? "lg:translate-x-1/2" : "lg:translate-x-0"
           }`}
         >
-          {/* Column titles; they move with their columns. */}
-          <div className="grid grid-cols-1 gap-x-4 lg:grid-cols-2">
-            <h2 className="text-lg font-semibold">{t("columns.sessions")}</h2>
-            <h2
-              aria-hidden={step === 0 || undefined}
-              className={`hidden text-lg font-semibold lg:block ${
-                step === 0 ? "lg:invisible" : ""
-              }`}
-            >
-              {t("columns.weights")}
-            </h2>
-          </div>
-          {sessions.map((s, si) => {
+          {/* The column's title moves with the column. */}
+          <h2 className="text-lg font-semibold">
+            {step === 0 ? t("columns.sessions") : t("columns.weights")}
+          </h2>
+          {sessions.map((s) => {
             const label = labelOf(s);
             if (step === 0)
               return (
@@ -366,86 +395,55 @@ export function WeekEditor({
                   />
                 </div>
               );
-            // Step 2: the session card (day, slot, exercises) on the left,
-            // each exercise's values on the right in the same row.
-            const rows = Math.max(1, s.exercises.length);
+            // Step 2: one table per session over the whole width.
             return (
-              <section
+              <div
                 key={s.key}
-                aria-label={label}
-                data-session={`${s.weekday}.${s.slot}`}
-                className="grid grid-cols-1 gap-x-4 gap-y-2 lg:grid-cols-2"
+                className="transition-opacity duration-300 starting:opacity-0 motion-reduce:transition-none"
               >
-                <h3 className="font-semibold lg:hidden">{label}</h3>
-                <div
-                  aria-hidden="true"
-                  style={{ ["--span" as string]: rows + 1 }}
-                  className="hidden rounded-2xl border border-zinc-200 px-3 pb-3 lg:col-start-1 lg:grid lg:grid-rows-subgrid lg:[grid-row:1/span_var(--span)] dark:border-zinc-800"
-                >
-                  <p className="pt-3 font-semibold">{label}</p>
-                  {s.exercises.map((e) => (
-                    <p key={e.key} className="pt-3 text-sm font-medium">
-                      {exerciseName(e.exerciseNumber)}
-                    </p>
-                  ))}
-                </div>
-                {s.exercises.map((e, ei) => (
-                  <div
-                    key={e.key}
-                    style={{ ["--row" as string]: ei + 2 }}
-                    className="transition-opacity duration-300 starting:opacity-0 motion-reduce:transition-none lg:col-start-2 lg:[grid-row:var(--row)]"
-                  >
-                    <ValuesBlock
-                      exercise={e}
-                      name={exerciseName(e.exerciseNumber)}
-                      path={`sessions.${si}.exercises.${ei}`}
-                      errors={errors}
-                      actuals={actuals.get(e.exerciseNumber)}
-                      projection={projections[e.exerciseNumber]}
-                      onChangeGroup={(gi, field, value) =>
-                        updateExercise(s.key, e.key, (y) => ({
-                          ...y,
-                          groups: y.groups.map((g, i) =>
-                            i === gi ? { ...g, [field]: value } : g,
-                          ),
-                        }))
-                      }
-                      onAddGroup={() =>
-                        updateExercise(s.key, e.key, (y) => {
-                          // A new set group starts as a copy of the last one.
-                          const last = y.groups.at(-1);
-                          return {
-                            ...y,
-                            groups: [
-                              ...y.groups,
-                              {
-                                key: newKey(),
-                                sets: last?.sets ?? "",
-                                reps: last?.reps ?? "",
-                                weight: last?.weight ?? "",
-                              },
-                            ],
-                          };
-                        })
-                      }
-                      onRemoveGroup={(gi) =>
-                        updateExercise(s.key, e.key, (y) => ({
-                          ...y,
-                          groups: y.groups.filter((_, i) => i !== gi),
-                        }))
-                      }
-                      onChangeNote={(note) =>
-                        updateExercise(s.key, e.key, (y) => ({ ...y, note }))
-                      }
-                    />
-                  </div>
-                ))}
-                {s.exercises.length === 0 && (
-                  <p className="rounded-2xl border border-dashed border-zinc-300 p-3 text-sm text-zinc-500 lg:col-start-2 lg:row-start-2 dark:border-zinc-700">
-                    {t("values.noExercises")}
-                  </p>
-                )}
-              </section>
+                <SessionTable
+                  session={s}
+                  label={label}
+                  exerciseName={exerciseName}
+                  actualsOf={(n) => actuals.get(n)}
+                  projectionOf={(n) => projections[n]}
+                  onChangeSet={(exerciseKey, index, field, value) =>
+                    updateExercise(s.key, exerciseKey, (y) => ({
+                      ...y,
+                      sets: y.sets.map((set, i) =>
+                        i === index ? { ...set, [field]: value } : set,
+                      ),
+                    }))
+                  }
+                  onAddSet={(exerciseKey) =>
+                    updateExercise(s.key, exerciseKey, (y) => {
+                      if (y.sets.length >= MAX_SETS) return y;
+                      // A new set starts as a copy of the last one.
+                      const last = y.sets.at(-1);
+                      return {
+                        ...y,
+                        sets: [
+                          ...y.sets,
+                          {
+                            key: newKey(),
+                            weight: last?.weight ?? "",
+                            reps: last?.reps ?? "",
+                          },
+                        ],
+                      };
+                    })
+                  }
+                  onRemoveSet={(exerciseKey) =>
+                    updateExercise(s.key, exerciseKey, (y) => ({
+                      ...y,
+                      sets: y.sets.slice(0, -1),
+                    }))
+                  }
+                  onChangeNote={(exerciseKey, note) =>
+                    updateExercise(s.key, exerciseKey, (y) => ({ ...y, note }))
+                  }
+                />
+              </div>
             );
           })}
           {step === 0 && (
@@ -472,51 +470,41 @@ export function WeekEditor({
 
       <div className="flex flex-wrap items-center gap-3">
         {step === 0 ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className={primary}
-            >
-              {t("continue")}
-            </button>
-            <button
-              type="button"
-              onClick={save}
-              disabled={status === "saving"}
-              className={secondary}
-            >
-              {t("save")}
-            </button>
-          </>
+          <button type="button" onClick={() => setStep(1)} className={primary}>
+            {t("continue")}
+          </button>
         ) : (
-          <>
-            <button
-              type="button"
-              onClick={save}
-              disabled={status === "saving"}
-              className={primary}
-            >
-              {t("save")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep(0)}
-              className={secondary}
-            >
-              {t("back")}
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => setStep(0)}
+            className={secondary}
+          >
+            {t("back")}
+          </button>
         )}
-        {status === "saved" && (
-          <p role="status" className="text-sm text-zinc-600 dark:text-zinc-400">
-            {t("saved")}
+        {status !== "untouched" && (
+          <p
+            role={
+              status === "failed" || status === "invalid" ? "alert" : "status"
+            }
+            data-save-status={status}
+            className={`text-sm ${
+              status === "failed" || status === "invalid"
+                ? "text-red-700 dark:text-red-400"
+                : "text-zinc-600 dark:text-zinc-400"
+            }`}
+          >
+            {t(`status.${status}`)}
           </p>
         )}
-        {status === "error" && (
-          <p role="alert" className="text-sm text-red-700 dark:text-red-400">
-            {Object.keys(errors).length ? t("checkFields") : t("saveFailed")}
-          </p>
+        {status === "failed" && (
+          <button
+            type="button"
+            onClick={() => void flush()}
+            className={secondary}
+          >
+            {t("retry")}
+          </button>
         )}
       </div>
 

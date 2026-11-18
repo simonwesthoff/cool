@@ -378,10 +378,6 @@
     },
     "continue": "Weiter",
     "back": "Zurück",
-    "save": "Speichern",
-    "saved": "Gespeichert.",
-    "saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
-    "checkFields": "Bitte prüfe die markierten Felder.",
     "catalog": {
       "title": "Übungen",
       "close": "Schließen",
@@ -406,18 +402,15 @@
       "move": "{name} verschieben: ziehen oder Pfeiltasten"
     },
     "values": {
-      "noGroups": "Noch keine Satzgruppen.",
       "noExercises": "Keine Übungen in dieser Einheit.",
-      "addGroup": "Satzgruppe",
-      "addGroupTo": "Satzgruppe zu {name} hinzufügen",
-      "removeGroup": "Satzgruppe {n} von {name} entfernen",
-      "setsOf": "Sätze der Satzgruppe {n} von {name}",
-      "repsOf": "Wiederholungen der Satzgruppe {n} von {name}",
-      "weightOf": "Gewicht in kg der Satzgruppe {n} von {name}",
-      "times": "×",
-      "at": "@",
       "kg": "kg",
-      "note": "Trainerhinweis"
+      "reps": "Wdh.",
+      "weightOf": "Gewicht in kg von Satz {n} von {name}",
+      "repsOf": "Wiederholungen von Satz {n} von {name}",
+      "addSetTo": "Satz zu {name} hinzufügen",
+      "removeSetOf": "Letzten Satz von {name} entfernen",
+      "note": "Trainerhinweis",
+      "noteOf": "Trainerhinweis zu {name}"
     },
     "totals": {
       "title": "Diese Woche (alle Einheiten)",
@@ -431,17 +424,6 @@
       "above": "mehr als 5 % über dem Plan",
       "below": "mehr als 5 % unter dem Plan"
     },
-    "errors": {
-      "OUT_OF_RANGE": "Außerhalb des erlaubten Bereichs.",
-      "NOT_INTEGER": "Bitte gib eine ganze Zahl ein.",
-      "NOT_HALF_KG": "Bitte in Schritten von 0,5 kg.",
-      "TOO_LONG": "Zu lang.",
-      "DUPLICATE": "Schon in dieser Einheit.",
-      "TOO_MANY": "Höchstens 14 Einheiten pro Woche.",
-      "UNKNOWN_EXERCISE": "Unbekannte Übung.",
-      "REQUIRED": "Pflichtfeld.",
-      "INVALID": "Ungültiger Wert."
-    },
     "blockAndLevel": "{block} · {level}",
     "dates": "{start} – {end}",
     "columns": {
@@ -449,6 +431,14 @@
       "sessions": "Einheiten",
       "weights": "Gewichte"
     },
-    "withVariation": "{name} ({variation})"
+    "withVariation": "{name} ({variation})",
+    "status": {
+      "pending": "Wird gespeichert…",
+      "saving": "Wird gespeichert…",
+      "saved": "Alle Änderungen gespeichert.",
+      "invalid": "Nicht gespeichert: Bitte prüfe die markierten Felder.",
+      "failed": "Speichern fehlgeschlagen."
+    },
+    "retry": "Erneut versuchen"
   }
 }

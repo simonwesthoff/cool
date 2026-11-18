@@ -36,6 +36,7 @@ import type {
 } from "./week-plan-types";
 
 export const MAX_SESSIONS = 14;
+export const MAX_SETS = 10;
 export const NOTE_MAX_LENGTH = 500;
 
 const code = (value: string) => ({ params: { code: value } });
@@ -46,7 +47,7 @@ const int = (min: number, max: number) =>
     .refine((v) => v >= min && v <= max, code("OUT_OF_RANGE"));
 
 const setGroupSchema = z.strictObject({
-  sets: int(1, 20),
+  sets: int(1, MAX_SETS),
   reps: int(1, 30),
   weightKg: z
     .number()
@@ -64,8 +65,14 @@ const sessionExerciseSchema = z.strictObject({
     .nullable()
     .optional()
     .transform((v) => (v ? v : null)),
-  // Set groups are entered in step 2; a week can be saved before.
-  setGroups: z.array(setGroupSchema),
+  // Set groups are entered in step 2; a week can be saved before. At most
+  // 10 sets per exercise in a session.
+  setGroups: z
+    .array(setGroupSchema)
+    .refine(
+      (list) => list.reduce((sum, g) => sum + g.sets, 0) <= MAX_SETS,
+      code("TOO_MANY"),
+    ),
 });
 
 const sessionSchema = z.strictObject({

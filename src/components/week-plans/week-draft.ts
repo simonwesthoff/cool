@@ -1,6 +1,7 @@
 /**
- * The week editor's draft: sessions with exercises and set groups as typed
- * text, converted to the API payload on save. Pure functions, no React.
+ * The week editor's draft: sessions with exercises and their single sets
+ * (weight and reps as typed text). Saved as set groups: consecutive equal
+ * sets form one group. Pure functions, no React.
  */
 import {
   weekActuals,
@@ -9,17 +10,13 @@ import {
 } from "@/domain/week-plans/calculation";
 import type { PlannedSession } from "@/domain/week-plans/week-plan-types";
 
-export type DraftGroup = {
-  key: string;
-  sets: string;
-  reps: string;
-  weight: string;
-};
+/** One set: weight on top, reps below. */
+export type DraftSet = { key: string; weight: string; reps: string };
 export type DraftExercise = {
   key: string;
   exerciseNumber: number;
   note: string;
-  groups: DraftGroup[];
+  sets: DraftSet[];
 };
 export type DraftSession = {
   key: string;
@@ -30,6 +27,8 @@ export type DraftSession = {
 
 export const MAX_SESSIONS = 14;
 export const MAX_PER_DAY = 3;
+/** More sets per exercise in a session make no sense. */
+export const MAX_SETS = 10;
 
 let counter = 0;
 export const newKey = () => `k${++counter}`;
@@ -44,12 +43,13 @@ export function draftOf(sessions: PlannedSession[]): DraftSession[] {
         key: newKey(),
         exerciseNumber: e.exerciseNumber,
         note: e.note ?? "",
-        groups: e.setGroups.map((g) => ({
-          key: newKey(),
-          sets: String(g.sets),
-          reps: String(g.reps),
-          weight: g.weightKg === null ? "" : String(g.weightKg),
-        })),
+        sets: e.setGroups.flatMap((g) =>
+          Array.from({ length: g.sets }, () => ({
+            key: newKey(),
+            weight: g.weightKg === null ? "" : String(g.weightKg),
+            reps: String(g.reps),
+          })),
+        ),
       })),
     })),
   );
@@ -80,13 +80,56 @@ export function dayForNewSession(sessions: DraftSession[]): number | null {
   return null;
 }
 
-/** A number from typed text ("82,5" too); the text itself when it is none. */
-function numberOf(text: string): number | string {
+function numberOf(text: string): number | null {
   const value = Number(text.trim().replace(",", "."));
-  return text.trim() !== "" && Number.isFinite(value) ? value : text;
+  return text.trim() !== "" && Number.isFinite(value) ? value : null;
 }
 
-/** The API payload; invalid text is sent as is, so the API names the field. */
+export type CellError = "reps" | "weight";
+
+/**
+ * Which cells of a set are invalid: reps a whole number 1–30, weight empty
+ * or 0–500 kg in 0.5 kg steps. A set without reps is still being typed.
+ */
+export function setErrors(set: DraftSet): CellError[] {
+  const errors: CellError[] = [];
+  if (set.reps.trim() !== "") {
+    const reps = numberOf(set.reps);
+    if (reps === null || !Number.isInteger(reps) || reps < 1 || reps > 30)
+      errors.push("reps");
+  }
+  if (set.weight.trim() !== "") {
+    const w = numberOf(set.weight);
+    if (w === null || w < 0 || w > 500 || !Number.isInteger(w * 2))
+      errors.push("weight");
+  }
+  return errors;
+}
+
+/** A set with valid reps (and a valid or no weight) is saved. */
+const complete = (set: DraftSet) =>
+  set.reps.trim() !== "" && setErrors(set).length === 0;
+
+export const hasErrors = (sessions: DraftSession[]) =>
+  sessions.some((s) =>
+    s.exercises.some((e) => e.sets.some((x) => setErrors(x).length > 0)),
+  );
+
+/** Complete sets as set groups: consecutive equal sets form one group. */
+function groupsOf(sets: DraftSet[]): SetGroupValues[] {
+  const groups: SetGroupValues[] = [];
+  for (const set of sets.filter(complete)) {
+    const reps = numberOf(set.reps)!;
+    const weightKg = numberOf(set.weight);
+    const last = groups.at(-1);
+    if (last && last.reps === reps && last.weightKg === weightKg)
+      last.sets += 1;
+    else groups.push({ sets: 1, reps, weightKg });
+  }
+  return groups;
+}
+
+/** The API payload with the complete sets of every exercise. */
 export function payloadOf(sessions: DraftSession[]) {
   return {
     sessions: sessions.map((s) => ({
@@ -95,32 +138,21 @@ export function payloadOf(sessions: DraftSession[]) {
       exercises: s.exercises.map((e) => ({
         exerciseNumber: e.exerciseNumber,
         note: e.note.trim() === "" ? null : e.note,
-        setGroups: e.groups.map((g) => ({
-          sets: numberOf(g.sets),
-          reps: numberOf(g.reps),
-          weightKg: g.weight.trim() === "" ? null : numberOf(g.weight),
-        })),
+        setGroups: groupsOf(e.sets),
       })),
     })),
   };
 }
 
-/** The week's actual values per exercise, from all valid set groups. */
+/** The week's actual values per exercise, from all complete sets. */
 export function actualsOf(sessions: DraftSession[]): Map<number, WeekActuals> {
   const groups = new Map<number, SetGroupValues[]>();
   for (const s of sessions)
-    for (const e of s.exercises) {
-      const list = groups.get(e.exerciseNumber) ?? [];
-      for (const g of e.groups) {
-        const sets = numberOf(g.sets);
-        const reps = numberOf(g.reps);
-        const weight = g.weight.trim() === "" ? null : numberOf(g.weight);
-        if (typeof sets !== "number" || typeof reps !== "number") continue;
-        if (typeof weight === "string") continue;
-        list.push({ sets, reps, weightKg: weight });
-      }
-      groups.set(e.exerciseNumber, list);
-    }
+    for (const e of s.exercises)
+      groups.set(e.exerciseNumber, [
+        ...(groups.get(e.exerciseNumber) ?? []),
+        ...groupsOf(e.sets),
+      ]);
   return new Map([...groups].map(([n, list]) => [n, weekActuals(list)]));
 }
 

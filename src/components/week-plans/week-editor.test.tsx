@@ -388,9 +388,26 @@ describe("WeekEditor step 1", () => {
   });
 });
 
+/** The set inputs of an exercise in a session, as [weight, reps] per set. */
+const setsOf = (session: string, name: string) => {
+  const table = sessionNamed(session);
+  const weights = within(table).queryAllByRole("textbox", {
+    name: new RegExp(`^Weight in kg of set \\d+ of ${name}$`),
+  }) as HTMLInputElement[];
+  const reps = within(table).queryAllByRole("textbox", {
+    name: new RegExp(`^Reps of set \\d+ of ${name}$`),
+  }) as HTMLInputElement[];
+  return weights.map((w, i) => [w.value, reps[i]!.value]);
+};
+/** Waits for the next automatic save and returns its payload. */
+const nextSave = async () => {
+  await waitFor(() => expect(fetchMock).toHaveBeenCalled(), { timeout: 2000 });
+  return lastBody();
+};
+
 describe("WeekEditor names and column titles", () => {
   it("writes the mesocycle's variation in brackets after the exercise name", async () => {
-    const { container } = renderEditor(week11, "en", { 1: "From blocks" });
+    renderEditor(week11, "en", { 1: "From blocks" });
     const aside = screen.getByRole("complementary", { name: "Exercises" });
     expect(aside.querySelector('[data-exercise="1"]')!.textContent).toContain(
       "1 Snatch (From blocks)",
@@ -399,12 +416,12 @@ describe("WeekEditor names and column titles", () => {
       "1 Snatch (From blocks)",
     );
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(container.querySelector('[data-values="1"]')!.textContent).toContain(
+    expect(sessionNamed("Monday").textContent).toContain(
       "1 Snatch (From blocks)",
     );
   });
 
-  it("titles the columns Exercises, Sessions and Weights", async () => {
+  it("titles the columns Exercises and Sessions, and Weights in step 2", async () => {
     renderEditor(week11);
     const titles = () =>
       screen
@@ -413,78 +430,65 @@ describe("WeekEditor names and column titles", () => {
         .map((h) => h.textContent);
     expect(titles()).toEqual(["Exercises", "Sessions"]);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(titles()).toEqual(["Sessions", "Weights"]);
+    expect(titles()).toEqual(["Weights"]);
   });
 });
 
 describe("WeekEditor step 2", () => {
-  it("switches steps on the page, slides only the sessions column and keeps the values", async () => {
+  it("shows each session as a table: one column per set, weight on top and reps below", async () => {
     const { container } = renderEditor(week11);
-    expect(column(container).className).toContain("lg:translate-x-1/2");
-    expect(column(container).className).toContain(
-      "motion-reduce:transition-none",
-    );
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(
-      container.querySelector("[data-step]")!.getAttribute("data-step"),
-    ).toBe("2");
     expect(column(container).className).toContain("lg:translate-x-0");
-    // The catalog is hidden, the values are there.
     expect(container.querySelector("aside")!.getAttribute("aria-hidden")).toBe(
       "true",
     );
-    const weight = screen.getAllByRole("textbox", {
-      name: "Weight in kg of set group 3 of 1 Snatch",
-    })[0]!;
-    await userEvent.clear(weight);
-    await userEvent.type(weight, "82.5");
-    await userEvent.click(
-      screen.getByRole("button", { name: "1 Exercises & sessions, completed" }),
-    );
-    expect(column(container).className).toContain("lg:translate-x-1/2");
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    // 2 × 3 @ 60, 3 × 2 @ 70, 2 × 1 @ 80 are seven sets.
+    expect(setsOf("Monday", "1 Snatch")).toEqual([
+      ["60", "3"],
+      ["60", "3"],
+      ["70", "2"],
+      ["70", "2"],
+      ["70", "2"],
+      ["80", "1"],
+      ["80", "1"],
+    ]);
+    const table = sessionNamed("Monday").querySelector("table")!;
     expect(
-      (
-        screen.getAllByRole("textbox", {
-          name: "Weight in kg of set group 3 of 1 Snatch",
-        })[0] as HTMLInputElement
-      ).value,
-    ).toBe("82.5");
+      table.querySelector('tr[data-row="weight"] th[scope=rowgroup]')!
+        .textContent,
+    ).toBe("1 Snatch");
+    expect(
+      table.querySelector("th[scope=rowgroup]")!.getAttribute("rowspan"),
+    ).toBe("2");
     expect(router.push).not.toHaveBeenCalled();
   });
 
   it("shows the week's totals against the projection with red and blue", async () => {
-    const { container } = renderEditor(week11);
+    renderEditor(week11);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     const totals = (key: string) =>
-      container.querySelector(`[data-values="1"] [data-total=${key}]`)!;
+      sessionNamed("Monday").querySelector(`[data-total=${key}]`)!;
     expect(totals("heaviest").textContent).toBe("Heaviest80 kgplan 80 kg");
     expect(totals("average").textContent).toBe("mHG69.5 kgplan 69 kg");
     expect(totals("setSize").getAttribute("data-deviation")).toBe("below");
-    expect(totals("setSize").textContent).toBe("Set size2↓plan 3");
     expect(totals("setSize").querySelector("dd")!.className).toContain(
       "text-blue-700",
     );
     expect(totals("reps").getAttribute("data-deviation")).toBe("within");
     // 85 kg is more than 5 % above 80 kg.
-    const weight = screen.getAllByRole("textbox", {
-      name: "Weight in kg of set group 3 of 1 Snatch",
-    })[0]!;
+    const weight = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 7 of 1 Snatch",
+    });
     await userEvent.clear(weight);
     await userEvent.type(weight, "85");
     expect(totals("heaviest").getAttribute("data-deviation")).toBe("above");
     expect(totals("heaviest").querySelector("dd")!.className).toContain(
       "text-red-700",
     );
-    expect(
-      totals("heaviest").querySelector(
-        '[aria-label="more than 5 % above the plan"]',
-      ),
-    ).toBeTruthy();
   });
 
   it("does not compare values without data or projection", async () => {
-    const { container } = renderEditor([
+    renderEditor([
       {
         weekday: 1,
         slot: 1,
@@ -493,117 +497,127 @@ describe("WeekEditor step 2", () => {
     ]);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(
-      [...container.querySelectorAll("[data-total]")].map((d) =>
-        d.getAttribute("data-deviation"),
-      ),
+      // The totals are there once for wide screens and once for phones.
+      [...sessionNamed("Monday").querySelectorAll("[data-total]")]
+        .slice(0, 4)
+        .map((d) => d.getAttribute("data-deviation")),
     ).toEqual(["none", "none", "none", "none"]);
   });
 
-  it("adds set groups as a copy of the last one and saves the whole week", async () => {
+  it("adds sets as a copy of the last one, at most 10", async () => {
+    renderEditor([
+      {
+        weekday: 1,
+        slot: 1,
+        exercises: [
+          {
+            exerciseNumber: 1,
+            note: null,
+            setGroups: [{ sets: 8, reps: 2, weightKg: 70 }],
+          },
+        ],
+      },
+    ]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const add = screen.getByRole("button", { name: "Add a set to 1 Snatch" });
+    await userEvent.click(add);
+    await userEvent.click(add);
+    expect(setsOf("Monday", "1 Snatch")).toHaveLength(10);
+    expect(setsOf("Monday", "1 Snatch").at(-1)).toEqual(["70", "2"]);
+    expect((add as HTMLButtonElement).disabled).toBe(true);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Remove the last set of 1 Snatch" }),
+    );
+    expect(setsOf("Monday", "1 Snatch")).toHaveLength(9);
+  });
+});
+
+describe("WeekEditor saving", () => {
+  it("saves every change on its own, as set groups of equal sets", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderEditor(week11);
+    expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     await userEvent.click(
-      screen.getAllByRole("button", {
-        name: "Add a set group to 1 Snatch",
-      })[1]!,
+      within(sessionNamed("Thursday")).getByRole("button", {
+        name: "Add a set to 1 Snatch",
+      }),
     );
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    const body = await nextSave();
     expect(fetchMock.mock.lastCall![0]).toBe(
       "/api/athletes/a1/macrocycle/weeks/11/plan",
     );
     expect(fetchMock.mock.lastCall![1].method).toBe("PUT");
-    expect(lastBody()).toEqual({
-      sessions: [
-        {
-          weekday: 1,
-          slot: 1,
-          exercises: [
-            {
-              exerciseNumber: 1,
-              note: "Fast turnover",
-              setGroups: [
-                { sets: 2, reps: 3, weightKg: 60 },
-                { sets: 3, reps: 2, weightKg: 70 },
-                { sets: 2, reps: 1, weightKg: 80 },
-              ],
-            },
-          ],
-        },
-        {
-          weekday: 4,
-          slot: 1,
-          exercises: [
-            {
-              exerciseNumber: 1,
-              note: null,
-              setGroups: [
-                { sets: 3, reps: 2, weightKg: 75 },
-                { sets: 3, reps: 2, weightKg: 75 },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-    expect(await screen.findByRole("status")).toBeTruthy();
+    expect(body.sessions[0].exercises[0].setGroups).toEqual([
+      { sets: 2, reps: 3, weightKg: 60 },
+      { sets: 3, reps: 2, weightKg: 70 },
+      { sets: 2, reps: 1, weightKg: 80 },
+    ]);
+    // Four equal sets on Thursday form one group.
+    expect(body.sessions[1].exercises[0].setGroups).toEqual([
+      { sets: 4, reps: 2, weightKg: 75 },
+    ]);
+    expect(await screen.findByText("All changes saved.")).toBeTruthy();
     expect(router.refresh).toHaveBeenCalled();
   });
 
-  it("marks fields the API refuses and opens step 2 for them", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          error: {
-            code: "VALIDATION_FAILED",
-            fields: {
-              "sessions.0.exercises.0.setGroups.1.weightKg": ["NOT_HALF_KG"],
-            },
-          },
-        }),
-        { status: 400 },
-      ),
-    );
-    const { container } = renderEditor(week11);
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() =>
-      expect(
-        container.querySelector("[data-step]")!.getAttribute("data-step"),
-      ).toBe("2"),
-    );
-    expect(
-      screen
-        .getAllByRole("textbox", {
-          name: "Weight in kg of set group 2 of 1 Snatch",
-        })[0]!
-        .getAttribute("aria-invalid"),
-    ).toBe("true");
-    expect(screen.getByText("Please use steps of 0.5 kg.")).toBeTruthy();
-    expect(screen.getByRole("alert").textContent).toBe(
-      "Please check the marked fields.",
-    );
-  });
-
-  it("saves a week without sessions to make it unplanned", async () => {
+  it("saves changes of step 1 too, so both steps always agree", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderEditor([{ weekday: 1, slot: 1, exercises: [] }]);
     await userEvent.click(
       screen.getByRole("button", { name: "Remove Monday" }),
     );
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(lastBody()).toEqual({ sessions: [] });
+    expect(await nextSave()).toEqual({ sessions: [] });
+  });
+
+  it("does not save while a cell is invalid, and marks it", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor(week11);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const weight = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 1 of 1 Snatch",
+    });
+    await userEvent.clear(weight);
+    await userEvent.type(weight, "82.3");
+    expect(weight.getAttribute("aria-invalid")).toBe("true");
+    expect(
+      await screen.findByText("Not saved: please check the marked fields."),
+    ).toBeTruthy();
+    await new Promise((r) => setTimeout(r, 700));
+    expect(fetchMock).not.toHaveBeenCalled();
+    await userEvent.clear(weight);
+    await userEvent.type(weight, "82.5");
+    expect((await nextSave()).sessions[0].exercises[0].setGroups[0]).toEqual({
+      sets: 1,
+      reps: 3,
+      weightKg: 82.5,
+    });
+  });
+
+  it("offers to try again when saving fails", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
+    renderEditor(week11);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(
+      within(sessionNamed("Thursday")).getByRole("button", {
+        name: "Add a set to 1 Snatch",
+      }),
+    );
+    expect(
+      await screen.findByText("Could not save.", {}, { timeout: 2000 }),
+    ).toBeTruthy();
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("All changes saved.")).toBeTruthy();
   });
 });
 
-describe("WeekEditor unsaved changes", () => {
-  it("asks before leaving with changes, but not when switching steps", async () => {
+describe("WeekEditor leaving", () => {
+  it("asks before leaving with a change that is not saved yet", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderEditor();
     await userEvent.click(screen.getByRole("button", { name: "Add session" }));
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await userEvent.click(
-      screen.getByRole("button", { name: "1 Exercises & sessions, completed" }),
-    );
-    expect(document.querySelector("dialog[open]")).toBeNull();
+    // Leaving before the automatic save asks.
     await userEvent.click(
       screen.getByRole("link", { name: /Back to Anna Weber/ }),
     );
@@ -611,10 +625,11 @@ describe("WeekEditor unsaved changes", () => {
     expect(
       within(dialog).getByRole("heading", { name: "Save changes?" }),
     ).toBeTruthy();
-    await userEvent.click(
-      within(dialog).getByRole("button", { name: "Discard" }),
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith("/athletes/a1"),
     );
-    expect(router.push).toHaveBeenCalledWith("/athletes/a1");
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it("does not ask without changes", () => {
@@ -629,20 +644,19 @@ describe("WeekEditor unsaved changes", () => {
 
 describe("WeekEditor in German", () => {
   it("uses German texts", async () => {
-    const { container } = renderEditor(week11, "de");
+    renderEditor(week11, "de");
     expect(
       screen.getByRole("heading", { name: "Woche 11 von 21" }),
     ).toBeTruthy();
     expect(screen.getByText("Aufbauphase (ABP) · Mittlere Woche")).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Weiter" }));
     expect(
-      container.querySelector('[data-values="1"] [data-total=setSize]')!
-        .textContent,
+      sessionNamed("Montag").querySelector("[data-total=setSize]")!.textContent,
     ).toBe("Satzgröße2↓Plan 3");
     expect(
-      screen.getAllByRole("textbox", {
-        name: "Gewicht in kg der Satzgruppe 1 von 1 Reißen",
+      within(sessionNamed("Montag")).getAllByRole("textbox", {
+        name: /^Gewicht in kg von Satz \d+ von 1 Reißen$/,
       }),
-    ).toHaveLength(2);
+    ).toHaveLength(7);
   });
 });

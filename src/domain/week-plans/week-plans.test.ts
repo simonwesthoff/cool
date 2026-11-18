@@ -237,6 +237,47 @@ describe("saveWeekPlan and getWeekPlan", () => {
     });
   });
 
+  it("allows at most 10 sets per exercise in a session", async () => {
+    const { coach, athlete } = await setup();
+    const week = (
+      groups: { sets: number; reps: number; weightKg: number }[],
+    ) => ({
+      sessions: [
+        {
+          weekday: 1,
+          slot: 1,
+          exercises: [{ exerciseNumber: 1, setGroups: groups }],
+        },
+      ],
+    });
+    expect(
+      await fieldsOf(
+        saveWeekPlan(
+          coach,
+          athlete.id,
+          "11",
+          week([
+            { sets: 6, reps: 2, weightKg: 70 },
+            { sets: 5, reps: 1, weightKg: 80 },
+          ]),
+        ),
+      ),
+    ).toEqual({ "sessions.0.exercises.0.setGroups": ["TOO_MANY"] });
+    expect(
+      (
+        await saveWeekPlan(
+          coach,
+          athlete.id,
+          "11",
+          week([
+            { sets: 5, reps: 2, weightKg: 70 },
+            { sets: 5, reps: 1, weightKg: 80 },
+          ]),
+        )
+      ).planned,
+    ).toBe(true);
+  });
+
   it("refuses weeks outside the macrocycle", async () => {
     const { coach, athlete } = await setup();
     for (const week of ["0", "22", "x"])
