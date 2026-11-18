@@ -134,6 +134,13 @@
       "when": 1795017712361,
       "tag": "0018_session_exercise_free_text",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795037878604,
+      "tag": "0019_session_exercise_feedback",
+      "breakpoints": true
     }
   ]
 }

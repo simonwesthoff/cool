@@ -2,14 +2,14 @@
 
 ## 1. Data and domain
 
-- [ ] 1.1 Add `session_exercise.feedback` and its migration. Verify: the migration applies on the dev database and in PGlite.
-- [ ] 1.2 Read and keep the feedback:
+- [x] 1.1 Add `session_exercise.feedback` and its migration. Verify: the migration applies on the dev database and in PGlite.
+- [x] 1.2 Read and keep the feedback:
   - **Read model:** week plans include `feedback`.
   - **Editor saves:** `saveWeekPlan` keeps it by weekday, slot and exercise.
 
   Verify with PGlite tests: the feedback survives a save with changed sets; it is gone after moving the exercise to another day or removing it; the plan payload cannot set it.
-- [ ] 1.3 `setFeedback` (linked user only), with the codes `NOT_THE_ATHLETE`, `ATHLETE_NOT_FOUND`, `EXERCISE_NOT_IN_WEEK` and `VALIDATION_FAILED`, trimming and clearing. Verify with PGlite tests: athlete, coach who trains themselves, coach not linked, stranger, wrong exercise, 501 characters, empty clears.
-- [ ] 1.4 `isoWeek(date)` and `getCurrentWeek(user, athleteId, today)`:
+- [x] 1.3 `setFeedback` (linked user only), with the codes `NOT_THE_ATHLETE`, `ATHLETE_NOT_FOUND`, `EXERCISE_NOT_IN_WEEK` and `VALIDATION_FAILED`, trimming and clearing. Verify with PGlite tests: athlete, coach who trains themselves, coach not linked, stranger, wrong exercise, 501 characters, empty clears.
+- [x] 1.4 `isoWeek(date)` and `getCurrentWeek(user, athleteId, today)`:
   - **States:** before, after, week.
   - **Week:** the plan or unplanned.
   - **Coach links:** the next week's info.
@@ -18,7 +18,7 @@
 
 ## 2. API
 
-- [ ] 2.1 `PUT /api/athletes/{id}/macrocycle/weeks/{week}/plan/feedback`. Verify with route tests: 200 for the athlete, 403 for the coach, 404 codes, 400, 401 without a session; GET of the plan includes the feedback.
+- [x] 2.1 `PUT /api/athletes/{id}/macrocycle/weeks/{week}/plan/feedback`. Verify with route tests: 200 for the athlete, 403 for the coach, 404 codes, 400, 401 without a session; GET of the plan includes the feedback.
 
 ## 3. UI
 

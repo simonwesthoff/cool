@@ -13,11 +13,13 @@ const { athlete: athleteTable } = await import("@/server/db/schema");
 const { eq } = await import("drizzle-orm");
 const {
   getWeekPlan,
+  getCurrentWeek,
   getTrainingWeeks,
   getWeekProjections,
   initialWeekContent,
   listWeekPlans,
   saveWeekPlan,
+  setFeedback,
 } = await import("./index");
 
 /** 21 weeks from Monday 2026-11-30, entry 60 %, snatch goal 100 kg. */
@@ -116,6 +118,7 @@ describe("saveWeekPlan and getWeekPlan", () => {
             exerciseNumber: 1,
             note: "Fast turnover",
             freeText: null,
+            feedback: null,
             setGroups: [
               { sets: 2, reps: 3, weightKg: 60 },
               { sets: 3, reps: 2, weightKg: 70 },
@@ -126,6 +129,7 @@ describe("saveWeekPlan and getWeekPlan", () => {
             exerciseNumber: 33,
             note: null,
             freeText: null,
+            feedback: null,
             setGroups: [{ sets: 3, reps: 8, weightKg: null }],
           },
         ],
@@ -138,6 +142,7 @@ describe("saveWeekPlan and getWeekPlan", () => {
             exerciseNumber: 1,
             note: null,
             freeText: null,
+            feedback: null,
             setGroups: [{ sets: 3, reps: 2, weightKg: 75 }],
           },
         ],
@@ -458,5 +463,156 @@ describe("getTrainingWeeks", () => {
     await startAsCoach(coach);
     const athlete = await createAthlete(coach, { name: "No Plan" });
     expect(await getTrainingWeeks(coach, athlete.id, "2027-01-06")).toBeNull();
+  });
+});
+
+describe("feedback", () => {
+  async function linkedSetup() {
+    const { coach, athlete } = await setup();
+    await saveWeekPlan(coach, athlete.id, "11", week11);
+    const linked = await createUser(testDb.db);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: linked.id })
+      .where(eq(athleteTable.id, athlete.id));
+    return { coach, athlete, linked };
+  }
+  const mondaySnatch = (feedback: string) => ({
+    weekday: 1,
+    slot: 1,
+    exerciseNumber: 1,
+    feedback,
+  });
+  const feedbackOf = async (
+    user: Awaited<ReturnType<typeof createUser>>,
+    id: string,
+  ) =>
+    (await getWeekPlan(user, id, "11")).sessions.flatMap((s) =>
+      s.exercises.map((e) => `${s.weekday}.${e.exerciseNumber}:${e.feedback}`),
+    );
+
+  it("lets the linked athlete write feedback, which the coach reads", async () => {
+    const { coach, athlete, linked } = await linkedSetup();
+    const plan = await setFeedback(
+      linked,
+      athlete.id,
+      "11",
+      mondaySnatch("  Last set felt heavy "),
+    );
+    expect(plan.sessions[0]!.exercises[0]!.feedback).toBe(
+      "Last set felt heavy",
+    );
+    expect(await feedbackOf(coach, athlete.id)).toEqual([
+      "1.1:Last set felt heavy",
+      "1.33:null",
+      "4.1:null",
+    ]);
+    // Empty text clears it.
+    await setFeedback(linked, athlete.id, "11", mondaySnatch(" "));
+    expect((await feedbackOf(coach, athlete.id))[0]).toBe("1.1:null");
+  });
+
+  it("keeps feedback when the coach saves, unless the exercise leaves its session", async () => {
+    const { coach, athlete, linked } = await linkedSetup();
+    await setFeedback(linked, athlete.id, "11", mondaySnatch("Heavy"));
+    // A changed weight keeps it; the payload cannot overwrite it.
+    const changed = structuredClone(week11);
+    changed.sessions[1]!.exercises[0]!.setGroups[0]!.weightKg = 65;
+    (changed.sessions[1]!.exercises[0] as Record<string, unknown>).feedback =
+      "x";
+    await expect(
+      saveWeekPlan(coach, athlete.id, "11", changed),
+    ).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
+    delete (changed.sessions[1]!.exercises[0] as Record<string, unknown>)
+      .feedback;
+    await saveWeekPlan(coach, athlete.id, "11", changed);
+    expect((await feedbackOf(coach, athlete.id))[0]).toBe("1.1:Heavy");
+    // Moving Monday's session (with the snatch) to Wednesday loses it.
+    const moved = structuredClone(week11);
+    moved.sessions[1]!.weekday = 3;
+    await saveWeekPlan(coach, athlete.id, "11", moved);
+    expect(await feedbackOf(coach, athlete.id)).toEqual([
+      "3.1:null",
+      "3.33:null",
+      "4.1:null",
+    ]);
+  });
+
+  it("refuses everyone but the linked user", async () => {
+    const { coach, athlete } = await linkedSetup();
+    expect(
+      await codeOf(setFeedback(coach, athlete.id, "11", mondaySnatch("x"))),
+    ).toBe("NOT_THE_ATHLETE");
+    const stranger = await createUser(testDb.db);
+    expect(
+      await codeOf(setFeedback(stranger, athlete.id, "11", mondaySnatch("x"))),
+    ).toBe("ATHLETE_NOT_FOUND");
+  });
+
+  it("lets a coach who trains themselves write feedback", async () => {
+    const { coach, athlete } = await setup();
+    await saveWeekPlan(coach, athlete.id, "11", week11);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: coach.id })
+      .where(eq(athleteTable.id, athlete.id));
+    const plan = await setFeedback(
+      coach,
+      athlete.id,
+      "11",
+      mondaySnatch("Good"),
+    );
+    expect(plan.sessions[0]!.exercises[0]!.feedback).toBe("Good");
+  });
+
+  it("checks the exercise and the length", async () => {
+    const { athlete, linked } = await linkedSetup();
+    expect(
+      await codeOf(
+        setFeedback(linked, athlete.id, "11", {
+          weekday: 1,
+          slot: 1,
+          exerciseNumber: 13,
+          feedback: "x",
+        }),
+      ),
+    ).toBe("EXERCISE_NOT_IN_WEEK");
+    expect(
+      await fieldsOf(
+        setFeedback(linked, athlete.id, "11", mondaySnatch("x".repeat(501))),
+      ),
+    ).toEqual({ feedback: ["TOO_LONG"] });
+  });
+});
+
+describe("getCurrentWeek", () => {
+  it("returns the current week with the plan, the calendar week and the next week", async () => {
+    const { coach, athlete } = await setup();
+    await saveWeekPlan(coach, athlete.id, "11", week11);
+    const current = await getCurrentWeek(coach, athlete.id, "2027-02-10");
+    expect(current).toMatchObject({
+      state: "week",
+      calendarWeek: 6,
+      next: { weekNumber: 12, planned: false },
+      week: { weekNumber: 11, startDate: "2027-02-08", planned: true },
+    });
+    const unplanned = await getCurrentWeek(coach, athlete.id, "2027-02-17");
+    expect(unplanned).toMatchObject({
+      state: "week",
+      week: { weekNumber: 12, planned: false, sessions: [] },
+    });
+  });
+
+  it("says before the start and after the end, and null without a macrocycle", async () => {
+    const { coach, athlete } = await setup();
+    expect(await getCurrentWeek(coach, athlete.id, "2026-11-20")).toEqual({
+      state: "before",
+      startDate: "2026-11-30",
+    });
+    expect(await getCurrentWeek(coach, athlete.id, "2027-04-26")).toEqual({
+      state: "after",
+    });
+    const other = await createAthlete(coach, { name: "No Plan" });
+    expect(await getCurrentWeek(coach, other.id, "2027-02-10")).toBeNull();
   });
 });
