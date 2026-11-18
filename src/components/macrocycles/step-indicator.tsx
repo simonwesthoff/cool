@@ -172,10 +172,11 @@ export function StepIndicator({
         <div className="mt-5 grid grid-cols-3 gap-2">
           <button
             type="button"
-            onClick={() => dialog.current?.close()}
-            className="inline-flex min-h-11 items-center justify-center rounded-full px-3 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            onClick={saveAndLeave}
+            disabled={saving}
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-zinc-900 px-3 font-medium text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           >
-            {tu("cancel")}
+            {tu("save")}
           </button>
           <button
             type="button"
@@ -187,11 +188,10 @@ export function StepIndicator({
           </button>
           <button
             type="button"
-            onClick={saveAndLeave}
-            disabled={saving}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-zinc-900 px-3 font-medium text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            onClick={() => dialog.current?.close()}
+            className="inline-flex min-h-11 items-center justify-center rounded-full px-3 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-900"
           >
-            {tu("save")}
+            {tu("cancel")}
           </button>
         </div>
       </dialog>

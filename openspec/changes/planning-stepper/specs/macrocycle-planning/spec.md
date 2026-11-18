@@ -40,7 +40,7 @@ page.
 #### Scenario: Unsaved changes when changing the step
 - **GIVEN** the coach changed the strengths in step 2 without saving
 - **WHEN** they choose step 1 in the stepper
-- **THEN** a dialog asks "Save changes?" with "Save", "Discard" and "Cancel"; "Save" stores the SWOT and opens step 1, "Discard" opens step 1 without storing, "Cancel" keeps step 2 with the changes
+- **THEN** a dialog asks "Save changes?" with "Save", "Discard" and "Cancel" in this order; "Save" stores the SWOT and opens step 1, "Discard" opens step 1 without storing, "Cancel" keeps step 2 with the changes
 
 #### Scenario: Saving fails in the dialog
 - **GIVEN** the dialog after changing step 2

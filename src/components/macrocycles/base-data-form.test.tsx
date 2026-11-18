@@ -422,6 +422,11 @@ describe("Unsaved changes when changing the step", () => {
     expect(
       within(dialog()).getByRole("heading", { name: "Save changes?" }),
     ).toBeTruthy();
+    expect(
+      within(dialog())
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["Save", "Discard", "Cancel"]);
     await userEvent.click(
       within(dialog()).getByRole("button", { name: "Discard" }),
     );
