@@ -4,13 +4,12 @@
 
 ### Requirement: Macrocycle base data
 Step 1 (base data) SHALL have two sections. "Historical data": personal
-bests in snatch and clean & jerk (kg), current body weight (kg), body fat
-and muscle mass (%, optional). "New macrocycle plan": start date (a
-Monday), duration (7–52 weeks), date and type of the main competition,
-entry value (30–95 %, default 60 %), goals in snatch and clean & jerk (kg),
-target body weight (kg) and the weekly schedule. All except body fat and
-muscle mass SHALL be required. A duration that would remove weeks with a
-week plan SHALL be refused.
+bests in snatch and clean & jerk, body weight, body fat and muscle mass
+(the last two optional). "New macrocycle plan": start date (a Monday),
+duration (7–52 weeks), date and type of the main competition, entry value
+(30–95 %, default 60 %), goals in snatch and clean & jerk, target body
+weight and the weekly schedule. All other values SHALL be required; a
+duration that would remove planned weeks SHALL be refused.
 
 #### Scenario: Required values missing
 - **WHEN** the coach saves the base data without a snatch goal
