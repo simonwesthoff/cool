@@ -9,7 +9,12 @@ import { locales, storeLocaleChoice, type Locale } from "@/i18n/locale";
  * Lets the user switch the UI language. The choice is stored in a cookie on
  * this device and the current page is re-rendered in place.
  */
-export function LanguageSwitcher() {
+export function LanguageSwitcher({
+  fullWidth = false,
+}: {
+  /** Two equal halves across the container (user menu). */
+  fullWidth?: boolean;
+}) {
   const t = useTranslations("LanguageSwitcher");
   const current = useLocale();
   const router = useRouter();
@@ -25,7 +30,9 @@ export function LanguageSwitcher() {
     <div
       role="group"
       aria-label={t("label")}
-      className="inline-flex self-start rounded-full border border-zinc-300 p-0.5 text-sm dark:border-zinc-700"
+      className={`rounded-full border border-zinc-300 p-0.5 text-sm dark:border-zinc-700 ${
+        fullWidth ? "grid w-full grid-cols-2" : "inline-flex self-start"
+      }`}
     >
       {locales.map((locale) => (
         <button

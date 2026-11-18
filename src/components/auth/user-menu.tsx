@@ -54,13 +54,27 @@ export function UserMenu({ user }: { user: CurrentUser }) {
       {open && (
         <div
           id={menuId}
-          className="absolute right-0 z-30 mt-2 flex min-w-48 flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-800 dark:bg-zinc-950"
+          className="absolute right-0 z-30 mt-2 flex w-72 max-w-[calc(100vw-2rem)] flex-col rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950"
         >
-          <p className="truncate text-sm text-zinc-600 dark:text-zinc-400">
-            {user.email}
-          </p>
-          <LanguageSwitcher />
-          <SignOutButton />
+          {/* Every part spans the menu's width; a long email is cut off. */}
+          <div className="flex min-w-0 flex-col gap-0.5 p-3">
+            <p className="truncate font-medium">{user.name}</p>
+            <p
+              className="truncate text-sm text-zinc-600 dark:text-zinc-400"
+              title={user.email}
+            >
+              {user.email}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 border-t border-zinc-200 p-3 dark:border-zinc-800">
+            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              {t("language")}
+            </p>
+            <LanguageSwitcher fullWidth />
+          </div>
+          <div className="flex flex-col border-t border-zinc-200 p-3 dark:border-zinc-800">
+            <SignOutButton />
+          </div>
         </div>
       )}
     </div>

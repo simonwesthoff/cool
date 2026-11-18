@@ -169,11 +169,11 @@ export function StepIndicator({
         <p id="unsaved-text" className="mt-2 text-zinc-600 dark:text-zinc-400">
           {tu("text")}
         </p>
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <div className="mt-5 grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => dialog.current?.close()}
-            className="inline-flex min-h-11 items-center rounded-full px-4 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            className="inline-flex min-h-11 items-center justify-center rounded-full px-3 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-900"
           >
             {tu("cancel")}
           </button>
@@ -181,7 +181,7 @@ export function StepIndicator({
             type="button"
             onClick={discardAndLeave}
             disabled={saving}
-            className="inline-flex min-h-11 items-center rounded-full border border-zinc-300 px-4 font-medium hover:bg-zinc-100 disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-900"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-zinc-300 px-3 font-medium hover:bg-zinc-100 disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-900"
           >
             {tu("discard")}
           </button>
@@ -189,7 +189,7 @@ export function StepIndicator({
             type="button"
             onClick={saveAndLeave}
             disabled={saving}
-            className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 font-medium text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-zinc-900 px-3 font-medium text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           >
             {tu("save")}
           </button>

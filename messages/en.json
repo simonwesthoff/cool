@@ -17,7 +17,8 @@
   "UserMenu": {
     "pictureAlt": "Profile picture of {name}",
     "signOut": "Sign out",
-    "accountLabel": "Account of {name}"
+    "accountLabel": "Account of {name}",
+    "language": "Language"
   },
   "Athletes": {
     "title": "Athletes",

@@ -14,4 +14,4 @@
 
 - [x] 2.1 Unsaved-changes dialog on step changes (save, discard, cancel; failed save keeps the step with the errors). Verify with component tests (all three choices, failed save, no dialog without changes, German) and a registry test for the hidden previous page.
 - [x] 2.2 Hover highlight behind the connector line; circles above the line, user menu above the stepper. Language switch not stretched to the menu width; one shared `firstName` helper. Verify with a browser check (hover, dialog flow with save and discard, menu width) and screenshots.
-
+- [x] 2.3 Dialog buttons in one row of three equal widths. User menu with a fixed width: name and truncated email, "Language" label with a full-width switch, full-width sign-out, separated by lines. Verify with screenshots (German phone dark, English desktop light) and button widths without overflow.

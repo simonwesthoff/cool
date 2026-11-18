@@ -19,8 +19,9 @@ name in the title.
   or 2 has unsaved input asks in a small dialog: save, discard or cancel.
   Steps 3 and 4 save every change at once, so they never ask.
 - **Polish:** the hover highlight of a step is drawn behind the connector
-  line, and the language switch in the user menu keeps its own width
-  instead of stretching to the email address.
+  line, the dialog's buttons share one row in equal widths, and the user
+  menu has a fixed width in which every part spans the full width (name and
+  truncated email, language switch, sign out).
 - **Title:** "<first name>'s macrocycle planning" ("Makrozyklusplanung für
   <first name>" in German) replaces the small name line and the generic
   title. The first name is the first word of the athlete's name.
