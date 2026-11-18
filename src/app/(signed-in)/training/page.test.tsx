@@ -2,7 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 
 const requirePageRoles = vi.fn();
 const loadMacrocycleChart = vi.fn();
-vi.mock("../macrocycle-view/load", () => ({ loadMacrocycleChart }));
+const loadTrainingWeeks = vi.fn(async () => ({
+  current: null,
+  next: { weekNumber: 1, planned: false },
+  planned: [],
+}));
+vi.mock("../macrocycle-view/load", () => ({
+  loadMacrocycleChart,
+  loadTrainingWeeks,
+}));
 vi.mock("../current-user", () => ({ requirePageRoles }));
 const isCoachOfAthlete = vi.fn(async () => false);
 vi.mock("@/domain/athletes", () => ({ isCoachOfAthlete }));
@@ -52,7 +60,10 @@ describe("athlete view", () => {
       coachName: "Max Berg",
       canEdit: false,
       macrocycle: null,
+      // No week planning entry points for an athlete who may not plan.
+      trainingWeeks: null,
     });
+    expect(loadTrainingWeeks).not.toHaveBeenCalled();
   });
 
   it("passes the own macrocycle chart data when one is planned", async () => {
@@ -91,6 +102,11 @@ describe("athlete view", () => {
     isCoachOfAthlete.mockResolvedValueOnce(true);
     const element = await Training();
     expect(element.props.canEdit).toBe(true);
+    expect(element.props.trainingWeeks).toEqual({
+      current: null,
+      next: { weekNumber: 1, planned: false },
+      planned: [],
+    });
     expect(isCoachOfAthlete).toHaveBeenCalledWith(user, "a1");
   });
 });

@@ -25,6 +25,25 @@ const monday = z.iso
   .refine((v) => weekdayOf(v) === 1, code("NOT_MONDAY"));
 
 export const MAX_FOCUS_POINTS = 3;
+export const MAX_SESSIONS_PER_DAY = 3;
+export const MAX_SESSIONS_PER_WEEK = 14;
+
+type Session = { weekday: number; slot: number };
+
+/** Sessions in week order: by weekday, then slot. */
+export function sortSessions<T extends Session>(list: T[]): T[] {
+  return [...list].sort((a, b) => a.weekday - b.weekday || a.slot - b.slot);
+}
+
+/** Each day's slots are 1, 2, … without gaps or duplicates. */
+export function isContiguousSchedule(list: Session[]): boolean {
+  const byDay = new Map<number, number[]>();
+  for (const s of list)
+    byDay.set(s.weekday, [...(byDay.get(s.weekday) ?? []), s.slot]);
+  return [...byDay.values()].every((slots) =>
+    [...slots].sort((a, b) => a - b).every((slot, i) => slot === i + 1),
+  );
+}
 export const FOCUS_POINT_MAX_LENGTH = 200;
 export const DURATION_MIN_WEEKS = 7;
 export const DURATION_MAX_WEEKS = 52;
@@ -45,10 +64,26 @@ const fields = {
   cleanAndJerkGoalKg: number(1, 400),
   bodyWeightKg: number(20, 250),
   targetBodyWeightKg: number(20, 250),
-  trainingFrequency: z
-    .number()
-    .refine(Number.isInteger, code("NOT_INTEGER"))
-    .refine((v) => v >= 1 && v <= 14, code("OUT_OF_RANGE")),
+  sessions: z
+    .array(
+      z.strictObject({
+        weekday: z
+          .number()
+          .refine(Number.isInteger, code("NOT_INTEGER"))
+          .refine((v) => v >= 1 && v <= 7, code("OUT_OF_RANGE")),
+        slot: z
+          .number()
+          .refine(Number.isInteger, code("NOT_INTEGER"))
+          .refine(
+            (v) => v >= 1 && v <= MAX_SESSIONS_PER_DAY,
+            code("OUT_OF_RANGE"),
+          ),
+      }),
+    )
+    .refine((list) => list.length >= 1, code("REQUIRED"))
+    .refine((list) => list.length <= MAX_SESSIONS_PER_WEEK, code("TOO_MANY"))
+    .refine(isContiguousSchedule, code("INVALID"))
+    .transform(sortSessions),
   competitionDate: z.iso.date(),
   competitionType: text(200),
 };

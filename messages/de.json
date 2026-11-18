@@ -119,7 +119,19 @@
     "macrocycleOpen": "Zum Makrozyklus",
     "plan": "Makrozyklus planen",
     "notPlanned": "Noch kein Makrozyklus geplant.",
-    "editBasicData": "Stammdaten bearbeiten"
+    "editBasicData": "Stammdaten bearbeiten",
+    "trainingWeek": {
+      "title": "Trainingswoche",
+      "planNext": "Nächste Woche planen (Woche {week})",
+      "editNext": "Nächste Woche bearbeiten (Woche {week})",
+      "planThis": "Diese Woche planen (Woche {week})",
+      "none": "Noch keine Woche geplant.",
+      "week": "Woche {week}",
+      "from": "ab {date}",
+      "current": "Aktuelle Woche",
+      "edit": "Bearbeiten",
+      "editWeek": "Woche {week} bearbeiten"
+    }
   },
   "Catalog": {
     "title": "Trainingsmittelkatalog",
@@ -185,9 +197,9 @@
         "jerkDeficits": "Defizite im Ausstoßen",
         "otherDeficits": "Sonstige Defizite",
         "injuriesAndIllnesses": "Aktuelle und chronische Verletzungen und Krankheiten",
-        "trainingFrequency": "Trainingseinheiten pro Woche",
         "strengths": "Stärken",
-        "experience": "Erfahrung im Gewichtheben"
+        "experience": "Erfahrung im Gewichtheben",
+        "sessions": "Trainingseinheiten pro Woche"
       },
       "optional": "(optional)",
       "mondayHint": "Makrozyklen beginnen an einem Montag.",
@@ -205,9 +217,9 @@
         "INVALID_FORMAT": "Bitte ein gültiges Datum eingeben.",
         "TOO_LONG": "Zu lang.",
         "INVALID": "Ungültiger Wert.",
-        "TOO_MANY": "Höchstens 3 Schwerpunkte."
+        "TOO_MANY": "Höchstens 3 Schwerpunkte.",
+        "WEEKS_PLANNED": "Wochen mit Wochenplan würden entfernt."
       },
-      "trainingFrequencyHint": "1 bis 14 Einheiten.",
       "focusPoints": {
         "title": "Schwerpunkte",
         "help": "1 bis 3 Schwerpunkte für diesen Makrozyklus, den wichtigsten zuerst.",
@@ -218,7 +230,14 @@
         "remove": "Schwerpunkt {position} entfernen",
         "add": "Schwerpunkt hinzufügen"
       },
-      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen."
+      "deficitsHint": "Werden bei der Übungsauswahl angezeigt: Defizite im Reißen bei Reißübungen, im Umsetzen und Ausstoßen bei Stoßübungen.",
+      "schedule": {
+        "add": "Einheit am {day} hinzufügen",
+        "remove": "Einheit {slot} am {day} entfernen",
+        "count": "{count, plural, =0 {Keine Einheiten} one {# Einheit} other {# Einheiten}} pro Woche · bis zu 3 pro Tag",
+        "required": "Wähle mindestens eine Trainingseinheit.",
+        "tooMany": "Höchstens 14 Einheiten pro Woche."
+      }
     },
     "mesocycles": {
       "general_preparation": "Grundlagenphase (GLP)",
@@ -293,7 +312,7 @@
     },
     "unsaved": {
       "title": "Änderungen speichern?",
-      "text": "Dieser Schritt hat Änderungen, die noch nicht gespeichert sind.",
+      "text": "Es gibt Änderungen, die noch nicht gespeichert sind.",
       "save": "Speichern",
       "discard": "Verwerfen",
       "cancel": "Abbrechen"
@@ -347,5 +366,85 @@
       "trainingFrequency": "Trainingseinheiten pro Woche"
     },
     "value": "Wert"
+  },
+  "WeekEditor": {
+    "title": "Woche {week} von {weeks}",
+    "sessionLabel": "{day} {slot}",
+    "steps": {
+      "label": "Schritte der Wochenplanung",
+      "sessions": "Übungen & Einheiten",
+      "values": "Sätze & Gewichte",
+      "completed": "abgeschlossen"
+    },
+    "continue": "Weiter",
+    "back": "Zurück",
+    "catalog": {
+      "title": "Übungen",
+      "close": "Schließen",
+      "addTo": "Übung zu {session} hinzufügen",
+      "group": "{code} · {name}",
+      "showAll": "Alle Übungen anzeigen",
+      "showBlock": "Nur die Übungen der {block} anzeigen",
+      "emptyBlock": "Für die {block} sind keine Übungen gewählt.",
+      "inWeek": "in der Woche",
+      "notInWeek": "noch nicht in der Woche",
+      "notInBlock": "nicht für die {block} geplant"
+    },
+    "session": {
+      "add": "Einheit hinzufügen",
+      "remove": "{session} entfernen",
+      "day": "Tag von {session}",
+      "empty": "Noch keine Übungen.",
+      "addExercise": "Übung",
+      "addTo": "Übung zu {session} hinzufügen",
+      "notPlanned": "Nicht für die {block} geplant",
+      "removeExercise": "{name} aus {session} entfernen",
+      "move": "{name} verschieben: ziehen oder Pfeiltasten"
+    },
+    "values": {
+      "noExercises": "Keine Übungen in dieser Einheit.",
+      "kg": "kg",
+      "reps": "Wdh.",
+      "weightOf": "Gewicht in kg von Satz {n} von {name}",
+      "repsOf": "Wiederholungen von Satz {n} von {name}",
+      "note": "Trainerhinweis",
+      "noteOf": "Trainerhinweis zu {name}",
+      "freeText": "Sätze und Wiederholungen, z. B. 3 × 12",
+      "freeTextOf": "Sätze und Wiederholungen von {name}",
+      "exercise": "Übung",
+      "row": "Zeile"
+    },
+    "totals": {
+      "title": "Diese Woche (alle Einheiten)",
+      "heaviest": "Bestwert",
+      "average": "mHG",
+      "setSize": "Satzgröße",
+      "reps": "Wdh.",
+      "kg": "{value} kg",
+      "none": "–",
+      "above": "mehr als 5 % über dem Plan",
+      "below": "mehr als 5 % unter dem Plan",
+      "actual": "Ist",
+      "plan": "Plan",
+      "row": "Wert"
+    },
+    "blockAndLevel": "{block} · {level}",
+    "dates": "{start} – {end}",
+    "columns": {
+      "exercises": "Übungen",
+      "sessions": "Einheiten",
+      "weights": "Gewichte"
+    },
+    "withVariation": "{name} ({variation})",
+    "status": {
+      "pending": "Wird gespeichert…",
+      "saving": "Wird gespeichert…",
+      "saved": "Alle Änderungen gespeichert.",
+      "invalid": "Nicht gespeichert: Bitte prüfe die markierten Felder.",
+      "failed": "Speichern fehlgeschlagen."
+    },
+    "retry": "Erneut versuchen",
+    "finish": "Wochenplanung abschließen",
+    "offPlan": "{count, plural, one {# Wert weicht} other {# Werte weichen}} mehr als 5 % vom Plan ab (rot: darüber, blau: darunter). Gespeichert wird trotzdem."
   }
 }

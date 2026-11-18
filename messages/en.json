@@ -119,7 +119,19 @@
     "macrocycleOpen": "Open macrocycle",
     "plan": "Plan macrocycle",
     "notPlanned": "No macrocycle planned yet.",
-    "editBasicData": "Edit basic data"
+    "editBasicData": "Edit basic data",
+    "trainingWeek": {
+      "title": "Training week",
+      "planNext": "Plan next week (week {week})",
+      "editNext": "Edit next week (week {week})",
+      "planThis": "Plan this week (week {week})",
+      "none": "No week is planned yet.",
+      "week": "Week {week}",
+      "from": "from {date}",
+      "current": "Current week",
+      "edit": "Edit",
+      "editWeek": "Edit week {week}"
+    }
   },
   "Catalog": {
     "title": "Exercises",
@@ -185,9 +197,9 @@
         "jerkDeficits": "Deficits in the jerk",
         "otherDeficits": "Other deficits",
         "injuriesAndIllnesses": "Current and chronic injuries and illnesses",
-        "trainingFrequency": "Training sessions per week",
         "strengths": "Strengths",
-        "experience": "Weightlifting experience"
+        "experience": "Weightlifting experience",
+        "sessions": "Training sessions per week"
       },
       "optional": "(optional)",
       "mondayHint": "Macrocycles start on a Monday.",
@@ -205,9 +217,9 @@
         "INVALID_FORMAT": "Please enter a valid date.",
         "TOO_LONG": "Too long.",
         "INVALID": "Invalid value.",
-        "TOO_MANY": "At most 3 focus points."
+        "TOO_MANY": "At most 3 focus points.",
+        "WEEKS_PLANNED": "Weeks with a week plan would be removed."
       },
-      "trainingFrequencyHint": "1 to 14 sessions.",
       "focusPoints": {
         "title": "Focus points",
         "help": "1 to 3 focus points for this macrocycle, the most important first.",
@@ -218,7 +230,14 @@
         "remove": "Remove focus point {position}",
         "add": "Add focus point"
       },
-      "deficitsHint": "Shown when choosing exercises: snatch deficits for snatch exercises, clean and jerk deficits for clean & jerk exercises."
+      "deficitsHint": "Shown when choosing exercises: snatch deficits for snatch exercises, clean and jerk deficits for clean & jerk exercises.",
+      "schedule": {
+        "add": "Add a session on {day}",
+        "remove": "Remove session {slot} on {day}",
+        "count": "{count, plural, =0 {No sessions} one {# session} other {# sessions}} per week · up to 3 per day",
+        "required": "Choose at least one training session.",
+        "tooMany": "At most 14 sessions per week."
+      }
     },
     "mesocycles": {
       "general_preparation": "General preparation block",
@@ -293,7 +312,7 @@
     },
     "unsaved": {
       "title": "Save changes?",
-      "text": "This step has changes that are not saved yet.",
+      "text": "There are changes that are not saved yet.",
       "save": "Save",
       "discard": "Discard",
       "cancel": "Cancel"
@@ -347,5 +366,85 @@
       "trainingFrequency": "Training sessions per week"
     },
     "value": "Value"
+  },
+  "WeekEditor": {
+    "title": "Week {week} of {weeks}",
+    "sessionLabel": "{day} {slot}",
+    "steps": {
+      "label": "Week planning steps",
+      "sessions": "Exercises & sessions",
+      "values": "Sets & weights",
+      "completed": "completed"
+    },
+    "continue": "Continue",
+    "back": "Back",
+    "catalog": {
+      "title": "Exercises",
+      "close": "Close",
+      "addTo": "Add an exercise to {session}",
+      "group": "{code} · {name}",
+      "showAll": "Show all exercises",
+      "showBlock": "Show only the exercises of the {block}",
+      "emptyBlock": "No exercises are chosen for the {block}.",
+      "inWeek": "in the week",
+      "notInWeek": "not in the week yet",
+      "notInBlock": "not planned for the {block}"
+    },
+    "session": {
+      "add": "Add session",
+      "remove": "Remove {session}",
+      "day": "Day of {session}",
+      "empty": "No exercises yet.",
+      "addExercise": "Exercise",
+      "addTo": "Add an exercise to {session}",
+      "notPlanned": "Not planned for the {block}",
+      "removeExercise": "Remove {name} from {session}",
+      "move": "Move {name}: drag, or use the arrow keys"
+    },
+    "values": {
+      "noExercises": "No exercises in this session.",
+      "kg": "kg",
+      "reps": "Reps",
+      "weightOf": "Weight in kg of set {n} of {name}",
+      "repsOf": "Reps of set {n} of {name}",
+      "note": "Coach note",
+      "noteOf": "Coach note for {name}",
+      "freeText": "Sets and reps, e.g. 3 × 12",
+      "freeTextOf": "Sets and reps of {name}",
+      "exercise": "Exercise",
+      "row": "Row"
+    },
+    "totals": {
+      "title": "This week (all sessions)",
+      "heaviest": "Best value",
+      "average": "mHG",
+      "setSize": "Set size",
+      "reps": "Reps",
+      "kg": "{value} kg",
+      "none": "–",
+      "above": "more than 5 % above the plan",
+      "below": "more than 5 % below the plan",
+      "actual": "Actual",
+      "plan": "Plan",
+      "row": "Value"
+    },
+    "blockAndLevel": "{block} · {level}",
+    "dates": "{start} – {end}",
+    "columns": {
+      "exercises": "Exercises",
+      "sessions": "Sessions",
+      "weights": "Weights"
+    },
+    "withVariation": "{name} ({variation})",
+    "status": {
+      "pending": "Saving…",
+      "saving": "Saving…",
+      "saved": "All changes saved.",
+      "invalid": "Not saved: please check the marked fields.",
+      "failed": "Could not save."
+    },
+    "retry": "Try again",
+    "finish": "Finish week planning",
+    "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway."
   }
 }

@@ -1,6 +1,7 @@
 import { today } from "@/domain/athletes/basic-data";
 import type { CurrentUser } from "@/domain/auth";
 import { getExercisesWithValues } from "@/domain/exercises";
+import { getTrainingWeeks } from "@/domain/week-plans";
 import {
   canPlanMacrocycle,
   findMacrocycle,
@@ -53,4 +54,9 @@ export async function loadMacrocycleChart(
     String(DEFAULT_EXERCISE),
   );
   return { macrocycle, values, today: today() };
+}
+
+/** The week planning entry points of the athlete page; null without a macrocycle. */
+export async function loadTrainingWeeks(user: CurrentUser, athleteId: string) {
+  return getTrainingWeeks(user, athleteId, today());
 }

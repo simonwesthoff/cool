@@ -1,0 +1,1 @@
+ALTER TABLE "session_exercise" ADD COLUMN "free_text" text;

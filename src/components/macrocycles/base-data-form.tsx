@@ -12,9 +12,13 @@ import {
 } from "react";
 import type { MacrocycleBaseData } from "@/domain/macrocycles/macrocycle-types";
 import { FocusPointsField } from "./focus-points-field";
+import { SchedulePicker } from "./schedule-picker";
 import { useUnsavedChangesGuard } from "./unsaved-changes";
 
-type FieldName = Exclude<keyof MacrocycleBaseData, "focusPoints">;
+type FieldName = Exclude<
+  keyof MacrocycleBaseData,
+  "focusPoints" | "sessions" | "trainingFrequency"
+>;
 type FieldErrors = Partial<Record<string, string[]>>;
 
 const errorCodes = [
@@ -26,6 +30,7 @@ const errorCodes = [
   "INVALID_FORMAT",
   "TOO_LONG",
   "TOO_MANY",
+  "WEEKS_PLANNED",
 ] as const;
 type ErrorCode = (typeof errorCodes)[number];
 
@@ -40,7 +45,6 @@ const numberFields: FieldName[] = [
   "targetBodyWeightKg",
   "bodyFatPct",
   "muscleMassPct",
-  "trainingFrequency",
 ];
 const optionalFields: FieldName[] = ["bodyFatPct", "muscleMassPct"];
 
@@ -54,8 +58,15 @@ function valuesOf(form: HTMLFormElement): Record<string, unknown> {
       .map((v) => String(v).trim())
       .filter((v) => v !== "");
   }
+  // Weekly schedule (base data step only): "weekday.slot" per session.
+  if (form.querySelector("[data-schedule]")) {
+    result.sessions = data.getAll("sessions").map((v) => {
+      const [weekday, slot] = String(v).split(".").map(Number);
+      return { weekday, slot };
+    });
+  }
   for (const [key, raw] of data.entries()) {
-    if (key === "focusPoints") continue;
+    if (key === "focusPoints" || key === "sessions") continue;
     const text = String(raw).trim();
     const name = key as FieldName;
     if (numberFields.includes(name)) {
@@ -160,6 +171,40 @@ function BaseDataFormFields({
     (errorCodes as readonly string[]).includes(code)
       ? t(`errors.${code as ErrorCode}`)
       : t("errors.INVALID");
+
+  /** The weekly schedule across both columns, with its own error texts. */
+  function schedule() {
+    const id = `${formId}-sessions`;
+    const codes = Object.entries(errors)
+      .filter(([key]) => key === "sessions" || key.startsWith("sessions."))
+      .flatMap(([, list]) => list ?? []);
+    const errorId = codes.length ? `${id}-error` : undefined;
+    const text = (code: string) =>
+      code === "REQUIRED"
+        ? t("schedule.required")
+        : code === "TOO_MANY"
+          ? t("schedule.tooMany")
+          : t("errors.INVALID");
+    return (
+      <div className="flex flex-col gap-1 sm:col-span-2">
+        <span id={`${id}-label`} className="text-sm font-medium">
+          {t("fields.sessions")}
+        </span>
+        <SchedulePicker
+          id={id}
+          labelledBy={`${id}-label`}
+          initial={m?.sessions ?? []}
+          errorId={errorId}
+          invalid={codes.length > 0}
+        />
+        {errorId && (
+          <p id={errorId} className="text-sm text-red-700 dark:text-red-400">
+            {[...new Set(codes.map(text))].join(" ")}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   function field(
     name: FieldName,
@@ -323,22 +368,7 @@ function BaseDataFormFields({
               {num("snatchGoalKg", "0.5", m?.snatchGoalKg)}
               {num("cleanAndJerkGoalKg", "0.5", m?.cleanAndJerkGoalKg)}
               {num("targetBodyWeightKg", "0.1", m?.targetBodyWeightKg)}
-              {field(
-                "trainingFrequency",
-                (p) => (
-                  <input
-                    {...p}
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    max={14}
-                    step={1}
-                    defaultValue={m?.trainingFrequency ?? ""}
-                    className={inputClass}
-                  />
-                ),
-                { hint: t("trainingFrequencyHint") },
-              )}
+              {schedule()}
             </>,
           )}
         </>

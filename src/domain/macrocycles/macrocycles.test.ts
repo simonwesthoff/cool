@@ -37,7 +37,17 @@ const baseData = {
   targetBodyWeightKg: 80.5,
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
-  trainingFrequency: 8,
+  /** Weekly schedule with 8 sessions: Monday and Tuesday twice, Wednesday–Saturday once. */
+  sessions: [
+    { weekday: 1, slot: 1 },
+    { weekday: 1, slot: 2 },
+    { weekday: 2, slot: 1 },
+    { weekday: 2, slot: 2 },
+    { weekday: 3, slot: 1 },
+    { weekday: 4, slot: 1 },
+    { weekday: 5, slot: 1 },
+    { weekday: 6, slot: 1 },
+  ],
 };
 
 /** Step 2 of the planning. */
@@ -78,6 +88,7 @@ describe("createMacrocycle", () => {
     const created = await createMacrocycle(coach, athlete.id, baseData);
     expect(created).toMatchObject({
       ...baseData,
+      trainingFrequency: 8,
       bodyFatPct: null,
       muscleMassPct: null,
       // The SWOT is filled in step 2.
@@ -133,12 +144,12 @@ describe("createMacrocycle", () => {
     const { coach, athlete } = await setup();
     const incomplete: Record<string, unknown> = { ...baseData };
     delete incomplete.snatchGoalKg;
-    delete incomplete.trainingFrequency;
+    delete incomplete.sessions;
     expect(
       await fieldsOf(createMacrocycle(coach, athlete.id, incomplete)),
     ).toEqual({
       snatchGoalKg: ["REQUIRED"],
-      trainingFrequency: ["REQUIRED"],
+      sessions: ["REQUIRED"],
     });
     // SWOT fields belong to step 2.
     expect(
@@ -186,16 +197,67 @@ describe("createMacrocycle", () => {
     ).toEqual({ competitionDate: ["BEFORE_START"] });
   });
 
-  it("rejects a wrong training frequency", async () => {
+  it("checks the weekly schedule", async () => {
     const { coach, athlete } = await setup();
+    const withSessions = (sessions: unknown) =>
+      fieldsOf(createMacrocycle(coach, athlete.id, { ...baseData, sessions }));
+    expect(await withSessions([])).toEqual({ sessions: ["REQUIRED"] });
+    // A fourth session on Monday, and a weekday 8.
     expect(
-      await fieldsOf(
-        createMacrocycle(coach, athlete.id, {
-          ...baseData,
-          trainingFrequency: 15,
-        }),
-      ),
-    ).toEqual({ trainingFrequency: ["OUT_OF_RANGE"] });
+      await withSessions([
+        { weekday: 1, slot: 4 },
+        { weekday: 8, slot: 1 },
+      ]),
+    ).toEqual({
+      // Slot 4 alone also leaves a gap in Monday's slots.
+      sessions: ["INVALID"],
+      "sessions.0.slot": ["OUT_OF_RANGE"],
+      "sessions.1.weekday": ["OUT_OF_RANGE"],
+    });
+    // Slot 2 without slot 1, and a duplicate.
+    expect(await withSessions([{ weekday: 1, slot: 2 }])).toEqual({
+      sessions: ["INVALID"],
+    });
+    expect(
+      await withSessions([
+        { weekday: 1, slot: 1 },
+        { weekday: 1, slot: 1 },
+      ]),
+    ).toEqual({ sessions: ["INVALID"] });
+    const fifteen = [1, 2, 3, 4, 5, 6, 7]
+      .flatMap((weekday) => [1, 2, 3].map((slot) => ({ weekday, slot })))
+      .slice(0, 15);
+    expect(await withSessions(fifteen)).toEqual({ sessions: ["TOO_MANY"] });
+  });
+
+  it("stores the schedule in week order and counts it as the training frequency", async () => {
+    const { coach, athlete } = await setup();
+    const created = await createMacrocycle(coach, athlete.id, {
+      ...baseData,
+      sessions: [
+        { weekday: 5, slot: 1 },
+        { weekday: 1, slot: 2 },
+        { weekday: 1, slot: 1 },
+        { weekday: 3, slot: 1 },
+      ],
+    });
+    expect(created.sessions).toEqual([
+      { weekday: 1, slot: 1 },
+      { weekday: 1, slot: 2 },
+      { weekday: 3, slot: 1 },
+      { weekday: 5, slot: 1 },
+    ]);
+    expect(created.trainingFrequency).toBe(4);
+    const updated = await updateBaseData(coach, athlete.id, {
+      sessions: [{ weekday: 7, slot: 1 }],
+    });
+    expect(updated.sessions).toEqual([{ weekday: 7, slot: 1 }]);
+    expect(updated.trainingFrequency).toBe(1);
+    // Other changes keep the schedule.
+    const again = await updateBaseData(coach, athlete.id, {
+      snatchGoalKg: 105,
+    });
+    expect(again.sessions).toEqual([{ weekday: 7, slot: 1 }]);
   });
 
   it("allows only one macrocycle per athlete", async () => {

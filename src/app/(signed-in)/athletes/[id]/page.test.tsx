@@ -4,7 +4,11 @@ import { DomainError } from "@/domain/errors";
 const getAthlete = vi.fn();
 vi.mock("@/domain/athletes", () => ({ getAthlete }));
 const loadMacrocycleChart = vi.fn();
-vi.mock("../../macrocycle-view/load", () => ({ loadMacrocycleChart }));
+const loadTrainingWeeks = vi.fn(async () => null as unknown);
+vi.mock("../../macrocycle-view/load", () => ({
+  loadMacrocycleChart,
+  loadTrainingWeeks,
+}));
 const requireCoachPage = vi.fn();
 vi.mock("../../current-user", () => ({ requireCoachPage }));
 class NotFound extends Error {}
@@ -46,6 +50,7 @@ describe("athlete details page", () => {
       image: "https://img/a.png",
       coachName: "Max",
       canEdit: true,
+      trainingWeeks: null,
       macrocycle: null,
     });
     expect(getAthlete).toHaveBeenCalledWith(coach.user, "a1");

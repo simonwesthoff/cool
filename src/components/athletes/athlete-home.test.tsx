@@ -168,6 +168,28 @@ describe("AthleteHome", () => {
     expect(screen.queryByRole("link", { name: /Back/ })).toBeNull();
   });
 
+  it("shows the training week section only to whoever may plan", () => {
+    const weeks = {
+      current: null,
+      next: { weekNumber: 1, planned: false },
+      planned: [],
+    };
+    renderHome({ canEdit: false, trainingWeeks: weeks });
+    expect(screen.queryByRole("heading", { name: "Training week" })).toBeNull();
+    cleanup();
+    renderHome({ viewer: "coach", canEdit: true, trainingWeeks: weeks });
+    expect(screen.getByRole("heading", { name: "Training week" })).toBeTruthy();
+    cleanup();
+    // Not without a macrocycle.
+    renderHome({
+      viewer: "coach",
+      canEdit: true,
+      macrocycle: null,
+      trainingWeeks: weeks,
+    });
+    expect(screen.queryByRole("heading", { name: "Training week" })).toBeNull();
+  });
+
   it("is translated to German", () => {
     renderHome({ viewer: "coach", canEdit: true }, "de");
     expect(screen.getByText("Trainer: Max Berg")).toBeTruthy();

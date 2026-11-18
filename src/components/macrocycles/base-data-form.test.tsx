@@ -57,7 +57,12 @@ const baseData = {
   muscleMassPct: null,
   competitionDate: "2027-04-24",
   competitionType: "German Championships",
-  trainingFrequency: 8,
+  sessions: [
+    { weekday: 1, slot: 1 },
+    { weekday: 1, slot: 2 },
+    { weekday: 3, slot: 1 },
+    { weekday: 5, slot: 1 },
+  ],
 };
 const swot = {
   strengths: "Fast under the bar",
@@ -69,7 +74,7 @@ const swot = {
   focusPoints: ["Turnover", "Squat strength"],
   injuriesAndIllnesses: "None",
 };
-const existing = { ...baseData, ...swot };
+const existing = { ...baseData, ...swot, trainingFrequency: 4 };
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -128,9 +133,9 @@ describe("BaseDataForm", () => {
       "Body fat (%) (optional)",
       "Muscle mass (%) (optional)",
     ]);
-    expect(labelsIn("New macrocycle plan").at(-1)).toBe(
-      "Training sessions per week",
-    );
+    expect(
+      screen.getByRole("group", { name: "Training sessions per week" }),
+    ).toBeTruthy();
     expect(screen.queryByLabelText("Strengths")).toBeNull();
     expect(screen.queryByLabelText("Focus point 1")).toBeNull();
   });
@@ -149,7 +154,10 @@ describe("BaseDataForm", () => {
     await fill("Goal clean & jerk (kg)", "130");
     await fill("Body weight (kg)", "81");
     await fill("Target body weight (kg)", "80.5");
-    await fill("Training sessions per week", "8");
+    for (const day of ["Monday", "Monday", "Wednesday", "Friday"])
+      await userEvent.click(
+        screen.getByRole("button", { name: `Add a session on ${day}` }),
+      );
     await userEvent.click(
       screen.getByRole("button", { name: "Save and continue" }),
     );
@@ -191,7 +199,104 @@ describe("BaseDataForm", () => {
       snatchGoalKg: 105,
       bodyFatPct: 12,
       muscleMassPct: null,
+      // The stored schedule is sent again unchanged.
+      sessions: baseData.sessions,
     });
+  });
+
+  it("picks the weekly schedule with up to 3 sessions per day", async () => {
+    respond(200, {});
+    renderWith(
+      <BaseDataForm
+        athleteId="a1"
+        part="base"
+        macrocycle={existing}
+        defaultStartDate="2026-11-23"
+      />,
+    );
+    const group = screen.getByRole("group", {
+      name: "Training sessions per week",
+    });
+    expect(group.textContent).toContain("4 sessions per week");
+    // A third session on Monday; then no further one is offered there.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add a session on Monday" }),
+    );
+    expect(
+      screen.queryByRole("button", { name: "Add a session on Monday" }),
+    ).toBeNull();
+    // Removing Wednesday's session.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Remove session 1 on Wednesday" }),
+    );
+    expect(group.textContent).toContain("4 sessions per week");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save and continue" }),
+    );
+    const [, init] = fetchMock.mock.calls[0]!;
+    expect(JSON.parse(init.body).sessions).toEqual([
+      { weekday: 1, slot: 1 },
+      { weekday: 1, slot: 2 },
+      { weekday: 1, slot: 3 },
+      { weekday: 5, slot: 1 },
+    ]);
+  });
+
+  it("explains that planned weeks block a shorter duration", async () => {
+    respond(400, {
+      error: {
+        code: "VALIDATION_FAILED",
+        fields: { durationWeeks: ["WEEKS_PLANNED"] },
+      },
+    });
+    renderWith(
+      <BaseDataForm
+        athleteId="a1"
+        part="base"
+        macrocycle={existing}
+        defaultStartDate="2026-11-23"
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save and continue" }),
+    );
+    expect(
+      await screen.findByText("Weeks with a week plan would be removed."),
+    ).toBeTruthy();
+  });
+
+  it("explains a missing schedule", async () => {
+    respond(400, {
+      error: { code: "VALIDATION_FAILED", fields: { sessions: ["REQUIRED"] } },
+    });
+    renderWith(
+      <BaseDataForm athleteId="a1" part="base" defaultStartDate="2026-11-30" />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save and continue" }),
+    );
+    expect(
+      await screen.findByText("Choose at least one training session."),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("group", { name: "Training sessions per week" })
+        .hasAttribute("data-invalid"),
+    ).toBe(true);
+  });
+
+  it("labels the schedule in German", () => {
+    renderWith(
+      <BaseDataForm athleteId="a1" part="base" defaultStartDate="2026-11-30" />,
+      "de",
+    );
+    expect(
+      screen.getByRole("group", { name: "Trainingseinheiten pro Woche" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Einheit am Montag hinzufügen" }),
+    ).toBeTruthy();
+    expect(screen.getByText(/Keine Einheiten pro Woche/)).toBeTruthy();
   });
 
   it("shows field errors from the API", async () => {

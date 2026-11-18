@@ -1,8 +1,7 @@
-import { and, asc, eq, gt, inArray } from "drizzle-orm";
-import { findAthleteInTeam, isCoachOfAthlete } from "@/domain/athletes";
+import { and, asc, eq, gt, inArray, max } from "drizzle-orm";
+import { isCoachOfAthlete } from "@/domain/athletes";
 import type { CurrentUser } from "@/domain/auth";
 import { DomainError } from "@/domain/errors";
-import { getRoles, requireCoachTeam } from "@/domain/roles";
 import { DomainValidationError, parseInput } from "@/domain/validation";
 import { z } from "zod";
 import { getDb } from "@/server/db";
@@ -10,14 +9,22 @@ import {
   exercise,
   exerciseAddresses,
   macrocycle,
+  macrocycleSession,
   macrocycleWeek,
   mesocycle,
   mesocycleExercise,
+  weekPlan,
 } from "@/server/db/schema";
+import {
+  findMacrocycleRow,
+  requireOwnAthlete,
+  requireViewableAthlete,
+} from "./access";
 import {
   completeBaseDataSchema,
   createBaseDataSchema,
   EMPTY_SWOT,
+  sortSessions,
   swotSchema,
   updateBaseDataSchema,
 } from "./base-data";
@@ -41,28 +48,10 @@ import type {
   Macrocycle,
   MacrocycleBaseData,
   MacrocycleWeekView,
+  ScheduledSession,
 } from "./macrocycle-types";
 
 const notFound = () => new DomainError("not_found", "MACROCYCLE_NOT_FOUND");
-
-async function requireOwnAthlete(coach: CurrentUser, athleteId: string) {
-  const { id: teamId } = await requireCoachTeam(coach);
-  const found = await findAthleteInTeam(teamId, athleteId);
-  if (!found) throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
-  return found;
-}
-
-/**
- * Read access: the coach of the athlete's Team or the user linked to the
- * Athlete. Everyone else gets `ATHLETE_NOT_FOUND`, as for writes.
- */
-async function requireViewableAthlete(user: CurrentUser, athleteId: string) {
-  const roles = await getRoles(user);
-  if (roles.athlete?.athleteId === athleteId) return;
-  if (roles.coach && (await findAthleteInTeam(roles.coach.teamId, athleteId)))
-    return;
-  throw new DomainError("not_found", "ATHLETE_NOT_FOUND");
-}
 
 /**
  * Whether the user may plan (create and change) the athlete's macrocycle:
@@ -73,14 +62,6 @@ export async function canPlanMacrocycle(
   athleteId: string,
 ): Promise<boolean> {
   return isCoachOfAthlete(user, athleteId);
-}
-
-async function findMacrocycleRow(athleteId: string) {
-  const [row] = await getDb()
-    .select()
-    .from(macrocycle)
-    .where(eq(macrocycle.athleteId, athleteId));
-  return row;
 }
 
 function isUniqueViolation(error: unknown): boolean {
@@ -98,7 +79,35 @@ function addDays(isoDate: string, days: number): string {
 
 type BaseRow = typeof macrocycle.$inferSelect;
 
-function baseDataOf(row: BaseRow): MacrocycleBaseData {
+async function scheduleOf(macrocycleId: string): Promise<ScheduledSession[]> {
+  const rows = await getDb()
+    .select({
+      weekday: macrocycleSession.weekday,
+      slot: macrocycleSession.slot,
+    })
+    .from(macrocycleSession)
+    .where(eq(macrocycleSession.macrocycleId, macrocycleId));
+  return sortSessions(rows);
+}
+
+/** The stored columns only (no schedule, no derived count). */
+type StoredBaseData = Omit<
+  MacrocycleBaseData,
+  "sessions" | "trainingFrequency"
+>;
+
+function baseDataOf(
+  row: BaseRow,
+  sessions: ScheduledSession[],
+): MacrocycleBaseData {
+  return {
+    ...storedBaseDataOf(row),
+    sessions,
+    trainingFrequency: sessions.length,
+  };
+}
+
+function storedBaseDataOf(row: BaseRow): StoredBaseData {
   return {
     startDate: row.startDate,
     durationWeeks: row.durationWeeks,
@@ -118,7 +127,6 @@ function baseDataOf(row: BaseRow): MacrocycleBaseData {
     injuriesAndIllnesses: row.injuriesAndIllnesses,
     strengths: row.strengths,
     experience: row.experience,
-    trainingFrequency: row.trainingFrequency,
     focusPoints: row.focusPoints,
     competitionDate: row.competitionDate,
     competitionType: row.competitionType,
@@ -205,7 +213,7 @@ export async function getExerciseWeeks(
 
 async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
   const db = getDb();
-  const [weeks, mesocycles] = await Promise.all([
+  const [weeks, mesocycles, sessions] = await Promise.all([
     db
       .select({
         number: macrocycleWeek.weekNumber,
@@ -219,6 +227,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
       .from(mesocycle)
       .where(eq(mesocycle.macrocycleId, row.id))
       .orderBy(asc(mesocycle.firstWeek)),
+    scheduleOf(row.id),
   ]);
   const chosen = mesocycles.length
     ? await db
@@ -307,7 +316,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
   return {
     id: row.id,
     athleteId: row.athleteId,
-    ...baseDataOf(row),
+    ...baseDataOf(row, sessions),
     mesocycles: mesocycleViews,
     weeks: weekViews,
   };
@@ -325,12 +334,13 @@ export async function createMacrocycle(
   if (await findMacrocycleRow(athleteId)) {
     throw new DomainError("conflict", "MACROCYCLE_EXISTS");
   }
+  const { sessions, ...stored } = data;
   try {
     await getDb().transaction(async (tx) => {
       const [created] = await tx
         .insert(macrocycle)
         .values({
-          ...data,
+          ...stored,
           ...EMPTY_SWOT,
           bodyFatPct: data.bodyFatPct ?? null,
           muscleMassPct: data.muscleMassPct ?? null,
@@ -338,6 +348,9 @@ export async function createMacrocycle(
         })
         .returning({ id: macrocycle.id });
       const id = created!.id;
+      await tx
+        .insert(macrocycleSession)
+        .values(sessions.map((s) => ({ ...s, macrocycleId: id })));
       await tx.insert(macrocycleWeek).values(
         Array.from({ length: data.durationWeeks }, (_, i) => ({
           macrocycleId: id,
@@ -387,14 +400,32 @@ export async function updateBaseData(
   const patch = parseInput(updateBaseDataSchema, input);
   const row = await findMacrocycleRow(athleteId);
   if (!row) throw notFound();
-  const next: MacrocycleBaseData = { ...baseDataOf(row) };
-  for (const [key, value] of Object.entries(patch)) {
+  const { sessions, ...storedPatch } = patch;
+  const next: StoredBaseData = { ...storedBaseDataOf(row) };
+  for (const [key, value] of Object.entries(storedPatch)) {
     if (value !== undefined) Object.assign(next, { [key]: value });
   }
   parseInput(completeBaseDataSchema, next);
+  // Weeks with a week plan must stay part of the macrocycle.
+  if (next.durationWeeks < row.durationWeeks) {
+    const [last] = await getDb()
+      .select({ week: max(weekPlan.weekNumber) })
+      .from(weekPlan)
+      .where(eq(weekPlan.macrocycleId, row.id));
+    if (last?.week && next.durationWeeks < last.week)
+      throw new DomainValidationError({ durationWeeks: ["WEEKS_PLANNED"] });
+  }
 
   await getDb().transaction(async (tx) => {
     await tx.update(macrocycle).set(next).where(eq(macrocycle.id, row.id));
+    if (sessions) {
+      await tx
+        .delete(macrocycleSession)
+        .where(eq(macrocycleSession.macrocycleId, row.id));
+      await tx
+        .insert(macrocycleSession)
+        .values(sessions.map((s) => ({ ...s, macrocycleId: row.id })));
+    }
     if (next.durationWeeks !== row.durationWeeks) {
       await tx
         .delete(macrocycleWeek)
