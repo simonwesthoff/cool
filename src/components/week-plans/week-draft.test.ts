@@ -32,13 +32,15 @@ describe("week draft", () => {
   it("saves only sets with reps, and marks invalid cells", () => {
     const draft = one([]);
     draft[0]!.exercises[0]!.sets = [
-      { key: "a", weight: "80", reps: "" },
+      { key: "a", weight: "", reps: "" },
       { key: "b", weight: "", reps: "8" },
     ];
     expect(payloadOf(draft).sessions[0]!.exercises[0]!.setGroups).toEqual([
       { sets: 1, reps: 8, weightKg: null },
     ]);
     expect(hasErrors(draft)).toBe(false);
+    // A weight needs reps.
+    expect(setErrors(set("80", ""))).toEqual(["reps"]);
     expect(setErrors(set("82.3", "2"))).toEqual(["weight"]);
     expect(setErrors(set("80", "0"))).toEqual(["reps"]);
     expect(setErrors(set("80,5", "31"))).toEqual(["reps"]);

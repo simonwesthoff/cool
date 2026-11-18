@@ -397,8 +397,14 @@ const setsOf = (session: string, name: string) => {
   const reps = within(table).queryAllByRole("textbox", {
     name: new RegExp(`^Reps of set \\d+ of ${name}$`),
   }) as HTMLInputElement[];
-  return weights.map((w, i) => [w.value, reps[i]!.value]);
+  return weights
+    .map((w, i) => [w.value, reps[i]!.value])
+    .filter(([w, r]) => w !== "" || r !== "");
 };
+const cellsOf = (session: string, name: string) =>
+  within(sessionNamed(session)).queryAllByRole("textbox", {
+    name: new RegExp(`^Weight in kg of set \\d+ of ${name}$`),
+  }).length;
 /** Waits for the next automatic save and returns its payload. */
 const nextSave = async () => {
   await waitFor(() => expect(fetchMock).toHaveBeenCalled(), { timeout: 2000 });
@@ -435,13 +441,14 @@ describe("WeekEditor names and column titles", () => {
 });
 
 describe("WeekEditor step 2", () => {
-  it("shows each session as a table: one column per set, weight on top and reps below", async () => {
+  it("shows each session as a table: ten set columns, weight on top and reps below", async () => {
     const { container } = renderEditor(week11);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(column(container).className).toContain("lg:translate-x-0");
     expect(container.querySelector("aside")!.getAttribute("aria-hidden")).toBe(
       "true",
     );
+    expect(cellsOf("Monday", "1 Snatch")).toBe(10);
     // 2 × 3 @ 60, 3 × 2 @ 70, 2 × 1 @ 80 are seven sets.
     expect(setsOf("Monday", "1 Snatch")).toEqual([
       ["60", "3"],
@@ -453,38 +460,59 @@ describe("WeekEditor step 2", () => {
       ["80", "1"],
     ]);
     const table = sessionNamed("Monday").querySelector("table")!;
+    const name = table.querySelector("tbody th[scope=rowgroup]")!;
+    expect(name.textContent).toBe("1 Snatch");
+    expect(name.getAttribute("rowspan")).toBe("2");
+    // No buttons to add or remove sets.
     expect(
-      table.querySelector('tr[data-row="weight"] th[scope=rowgroup]')!
-        .textContent,
-    ).toBe("1 Snatch");
-    expect(
-      table.querySelector("th[scope=rowgroup]")!.getAttribute("rowspan"),
-    ).toBe("2");
+      within(sessionNamed("Monday")).queryAllByRole("button"),
+    ).toHaveLength(0);
     expect(router.push).not.toHaveBeenCalled();
   });
 
-  it("shows the week's totals against the projection with red and blue", async () => {
+  it("heads the indicators best value, mHG, set size and reps, with Actual and Plan as rows", async () => {
     renderEditor(week11);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    const totals = (key: string) =>
-      sessionNamed("Monday").querySelector(`[data-total=${key}]`)!;
-    expect(totals("heaviest").textContent).toBe("Heaviest80 kg80 kg");
-    expect(totals("average").textContent).toBe("mHG69.5 kg69 kg");
-    expect(totals("setSize").getAttribute("data-deviation")).toBe("below");
-    expect(totals("setSize").querySelector("dd")!.className).toContain(
-      "text-blue-700",
+    const table = sessionNamed("Monday").querySelector("table")!;
+    expect(
+      [...table.querySelectorAll("thead [data-heading]")].map(
+        (h) => h.textContent,
+      ),
+    ).toEqual(["Best value", "mHG", "Set size", "Reps"]);
+    const cell = (kind: string, key: string) =>
+      table.querySelector(`[data-kind=${kind}][data-total=${key}]`)!;
+    expect(cell("actual", "heaviest").closest("tr")!.textContent).toContain(
+      "Actual",
     );
-    expect(totals("reps").getAttribute("data-deviation")).toBe("within");
+    expect(cell("plan", "heaviest").closest("tr")!.textContent).toContain(
+      "Plan",
+    );
+    expect(cell("actual", "heaviest").textContent).toBe("80 kg");
+    expect(cell("plan", "heaviest").textContent).toBe("80 kg");
+    expect(cell("actual", "average").textContent).toBe("69.5 kg");
+    expect(cell("plan", "average").textContent).toBe("69 kg");
+    expect(cell("actual", "setSize").getAttribute("data-deviation")).toBe(
+      "below",
+    );
+    expect(cell("actual", "setSize").className).toContain("text-blue-700");
+    expect(cell("actual", "reps").getAttribute("data-deviation")).toBe(
+      "within",
+    );
+    // The coach note takes both rows of the exercise.
+    const note = within(table).getByRole("textbox", {
+      name: "Coach note for 1 Snatch",
+    });
+    expect(note.closest("td")!.getAttribute("rowspan")).toBe("2");
     // 85 kg is more than 5 % above 80 kg.
-    const weight = within(sessionNamed("Monday")).getByRole("textbox", {
+    const weight = within(table).getByRole("textbox", {
       name: "Weight in kg of set 7 of 1 Snatch",
     });
     await userEvent.clear(weight);
     await userEvent.type(weight, "85");
-    expect(totals("heaviest").getAttribute("data-deviation")).toBe("above");
-    expect(totals("heaviest").querySelector("dd")!.className).toContain(
-      "text-red-700",
+    expect(cell("actual", "heaviest").getAttribute("data-deviation")).toBe(
+      "above",
     );
+    expect(cell("actual", "heaviest").className).toContain("text-red-700");
   });
 
   it("does not compare values without data or projection", async () => {
@@ -497,38 +525,38 @@ describe("WeekEditor step 2", () => {
     ]);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(
-      // The totals are there once for wide screens and once for phones.
-      [...sessionNamed("Monday").querySelectorAll("[data-total]")]
-        .slice(0, 4)
-        .map((d) => d.getAttribute("data-deviation")),
+      [...sessionNamed("Monday").querySelectorAll("[data-kind=actual]")].map(
+        (d) => d.getAttribute("data-deviation"),
+      ),
     ).toEqual(["none", "none", "none", "none"]);
   });
 
-  it("adds sets as a copy of the last one, at most 10", async () => {
+  it("adds a set by typing into an empty cell, and marks a weight without reps", async () => {
     renderEditor([
       {
         weekday: 1,
         slot: 1,
-        exercises: [
-          {
-            exerciseNumber: 1,
-            note: null,
-            setGroups: [{ sets: 8, reps: 2, weightKg: 70 }],
-          },
-        ],
+        exercises: [{ exerciseNumber: 1, note: null, setGroups: [] }],
       },
     ]);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    const add = screen.getByRole("button", { name: "Add a set to 1 Snatch" });
-    await userEvent.click(add);
-    await userEvent.click(add);
-    expect(setsOf("Monday", "1 Snatch")).toHaveLength(10);
-    expect(setsOf("Monday", "1 Snatch").at(-1)).toEqual(["70", "2"]);
-    expect((add as HTMLButtonElement).disabled).toBe(true);
-    await userEvent.click(
-      screen.getByRole("button", { name: "Remove the last set of 1 Snatch" }),
+    const table = sessionNamed("Monday");
+    await userEvent.type(
+      within(table).getByRole("textbox", {
+        name: "Weight in kg of set 3 of 1 Snatch",
+      }),
+      "70",
     );
-    expect(setsOf("Monday", "1 Snatch")).toHaveLength(9);
+    expect(
+      within(table)
+        .getByRole("textbox", { name: "Reps of set 3 of 1 Snatch" })
+        .getAttribute("aria-invalid"),
+    ).toBe("true");
+    await userEvent.type(
+      within(table).getByRole("textbox", { name: "Reps of set 3 of 1 Snatch" }),
+      "2",
+    );
+    expect(setsOf("Monday", "1 Snatch")).toEqual([["70", "2"]]);
   });
 });
 
@@ -570,35 +598,6 @@ describe("WeekEditor step 2 layout", () => {
       </NextIntlClientProvider>,
     );
 
-  it("separates exercises by lines and heads the indicators with Actual and Plan", async () => {
-    renderWithPullUp();
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    const table = sessionNamed("Monday").querySelector("table")!;
-    const groups = [...table.querySelectorAll("tbody")];
-    expect(groups.map((g) => g.getAttribute("data-exercise"))).toEqual([
-      "1",
-      "33",
-    ]);
-    for (const g of groups) expect(g.className).toContain("border-t");
-    expect(
-      [...table.querySelectorAll("thead [data-heading]")].map(
-        (h) => h.textContent,
-      ),
-    ).toEqual(["Actual", "Plan"]);
-    // The indicator shows name, actual value and plan, the note is left of it.
-    const snatch = groups[0]!;
-    const total = snatch.querySelector("[data-total=heaviest]")!;
-    expect(total.querySelector("dt")!.textContent).toBe("Heaviest");
-    expect(total.querySelector("[data-actual]")!.textContent).toBe("80 kg");
-    expect(total.querySelector("[data-plan]")!.textContent).toBe("80 kg");
-    const note = within(snatch).getAllByRole("textbox", {
-      name: "Coach note for 1 Snatch",
-    })[0]!;
-    expect(
-      note.compareDocumentPosition(total) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-  });
-
   it("gives exercises from 30 on a free text instead of sets, without indicators", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderWithPullUp();
@@ -612,7 +611,7 @@ describe("WeekEditor step 2 layout", () => {
     expect(pullUp.querySelector("[data-total]")).toBeNull();
     const text = within(pullUp).getByRole("textbox", {
       name: "Sets and reps of 33 Pull-up",
-    }) as HTMLInputElement;
+    }) as HTMLTextAreaElement;
     expect(text.value).toBe("3 × 10, slow");
     await userEvent.type(text, ", 2 min rest");
     const body = await nextSave();
@@ -631,10 +630,18 @@ describe("WeekEditor saving", () => {
     renderEditor(week11);
     expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await userEvent.click(
-      within(sessionNamed("Thursday")).getByRole("button", {
-        name: "Add a set to 1 Snatch",
+    const thursday = sessionNamed("Thursday");
+    await userEvent.type(
+      within(thursday).getByRole("textbox", {
+        name: "Weight in kg of set 4 of 1 Snatch",
       }),
+      "75",
+    );
+    await userEvent.type(
+      within(thursday).getByRole("textbox", {
+        name: "Reps of set 4 of 1 Snatch",
+      }),
+      "2",
     );
     const body = await nextSave();
     expect(fetchMock.mock.lastCall![0]).toBe(
@@ -693,13 +700,15 @@ describe("WeekEditor saving", () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
     renderEditor(week11);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await userEvent.click(
-      within(sessionNamed("Thursday")).getByRole("button", {
-        name: "Add a set to 1 Snatch",
+    const thursday = sessionNamed("Thursday");
+    await userEvent.type(
+      within(thursday).getByRole("textbox", {
+        name: "Reps of set 4 of 1 Snatch",
       }),
+      "2",
     );
     expect(
-      await screen.findByText("Could not save.", {}, { timeout: 2000 }),
+      await screen.findByText("Could not save.", {}, { timeout: 5000 }),
     ).toBeTruthy();
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
@@ -747,13 +756,18 @@ describe("WeekEditor in German", () => {
     ).toBeTruthy();
     expect(screen.getByText("Aufbauphase (ABP) · Mittlere Woche")).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    const table = sessionNamed("Montag").querySelector("table")!;
     expect(
-      sessionNamed("Montag").querySelector("[data-total=setSize]")!.textContent,
-    ).toBe("Satzgröße2↓3");
+      [...table.querySelectorAll("thead [data-heading]")].map(
+        (h) => h.textContent,
+      ),
+    ).toEqual(["Bestwert", "mHG", "Satzgröße", "Wdh."]);
+    expect(table.textContent).toContain("Ist");
+    expect(table.textContent).toContain("Plan");
     expect(
       within(sessionNamed("Montag")).getAllByRole("textbox", {
         name: /^Gewicht in kg von Satz \d+ von 1 Reißen$/,
       }),
-    ).toHaveLength(7);
+    ).toHaveLength(10);
   });
 });

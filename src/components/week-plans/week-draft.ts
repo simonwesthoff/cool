@@ -92,10 +92,13 @@ export type CellError = "reps" | "weight";
 
 /**
  * Which cells of a set are invalid: reps a whole number 1–30, weight empty
- * or 0–500 kg in 0.5 kg steps. A set without reps is still being typed.
+ * or 0–500 kg in 0.5 kg steps; a weight needs reps. An empty set is
+ * ignored.
  */
 export function setErrors(set: DraftSet): CellError[] {
   const errors: CellError[] = [];
+  // A weight without reps is an incomplete set.
+  if (set.reps.trim() === "" && set.weight.trim() !== "") errors.push("reps");
   if (set.reps.trim() !== "") {
     const reps = numberOf(set.reps);
     if (reps === null || !Number.isInteger(reps) || reps < 1 || reps > 30)

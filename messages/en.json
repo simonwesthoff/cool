@@ -407,16 +407,16 @@
       "reps": "Reps",
       "weightOf": "Weight in kg of set {n} of {name}",
       "repsOf": "Reps of set {n} of {name}",
-      "addSetTo": "Add a set to {name}",
-      "removeSetOf": "Remove the last set of {name}",
       "note": "Coach note",
       "noteOf": "Coach note for {name}",
       "freeText": "Sets and reps, e.g. 3 × 12",
-      "freeTextOf": "Sets and reps of {name}"
+      "freeTextOf": "Sets and reps of {name}",
+      "exercise": "Exercise",
+      "row": "Row"
     },
     "totals": {
       "title": "This week (all sessions)",
-      "heaviest": "Heaviest",
+      "heaviest": "Best value",
       "average": "mHG",
       "setSize": "Set size",
       "reps": "Reps",
@@ -425,7 +425,8 @@
       "above": "more than 5 % above the plan",
       "below": "more than 5 % below the plan",
       "actual": "Actual",
-      "plan": "Plan"
+      "plan": "Plan",
+      "row": "Value"
     },
     "blockAndLevel": "{block} · {level}",
     "dates": "{start} – {end}",

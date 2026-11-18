@@ -183,18 +183,19 @@ prompt happens between them.
   buttons.
   - **Alternatives:** a drag & drop library was rejected; it adds a
     dependency, and touch is covered by the click path.
-- **Step 2 table:** one `<table>` (border-collapse) per session over the
-  full width, each exercise its own `<tbody>` with a top border as the
-  dividing line.
-  - **Columns:** a `rowgroup` header with two rows (weight, reps) and one
-    column per set, then "+"/"−", a spacer, the coach note, and the
-    indicators.
-  - **Indicators:** a fixed three-column grid (name, actual, plan) that
-    lines up with the "Actual" / "Plan" header in the table head.
+- **Step 2 table:** a spreadsheet-like `<table>` (collapsed grid lines)
+  per session; each exercise is a `<tbody>` of two rows.
+  - **Columns:** name (`rowgroup`, both rows), a kg/reps label, ten set
+    columns with inputs filling their cells, the coach note (both rows),
+    an Actual/Plan label, and the indicator columns best value, mHG, set
+    size and reps.
+  - **Sets:** there are no add or remove buttons; typing into an empty
+    cell creates the sets up to it. A weight without reps is marked as
+    incomplete and blocks saving.
   - **Free text:** exercises from 30 on (`usesFreeText`) have one
-    free-text cell instead of sets, and no indicators. It is stored in
-    `session_exercise.free_text` (migration 0018). On phones the sets scroll sideways and
-  the note and totals sit in an extra row that stays in view (sticky).
+    free-text cell over the set columns and empty indicator cells. It is
+    stored in `session_exercise.free_text` (migration 0018).
+  - **Phones:** the table scrolls sideways, and the name column is sticky.
 - **Values column (replaced by the step 2 table):**
   - **Rows:** one block per session exercise, aligned with the sessions
     column, with set group inputs ("sets × reps @ kg", add and remove) and

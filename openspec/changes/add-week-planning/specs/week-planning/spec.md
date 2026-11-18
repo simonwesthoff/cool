@@ -124,21 +124,22 @@ session SHALL open the exercise selection.
 - **THEN** exercise 1 is added to Thursday
 
 ### Requirement: Step 2 values
-Step 2 SHALL show one column over the whole width with a table per
-session, its exercises separated by lines: each exercise on the left, two
-rows high, one column per set with the weight on top and the reps below
-(at most 10 sets; a new set copies the last one), then the coach note and,
-on the right, the week's indicators. On phones the sets SHALL scroll
-sideways with the note and indicators below them.
+Step 2 SHALL show a compact table per session over the whole width. Each
+exercise SHALL take two rows: its name and coach note span both, the ten
+set columns hold the weight in the first row and the reps in the second,
+and there are no buttons to add or remove sets; typing into an empty cell
+adds the set. A weight without reps SHALL be marked as incomplete. On
+phones the table SHALL scroll sideways with the exercise names kept in
+view.
 
 #### Scenario: Sets of the snatch on Monday
 - **GIVEN** Monday's snatch with 2 × 3 @ 60 kg, 3 × 2 @ 70 kg and 2 × 1 @ 80 kg
 - **WHEN** the coach opens step 2
-- **THEN** Monday's table shows the snatch with seven set columns: 60/3, 60/3, 70/2, 70/2, 70/2, 80/1, 80/1, separated by a line from the next exercise
+- **THEN** Monday's table shows the snatch in two rows with the sets 60/3, 60/3, 70/2, 70/2, 70/2, 80/1, 80/1 in the first seven of ten set columns
 
-#### Scenario: Add and remove sets
-- **WHEN** the coach adds a set to the snatch and then removes the last set
-- **THEN** the new set first copies 80/1, and removing takes away the last column
+#### Scenario: Add a set by typing
+- **WHEN** the coach types 70 kg and 2 reps into the empty eighth set cells of the snatch
+- **THEN** the snatch has eight sets and the change is saved
 
 ### Requirement: Exercises without values
 Exercises from number 30 on (general strength exercises without reference
@@ -151,15 +152,15 @@ instead of set columns, and no indicators; their coach note stays.
 - **THEN** the text is saved with the exercise, and no weights, reps or indicators are shown for it
 
 ### Requirement: Indicator layout
-Each session table SHALL head the indicators with "Actual" and "Plan"
-("Ist", "Plan"); every indicator SHALL show its name, the week's actual
-value and the planned value, aligned under these headings for all
-exercises of the session.
+Each session table SHALL have the columns "Best value", "mHG", "Set size"
+and "Reps" ("Bestwert", "mHG", "Satzgröße", "Wdh."). For every exercise
+with values, the first row SHALL hold the week's actual values ("Actual",
+"Ist") and the second row the planned values ("Plan").
 
 #### Scenario: Heaviest weight of the snatch
-- **GIVEN** the week 11 snatch with its heaviest set at 80 kg
+- **GIVEN** the week 11 snatch with its heaviest set at 80 kg and an mHG of 69.5 kg
 - **WHEN** the coach looks at Monday's table
-- **THEN** the row "Heaviest" shows 80 kg under "Actual" and 80 kg under "Plan", without the word "plan"
+- **THEN** the "Actual" row shows 80 kg under "Best value" and 69.5 kg under "mHG", and the "Plan" row 80 kg and 69 kg
 
 ### Requirement: Step animation
 When switching to step 2, only the sessions column SHALL slide from right

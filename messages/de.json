@@ -407,16 +407,16 @@
       "reps": "Wdh.",
       "weightOf": "Gewicht in kg von Satz {n} von {name}",
       "repsOf": "Wiederholungen von Satz {n} von {name}",
-      "addSetTo": "Satz zu {name} hinzufügen",
-      "removeSetOf": "Letzten Satz von {name} entfernen",
       "note": "Trainerhinweis",
       "noteOf": "Trainerhinweis zu {name}",
       "freeText": "Sätze und Wiederholungen, z. B. 3 × 12",
-      "freeTextOf": "Sätze und Wiederholungen von {name}"
+      "freeTextOf": "Sätze und Wiederholungen von {name}",
+      "exercise": "Übung",
+      "row": "Zeile"
     },
     "totals": {
       "title": "Diese Woche (alle Einheiten)",
-      "heaviest": "Höchstes",
+      "heaviest": "Bestwert",
       "average": "mHG",
       "setSize": "Satzgröße",
       "reps": "Wdh.",
@@ -425,7 +425,8 @@
       "above": "mehr als 5 % über dem Plan",
       "below": "mehr als 5 % unter dem Plan",
       "actual": "Ist",
-      "plan": "Plan"
+      "plan": "Plan",
+      "row": "Wert"
     },
     "blockAndLevel": "{block} · {level}",
     "dates": "{start} – {end}",

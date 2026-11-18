@@ -25,7 +25,6 @@ import {
   draftOf,
   exercisesOf,
   hasErrors,
-  MAX_SETS,
   newKey,
   normalize,
   payloadOf,
@@ -409,36 +408,14 @@ export function WeekEditor({
                   actualsOf={(n) => actuals.get(n)}
                   projectionOf={(n) => projections[n]}
                   onChangeSet={(exerciseKey, index, field, value) =>
-                    updateExercise(s.key, exerciseKey, (y) => ({
-                      ...y,
-                      sets: y.sets.map((set, i) =>
-                        i === index ? { ...set, [field]: value } : set,
-                      ),
-                    }))
-                  }
-                  onAddSet={(exerciseKey) =>
                     updateExercise(s.key, exerciseKey, (y) => {
-                      if (y.sets.length >= MAX_SETS) return y;
-                      // A new set starts as a copy of the last one.
-                      const last = y.sets.at(-1);
-                      return {
-                        ...y,
-                        sets: [
-                          ...y.sets,
-                          {
-                            key: newKey(),
-                            weight: last?.weight ?? "",
-                            reps: last?.reps ?? "",
-                          },
-                        ],
-                      };
+                      // Typing into an empty cell creates the sets up to it.
+                      const sets = [...y.sets];
+                      while (sets.length <= index)
+                        sets.push({ key: newKey(), weight: "", reps: "" });
+                      sets[index] = { ...sets[index]!, [field]: value };
+                      return { ...y, sets };
                     })
-                  }
-                  onRemoveSet={(exerciseKey) =>
-                    updateExercise(s.key, exerciseKey, (y) => ({
-                      ...y,
-                      sets: y.sets.slice(0, -1),
-                    }))
                   }
                   onChangeNote={(exerciseKey, note) =>
                     updateExercise(s.key, exerciseKey, (y) => ({ ...y, note }))
