@@ -44,6 +44,10 @@ whether a week fits the plan.
     sessions column slides from right to left; the catalog makes room and
     the values column appears on the right. Going back, it slides from
     left to right.
+- **Beyond the plan** (user decision): values more than 5 % off the plan
+  are saved and only warned about (colour and a count in step 2).
+- **Finish:** step 2 has "Finish week planning", which saves and returns
+  to the athlete page.
 - **Block check:** exercises of the week's mesocycle that are not in the
   week yet show it by their status icon in the exercise list; exercises in
   a session that are not chosen for the mesocycle get an icon at the right

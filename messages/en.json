@@ -443,6 +443,8 @@
       "invalid": "Not saved: please check the marked fields.",
       "failed": "Could not save."
     },
-    "retry": "Try again"
+    "retry": "Try again",
+    "finish": "Finish week planning",
+    "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway."
   }
 }

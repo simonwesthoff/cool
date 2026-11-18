@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { localized } from "@/domain/exercises/catalog-types";
 import type { PlannedExercise } from "@/domain/macrocycles/calculation";
-import type {
-  PlannedSession,
-  WeekPlan,
+import { deviation } from "@/domain/week-plans/calculation";
+import {
+  usesFreeText,
+  type PlannedSession,
+  type WeekPlan,
 } from "@/domain/week-plans/week-plan-types";
 import { PlusIcon } from "../icons";
 import { useUnsavedChangesGuard } from "../macrocycles/unsaved-changes";
@@ -256,6 +258,37 @@ export function WeekEditor({
   });
 
   const actuals = actualsOf(sessions);
+  // Values off the plan are allowed (the coach may intend it), but warned.
+  const offPlan = exercisesOf(sessions)
+    .filter((n) => !usesFreeText(n))
+    .reduce((count, n) => {
+      const a = actuals.get(n);
+      const p = projections[n];
+      const pairs: [number | null, number | null][] = [
+        [a?.heaviestKg ?? null, p?.bestKg ?? null],
+        [a?.averageKg ?? null, p?.averageKg ?? null],
+        [a?.setSize ?? null, p?.setSize ?? null],
+        [a?.weeklyReps ?? null, p?.weeklyReps ?? null],
+      ];
+      return (
+        count +
+        pairs.filter(([x, y]) => {
+          const d = deviation(x, y);
+          return d === "above" || d === "below";
+        }).length
+      );
+    }, 0);
+  const [finishing, setFinishing] = useState(false);
+  /** Saves what is left and goes back to the athlete page. */
+  async function finish() {
+    setFinishing(true);
+    const saved = await flush();
+    setFinishing(false);
+    if (saved) {
+      router.push(`/athletes/${athleteId}`);
+      router.refresh();
+    }
+  }
   const onWeek = exercisesOf(sessions);
   const end = new Date(`${plan.startDate}T00:00:00Z`);
   end.setUTCDate(end.getUTCDate() + 6);
@@ -458,13 +491,23 @@ export function WeekEditor({
             {t("continue")}
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => setStep(0)}
-            className={secondary}
-          >
-            {t("back")}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => void finish()}
+              disabled={finishing}
+              className={primary}
+            >
+              {t("finish")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(0)}
+              className={secondary}
+            >
+              {t("back")}
+            </button>
+          </>
         )}
         {status !== "untouched" && (
           <p
@@ -479,6 +522,14 @@ export function WeekEditor({
             }`}
           >
             {t(`status.${status}`)}
+          </p>
+        )}
+        {step === 1 && offPlan > 0 && (
+          <p
+            data-off-plan={offPlan}
+            className="basis-full text-sm text-zinc-700 dark:text-zinc-300"
+          >
+            {t("offPlan", { count: offPlan })}
           </p>
         )}
         {status === "failed" && (

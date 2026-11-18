@@ -77,6 +77,31 @@ sessions SHALL be unplanned again.
 - **WHEN** the coach chooses the back link
 - **THEN** a dialog asks "Save changes?" with "Save", "Discard" and "Cancel", as in the planning steps; switching between the two steps does not ask
 
+### Requirement: Values beyond the plan
+Values more than 5 % off the plan SHALL be saved like all others, because
+the coach may intend them; step 2 SHALL warn how many values are off the
+plan. Only invalid entries (a weight not in 0.5 kg steps or above 500 kg,
+reps outside 1–30, a weight without reps) SHALL block saving.
+
+#### Scenario: Heavier than planned
+- **GIVEN** the week 11 snatch with a plan of 80 kg best value
+- **WHEN** the coach enters a set with 95 kg
+- **THEN** the week is saved with 95 kg, the value is shown in red, and step 2 says how many values are more than 5 % off the plan
+
+### Requirement: Finish week planning
+Step 2 SHALL offer "Finish week planning", which saves any change not yet
+saved and opens the athlete page. With an invalid entry the editor SHALL
+stay open and say which fields to check.
+
+#### Scenario: Finish the week
+- **WHEN** the coach chooses "Finish week planning" right after a change
+- **THEN** the change is saved and the athlete page opens
+
+#### Scenario: Invalid entry
+- **GIVEN** a weight of 82.3 kg
+- **WHEN** the coach chooses "Finish week planning"
+- **THEN** the editor stays open and asks to check the marked fields
+
 ### Requirement: Step 1 sessions and exercises
 Step 1 SHALL show the week's sessions, each titled by its day selection
 (with the slot when a day has several sessions), and their exercises. The

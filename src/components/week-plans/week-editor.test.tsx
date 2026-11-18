@@ -723,6 +723,82 @@ describe("WeekEditor saving", () => {
   });
 });
 
+describe("WeekEditor beyond the plan and finishing", () => {
+  it("saves values beyond the plan and warns about them", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor(week11);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    // Week 11 already has set size 2 against a plan of 3: one value off.
+    // With 95 kg the best value is off too; the mHG (70.25 kg) stays within.
+    expect(
+      screen.getByText(
+        "1 value is more than 5 % off the plan (red: above, blue: below). It is saved anyway.",
+      ),
+    ).toBeTruthy();
+    const weight = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 7 of 1 Snatch",
+    });
+    await userEvent.clear(weight);
+    await userEvent.type(weight, "95");
+    const body = await nextSave();
+    expect(body.sessions[0].exercises[0].setGroups.at(-1)).toEqual({
+      sets: 1,
+      reps: 1,
+      weightKg: 95,
+    });
+    expect(
+      await screen.findByText("All changes saved.", {}, { timeout: 5000 }),
+    ).toBeTruthy();
+    expect(
+      document.querySelector("[data-off-plan]")!.getAttribute("data-off-plan"),
+    ).toBe("2");
+  });
+
+  it("finishes the week: saves what is left and goes back to the athlete", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor(week11);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      screen.queryByRole("button", { name: "Finish week planning" }),
+    ).toBeTruthy();
+    await userEvent.type(
+      within(sessionNamed("Thursday")).getByRole("textbox", {
+        name: "Reps of set 4 of 1 Snatch",
+      }),
+      "2",
+    );
+    // Right away, before the automatic save.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Finish week planning" }),
+    );
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith("/athletes/a1"),
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(lastBody().sessions[1].exercises[0].setGroups).toEqual([
+      { sets: 3, reps: 2, weightKg: 75 },
+      { sets: 1, reps: 2, weightKg: null },
+    ]);
+  });
+
+  it("stays on the week when a cell is invalid", async () => {
+    renderEditor(week11);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const weight = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 1 of 1 Snatch",
+    });
+    await userEvent.clear(weight);
+    await userEvent.type(weight, "82.3");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Finish week planning" }),
+    );
+    expect(
+      await screen.findByText("Not saved: please check the marked fields."),
+    ).toBeTruthy();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+});
+
 describe("WeekEditor leaving", () => {
   it("asks before leaving with a change that is not saved yet", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
