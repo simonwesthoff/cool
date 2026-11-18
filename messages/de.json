@@ -372,7 +372,7 @@
     "sessionLabel": "{day} {slot}",
     "steps": {
       "label": "Schritte der Wochenplanung",
-      "sessions": "Einheiten & Übungen",
+      "sessions": "Übungen & Einheiten",
       "values": "Sätze & Gewichte",
       "completed": "abgeschlossen"
     },
@@ -443,6 +443,12 @@
       "INVALID": "Ungültiger Wert."
     },
     "blockAndLevel": "{block} · {level}",
-    "dates": "{start} – {end}"
+    "dates": "{start} – {end}",
+    "columns": {
+      "exercises": "Übungen",
+      "sessions": "Einheiten",
+      "weights": "Gewichte"
+    },
+    "withVariation": "{name} ({variation})"
   }
 }

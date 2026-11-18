@@ -36,7 +36,11 @@ type Props = {
   plan: Pick<
     WeekPlan,
     "weekNumber" | "durationWeeks" | "startDate" | "mesocycle" | "level"
-  > & { chosen: number[] };
+  > & {
+    chosen: number[];
+    /** Variations of the mesocycle's exercises, shown after the name. */
+    variations: Record<number, string>;
+  };
   initialSessions: PlannedSession[];
   catalog: CatalogGroup[];
   projections: Record<number, PlannedExercise>;
@@ -89,7 +93,12 @@ export function WeekEditor({
         map.set(e.number, `${e.number} ${localized(e.name, locale)}`);
     return map;
   }, [catalog, locale]);
-  const exerciseName = (n: number) => names.get(n) ?? String(n);
+  /** "13 Snatch pull", with the mesocycle's variation in brackets. */
+  const exerciseName = (n: number) => {
+    const name = names.get(n) ?? String(n);
+    const variation = plan.variations[n];
+    return variation ? t("withVariation", { name, variation }) : name;
+  };
   const dayName = (weekday: number) =>
     format.dateTime(dayDate(weekday), { weekday: "long", timeZone: "UTC" });
   const labelOf = (s: DraftSession) =>
@@ -280,7 +289,11 @@ export function WeekEditor({
               : "pointer-events-none invisible opacity-0"
           }`}
         >
+          <h2 className="mb-2 text-lg font-semibold">
+            {t("columns.exercises")}
+          </h2>
           <ExerciseList
+            nameOf={exerciseName}
             catalog={catalog}
             chosen={plan.chosen}
             onWeek={onWeek}
@@ -294,6 +307,18 @@ export function WeekEditor({
             step === 0 ? "lg:translate-x-1/2" : "lg:translate-x-0"
           }`}
         >
+          {/* Column titles; they move with their columns. */}
+          <div className="grid grid-cols-1 gap-x-4 lg:grid-cols-2">
+            <h2 className="text-lg font-semibold">{t("columns.sessions")}</h2>
+            <h2
+              aria-hidden={step === 0 || undefined}
+              className={`hidden text-lg font-semibold lg:block ${
+                step === 0 ? "lg:invisible" : ""
+              }`}
+            >
+              {t("columns.weights")}
+            </h2>
+          </div>
           {sessions.map((s, si) => {
             const label = labelOf(s);
             if (step === 0)
@@ -503,6 +528,7 @@ export function WeekEditor({
             : ""
         }
         onClose={() => setPicking(null)}
+        nameOf={exerciseName}
         catalog={catalog}
         chosen={plan.chosen}
         onWeek={onWeek}

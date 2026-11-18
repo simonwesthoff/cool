@@ -372,7 +372,7 @@
     "sessionLabel": "{day} {slot}",
     "steps": {
       "label": "Week planning steps",
-      "sessions": "Sessions & exercises",
+      "sessions": "Exercises & sessions",
       "values": "Sets & weights",
       "completed": "completed"
     },
@@ -443,6 +443,12 @@
       "INVALID": "Invalid value."
     },
     "blockAndLevel": "{block} · {level}",
-    "dates": "{start} – {end}"
+    "dates": "{start} – {end}",
+    "columns": {
+      "exercises": "Exercises",
+      "sessions": "Sessions",
+      "weights": "Weights"
+    },
+    "withVariation": "{name} ({variation})"
   }
 }

@@ -47,6 +47,8 @@ export type WeekPlan = {
   planned: boolean;
   sessions: PlannedSession[];
   check: MesocycleCheck;
+  /** Variations of the mesocycle's chosen exercises, by exercise number. */
+  variations: Record<number, string>;
 };
 
 export type PlannedWeekSummary = { weekNumber: number; startDate: string };

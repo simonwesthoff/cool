@@ -54,6 +54,7 @@ function DoneIcon() {
  * buttons (selection dialog).
  */
 export function ExerciseList({
+  nameOf,
   catalog,
   chosen,
   onWeek,
@@ -62,6 +63,8 @@ export function ExerciseList({
   disabled = [],
   draggable = false,
 }: {
+  /** Display name of an exercise ("13 Snatch pull (From blocks)"). */
+  nameOf: (exerciseNumber: number) => string;
   catalog: CatalogGroup[];
   /** Exercises chosen for the week's mesocycle. */
   chosen: number[];
@@ -108,7 +111,7 @@ export function ExerciseList({
                 const inBlock = chosen.includes(e.number);
                 const inWeek = onWeek.includes(e.number);
                 const off = disabled.includes(e.number);
-                const name = `${e.number} ${localized(e.name, locale)}`;
+                const name = nameOf(e.number);
                 const row = `flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 ${
                   inBlock ? "" : "text-zinc-400 dark:text-zinc-500"
                 }`;

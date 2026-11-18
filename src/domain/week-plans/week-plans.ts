@@ -193,13 +193,15 @@ async function weekPlanOf(row: MacrocycleRow, week: number): Promise<WeekPlan> {
   ]);
   const type = mesocycleOf(week, spans);
   const block = spans.find((s) => s.type === type)!;
-  const chosen = (
-    await db
-      .select({ number: mesocycleExercise.exerciseNumber })
-      .from(mesocycleExercise)
-      .where(eq(mesocycleExercise.mesocycleId, block.id))
-      .orderBy(asc(mesocycleExercise.exerciseNumber))
-  ).map((c) => c.number);
+  const chosenRows = await db
+    .select({
+      number: mesocycleExercise.exerciseNumber,
+      variation: mesocycleExercise.variation,
+    })
+    .from(mesocycleExercise)
+    .where(eq(mesocycleExercise.mesocycleId, block.id))
+    .orderBy(asc(mesocycleExercise.exerciseNumber));
+  const chosen = chosenRows.map((c) => c.number);
   const list = sessions ?? [];
   const onWeek = [
     ...new Set(list.flatMap((s) => s.exercises.map((e) => e.exerciseNumber))),
@@ -217,6 +219,11 @@ async function weekPlanOf(row: MacrocycleRow, week: number): Promise<WeekPlan> {
       missing: chosen.filter((n) => !onWeek.includes(n)),
       notPlanned: onWeek.filter((n) => !chosen.includes(n)),
     },
+    variations: Object.fromEntries(
+      chosenRows
+        .filter((c) => c.variation)
+        .map((c) => [c.number, c.variation!]),
+    ),
   };
 }
 

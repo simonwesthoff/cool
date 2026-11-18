@@ -36,7 +36,7 @@ coach note of up to 500 characters.
 ### Requirement: Week editor
 The coach of the athlete's Team SHALL edit any week of the macrocycle,
 whether it is already planned, ongoing or in the future, in two steps on
-one page with a stepper on top: 1. sessions and exercises, 2. values. The
+one page with a stepper on top: 1. exercises and sessions, 2. values. The
 editor SHALL show "Week x of y", the dates of the week, its mesocycle and
 its week level. "Continue" and the stepper SHALL switch steps without
 leaving the page. "Save" SHALL store the whole week, from either step;
@@ -174,6 +174,22 @@ mesocycle SHALL be greyed out but still be selectable.
 #### Scenario: Show all exercises
 - **WHEN** the coach chooses "Show all exercises"
 - **THEN** all catalog exercises are listed, those not chosen for the special preparation block greyed out, and choosing one still adds it
+
+### Requirement: Column titles and variations
+The editor's columns SHALL have the titles "Exercises", "Sessions" and
+"Weights" ("Übungen", "Einheiten", "Gewichte"); the titles move with their
+columns between the steps. The first step SHALL be called "Exercises &
+sessions". An exercise chosen for the week's mesocycle with a variation
+SHALL be named with the variation in brackets everywhere in the editor.
+
+#### Scenario: Titles per step
+- **WHEN** the coach is in step 1 on a desktop screen
+- **THEN** the columns are titled "Exercises" and "Sessions"; in step 2 "Sessions" and "Weights"
+
+#### Scenario: Variation in brackets
+- **GIVEN** exercise 13 chosen for the special preparation block with the variation "From blocks"
+- **WHEN** the coach plans week 11
+- **THEN** the exercise list, the session and step 2 show "13 Snatch pull (From blocks)"
 
 ### Requirement: Projection per exercise
 In step 2, for every exercise of the week, the values column SHALL show the week's

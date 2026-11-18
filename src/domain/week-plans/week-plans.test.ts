@@ -274,6 +274,14 @@ describe("mesocycle check", () => {
       missing: [13],
       notPlanned: [20],
     });
+    expect(plan.variations).toEqual({});
+    await setMesocycleExercise(coach, athlete.id, "special_preparation", "13", {
+      ownReasons: ["Technique"],
+      variation: "From blocks",
+    });
+    expect((await getWeekPlan(coach, athlete.id, "11")).variations).toEqual({
+      13: "From blocks",
+    });
   });
 });
 

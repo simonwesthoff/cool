@@ -79,6 +79,7 @@ const plan = {
   mesocycle: "special_preparation" as const,
   level: "medium" as const,
   chosen: [1, 13],
+  variations: {} as Record<number, string>,
 };
 const schedule: PlannedSession[] = [
   { weekday: 1, slot: 1, exercises: [] },
@@ -118,6 +119,7 @@ const week11: PlannedSession[] = [
 function renderEditor(
   initialSessions: PlannedSession[] = schedule,
   locale: "en" | "de" = "en",
+  variations: Record<number, string> = {},
 ) {
   return render(
     <NextIntlClientProvider
@@ -129,7 +131,7 @@ function renderEditor(
         <GuardedBackLink href="/athletes/a1" label="Back to Anna Weber" />
         <WeekEditor
           athleteId="a1"
-          plan={plan}
+          plan={{ ...plan, variations }}
           initialSessions={initialSessions}
           catalog={catalog}
           projections={projections}
@@ -156,7 +158,7 @@ describe("WeekEditor step 1", () => {
       name: "Week planning steps",
     });
     expect(stepper.querySelector("[aria-current=step]")!.textContent).toContain(
-      "1 Sessions & exercises",
+      "1 Exercises & sessions",
     );
     expect(
       [...column(container).querySelectorAll("section[aria-label]")].map((h) =>
@@ -386,6 +388,35 @@ describe("WeekEditor step 1", () => {
   });
 });
 
+describe("WeekEditor names and column titles", () => {
+  it("writes the mesocycle's variation in brackets after the exercise name", async () => {
+    const { container } = renderEditor(week11, "en", { 1: "From blocks" });
+    const aside = screen.getByRole("complementary", { name: "Exercises" });
+    expect(aside.querySelector('[data-exercise="1"]')!.textContent).toContain(
+      "1 Snatch (From blocks)",
+    );
+    expect(sessionNamed("Monday").textContent).toContain(
+      "1 Snatch (From blocks)",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(container.querySelector('[data-values="1"]')!.textContent).toContain(
+      "1 Snatch (From blocks)",
+    );
+  });
+
+  it("titles the columns Exercises, Sessions and Weights", async () => {
+    renderEditor(week11);
+    const titles = () =>
+      screen
+        .getAllByRole("heading", { level: 2 })
+        .filter((h) => !h.closest("[aria-hidden=true]"))
+        .map((h) => h.textContent);
+    expect(titles()).toEqual(["Exercises", "Sessions"]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(titles()).toEqual(["Sessions", "Weights"]);
+  });
+});
+
 describe("WeekEditor step 2", () => {
   it("switches steps on the page, slides only the sessions column and keeps the values", async () => {
     const { container } = renderEditor(week11);
@@ -408,7 +439,7 @@ describe("WeekEditor step 2", () => {
     await userEvent.clear(weight);
     await userEvent.type(weight, "82.5");
     await userEvent.click(
-      screen.getByRole("button", { name: "1 Sessions & exercises, completed" }),
+      screen.getByRole("button", { name: "1 Exercises & sessions, completed" }),
     );
     expect(column(container).className).toContain("lg:translate-x-1/2");
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -570,7 +601,7 @@ describe("WeekEditor unsaved changes", () => {
     await userEvent.click(screen.getByRole("button", { name: "Add session" }));
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     await userEvent.click(
-      screen.getByRole("button", { name: "1 Sessions & exercises, completed" }),
+      screen.getByRole("button", { name: "1 Exercises & sessions, completed" }),
     );
     expect(document.querySelector("dialog[open]")).toBeNull();
     await userEvent.click(

@@ -115,6 +115,7 @@
 
 - [x] 8.1 Exercise list: only the mesocycle's exercises with an "in the week" icon, no search and no highlight note, "Show all exercises" at the end (others greyed out, still selectable). Session cards: the day selection is the title (slot badge with several sessions); drag handles move exercises within a session and into other sessions (arrow keys on the handle); no "drag here" note. Verify with component tests (list and status, show all, handle moves within and across sessions, keyboard, title select) and the browser flow on the dev server (desktop and phone) with screenshots.
 - [x] 8.2 No block check text below the stepper, no drag hint, no "not planned" text under exercises; an icon at the right of each session exercise not planned for the mesocycle. Verify with component tests (icon only for not planned exercises, texts gone) and a screenshot.
+- [x] 8.3 First step "Exercises & sessions"; column titles Exercises, Sessions, Weights (moving with the columns); variation of the mesocycle's exercise in brackets after its name (domain returns the variations). Verify with component and PGlite tests and screenshots of both steps.
 
 ## Workflow follow-up
 

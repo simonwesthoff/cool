@@ -58,6 +58,7 @@ export async function WeekPlanEditor({ params, searchParams }: Props) {
           mesocycle: content.plan.mesocycle,
           level: content.plan.level,
           chosen: content.plan.check.chosen,
+          variations: content.plan.variations,
         }}
         initialSessions={content.sessions}
         catalog={catalog.map((g) => ({
