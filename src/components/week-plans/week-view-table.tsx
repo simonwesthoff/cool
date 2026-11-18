@@ -55,7 +55,7 @@ export function WeekViewTable({
       {session.exercises.length === 0 ? (
         <p className="text-sm text-zinc-500">{tv("noExercises")}</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto pr-px">
           <table
             className="table-fixed border-collapse text-sm"
             style={{ width: `${VIEW_TABLE_WIDTH}rem` }}
