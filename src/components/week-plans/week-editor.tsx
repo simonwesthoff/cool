@@ -181,7 +181,7 @@ export function WeekEditor({
   const primary = `${button} bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300`;
   const secondary = `${button} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`;
   const slide =
-    "transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none";
+    "transition-[translate,opacity] duration-300 ease-out motion-reduce:transition-none";
 
   return (
     <div className="flex flex-col gap-6" data-step={step + 1}>

@@ -63,7 +63,7 @@ saving a week without sessions SHALL make it unplanned again.
 
 #### Scenario: Athlete cannot edit
 - **WHEN** the linked athlete opens the week editor of their own week
-- **THEN** they see the "not found" page, because the weekly view for athletes comes with a later feature
+- **THEN** they cannot open it, as for all coach pages: without a Team of their own they are sent to the home page, otherwise they see the "not found" page; the weekly view for athletes comes with a later feature
 
 ### Requirement: Step 1 sessions and exercises
 Step 1 SHALL show the week's sessions with their day, slot and exercises.

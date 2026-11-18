@@ -45,19 +45,19 @@
 
 ## 4. Week editor
 
-- [ ] 4.1 Page `/athletes/{id}/macrocycle/weeks/{week}`:
+- [x] 4.1 Page `/athletes/{id}/macrocycle/weeks/{week}`:
   - **Access:** coach only.
   - **Loads:** the macrocycle, the week's projections for all catalog exercises, the initial content (`?prefill=previous`) and the catalog.
   - **Back link:** to the athlete page.
 
   Verify with page tests: stored plan, prefill only when unplanned, the schedule otherwise, and "not found" for other users, the linked athlete and a week outside the macrocycle.
-- [ ] 4.2 Editor shell:
+- [x] 4.2 Editor shell:
   - **Header and stepper:** "Week x of y", dates, mesocycle and level; a two-step stepper sharing the planning stepper's look.
   - **Navigation:** "Continue" and "Back" between the steps without a route change; "Save" from both steps.
   - **Unsaved changes:** the guard on the back link.
 
   Verify with component tests: step switching keeps the draft and never calls the router; save payload; dialog choices; no dialog when switching steps.
-- [ ] 4.3 Step 1:
+- [x] 4.3 Step 1:
   - **Desktop:** the catalog column (all exercises, the mesocycle's highlighted) left of the session cards.
   - **Sessions:** day and slot change, add and remove a session, add, remove and reorder exercises.
   - **Adding exercises:** drag & drop from the catalog onto a session; clicking into a session opens the selection sheet (highlighted the same way).
@@ -66,14 +66,14 @@
   Verify with component tests:
   - **Adding:** a drop event adds the exercise; the click path adds it.
   - **Editing:** a day change; highlighting in both lists; labels "Monday" / "Monday 1"; no indicators in step 1.
-- [ ] 4.4 Step 2:
+- [x] 4.4 Step 2:
   - **Layout:** the sessions column (day, slot and exercises only) and the values column with set groups ("sets × reps @ kg", add and remove) and coach notes, aligned per exercise.
   - **Indicators:** the week totals with the projection and red ↑ / blue ↓ per exercise.
   - **Mesocycle check:** missing and not-planned exercises.
   - **Phones:** set groups below each exercise.
 
   Verify with component tests: the spec's week 11 example (colours, arrows, projected values), live update while typing, values without a projection not compared, and German texts.
-- [ ] 4.5 Step animation: on desktop, only the sessions column slides right→left to step 2 and back left→right; the catalog and values columns fade; `prefers-reduced-motion` switches instantly. Verify with component tests (classes and transforms per step, reduced-motion class) and a browser recording/screenshots of both directions.
+- [x] 4.5 Step animation: on desktop, only the sessions column slides right→left to step 2 and back left→right; the catalog and values columns fade; `prefers-reduced-motion` switches instantly. Verify with component tests (classes and transforms per step, reduced-motion class) and a browser recording/screenshots of both directions.
 
 ## 5. Entry points
 
