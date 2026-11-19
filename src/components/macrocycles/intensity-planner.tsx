@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { useState } from "react";
 import type {
   Macrocycle,
@@ -10,8 +9,21 @@ import type {
 import { baseIntensity, intensityAt } from "./chart-geometry";
 import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 
-/** Planning step 2: week levels on the macrocycle chart, saved per change. */
-export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
+/** Planning step 3: week levels on the macrocycle chart, saved per change. */
+export function IntensityPlanner({
+  macrocycle,
+  onSaved,
+  onContinue,
+  onBack,
+}: {
+  macrocycle: Macrocycle;
+  /** The macrocycle as stored after each change. */
+  onSaved: (macrocycle: Macrocycle) => void;
+  /** "Continue to exercises" (step 4). */
+  onContinue: () => void;
+  /** "Back to SWOT" (step 2). */
+  onBack: () => void;
+}) {
   const t = useTranslations("Macrocycle.intensity");
   const [weeks, setWeeks] = useState<ChartWeek[]>(macrocycle.weeks);
   const [mesocycles, setMesocycles] = useState(macrocycle.mesocycles);
@@ -46,6 +58,7 @@ export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
     if (response?.ok) {
       const saved = (await response.json()) as Macrocycle;
       setWeeks(saved.weeks);
+      onSaved(saved);
     } else {
       setWeeks(previous);
       setFailed(true);
@@ -79,13 +92,13 @@ export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
       const saved = (await response.json()) as Macrocycle;
       setMesocycles(saved.mesocycles);
       setWeeks(saved.weeks);
+      onSaved(saved);
     } else {
       setMesocycles(previous);
       setFailed(true);
     }
   }
 
-  const base = `/athletes/${macrocycle.athleteId}/macrocycle`;
   return (
     <div className="flex flex-col gap-6">
       <p className="text-zinc-600 dark:text-zinc-400">{t("help")}</p>
@@ -108,18 +121,20 @@ export function IntensityPlanner({ macrocycle }: { macrocycle: Macrocycle }) {
         }}
       />
       <div className="flex flex-wrap gap-3">
-        <Link
-          href={`${base}/exercises`}
+        <button
+          type="button"
+          onClick={onContinue}
           className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-6 font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
           {t("continue")}
-        </Link>
-        <Link
-          href={`${base}/swot`}
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
           className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
           {t("back")}
-        </Link>
+        </button>
       </div>
     </div>
   );

@@ -161,7 +161,7 @@ export function AthleteHome({
       ) : (
         canEdit && (
           <Link
-            href={`/athletes/${athleteId}/macrocycle/base-data`}
+            href={`/athletes/${athleteId}/macrocycle/planning?step=base-data`}
             className={`mt-4 ${card}`}
           >
             <span className="flex min-w-0 flex-col gap-1">

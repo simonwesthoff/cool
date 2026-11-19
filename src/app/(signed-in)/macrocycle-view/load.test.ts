@@ -38,7 +38,9 @@ describe("loadMacrocycleView", () => {
     getExerciseWeeks.mockResolvedValue({ exerciseNumber: 1, weeks: [] });
     canPlanMacrocycle.mockResolvedValue(true);
     const asCoach = await loadMacrocycleView(user, "a1");
-    expect(asCoach?.editHref).toBe("/athletes/a1/macrocycle/base-data");
+    expect(asCoach?.editHref).toBe(
+      "/athletes/a1/macrocycle/planning?step=base-data",
+    );
     expect(asCoach?.exercises).toEqual([
       { number: 1, name: { de: "Reißen", en: "Snatch" } },
     ]);

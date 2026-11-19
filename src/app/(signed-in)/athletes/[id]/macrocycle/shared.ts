@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
 import { findMacrocycle } from "@/domain/macrocycles";
+import type { PlanningStep } from "@/components/macrocycles/planning-steps";
 import { requireCoachPage } from "../../../current-user";
 
 /** Coach, athlete (not found for other Teams) and the athlete's macrocycle. */
@@ -22,4 +23,9 @@ export function nextMonday(from: string): string {
   const offset = (8 - date.getUTCDay()) % 7;
   date.setUTCDate(date.getUTCDate() + offset);
   return date.toISOString().slice(0, 10);
+}
+
+/** The planning page, opened at a step. */
+export function planningPath(athleteId: string, step: PlanningStep) {
+  return `/athletes/${athleteId}/macrocycle/planning?step=${step}`;
 }

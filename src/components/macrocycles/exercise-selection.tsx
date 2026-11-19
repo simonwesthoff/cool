@@ -18,7 +18,14 @@ import {
   type ChoiceTarget,
 } from "./exercise-choice-dialog";
 
-type Props = { macrocycle: Macrocycle; catalog: ExerciseGroup[] };
+type Props = {
+  macrocycle: Macrocycle;
+  catalog: ExerciseGroup[];
+  /** The macrocycle as stored after each change. */
+  onSaved: (macrocycle: Macrocycle) => void;
+  /** "Back to intensity" (step 3). */
+  onBack: () => void;
+};
 type Choices = Record<MesocycleType, MesocycleExercise[]>;
 
 /** All deficits, shown above the table. */
@@ -39,7 +46,12 @@ const choicesOf = (macrocycle: Pick<Macrocycle, "mesocycles">): Choices =>
  * Each cell opens a dialog to choose the exercise with a reason and a
  * variation; every change is saved.
  */
-export function ExerciseSelection({ macrocycle, catalog }: Props) {
+export function ExerciseSelection({
+  macrocycle,
+  catalog,
+  onSaved,
+  onBack,
+}: Props) {
   const t = useTranslations("Macrocycle.exercises");
   const tm = useTranslations("Macrocycle.mesocycles");
   const tf = useTranslations("Macrocycle.baseData.fields");
@@ -63,7 +75,9 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
       body: JSON.stringify(input),
     }).catch(() => null);
     if (!response?.ok) return false;
-    setChoices(choicesOf((await response.json()) as Macrocycle));
+    const saved = (await response.json()) as Macrocycle;
+    setChoices(choicesOf(saved));
+    onSaved(saved);
     return true;
   }
 
@@ -74,12 +88,19 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
       () => null,
     );
     if (!response?.ok) return false;
+    const without = (list: MesocycleExercise[]) =>
+      list.filter((c) => c.exerciseNumber !== cell.exercise.number);
     setChoices((current) => ({
       ...current,
-      [cell.type]: current[cell.type].filter(
-        (c) => c.exerciseNumber !== cell.exercise.number,
-      ),
+      [cell.type]: without(current[cell.type]),
     }));
+    // Removing answers without a body: the planning gets the same change.
+    onSaved({
+      ...macrocycle,
+      mesocycles: macrocycle.mesocycles.map((m) =>
+        m.type === cell.type ? { ...m, exercises: without(m.exercises) } : m,
+      ),
+    });
     return true;
   }
 
@@ -231,12 +252,13 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
         >
           {t("finish")}
         </Link>
-        <Link
-          href={`${base}/macrocycle/intensity`}
+        <button
+          type="button"
+          onClick={onBack}
           className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
           {t("back")}
-        </Link>
+        </button>
       </div>
     </div>
   );

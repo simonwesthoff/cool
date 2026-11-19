@@ -6,6 +6,7 @@ import { MacrocycleView } from "@/components/macrocycles/macrocycle-view";
 import { getAthlete } from "@/domain/athletes";
 import { DomainError } from "@/domain/errors";
 import { requireCoachPage } from "../../../current-user";
+import { planningPath } from "./shared";
 import { loadMacrocycleView } from "../../../macrocycle-view/load";
 import { BackLink } from "@/components/back-link";
 import { firstName } from "@/components/first-name";
@@ -35,7 +36,7 @@ export async function CoachMacrocycleView({ params }: { params: Params }) {
   };
   const athlete = await getAthlete(user, id).catch(onNotFound);
   const view = await loadMacrocycleView(user, id).catch(onNotFound);
-  if (!view) redirect(`/athletes/${id}/macrocycle/base-data`);
+  if (!view) redirect(planningPath(id, "base-data"));
   const t = await getTranslations("MacrocycleView");
   const tb = await getTranslations("Back");
   return (

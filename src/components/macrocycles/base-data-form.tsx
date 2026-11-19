@@ -10,7 +10,10 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import type { MacrocycleBaseData } from "@/domain/macrocycles/macrocycle-types";
+import type {
+  Macrocycle,
+  MacrocycleBaseData,
+} from "@/domain/macrocycles/macrocycle-types";
 import { FocusPointsField } from "./focus-points-field";
 import { SchedulePicker } from "./schedule-picker";
 import { useUnsavedChangesGuard } from "./unsaved-changes";
@@ -94,6 +97,10 @@ type Props = {
   macrocycle?: MacrocycleBaseData;
   /** Default start date for a new macrocycle (the next Monday). */
   defaultStartDate: string;
+  /** The macrocycle as stored after each successful save. */
+  onSaved: (macrocycle: Macrocycle) => void;
+  /** "Continue" after a successful save: the planning opens the next step. */
+  onContinue: () => void;
 };
 
 /** Planning steps 1 (base data) and 2 (SWOT) of a macrocycle. */
@@ -107,9 +114,10 @@ function BaseDataFormFields({
   part,
   macrocycle,
   defaultStartDate,
+  onSaved,
+  onContinue,
 }: Props) {
   const t = useTranslations("Macrocycle.baseData");
-  const router = useRouter();
   const formId = useId();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -139,6 +147,10 @@ function BaseDataFormFields({
     setPending(false);
     if (response?.ok) {
       stored.current = snapshot();
+      const saved = (await response
+        .json()
+        .catch(() => null)) as Macrocycle | null;
+      if (saved) onSaved(saved);
       return true;
     }
     const result = (await response?.json().catch(() => null)) as {
@@ -161,10 +173,7 @@ function BaseDataFormFields({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!(await save())) return;
-    const next = part === "swot" ? "intensity" : "swot";
-    router.push(`/athletes/${athleteId}/macrocycle/${next}`);
-    router.refresh();
+    if (await save()) onContinue();
   }
 
   const message = (code: string) =>
