@@ -141,13 +141,20 @@ const macrocycle = {
   weeks: [],
 } as unknown as Macrocycle;
 
+const onSaved = vi.fn();
+const onBack = vi.fn();
 const renderIt = (locale: "en" | "de" = "en") =>
   render(
     <NextIntlClientProvider
       locale={locale}
       messages={locale === "de" ? de : en}
     >
-      <ExerciseSelection macrocycle={macrocycle} catalog={catalog} />
+      <ExerciseSelection
+        onSaved={onSaved}
+        onBack={onBack}
+        macrocycle={macrocycle}
+        catalog={catalog}
+      />
     </NextIntlClientProvider>,
   );
 const dialog = () => screen.getByRole("dialog");
@@ -281,7 +288,12 @@ describe("ExerciseSelection", () => {
     } as unknown as Macrocycle;
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <ExerciseSelection macrocycle={plain} catalog={catalog} />
+        <ExerciseSelection
+          onSaved={onSaved}
+          onBack={onBack}
+          macrocycle={plain}
+          catalog={catalog}
+        />
       </NextIntlClientProvider>,
     );
     const cell = screen.getByRole("button", {
@@ -372,6 +384,8 @@ describe("ExerciseSelection", () => {
       }),
     ).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
+    // The planning gets the stored macrocycle.
+    expect(onSaved).toHaveBeenCalledTimes(1);
   });
 
   it("adds own reasons with Enter and with a comma, each followed by a new +", async () => {
@@ -468,7 +482,12 @@ describe("ExerciseSelection", () => {
     } as unknown as Macrocycle;
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <ExerciseSelection macrocycle={chosen} catalog={catalog} />
+        <ExerciseSelection
+          onSaved={onSaved}
+          onBack={onBack}
+          macrocycle={chosen}
+          catalog={catalog}
+        />
       </NextIntlClientProvider>,
     );
     await open("Power snatch, Special preparation block: choose");
@@ -584,6 +603,18 @@ describe("ExerciseSelection", () => {
     expect(
       screen.getByRole("link", { name: "Finish planning" }),
     ).toHaveProperty("pathname", "/athletes/a1");
+  });
+
+  it("goes back to the intensity step on the same page", async () => {
+    onBack.mockReset();
+    renderIt();
+    expect(
+      screen.queryByRole("link", { name: "Back to intensity" }),
+    ).toBeNull();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Back to intensity" }),
+    );
+    expect(onBack).toHaveBeenCalledTimes(1);
   });
 });
 

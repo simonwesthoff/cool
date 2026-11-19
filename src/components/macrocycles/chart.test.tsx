@@ -427,6 +427,9 @@ describe("week tooltip", () => {
 
 describe("IntensityPlanner", () => {
   const fetchMock = vi.fn();
+  const onSaved = vi.fn();
+  const onContinue = vi.fn();
+  const onBack = vi.fn();
   const macrocycle = {
     athleteId: "a1",
     competitionDate: "2027-04-24",
@@ -445,7 +448,12 @@ describe("IntensityPlanner", () => {
       new Response(JSON.stringify(saved), { status: 200 }),
     );
     const { container } = renderIn(
-      <IntensityPlanner macrocycle={macrocycle} />,
+      <IntensityPlanner
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
     );
     const column = container.querySelector('rect[data-week="11"]')!;
     fireEvent.pointerDown(column, { clientY: 101, pointerId: 1 });
@@ -459,6 +467,26 @@ describe("IntensityPlanner", () => {
         "Week 11, High week, 85%",
       ),
     );
+    // The planning gets the stored macrocycle.
+    expect(onSaved).toHaveBeenCalledWith(saved);
+  });
+
+  it("continues and goes back on the same page", async () => {
+    renderIn(
+      <IntensityPlanner
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
+    );
+    expect(screen.queryAllByRole("link")).toHaveLength(0);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continue to exercises" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Back to SWOT" }));
+    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onBack).toHaveBeenCalledTimes(1);
   });
 
   it("saves dragged borders", async () => {
@@ -489,7 +517,12 @@ describe("IntensityPlanner", () => {
       new Response(JSON.stringify(moved), { status: 200 }),
     );
     const { container } = renderIn(
-      <IntensityPlanner macrocycle={macrocycle} />,
+      <IntensityPlanner
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
     );
     const first = container.querySelector('[data-border="0"]')!;
     fireEvent.pointerDown(first, { clientX: 160, pointerId: 1 });
@@ -513,7 +546,12 @@ describe("IntensityPlanner", () => {
   it("reverts and shows a message when saving fails", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
     const { container } = renderIn(
-      <IntensityPlanner macrocycle={macrocycle} />,
+      <IntensityPlanner
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
     );
     const column = container.querySelector('rect[data-week="11"]')!;
     fireEvent.pointerDown(column, { clientY: 240, pointerId: 1 });

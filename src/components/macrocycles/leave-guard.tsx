@@ -7,20 +7,22 @@ import { useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { useCurrentGuard } from "./unsaved-changes";
 
 /**
- * Asks "Save changes?" (Save, Discard, Cancel) before a link leaves a page
- * whose form has unsaved changes. Returns the click handler for such links
+ * Asks "Save changes?" (Save, Discard, Cancel) before leaving a form with
+ * unsaved changes: by a link to another page (`leave`) or by an action on
+ * the same page, e.g. switching the planning step (`guard`). Returns both
  * and the dialog to render once.
  */
 export function useLeaveGuard(): {
   leave: (event: MouseEvent<HTMLElement>, href: string) => void;
+  guard: (action: () => void) => void;
   dialog: ReactNode;
 } {
   const tu = useTranslations("Macrocycle.unsaved");
   const router = useRouter();
-  const guard = useCurrentGuard();
+  const current = useCurrentGuard();
   const ref = useRef<HTMLDialogElement>(null);
-  // The page to open once the user decided about the unsaved changes.
-  const [target, setTarget] = useState<string | null>(null);
+  // What to do once the user decided about the unsaved changes.
+  const [target, setTarget] = useState<(() => void) | null>(null);
   const [saving, setSaving] = useState(false);
 
   function go(href: string) {
@@ -28,29 +30,39 @@ export function useLeaveGuard(): {
     router.refresh();
   }
 
-  function leave(event: MouseEvent<HTMLElement>, href: string) {
-    // Plain navigation without unsaved changes (and for new tabs).
-    if (event.metaKey || event.ctrlKey || event.shiftKey) return;
-    if (!guard()?.isDirty()) return;
-    event.preventDefault();
-    setTarget(href);
+  function ask(action: () => void) {
+    // A function in state must be wrapped, or React would call it.
+    setTarget(() => action);
     ref.current?.showModal();
   }
 
+  function leave(event: MouseEvent<HTMLElement>, href: string) {
+    // Plain navigation without unsaved changes (and for new tabs).
+    if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+    if (!current()?.isDirty()) return;
+    event.preventDefault();
+    ask(() => go(href));
+  }
+
+  function guard(action: () => void) {
+    if (current()?.isDirty()) ask(action);
+    else action();
+  }
+
   async function saveAndLeave() {
-    const current = guard();
-    if (!current || !target) return;
+    const form = current();
+    if (!form || !target) return;
     setSaving(true);
-    const saved = await current.save();
+    const saved = await form.save();
     setSaving(false);
     ref.current?.close();
-    // When saving failed the form shows why, and the page stays open.
-    if (saved) go(target);
+    // When saving failed the form shows why, and the step stays open.
+    if (saved) target();
   }
 
   function discardAndLeave() {
     ref.current?.close();
-    if (target) go(target);
+    target?.();
   }
 
   const dialog = (
@@ -97,7 +109,7 @@ export function useLeaveGuard(): {
       </div>
     </dialog>
   );
-  return { leave, dialog };
+  return { leave, guard, dialog };
 }
 
 /** "‹ Back to …" that asks about unsaved changes first. */

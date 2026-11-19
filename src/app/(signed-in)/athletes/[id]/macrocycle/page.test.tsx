@@ -38,7 +38,7 @@ const view = {
   initialValues: { exerciseNumber: 1, weeks: [] },
   exercises: [],
   today: "2027-01-06",
-  editHref: "/athletes/a1/macrocycle/base-data",
+  editHref: "/athletes/a1/macrocycle/planning?step=base-data",
 };
 
 describe("coach macrocycle view page", () => {
@@ -66,7 +66,7 @@ describe("coach macrocycle view page", () => {
     getAthlete.mockResolvedValue({ id: "a1", name: "Anna Weber" });
     loadMacrocycleView.mockResolvedValue(null);
     await expect(CoachMacrocycleView({ params })).rejects.toMatchObject({
-      url: "/athletes/a1/macrocycle/base-data",
+      url: "/athletes/a1/macrocycle/planning?step=base-data",
     });
   });
 

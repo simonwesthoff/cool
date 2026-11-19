@@ -85,7 +85,10 @@ function renderHome(
   );
 }
 const links = () =>
-  screen.getAllByRole("link").map((l) => (l as HTMLAnchorElement).pathname);
+  screen.getAllByRole("link").map((l) => {
+    const { pathname, search } = l as HTMLAnchorElement;
+    return pathname + search;
+  });
 
 describe("AthleteHome", () => {
   it("shows picture, name and coach on top, for both viewers", () => {
@@ -143,7 +146,7 @@ describe("AthleteHome", () => {
     expect(links()).toEqual([
       "/",
       "/athletes/a1/basic-data",
-      "/athletes/a1/macrocycle/base-data",
+      "/athletes/a1/macrocycle/planning?step=base-data",
     ]);
     expect(
       screen.getByRole("link", { name: /Plan macrocycle/ }).textContent,
@@ -161,7 +164,7 @@ describe("AthleteHome", () => {
     renderHome({ canEdit: true, macrocycle: null });
     expect(links()).toEqual([
       "/athletes/a1/basic-data",
-      "/athletes/a1/macrocycle/base-data",
+      "/athletes/a1/macrocycle/planning?step=base-data",
     ]);
     // No way back on a top-level page.
     expect(screen.queryByRole("link", { name: /Back/ })).toBeNull();

@@ -45,3 +45,12 @@ describe("loadPlanning", () => {
     await expect(loadPlanning("a1", "/x")).rejects.toBeInstanceOf(NotFound);
   });
 });
+
+describe("planningPath", () => {
+  it("opens the planning page at a step", async () => {
+    const { planningPath } = await import("./shared");
+    expect(planningPath("a1", "swot")).toBe(
+      "/athletes/a1/macrocycle/planning?step=swot",
+    );
+  });
+});

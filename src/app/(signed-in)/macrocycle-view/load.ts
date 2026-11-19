@@ -33,7 +33,7 @@ export async function loadMacrocycleView(user: CurrentUser, athleteId: string) {
     // "Change planning" only for the coach of the athlete's Team, on
     // whichever page the view is opened.
     editHref: canPlan
-      ? `/athletes/${athleteId}/macrocycle/base-data`
+      ? `/athletes/${athleteId}/macrocycle/planning?step=base-data`
       : undefined,
   };
 }
