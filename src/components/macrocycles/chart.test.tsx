@@ -185,6 +185,21 @@ describe("MacrocycleChart", () => {
     expect(legend.textContent).toContain("Leistungsausprägungsphase (LAP)");
   });
 
+  it("shows no legend on screen but keeps it for screen readers", () => {
+    renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={{ date: "2027-04-24", type: "German Championships" }}
+      />,
+    );
+    const legend = screen.getByRole("list", { name: "Legend" });
+    expect(legend.className).toBe("sr-only");
+    expect(legend.textContent).toContain("General preparation block");
+    expect(legend.textContent).toContain("High / low week");
+    expect(legend.textContent).toContain("Main competition");
+  });
+
   it("snaps a dragged handle to high and reports it on release", () => {
     const onLevelChange = vi.fn();
     const { container } = renderIn(
@@ -724,5 +739,57 @@ describe("main competition marker", () => {
         .querySelector("[data-competition]")!
         .getAttribute("aria-label"),
     ).toContain("24.04.2027");
+  });
+
+  const segmentsOf = (container: HTMLElement) =>
+    [...container.querySelectorAll("[data-competition-line]")].map((l) => [
+      Number(l.getAttribute("y1")),
+      Number(l.getAttribute("y2")),
+    ]);
+  // Planning chart at 800 px: the competition's row puts the plot at 44;
+  // the plot keeps the desktop proportions (220 px high at 960 px).
+  const plotTop = 44;
+  const plotBottom = 44 + 220 * (800 / 960);
+
+  it("runs the line from the top of the name to the plot's bottom", () => {
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={competition}
+      />,
+    );
+    const name = markerOf(container).querySelector("text")!;
+    const segments = segmentsOf(container);
+    expect(segments).toHaveLength(1);
+    const [top, bottom] = segments[0]!;
+    // The name's baseline is 24 px above the plot; its top 8 px higher.
+    expect(Number(name.getAttribute("y"))).toBe(plotTop - 24);
+    expect(top).toBe(plotTop - 32);
+    expect(top).toBeGreaterThan(0);
+    expect(bottom).toBeCloseTo(plotBottom, 5);
+  });
+
+  it("leaves a gap over a block label the line would cross", () => {
+    // Competition preparation starts in week 14 (day 91); the competition is
+    // three days later, so the line would run through "CPB".
+    const { container } = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={{ date: "2027-03-04", type: "Club competition" }}
+      />,
+    );
+    const segments = segmentsOf(container);
+    expect(segments).toHaveLength(2);
+    // The gap covers the block labels' row (baseline 8 px above the plot,
+    // 8 px cap height) with 3 px to spare on both sides.
+    expect(segments[0]).toEqual([plotTop - 32, plotTop - 19]);
+    expect(segments[1]![0]).toBe(plotTop - 5);
+    expect(segments[1]![1]).toBeCloseTo(plotBottom, 5);
+    const cpb = [...container.querySelectorAll("svg text")].find(
+      (t) => t.textContent === "CPB",
+    )!;
+    expect(Number(cpb.getAttribute("y"))).toBe(plotTop - 8);
   });
 });

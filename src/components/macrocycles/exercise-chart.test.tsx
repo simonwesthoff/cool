@@ -360,4 +360,15 @@ describe("ExerciseChart", () => {
     expect(area.getAttribute("fill")).toBe(ref);
     expect(area.getAttribute("mask")).toMatch(/^url\(#/);
   });
+
+  it("runs the competition line from the top of its name to the plot's bottom", () => {
+    const { container } = renderChart();
+    const lines = [...container.querySelectorAll("[data-competition-line]")];
+    expect(lines).toHaveLength(1);
+    expect(Number(lines[0]!.getAttribute("y1"))).toBe(PLOT.top - 32);
+    expect(Number(lines[0]!.getAttribute("y2"))).toBeCloseTo(
+      PLOT.top + PLOT.height,
+      5,
+    );
+  });
 });
