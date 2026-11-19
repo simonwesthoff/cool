@@ -355,22 +355,34 @@ export function WeekChart({
       Math.hypot(p.x - gesture.startX, p.y - gesture.startY) > DRAG_THRESHOLD;
     if (!moved) return;
     const inner = curveDraft.anchors.map((a) => a.t);
-    const { entryT, endT } = endsOf(curveDraft);
+    const { entryT, endT, endPct } = endsOf(curveDraft);
+    // The outer anchors snap to whole weeks: t = k / (n − 1).
+    const steps = Math.max(n - 1, 1);
+    const toWeek = (t: number) => Math.round(t * steps) / steps;
     if (gesture.anchor === "entry") {
-      // In any direction, but before the first inner anchor.
-      const limit = Math.min(endT, ...inner) - MIN_GAP;
+      // Before the first inner anchor (on a whole week), in whole percents,
+      // and below the end value.
+      const limit =
+        Math.floor((Math.min(endT, ...inner) - MIN_GAP) * steps) / steps;
       setCurveDraft({
         ...curveDraft,
-        entryT: clamp(tOfX(p.x), 0, limit),
-        entryPct: roundTenth(clamp(valueAtY(p.y), ...ENTRY_RANGE)),
+        entryT: clamp(toWeek(tOfX(p.x)), 0, Math.max(0, limit)),
+        entryPct: Math.round(
+          clamp(
+            valueAtY(p.y),
+            ENTRY_RANGE[0],
+            Math.min(ENTRY_RANGE[1], endPct - 1),
+          ),
+        ),
       });
     } else if (gesture.anchor === "end") {
-      // In any direction, but after the last inner anchor.
-      const limit = Math.max(entryT, ...inner) + MIN_GAP;
+      // After the last inner anchor (on a whole week), above the entry value.
+      const limit =
+        Math.ceil((Math.max(entryT, ...inner) + MIN_GAP) * steps) / steps;
       setCurveDraft({
         ...curveDraft,
-        endT: clamp(tOfX(p.x), limit, 1),
-        endPct: roundTenth(clamp(valueAtY(p.y), 0, 100)),
+        endT: clamp(toWeek(tOfX(p.x)), Math.min(1, limit), 1),
+        endPct: roundTenth(clamp(valueAtY(p.y), curveDraft.entryPct + 1, 100)),
       });
     } else {
       const anchors = [...curveDraft.anchors];

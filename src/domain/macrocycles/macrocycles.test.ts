@@ -730,6 +730,22 @@ describe("setCurve", () => {
     expect(m.weeks[10]!.intensityPct).toBe(79);
   });
 
+  it("rejects an end value not above the entry value", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    for (const endValuePct of [60, 55]) {
+      expect(
+        await fieldsOf(
+          setCurve(coach, athlete.id, {
+            entryValuePct: 60,
+            endValuePct,
+            anchors: [],
+          }),
+        ),
+      ).toEqual({ endValuePct: ["NOT_ABOVE_ENTRY"] });
+    }
+  });
+
   it("rejects inner anchors outside the entry and end anchors", async () => {
     const { coach, athlete } = await setup();
     await createMacrocycle(coach, athlete.id, baseData);

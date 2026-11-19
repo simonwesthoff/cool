@@ -106,6 +106,7 @@ function macrocycleOf(count = 21): Macrocycle {
     sessions: [{ weekday: 1, slot: 1 }],
     ...swot,
     mesocycles: spans.map((m) => ({ ...m, exercises: [] })),
+    curve: { entryPct: 60, anchors: [], entryT: 0, endPct: 100, endT: 1 },
     weeks: Array.from({ length: count }, (_, i) => ({
       number: i + 1,
       startDate: new Date(Date.UTC(2026, 10, 30 + 7 * i))
@@ -173,14 +174,15 @@ describe("MacrocyclePlanning", () => {
     ).toHaveProperty("pathname", "/athletes/a1/macrocycle");
     const nav = screen.getByRole("navigation", { name: "Planning steps" });
     expect(
-      within(nav).getByText("3 Intensity").closest("[aria-current=step]"),
+      within(nav).getByText("4 Weeks").closest("[aria-current=step]"),
     ).toBeTruthy();
     // The other steps are buttons on the same page, not links.
     expect(within(nav).queryAllByRole("link")).toHaveLength(0);
     for (const name of [
       "1 Base data, completed",
       "2 SWOT, completed",
-      "4 Exercises",
+      "3 Curve, completed",
+      "5 Exercises",
     ])
       expect(within(nav).getByRole("button", { name })).toBeTruthy();
     expect(stepOf(container)).toBe("intensity");
@@ -188,17 +190,22 @@ describe("MacrocyclePlanning", () => {
 
   it("switches steps on the page, keeps the step in the address and loads nothing", async () => {
     const { container } = renderPlanning({ step: "swot" });
-    await userEvent.click(stepButton("3 Intensity"));
-    expect(stepOf(container)).toBe("intensity");
-    expect(window.location.search).toBe("?step=intensity");
+    await userEvent.click(stepButton("3 Curve"));
+    expect(stepOf(container)).toBe("curve");
+    expect(window.location.search).toBe("?step=curve");
     expect(
       screen.getByRole("group", { name: "Intensity per week" }),
     ).toBeTruthy();
+    await userEvent.click(stepButton("Continue to weeks"));
+    expect(stepOf(container)).toBe("intensity");
+    expect(window.location.search).toBe("?step=intensity");
     await userEvent.click(stepButton("Continue to exercises"));
     expect(stepOf(container)).toBe("exercises");
     expect(window.location.search).toBe("?step=exercises");
-    await userEvent.click(stepButton("Back to intensity"));
+    await userEvent.click(stepButton("Back to weeks"));
     expect(stepOf(container)).toBe("intensity");
+    await userEvent.click(stepButton("Back to curve"));
+    expect(stepOf(container)).toBe("curve");
     await userEvent.click(stepButton("Back to SWOT"));
     expect(stepOf(container)).toBe("swot");
     expect(fetchMock).not.toHaveBeenCalled();
@@ -211,7 +218,7 @@ describe("MacrocyclePlanning", () => {
     // No slide on the first render.
     expect(slide().getAttribute("data-slide")).toBe("none");
     expect(slide().className).toContain("motion-reduce:transition-none");
-    await userEvent.click(stepButton("3 Intensity"));
+    await userEvent.click(stepButton("3 Curve"));
     expect(slide().getAttribute("data-slide")).toBe("forward");
     expect(slide().className).toContain("starting:translate-x-8");
     expect(slide().className).toContain("duration-300");
@@ -221,7 +228,7 @@ describe("MacrocyclePlanning", () => {
     expect(slide().parentElement!.className).toContain("overflow-x-clip");
   });
 
-  it("disables steps 2 to 4 before the macrocycle exists and enables them after saving step 1", async () => {
+  it("disables steps 2 to 5 before the macrocycle exists and enables them after saving step 1", async () => {
     const created = macrocycleOf();
     respond(201, created);
     const { container } = renderPlanning({
@@ -233,7 +240,7 @@ describe("MacrocyclePlanning", () => {
     ).toHaveProperty("pathname", "/athletes/a1");
     const nav = screen.getByRole("navigation", { name: "Planning steps" });
     expect(within(nav).queryAllByRole("button")).toHaveLength(0);
-    expect(nav.querySelectorAll("[aria-disabled=true]")).toHaveLength(3);
+    expect(nav.querySelectorAll("[aria-disabled=true]")).toHaveLength(4);
     await fill("Duration \\(weeks\\)", "21");
     await fill("Date of the main competition", "2027-04-24");
     await fill("Type of the main competition", "German Championships");
@@ -264,7 +271,7 @@ describe("MacrocyclePlanning", () => {
     await fill("Duration \\(weeks\\)", "24");
     await userEvent.click(stepButton("Save and continue"));
     await waitFor(() => expect(stepOf(container)).toBe("swot"));
-    await userEvent.click(stepButton("3 Intensity"));
+    await userEvent.click(stepButton("4 Weeks"));
     const labels = [...container.querySelectorAll("rect[data-week]")].map((t) =>
       Number(t.getAttribute("data-week")),
     );
@@ -364,6 +371,7 @@ describe("Unsaved changes when changing the step", () => {
     ).toBeTruthy();
     for (const name of ["Speichern", "Verwerfen", "Abbrechen"])
       expect(within(dialog()).getByRole("button", { name })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "3 Intensität" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "3 Kurve" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "4 Wochen" })).toBeTruthy();
   });
 });

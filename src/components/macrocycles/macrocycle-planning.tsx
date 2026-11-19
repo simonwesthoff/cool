@@ -74,16 +74,27 @@ export function MacrocyclePlanning({
           macrocycle={macrocycle ?? undefined}
           defaultStartDate={defaultStartDate}
           onSaved={setMacrocycle}
-          onContinue={() => open(step === "swot" ? "intensity" : "swot")}
+          onContinue={() => open(step === "swot" ? "curve" : "swot")}
+        />
+      );
+    if (step === "curve")
+      return (
+        <IntensityPlanner
+          mode="curve"
+          macrocycle={macrocycle}
+          onSaved={setMacrocycle}
+          onContinue={() => select("intensity")}
+          onBack={() => select("swot")}
         />
       );
     if (step === "intensity")
       return (
         <IntensityPlanner
+          mode="weeks"
           macrocycle={macrocycle}
           onSaved={setMacrocycle}
           onContinue={() => select("exercises")}
-          onBack={() => select("swot")}
+          onBack={() => select("curve")}
         />
       );
     return (

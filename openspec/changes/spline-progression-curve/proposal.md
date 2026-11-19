@@ -11,13 +11,15 @@ move and remove, with a smooth curve through them (adjustment 5 in
 
 ## What Changes
 
-- **Curve and weeks modes in step 3:**
-  - **The switch:** the intensity step gets a switch "Curve" / "Weeks". It
-    opens in "Curve".
-  - **"Curve" mode:** the chart shows the progression curve with its
-    anchors, and no week handles or block sliders.
-  - **"Weeks" mode:** works as today: high/low weeks and the block sliders,
-    on top of the current curve.
+- **Curve and weeks as separate steps** (user decision): the planning gets
+  five steps, 1 base data, 2 SWOT, 3 "Curve" (the progression curve with
+  its anchors), 4 "Weeks" (high/low weeks and block sliders, on the
+  current curve, as before) and 5 exercises. The old address
+  `…/macrocycle/intensity` opens step 4. Both chart steps show the
+  intensity from 0 to 110 %.
+- **Dip warning:** when the curve falls anywhere, step 3 shows a red text
+  below the chart: "The curve shouldn't dip. You can set high and low
+  weeks in the next step."
 - **Anchors** (user decisions):
   - **Start and end:** a new macrocycle starts with two anchors, the entry
     value in the first week and 100 % in the last week, joined by a
@@ -34,7 +36,9 @@ move and remove, with a smooth curve through them (adjustment 5 in
   - **End anchor:** it starts at 100 % in the last week and can be moved
     too (end value 0–100 %).
   - **Moving the outer anchors:** both move in any direction (user
-    decision). While one is moved, "Entry value X %" or "End value X %" is
+    decision), horizontally only to whole weeks (snapping to the closest
+    week). The entry value moves in whole percents, and the end value
+    always stays above the entry value. While one is moved, "Entry value X %" or "End value X %" is
     shown next to it. Moved inwards, the curve stays level (a straight
     horizontal line) from the start to the entry anchor and from the end
     anchor to the end. Neither can be removed.
@@ -77,9 +81,12 @@ None.
 - `macrocycle-calculation`: "Intensity curve" becomes a natural spline
   through the anchors, capped to 0–100 %, instead of the sine. New
   requirements for the anchors and for existing macrocycles.
-- `macrocycle-planning`: step 3 gets the Curve/Weeks switch and anchor
-  editing; "Intensity chart with week handles" applies to the "Weeks"
-  mode. New requirement for the curve API.
+- `macrocycle-planning`:
+  - **Steps:** "Planning in four steps" is replaced by "Planning in five
+    steps", with new requirements for the curve and weeks steps, the dip
+    warning, anchor editing and the curve API.
+  - **Renumbering:** the step numbers in the chart, border, exercise,
+    legend and one-page requirements are updated.
 
 ## Impact
 

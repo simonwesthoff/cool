@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import type { Curve } from "@/domain/macrocycles/calculation";
+import { curveValue, type Curve } from "@/domain/macrocycles/calculation";
 import type {
   Macrocycle,
   WeekLevel,
@@ -11,29 +11,31 @@ import { baseIntensity, intensityAt } from "./chart-geometry";
 import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 
 /**
- * Planning step 3: the progression curve ("Curve" mode, first) and the week
- * levels and block borders ("Weeks" mode) on the macrocycle chart, each
- * change saved.
+ * Planning steps 3 and 4 on the macrocycle chart: the progression curve
+ * ("curve") and the week levels and block borders ("weeks"), each change
+ * saved. Step 3 warns when the curve dips.
  */
 export function IntensityPlanner({
+  mode,
   macrocycle,
   onSaved,
   onContinue,
   onBack,
 }: {
+  /** Step 3 shapes the curve, step 4 sets high/low weeks and borders. */
+  mode: "curve" | "weeks";
   macrocycle: Macrocycle;
   /** The macrocycle as stored after each change. */
   onSaved: (macrocycle: Macrocycle) => void;
-  /** "Continue to exercises" (step 4). */
+  /** "Continue to weeks" (step 3) or "Continue to exercises" (step 4). */
   onContinue: () => void;
-  /** "Back to SWOT" (step 2). */
+  /** "Back to SWOT" (step 3) or "Back to curve" (step 4). */
   onBack: () => void;
 }) {
   const t = useTranslations("Macrocycle.intensity");
   const [weeks, setWeeks] = useState<ChartWeek[]>(macrocycle.weeks);
   const [mesocycles, setMesocycles] = useState(macrocycle.mesocycles);
   const [failed, setFailed] = useState(false);
-  const [mode, setMode] = useState<"curve" | "weeks">("curve");
   const [curve, setCurve] = useState<Curve>(macrocycle.curve);
 
   async function changeCurve(next: Curve) {
@@ -138,27 +140,6 @@ export function IntensityPlanner({
 
   return (
     <div className="flex flex-col gap-6">
-      <div
-        role="group"
-        aria-label={t("mode.label")}
-        className="inline-flex self-start rounded-full border border-zinc-300 p-1 dark:border-zinc-700"
-      >
-        {(["curve", "weeks"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            aria-pressed={mode === m}
-            onClick={() => setMode(m)}
-            className={`min-h-9 rounded-full px-4 text-sm font-medium ${
-              mode === m
-                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            }`}
-          >
-            {t(`mode.${m}`)}
-          </button>
-        ))}
-      </div>
       <p className="text-zinc-600 dark:text-zinc-400">
         {mode === "curve" ? t("helpCurve") : t("help")}
       </p>
@@ -183,22 +164,42 @@ export function IntensityPlanner({
           type: macrocycle.competitionType,
         }}
       />
+      {mode === "curve" && dips(curve) && (
+        <p
+          role="status"
+          data-curve-warning
+          className="text-sm font-medium text-red-700 dark:text-red-400"
+        >
+          {t("dipWarning")}
+        </p>
+      )}
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
           onClick={onContinue}
           className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-6 font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
-          {t("continue")}
+          {mode === "curve" ? t("continueToWeeks") : t("continue")}
         </button>
         <button
           type="button"
           onClick={onBack}
           className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
-          {t("back")}
+          {mode === "curve" ? t("back") : t("backToCurve")}
         </button>
       </div>
     </div>
   );
+}
+
+/** Whether the progression curve falls anywhere (it should only rise). */
+export function dips(curve: Curve): boolean {
+  let previous = curveValue(curve, 0);
+  for (let i = 1; i <= 400; i++) {
+    const value = curveValue(curve, i / 400);
+    if (value < previous - 1e-6) return true;
+    previous = value;
+  }
+  return false;
 }

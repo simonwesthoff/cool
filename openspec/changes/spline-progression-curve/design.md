@@ -103,13 +103,24 @@ See proposal.md - Why.
      stay one element with parameters, and the curve mode is one more
      parameter.
 
-7. **Switch.**
-   - **Where:** `IntensityPlanner` holds `mode: "curve" | "weeks"`, starting
-     with `"curve"`, and renders two segmented buttons (`aria-pressed`)
-     above the chart.
-   - **Curve:** passes `curve` and no handles or sliders.
-   - **Weeks:** passes the handles and sliders as today.
-   - **Help text:** one per mode.
+7. **Two steps instead of a switch** (user decision).
+   - **Steps:** `PLANNING_STEPS` gets `curve` between `swot` and
+     `intensity`. `IntensityPlanner` takes `mode: "curve" | "weeks"` from
+     the step; the curve step passes the curve editor, the weeks step the
+     handles and sliders.
+   - **Buttons and labels:** each step has its own continue/back buttons,
+     and the stepper labels are "Curve" and "Weeks".
+   - **Shared scale:** both steps use the fixed domain 0–110 %.
+   - **Dip warning:** `dips(curve)` samples the spline at 400 points and
+     reports any fall.
+
+8. **Outer anchors:**
+   - **Positions:** they snap to week positions `k / (n − 1)`, bounded by
+     the nearest inner anchor.
+   - **Values:** the entry value is rounded to whole percents and stays at
+     least 1 point below the end value; the end value stays at least 1
+     point above the entry value. The API also rejects an end value not
+     above the entry value (`NOT_ABOVE_ENTRY`).
 
 ## Domain model changes
 

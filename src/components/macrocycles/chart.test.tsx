@@ -309,7 +309,8 @@ describe("week positions and style", () => {
     expect(pointOf(container, 11).textContent).toBe("▲");
     expect(
       [...container.querySelectorAll("[data-axis]")].map((t) => t.textContent),
-    ).toEqual(["50%", "60%", "70%", "80%", "90%", "100%", "110%"]);
+      // 0–110 % in both planning steps; every other value when tight.
+    ).toEqual(["0%", "20%", "40%", "60%", "80%", "100%"]);
   });
 });
 
@@ -466,14 +467,13 @@ describe("IntensityPlanner", () => {
     );
     const { container } = renderIn(
       <IntensityPlanner
+        mode="weeks"
         macrocycle={macrocycle}
         onSaved={onSaved}
         onContinue={onContinue}
         onBack={onBack}
       />,
     );
-    // Week levels and borders are edited in "Weeks" mode.
-    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
     const column = container.querySelector('rect[data-week="11"]')!;
     fireEvent.pointerDown(column, { clientY: 101, pointerId: 1 });
     fireEvent.pointerMove(column, { clientY: 64, pointerId: 1 });
@@ -493,6 +493,7 @@ describe("IntensityPlanner", () => {
   it("continues and goes back on the same page", async () => {
     renderIn(
       <IntensityPlanner
+        mode="weeks"
         macrocycle={macrocycle}
         onSaved={onSaved}
         onContinue={onContinue}
@@ -503,7 +504,7 @@ describe("IntensityPlanner", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Continue to exercises" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Back to SWOT" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back to curve" }));
     expect(onContinue).toHaveBeenCalledTimes(1);
     expect(onBack).toHaveBeenCalledTimes(1);
   });
@@ -537,14 +538,13 @@ describe("IntensityPlanner", () => {
     );
     const { container } = renderIn(
       <IntensityPlanner
+        mode="weeks"
         macrocycle={macrocycle}
         onSaved={onSaved}
         onContinue={onContinue}
         onBack={onBack}
       />,
     );
-    // Week levels and borders are edited in "Weeks" mode.
-    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
     const first = container.querySelector('[data-border="0"]')!;
     fireEvent.pointerDown(first, { clientX: 160, pointerId: 1 });
     fireEvent.pointerMove(first, { clientX: 232, pointerId: 1 });
@@ -568,14 +568,13 @@ describe("IntensityPlanner", () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
     const { container } = renderIn(
       <IntensityPlanner
+        mode="weeks"
         macrocycle={macrocycle}
         onSaved={onSaved}
         onContinue={onContinue}
         onBack={onBack}
       />,
     );
-    // Week levels and borders are edited in "Weeks" mode.
-    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
     const column = container.querySelector('rect[data-week="11"]')!;
     fireEvent.pointerDown(column, { clientY: 240, pointerId: 1 });
     fireEvent.pointerUp(column, { clientY: 240, pointerId: 1 });
@@ -585,25 +584,84 @@ describe("IntensityPlanner", () => {
     );
   });
 
-  it("opens in Curve mode with the anchors and switches to Weeks", () => {
-    const { container } = renderIn(
+  it("shows the anchors in the curve step and the week handles in the weeks step", () => {
+    const curveStep = renderIn(
       <IntensityPlanner
+        mode="curve"
         macrocycle={macrocycle}
         onSaved={onSaved}
         onContinue={onContinue}
         onBack={onBack}
       />,
     );
-    const curveButton = screen.getByRole("button", { name: "Curve" });
-    expect(curveButton.getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector('[data-anchor="entry"]')).toBeTruthy();
-    expect(container.querySelector("[data-border]")).toBeNull();
-    expect(container.querySelector("rect[data-week]")).toBeNull();
+    expect(
+      curveStep.container.querySelector('[data-anchor="entry"]'),
+    ).toBeTruthy();
+    expect(curveStep.container.querySelector("[data-border]")).toBeNull();
+    expect(curveStep.container.querySelector("rect[data-week]")).toBeNull();
     expect(screen.getByText(/Shape the progression curve/)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
-    expect(container.querySelector('[data-anchor="entry"]')).toBeNull();
-    expect(container.querySelector("[data-border]")).toBeTruthy();
-    expect(container.querySelector("rect[data-week]")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Weeks" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Continue to weeks" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back to SWOT" })).toBeTruthy();
+    cleanup();
+    const weeksStep = renderIn(
+      <IntensityPlanner
+        mode="weeks"
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
+    );
+    expect(
+      weeksStep.container.querySelector('[data-anchor="entry"]'),
+    ).toBeNull();
+    expect(weeksStep.container.querySelector("[data-border]")).toBeTruthy();
+    expect(weeksStep.container.querySelector("rect[data-week]")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Continue to exercises" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back to curve" })).toBeTruthy();
+  });
+
+  it("warns below the chart when the curve dips, and only then", () => {
+    const dipping = {
+      ...macrocycle,
+      curve: {
+        entryPct: 60,
+        anchors: [
+          { t: 0.5, pct: 98 },
+          { t: 0.7, pct: 80 },
+        ],
+      },
+    } as unknown as Macrocycle;
+    const view = renderIn(
+      <IntensityPlanner
+        mode="curve"
+        macrocycle={dipping}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
+    );
+    expect(
+      view.container.querySelector("[data-curve-warning]")!.textContent,
+    ).toBe(
+      "The curve shouldn't dip. You can set high and low weeks in the next step.",
+    );
+    cleanup();
+    const rising = renderIn(
+      <IntensityPlanner
+        mode="curve"
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
+    );
+    expect(rising.container.querySelector("[data-curve-warning]")).toBeNull();
   });
 
   it("saves a curve change and takes the server's weeks", async () => {
@@ -616,6 +674,7 @@ describe("IntensityPlanner", () => {
     );
     const { container } = renderIn(
       <IntensityPlanner
+        mode="curve"
         macrocycle={macrocycle}
         onSaved={onSaved}
         onContinue={onContinue}
@@ -638,6 +697,7 @@ describe("IntensityPlanner", () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
     const { container } = renderIn(
       <IntensityPlanner
+        mode="curve"
         macrocycle={macrocycle}
         onSaved={onSaved}
         onContinue={onContinue}
@@ -1023,6 +1083,46 @@ describe("curve mode", () => {
       yOf(60),
     ]);
     expect(clicked.onChange).not.toHaveBeenCalled();
+  });
+
+  it("snaps the entry and end anchors to whole weeks and the entry value to whole percents", () => {
+    const entry = renderCurve(line);
+    press(
+      entry.container.querySelector('[data-anchor="entry"]')!,
+      [xOfT(0), yOf(60)],
+      [xOfT(0.33), yOf(64.4)],
+    );
+    const [moved] = entry.onChange.mock.calls[0]!;
+    // t 0.33 of 20 weeks' steps is closest to week 8 (t = 7/20).
+    expect(moved.entryT).toBeCloseTo(7 / 20, 12);
+    expect(Number.isInteger(moved.entryPct)).toBe(true);
+    expect(moved.entryPct).toBe(64);
+    cleanup();
+    const end = renderCurve(line);
+    press(
+      end.container.querySelector('[data-anchor="end"]')!,
+      [xOfT(1), yOf(100)],
+      [xOfT(0.77), yOf(95)],
+    );
+    expect(end.onChange.mock.calls[0]![0].endT).toBeCloseTo(15 / 20, 12);
+  });
+
+  it("keeps the end value above the entry value", () => {
+    const end = renderCurve(line);
+    press(
+      end.container.querySelector('[data-anchor="end"]')!,
+      [xOfT(1), yOf(100)],
+      [xOfT(1), yOf(40)],
+    );
+    expect(end.onChange.mock.calls[0]![0].endPct).toBe(61);
+    cleanup();
+    const entry = renderCurve({ entryPct: 60, anchors: [], endPct: 70 });
+    press(
+      entry.container.querySelector('[data-anchor="entry"]')!,
+      [xOfT(0), yOf(60)],
+      [xOfT(0), yOf(90)],
+    );
+    expect(entry.onChange.mock.calls[0]![0].entryPct).toBe(69);
   });
 
   it("moves the end anchor in any direction and never removes it", () => {

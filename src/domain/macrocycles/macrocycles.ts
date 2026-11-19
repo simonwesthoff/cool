@@ -757,6 +757,10 @@ export async function setCurve(
     endT = 1,
     endValuePct = 100,
   } = parseInput(curveSchema, input);
+  // The curve ends higher than it starts.
+  if (endValuePct <= entryValuePct) {
+    throw new DomainValidationError({ endValuePct: ["NOT_ABOVE_ENTRY"] });
+  }
   // The inner anchors lie strictly between the entry and the end anchor.
   const sorted = [...anchors].sort((a, b) => a.t - b.t);
   const positions = [entryT, ...sorted.map((a) => a.t), endT];

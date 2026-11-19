@@ -6,7 +6,7 @@ import type {
   MesocycleView,
   WeekLevel,
 } from "@/domain/macrocycles/macrocycle-types";
-import { baseIntensity, intensityDomain } from "./chart-geometry";
+import { baseIntensity } from "./chart-geometry";
 import { useWeekDate, WeekChart, type CurveEditor } from "./week-chart";
 
 export type ChartWeek = Pick<
@@ -30,7 +30,7 @@ type Props = {
   curveEditor?: Omit<CurveEditor, "labels">;
 };
 
-/** Curve mode spans every allowed anchor value (0–100 %) plus high weeks. */
+/** Both planning steps span every anchor value (0–100 %) plus high weeks. */
 const CURVE_DOMAIN = {
   min: 0,
   max: 110,
@@ -72,7 +72,8 @@ export function MacrocycleChart({
       weeks={weeks}
       mesocycles={mesocycles}
       values={weeks.map((w) => w.intensityPct)}
-      domain={curveEditor ? CURVE_DOMAIN : intensityDomain(bases)}
+      // The same range in the curve and the weeks step.
+      domain={CURVE_DOMAIN}
       caption={t("intensity")}
       series="intensity"
       competition={competition}
