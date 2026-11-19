@@ -4,20 +4,23 @@ import { useTranslations } from "next-intl";
 import { usesFreeText } from "@/domain/week-plans/week-plan-types";
 import type { PlannedSession } from "@/domain/week-plans/week-plan-types";
 import { FeedbackField } from "./feedback-field";
+import { NoteIndicator } from "./note-indicator";
 import {
+  exerciseDivider,
   line,
   SETS,
   stickyName,
   VIEW_TABLE_WIDTH,
   VIEW_WIDTH,
+  viewShare,
 } from "./table-layout";
 import { draftOf } from "./week-draft";
 
 /**
  * A session of the current week, read-only like the week editor's "Sets &
  * weights" table: each exercise two rows high (weight above reps, or the
- * free text from exercise 30 on), the coach note and the athlete's
- * feedback. Only the linked athlete can type feedback.
+ * free text from exercise 30 on) with an indicator for the coach's note
+ * (shown on hover), and the athlete's feedback. Only the linked athlete can type feedback.
  */
 export function WeekViewTable({
   athleteId,
@@ -55,21 +58,22 @@ export function WeekViewTable({
       {session.exercises.length === 0 ? (
         <p className="text-sm text-zinc-500">{tv("noExercises")}</p>
       ) : (
-        <div className="overflow-x-auto pr-px">
+        // On phones the table keeps its width and scrolls sideways; on wide
+        // screens it fits the container and the columns shrink in proportion.
+        <div className="overflow-x-auto pr-px lg:overflow-visible">
           <table
-            className="table-fixed border-collapse text-sm"
+            className="table-fixed border-collapse text-sm lg:!w-full"
             style={{ width: `${VIEW_TABLE_WIDTH}rem` }}
           >
             <colgroup>
-              <col style={{ width: `${VIEW_WIDTH.exercise}rem` }} />
-              <col style={{ width: `${VIEW_WIDTH.rowLabel}rem` }} />
+              <col style={{ width: viewShare(VIEW_WIDTH.exercise) }} />
+              <col style={{ width: viewShare(VIEW_WIDTH.rowLabel) }} />
               {SETS.map((i) => (
-                <col key={i} style={{ width: `${VIEW_WIDTH.set}rem` }} />
+                <col key={i} style={{ width: viewShare(VIEW_WIDTH.set) }} />
               ))}
-              <col style={{ width: `${VIEW_WIDTH.note}rem` }} />
               <col
                 data-col="feedback"
-                style={{ width: `${VIEW_WIDTH.feedback}rem` }}
+                style={{ width: viewShare(VIEW_WIDTH.feedback) }}
               />
             </colgroup>
             <thead>
@@ -92,9 +96,6 @@ export function WeekViewTable({
                     {i + 1}
                   </th>
                 ))}
-                <th scope="col" className={`${line} ${head} text-left`}>
-                  {tv("note")}
-                </th>
                 <th
                   scope="col"
                   data-heading="feedback"
@@ -110,13 +111,6 @@ export function WeekViewTable({
               const free = usesFreeText(e.exerciseNumber);
               const shared = (
                 <>
-                  <td
-                    rowSpan={2}
-                    data-note
-                    className={`${line} px-1 py-1 align-top text-sm whitespace-pre-wrap`}
-                  >
-                    {e.note}
-                  </td>
                   <td
                     rowSpan={2}
                     data-feedback
@@ -146,6 +140,7 @@ export function WeekViewTable({
                 <tbody
                   key={`${e.exerciseNumber}`}
                   data-exercise={e.exerciseNumber}
+                  className={exerciseDivider}
                 >
                   <tr data-row="weight">
                     <th
@@ -154,6 +149,12 @@ export function WeekViewTable({
                       className={`${line} ${stickyName} px-2 text-left align-middle font-medium`}
                     >
                       {name}
+                      {e.note && (
+                        <NoteIndicator
+                          note={e.note}
+                          label={t("noteOf", { name })}
+                        />
+                      )}
                     </th>
                     {free ? (
                       <td

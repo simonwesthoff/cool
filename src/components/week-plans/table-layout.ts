@@ -25,13 +25,15 @@ export const EDITOR_TABLE_WIDTH =
   EDITOR_WIDTH.valueLabel +
   4 * EDITOR_WIDTH.indicator;
 
-/** The week view: note and feedback instead of the indicators. */
-export const VIEW_WIDTH = {
-  ...SHARED_WIDTH,
-  note: 11,
-  feedback: 13.75,
-} as const;
-export const VIEW_TABLE_WIDTH = shared + VIEW_WIDTH.note + VIEW_WIDTH.feedback;
+/** The week view: the feedback instead of the note and the indicators. */
+export const VIEW_WIDTH = { ...SHARED_WIDTH, feedback: 24.75 } as const;
+export const VIEW_TABLE_WIDTH = shared + VIEW_WIDTH.feedback;
+/** A column's share of the week view's width, so the table can shrink. */
+export const viewShare = (rem: number) => `${(rem / VIEW_TABLE_WIDTH) * 100}%`;
+
+/** The bold line between two exercises. */
+export const exerciseDivider =
+  "border-t-2 border-t-zinc-400 dark:border-t-zinc-500";
 
 /** Grid lines of the table. */
 export const line = "border border-zinc-200 dark:border-zinc-800";

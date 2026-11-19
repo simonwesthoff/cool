@@ -461,6 +461,8 @@ describe("WeekEditor step 2", () => {
     ]);
     const table = sessionNamed("Monday").querySelector("table")!;
     const name = table.querySelector("tbody th[scope=rowgroup]")!;
+    // Bold lines between exercises.
+    expect(table.querySelector("tbody")!.className).toContain("border-t-2");
     expect(name.textContent).toBe("1 Snatch");
     expect(name.getAttribute("rowspan")).toBe("2");
     // No buttons to add or remove sets.

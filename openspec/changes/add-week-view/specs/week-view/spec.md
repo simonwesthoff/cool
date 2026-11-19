@@ -25,16 +25,30 @@ week level, and one table per session. No other week SHALL be shown there.
 
 ### Requirement: Week tables
 Each session SHALL be a read-only table like the week editor's "Sets &
-weights" table, with the same fixed column widths: each exercise two rows
-high with its name and coach note spanning both, ten set columns with the
-weight above the reps (or the free text for exercises from 30 on), and a
-"Feedback" column instead of the best value, mHG, set size and reps
-columns. Sessions without exercises SHALL say so.
+weights" table: each exercise two rows high, ten set columns with the
+weight above the reps (or the free text from exercise 30 on), and a
+"Feedback" column, with bold lines between exercises and no note or
+indicator columns. On wide screens the table SHALL fit the content width
+without scrolling sideways.
 
 #### Scenario: Snatch on Monday
 - **GIVEN** the current week has the snatch on Monday with 2 × 3 @ 60 kg and 1 × 1 @ 80 kg and the coach note "Fast turnover"
 - **WHEN** the athlete looks at the current week
-- **THEN** Monday's table shows the snatch with the sets 60/3, 60/3, 80/1, the note "Fast turnover" and a feedback field, and no best value, mHG, set size or reps columns
+- **THEN** Monday's table shows the snatch with the sets 60/3, 60/3, 80/1, a note indicator after its name that shows "Fast turnover" on hover, and a feedback field
+
+#### Scenario: Desktop width
+- **WHEN** the athlete opens "My training" on a desktop screen
+- **THEN** the week tables fit the content width and cannot be scrolled sideways
+
+### Requirement: Coach note indicator
+A coach note on an exercise SHALL show as an indicator after the exercise
+name; hovering or focusing it SHALL show the note as a tooltip. Exercises
+without a note SHALL have no indicator.
+
+#### Scenario: Hover the note
+- **GIVEN** the coach note "Fast turnover" on Monday's snatch
+- **WHEN** the athlete hovers the indicator after "1 Snatch"
+- **THEN** a tooltip shows "Fast turnover"
 
 ### Requirement: Feedback per exercise
 The user linked to the Athlete (also a coach who trains themselves) SHALL

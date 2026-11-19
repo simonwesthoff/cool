@@ -61,6 +61,10 @@
 
   Review the screenshots.
 
+## 6. Acceptance feedback
+
+- [x] 6.1 Week view tables fit the content width on desktop (column shares, no sideways scroll); no coach note column, a note indicator after the exercise name with a hover/focus tooltip; bold lines between exercises in the week view and the editor. Verify with component tests and a browser check (scroll width equals the container, tooltip visible on hover, screenshots).
+
 ## Workflow follow-up
 
 - User acceptance, archive (sync specs), PR into main. Next: whatever the user chooses from the feature list.

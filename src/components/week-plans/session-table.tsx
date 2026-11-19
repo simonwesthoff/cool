@@ -11,6 +11,7 @@ import { usesFreeText } from "@/domain/week-plans/week-plan-types";
 import {
   EDITOR_TABLE_WIDTH,
   EDITOR_WIDTH,
+  exerciseDivider,
   fill,
   line,
   SETS,
@@ -194,7 +195,7 @@ function ExerciseRows({
     });
 
   return (
-    <tbody data-exercise={exercise.exerciseNumber}>
+    <tbody data-exercise={exercise.exerciseNumber} className={exerciseDivider}>
       <tr data-row="weight">
         <th
           scope="rowgroup"

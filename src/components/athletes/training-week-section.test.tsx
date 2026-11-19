@@ -103,9 +103,17 @@ describe("TrainingWeekSection", () => {
         .map((td) => td.textContent)
         .filter(Boolean),
     ).toEqual(["60", "60", "80"]);
-    expect(snatch.querySelector("[data-note]")!.textContent).toBe(
-      "Fast turnover",
-    );
+    // The coach note is an indicator after the name with a tooltip.
+    const indicator = within(snatch as HTMLElement).getByRole("button", {
+      name: "Coach note on 1 Snatch",
+    });
+    expect(
+      document.getElementById(indicator.getAttribute("aria-describedby")!)!
+        .textContent,
+    ).toBe("Fast turnover");
+    expect(snatch.querySelector("[data-note]")).toBeNull();
+    // Bold lines between exercises; no note column.
+    expect(snatch.className).toContain("border-t-2");
     expect(snatch.querySelector("[data-feedback]")!.textContent).toBe(
       "Last set felt heavy",
     );
@@ -116,12 +124,18 @@ describe("TrainingWeekSection", () => {
     ).toBe("3 × 10, slow");
     // Read-only, no indicator columns, a feedback column.
     expect(within(monday).queryAllByRole("textbox")).toHaveLength(0);
+    expect(
+      monday.querySelector('tbody[data-exercise="33"] [data-note-indicator]'),
+    ).toBeNull();
     const headings = [...monday.querySelectorAll("thead th")].map(
       (th) => th.textContent,
     );
     expect(headings).toContain("Feedback");
     expect(headings).not.toContain("Best value");
     expect(headings).not.toContain("mHG");
+    expect(headings).not.toContain("Coach note");
+    // The table fits the container on wide screens (no sideways scrolling).
+    expect(monday.querySelector("table")!.className).toContain("lg:!w-full");
     expect(monday.querySelector("table")!.className).toContain("table-fixed");
   });
 

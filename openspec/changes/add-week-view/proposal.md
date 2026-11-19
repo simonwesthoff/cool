@@ -22,8 +22,13 @@ feedback per exercise.
       set columns (weight above reps), a free text for exercises from 30
       on, and the coach note.
     - **Read-only:** the plan can't be changed here.
-    - **Columns:** without best value, mHG, set size and reps, with a new
-      "Feedback" column instead.
+    - **Columns:** without best value, mHG, set size, reps and the coach
+      note, with a new "Feedback" column instead. A coach note shows as an
+      indicator after the exercise name with the note as a tooltip (user
+      decision).
+    - **Width:** on desktop the tables fit the content width without
+      scrolling sideways; bold lines separate exercises (also in the
+      editor).
   - **No current week:** an unplanned current week says "No plan for this
     week yet"; before the macrocycle starts or after it ends, a short text
     replaces the week.

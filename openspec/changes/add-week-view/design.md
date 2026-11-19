@@ -80,9 +80,15 @@ function in `week-plans/calculation.ts` (2027-02-08 → 6).
 - **Shared with the editor:** `WIDTH` and the set expansion move into a
   small shared module, so both tables use the same widths and the same
   sets-from-groups logic.
-- **Columns:** exercise, kg/reps label, ten sets, coach note, feedback.
-  The value-label and indicator widths go to the feedback column (13.75
-  rem), so the total stays 60 rem.
+- **Columns:** exercise, kg/reps label, ten sets and feedback (24.75 rem),
+  60 rem in total.
+  - **Widths:** given as shares of the table, so on wide screens the table
+    takes the container's width (`lg:w-full`) and never scrolls; on phones
+    it keeps 60 rem and scrolls.
+- **Coach note:** a small icon button after the exercise name with a CSS
+  tooltip (hover and focus); the note is its accessible description.
+- **Dividers:** each exercise's `tbody` has a 2 px top border, in both
+  tables.
 - **Cells:** set cells, the note and the free text are plain text.
 - **Feedback:** a `textarea` for the linked user, plain text otherwise.
 

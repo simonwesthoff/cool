@@ -456,6 +456,7 @@
     "editWeek": "Edit week",
     "planThis": "Plan this week",
     "planNext": "Plan next week (week {week})",
-    "editNext": "Edit next week (week {week})"
+    "editNext": "Edit next week (week {week})",
+    "noteOf": "Coach note on {name}"
   }
 }

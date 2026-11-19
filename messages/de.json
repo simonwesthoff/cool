@@ -456,6 +456,7 @@
     "editWeek": "Woche bearbeiten",
     "planThis": "Diese Woche planen",
     "planNext": "Nächste Woche planen (Woche {week})",
-    "editNext": "Nächste Woche bearbeiten (Woche {week})"
+    "editNext": "Nächste Woche bearbeiten (Woche {week})",
+    "noteOf": "Trainerhinweis zu {name}"
   }
 }

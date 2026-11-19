@@ -19,6 +19,14 @@ feedback.
 - **WHEN** the coach moves the snatch to Wednesday
 - **THEN** the feedback is no longer shown, because it belonged to Monday's session
 
+### Requirement: Bold lines between exercises
+The tables of the week editor's "Sets & weights" step SHALL separate the
+exercises of a session by bold lines, as the week view does.
+
+#### Scenario: Exercises in Monday's table
+- **WHEN** the coach opens step 2 with the snatch and the snatch pull on Monday
+- **THEN** a bold line separates the snatch's rows from the snatch pull's rows
+
 ## MODIFIED Requirements
 
 ### Requirement: Week plan access and API
