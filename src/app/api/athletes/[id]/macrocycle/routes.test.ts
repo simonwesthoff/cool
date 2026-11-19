@@ -10,6 +10,7 @@ const main = await import("./route");
 const weeks = await import("./weeks/[week]/route");
 const exercises = await import("./mesocycles/[type]/exercises/[number]/route");
 const borders = await import("./mesocycles/borders/route");
+const curve = await import("./curve/route");
 const swot = await import("./swot/route");
 const exerciseWeeks = await import("./exercises/[number]/route");
 const { athlete: athleteTable } = await import("@/server/db/schema");
@@ -206,6 +207,38 @@ describe("macrocycle API", () => {
     });
   });
 
+  it("sets the curve (200), recalculating the weeks, and rejects invalid anchors (400)", async () => {
+    const { athlete } = await coachWithAthlete();
+    const id = { id: athlete.id };
+    await main.POST(json("POST", baseData), ctx(id));
+    const ok = await curve.PUT(
+      json("PUT", { entryValuePct: 60, anchors: [{ t: 0.25, pct: 90 }] }),
+      ctx(id),
+    );
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get("cache-control")).toBe("no-store");
+    const body = await ok.json();
+    expect(body.curve).toEqual({
+      entryPct: 60,
+      anchors: [{ t: 0.25, pct: 90 }],
+    });
+    expect(body.weeks[5].intensityPct).toBe(90);
+    for (const anchor of [
+      { t: 1, pct: 90 },
+      { t: 0.5, pct: 120 },
+    ]) {
+      const bad = await curve.PUT(
+        json("PUT", { entryValuePct: 60, anchors: [anchor] }),
+        ctx(id),
+      );
+      expect(bad.status).toBe(400);
+      expect((await bad.json()).error.code).toBe("VALIDATION_FAILED");
+    }
+    // Nothing changed by the rejected requests.
+    const read = await main.GET(new Request("https://localhost/api"), ctx(id));
+    expect((await read.json()).curve.anchors).toEqual([{ t: 0.25, pct: 90 }]);
+  });
+
   it("answers invalid base data with 400 and field codes", async () => {
     const { athlete } = await coachWithAthlete();
     const response = await main.POST(
@@ -238,6 +271,14 @@ describe("macrocycle API", () => {
     as(await createUser(testDb.db));
     expect((await main.PATCH(json("PATCH", {}), ctx(id))).status).toBe(403);
     expect(
+      (
+        await curve.PUT(
+          json("PUT", { entryValuePct: 60, anchors: [] }),
+          ctx(id),
+        )
+      ).status,
+    ).toBe(403);
+    expect(
       (await main.GET(new Request("https://localhost/api"), ctx(id))).status,
     ).toBe(404);
 
@@ -259,6 +300,7 @@ describe("macrocycle API", () => {
         new Request("https://localhost/api", { method: "DELETE" }),
         ctx({ ...id, type: "special_preparation", number: "13" }),
       ),
+      await curve.PUT(json("PUT", { entryValuePct: 60, anchors: [] }), ctx(id)),
     ]) {
       expect(response.status).toBe(401);
     }

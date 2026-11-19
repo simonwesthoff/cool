@@ -155,6 +155,13 @@
       "when": 1795095880278,
       "tag": "0021_exercise_catalog_data",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795105100012,
+      "tag": "0022_macrocycle_curve_anchors",
+      "breakpoints": true
     }
   ]
 }

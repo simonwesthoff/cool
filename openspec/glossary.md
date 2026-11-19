@@ -36,6 +36,8 @@ Domain terms for the weightlifting coaching app.
 
 | Einstiegswert | - | Entry value | Share of the max values (in %) a macrocycle starts with, usually 60 %. |
 | Intensität | - | Intensity | Planned share of the max values for a week, following the macrocycle's curve. |
+| Progressionskurve | - | Progression curve | The macrocycle's intensity over the cycle before high and low weeks: a smooth curve from the entry value to 100 % through its anchors. |
+| Ankerpunkt | - | Anchor | A point the progression curve passes through, at a position in the cycle and an intensity; the coach adds, moves and removes them. |
 | Wochenintensität (hoch, mittel, niedrig) | - | Week level (high, medium, low) | A high week adds 5 percentage points to the intensity, a low week subtracts 5. |
 | Satzgröße | - | Set size | Repetitions per set. |
 | Wochenwiederholungen | - | Weekly reps | Repetitions of an exercise per week. |

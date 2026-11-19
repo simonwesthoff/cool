@@ -7,7 +7,7 @@ import type {
   WeekLevel,
 } from "@/domain/macrocycles/macrocycle-types";
 import { baseIntensity, intensityDomain } from "./chart-geometry";
-import { useWeekDate, WeekChart } from "./week-chart";
+import { useWeekDate, WeekChart, type CurveEditor } from "./week-chart";
 
 export type ChartWeek = Pick<
   MacrocycleWeekView,
@@ -23,6 +23,18 @@ type Props = {
   onBordersChange?: (specialStart: number, competitionStart: number) => void;
   /** The main competition, marked with a vertical line and its name. */
   competition?: { date: string; type: string };
+  /**
+   * Curve mode: the progression curve with its anchors instead of week
+   * handles and border sliders.
+   */
+  curveEditor?: Omit<CurveEditor, "labels">;
+};
+
+/** Curve mode spans every allowed anchor value (0–100 %) plus high weeks. */
+const CURVE_DOMAIN = {
+  min: 0,
+  max: 110,
+  ticks: Array.from({ length: 12 }, (_, i) => i * 10),
 };
 
 /**
@@ -36,6 +48,7 @@ export function MacrocycleChart({
   onLevelChange,
   onBordersChange,
   competition,
+  curveEditor,
 }: Props) {
   const t = useTranslations("Macrocycle.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
@@ -59,7 +72,7 @@ export function MacrocycleChart({
       weeks={weeks}
       mesocycles={mesocycles}
       values={weeks.map((w) => w.intensityPct)}
-      domain={intensityDomain(bases)}
+      domain={curveEditor ? CURVE_DOMAIN : intensityDomain(bases)}
       caption={t("intensity")}
       series="intensity"
       competition={competition}
@@ -68,9 +81,22 @@ export function MacrocycleChart({
       xAxisTitle={t("axisWeek")}
       legendExtra={[{ symbol: "▲▼", text: t("legendLevels") }]}
       handles={
-        onLevelChange ? { bases, levels, onChange: onLevelChange } : undefined
+        onLevelChange && !curveEditor
+          ? { bases, levels, onChange: onLevelChange }
+          : undefined
       }
-      onBordersChange={onBordersChange}
+      onBordersChange={curveEditor ? undefined : onBordersChange}
+      curveEditor={
+        curveEditor && {
+          ...curveEditor,
+          labels: {
+            entry: (value) => t("anchorEntry", { value: pct(value) }),
+            anchor: (week, value) =>
+              t("anchor", { week: format.number(week), value: pct(value) }),
+            end: t("anchorEnd", { value: pct(100) }),
+          },
+        }
+      }
       pointLabel={(week, value) =>
         t("weekValue", {
           week: week.number,

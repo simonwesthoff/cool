@@ -114,3 +114,69 @@ describe("migration weekly_schedule", () => {
     }
   });
 });
+
+describe("migration macrocycle_curve_anchors", () => {
+  it("gives existing macrocycles two anchors approximating the former S-curve", async () => {
+    const db = new PGlite();
+    try {
+      const tags = journal.entries.map((e) => e.tag);
+      const target = tags.findIndex((t) =>
+        t.endsWith("macrocycle_curve_anchors"),
+      );
+      expect(target).toBeGreaterThan(0);
+      for (const tag of tags.slice(0, target)) await apply(db, tag);
+      await db.exec(`
+        insert into user_account (id, name, email) values ('c', 'Coach', 'c@x.invalid');
+        insert into team (id, coach_id) values ('00000000-0000-4000-8000-000000000001', 'c');
+        insert into athlete (id, team_id, name) values
+          ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-000000000001', 'Anna');
+        insert into macrocycle (
+          athlete_id, start_date, duration_weeks, entry_value_pct,
+          snatch_best_kg, clean_and_jerk_best_kg, snatch_goal_kg, clean_and_jerk_goal_kg,
+          body_weight_kg, target_body_weight_kg,
+          snatch_deficits, clean_deficits, jerk_deficits, other_deficits,
+          injuries_and_illnesses, strengths, experience, focus_points,
+          competition_date, competition_type
+        ) values (
+          '00000000-0000-4000-8000-0000000000a1', '2026-11-30', 21, 60,
+          90, 115, 100, 130, 81, 80.5, '', '', '', '', '', '', '', '{}',
+          '2027-04-24', 'German Championships'
+        );
+      `);
+      await apply(db, tags[target]!);
+      const { rows } = await db.query<{
+        anchors: { t: number; pct: number }[];
+      }>(`select curve_anchors as anchors from macrocycle`);
+      const [{ t: t1, pct: p1 }, { t: t2, pct: p2 }] = rows[0]!.anchors as [
+        { t: number; pct: number },
+        { t: number; pct: number },
+      ];
+      expect(t1).toBeCloseTo(1 / 3, 12);
+      expect(t2).toBeCloseTo(2 / 3, 12);
+      expect([Number(p1), Number(p2)]).toEqual([70, 90]);
+      // A macrocycle created afterwards starts with the straight line.
+      await db.exec(`
+        insert into athlete (id, team_id, name) values
+          ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-000000000001', 'Ben');
+        insert into macrocycle (
+          athlete_id, start_date, duration_weeks, entry_value_pct,
+          snatch_best_kg, clean_and_jerk_best_kg, snatch_goal_kg, clean_and_jerk_goal_kg,
+          body_weight_kg, target_body_weight_kg,
+          snatch_deficits, clean_deficits, jerk_deficits, other_deficits,
+          injuries_and_illnesses, strengths, experience, focus_points,
+          competition_date, competition_type
+        ) values (
+          '00000000-0000-4000-8000-0000000000a2', '2026-11-30', 21, 60,
+          90, 115, 100, 130, 81, 80.5, '', '', '', '', '', '', '', '{}',
+          '2027-04-24', 'German Championships'
+        );
+      `);
+      const after = await db.query<{ anchors: unknown }>(
+        `select curve_anchors as anchors from macrocycle where athlete_id = '00000000-0000-4000-8000-0000000000a2'`,
+      );
+      expect(after.rows[0]!.anchors).toEqual([]);
+    } finally {
+      await db.close();
+    }
+  });
+});

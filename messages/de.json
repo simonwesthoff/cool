@@ -266,13 +266,22 @@
         "medium": "mittel",
         "low": "niedrig"
       },
-      "tooltipValue": "{intensity} ({level})"
+      "tooltipValue": "{intensity} ({level})",
+      "anchorEntry": "Einstiegswert {value}",
+      "anchor": "Ankerpunkt bei Woche {week}: {value}",
+      "anchorEnd": "Ende {value}"
     },
     "intensity": {
       "help": "Ziehe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche, oder tippe darüber oder darunter. Ziehe die Griffe an den Grenzen, um die Länge der Mesozyklen zu ändern. Jede Änderung wird gespeichert.",
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "continue": "Weiter zu den Übungen",
-      "back": "Zurück zur SWOT"
+      "back": "Zurück zur SWOT",
+      "mode": {
+        "label": "Planungsmodus",
+        "curve": "Kurve",
+        "weeks": "Wochen"
+      },
+      "helpCurve": "Forme die Progressionskurve: Klicke in das Diagramm, um einen Ankerpunkt hinzuzufügen, ziehe Ankerpunkte frei und klicke einen an oder ziehe ihn an den linken oder rechten Rand, um ihn zu entfernen. Der erste Ankerpunkt ist der Einstiegswert; die Kurve endet bei 100 %. Jede Änderung wird gespeichert."
     },
     "exercises": {
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",

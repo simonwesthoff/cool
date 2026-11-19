@@ -451,6 +451,7 @@ describe("IntensityPlanner", () => {
     competitionType: "German Championships",
     mesocycles: mesocycles.map((m) => ({ ...m, exerciseNumbers: [] })),
     weeks: makeWeeks().map((w) => ({ ...w, exercises: [] })),
+    curve: { entryPct: 60, anchors: [] },
   } as unknown as Macrocycle;
   beforeEach(() => {
     fetchMock.mockReset();
@@ -470,6 +471,8 @@ describe("IntensityPlanner", () => {
         onBack={onBack}
       />,
     );
+    // Week levels and borders are edited in "Weeks" mode.
+    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
     const column = container.querySelector('rect[data-week="11"]')!;
     fireEvent.pointerDown(column, { clientY: 101, pointerId: 1 });
     fireEvent.pointerMove(column, { clientY: 64, pointerId: 1 });
@@ -539,6 +542,8 @@ describe("IntensityPlanner", () => {
         onBack={onBack}
       />,
     );
+    // Week levels and borders are edited in "Weeks" mode.
+    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
     const first = container.querySelector('[data-border="0"]')!;
     fireEvent.pointerDown(first, { clientX: 160, pointerId: 1 });
     fireEvent.pointerMove(first, { clientX: 232, pointerId: 1 });
@@ -568,6 +573,8 @@ describe("IntensityPlanner", () => {
         onBack={onBack}
       />,
     );
+    // Week levels and borders are edited in "Weeks" mode.
+    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
     const column = container.querySelector('rect[data-week="11"]')!;
     fireEvent.pointerDown(column, { clientY: 240, pointerId: 1 });
     fireEvent.pointerUp(column, { clientY: 240, pointerId: 1 });
@@ -576,8 +583,73 @@ describe("IntensityPlanner", () => {
       "Week 11, Medium week, 80%",
     );
   });
-});
 
+  it("opens in Curve mode with the anchors and switches to Weeks", () => {
+    const { container } = renderIn(
+      <IntensityPlanner
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
+    );
+    const curveButton = screen.getByRole("button", { name: "Curve" });
+    expect(curveButton.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector('[data-anchor="entry"]')).toBeTruthy();
+    expect(container.querySelector("[data-border]")).toBeNull();
+    expect(container.querySelector("rect[data-week]")).toBeNull();
+    expect(screen.getByText(/Shape the progression curve/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
+    expect(container.querySelector('[data-anchor="entry"]')).toBeNull();
+    expect(container.querySelector("[data-border]")).toBeTruthy();
+    expect(container.querySelector("rect[data-week]")).toBeTruthy();
+  });
+
+  it("saves a curve change and takes the server's weeks", async () => {
+    const saved = {
+      ...macrocycle,
+      curve: { entryPct: 60, anchors: [{ t: 0.25, pct: 90 }] },
+    };
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(saved), { status: 200 }),
+    );
+    const { container } = renderIn(
+      <IntensityPlanner
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
+    );
+    const area = container.querySelector("[data-curve-area]")!;
+    fireEvent.pointerDown(area, { clientX: 300, clientY: 100, pointerId: 1 });
+    fireEvent.pointerUp(area, { clientX: 300, clientY: 100, pointerId: 1 });
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("/api/athletes/a1/macrocycle/curve");
+    expect(init.method).toBe("PUT");
+    const body = JSON.parse(init.body);
+    expect(body.entryValuePct).toBe(60);
+    expect(body.anchors).toHaveLength(1);
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
+  });
+
+  it("reverts a curve change and says so when saving fails", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
+    const { container } = renderIn(
+      <IntensityPlanner
+        macrocycle={macrocycle}
+        onSaved={onSaved}
+        onContinue={onContinue}
+        onBack={onBack}
+      />,
+    );
+    const area = container.querySelector("[data-curve-area]")!;
+    fireEvent.pointerDown(area, { clientX: 300, clientY: 100, pointerId: 1 });
+    fireEvent.pointerUp(area, { clientX: 300, clientY: 100, pointerId: 1 });
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(container.querySelectorAll("[data-anchor]")).toHaveLength(2);
+  });
+});
 describe("main competition marker", () => {
   const competition = { date: "2027-04-24", type: "German Championships" };
   const markerOf = (container: HTMLElement) =>
@@ -791,5 +863,139 @@ describe("main competition marker", () => {
       (t) => t.textContent === "CPB",
     )!;
     expect(Number(cpb.getAttribute("y"))).toBe(plotTop - 8);
+  });
+});
+
+describe("curve mode", () => {
+  // Width 800, y-axis margins 56/16, no competition: week 1 at x = 56, week
+  // 21 at x = 784; plot from y = 28, 220 px at 960 → 183.3 px, 0–110 %.
+  const xOfT = (t: number) => 56 + 728 * t;
+  const height = 220 * (800 / 960);
+  const yOf = (pct: number) => 28 + height * (1 - pct / 110);
+  const renderCurve = (
+    curve: { entryPct: number; anchors: { t: number; pct: number }[] },
+    onChange = vi.fn(),
+  ) => {
+    const view = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        onLevelChange={() => {}}
+        onBordersChange={() => {}}
+        curveEditor={{ curve, onChange }}
+      />,
+    );
+    return { ...view, onChange };
+  };
+  const press = (
+    el: Element,
+    from: [number, number],
+    to: [number, number] = from,
+  ) => {
+    fireEvent.pointerDown(el, {
+      clientX: from[0],
+      clientY: from[1],
+      pointerId: 1,
+    });
+    if (to !== from)
+      fireEvent.pointerMove(el, {
+        clientX: to[0],
+        clientY: to[1],
+        pointerId: 1,
+      });
+    fireEvent.pointerUp(el, { clientX: to[0], clientY: to[1], pointerId: 1 });
+  };
+  const line = { entryPct: 60, anchors: [] };
+  const withAnchor = { entryPct: 60, anchors: [{ t: 0.25, pct: 90 }] };
+
+  it("shows the anchors instead of week handles and border sliders", () => {
+    const { container } = renderCurve(withAnchor);
+    expect(
+      [...container.querySelectorAll("[data-anchor]")].map((a) =>
+        a.getAttribute("aria-label"),
+      ),
+    ).toEqual(["Entry value 60%", "Anchor at week 6: 90%", "End 100%"]);
+    expect(container.querySelector("[data-border]")).toBeNull();
+    expect(container.querySelector("[data-point]")).toBeNull();
+    // The curve is the spline itself: it passes the anchor.
+    expect(
+      container.querySelector("[data-line]")!.getAttribute("d"),
+    ).toBeTruthy();
+  });
+
+  it("adds an anchor where the chart is clicked", () => {
+    const { container, onChange } = renderCurve(line);
+    press(container.querySelector("[data-curve-area]")!, [xOfT(0.25), yOf(90)]);
+    const [curve] = onChange.mock.calls[0]!;
+    expect(curve.entryPct).toBe(60);
+    expect(curve.anchors).toHaveLength(1);
+    expect(curve.anchors[0].t).toBeCloseTo(0.25, 3);
+    expect(curve.anchors[0].pct).toBeCloseTo(90, 0);
+  });
+
+  it("drags an inner anchor smoothly, without snapping to weeks", () => {
+    const { container, onChange } = renderCurve(withAnchor);
+    press(
+      container.querySelector('[data-anchor="0"]')!,
+      [xOfT(0.25), yOf(90)],
+      [xOfT(0.37), yOf(85)],
+    );
+    const [curve] = onChange.mock.calls[0]!;
+    expect(curve.anchors[0].t).toBeCloseTo(0.37, 3);
+    // Week 8.4: between weeks 8 and 9, not snapped.
+    expect(1 + curve.anchors[0].t * 20).toBeCloseTo(8.4, 1);
+    expect(curve.anchors[0].pct).toBeCloseTo(85, 0);
+  });
+
+  it("removes an inner anchor by a click or by dragging it to an edge", () => {
+    const click = renderCurve(withAnchor);
+    press(click.container.querySelector('[data-anchor="0"]')!, [
+      xOfT(0.25),
+      yOf(90),
+    ]);
+    expect(click.onChange).toHaveBeenCalledWith({ entryPct: 60, anchors: [] });
+    cleanup();
+    const edge = renderCurve(withAnchor);
+    press(
+      edge.container.querySelector('[data-anchor="0"]')!,
+      [xOfT(0.25), yOf(90)],
+      [790, yOf(90)],
+    );
+    expect(edge.onChange).toHaveBeenCalledWith({ entryPct: 60, anchors: [] });
+  });
+
+  it("moves the entry anchor only up and down, within 30–95 %, and never removes it", () => {
+    const up = renderCurve(line);
+    const entry = () => up.container.querySelector('[data-anchor="entry"]')!;
+    press(entry(), [xOfT(0), yOf(60)], [xOfT(0.3), yOf(65)]);
+    const [curve] = up.onChange.mock.calls[0]!;
+    expect(curve.entryPct).toBeCloseTo(65, 0);
+    expect(curve.anchors).toEqual([]);
+    cleanup();
+    const low = renderCurve(line);
+    press(
+      low.container.querySelector('[data-anchor="entry"]')!,
+      [xOfT(0), yOf(60)],
+      [xOfT(0), yOf(10)],
+    );
+    expect(low.onChange.mock.calls[0]![0].entryPct).toBe(30);
+    cleanup();
+    // A click on the entry anchor changes nothing.
+    const clicked = renderCurve(line);
+    press(clicked.container.querySelector('[data-anchor="entry"]')!, [
+      xOfT(0),
+      yOf(60),
+    ]);
+    expect(clicked.onChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps the end anchor fixed and adds nothing there", () => {
+    const { container, onChange } = renderCurve(line);
+    press(
+      container.querySelector('[data-anchor="end"]')!,
+      [xOfT(1), yOf(100)],
+      [xOfT(0.8), yOf(70)],
+    );
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import type { Curve } from "@/domain/macrocycles/calculation";
 import type {
   Macrocycle,
   WeekLevel,
@@ -9,7 +10,11 @@ import type {
 import { baseIntensity, intensityAt } from "./chart-geometry";
 import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 
-/** Planning step 3: week levels on the macrocycle chart, saved per change. */
+/**
+ * Planning step 3: the progression curve ("Curve" mode, first) and the week
+ * levels and block borders ("Weeks" mode) on the macrocycle chart, each
+ * change saved.
+ */
 export function IntensityPlanner({
   macrocycle,
   onSaved,
@@ -28,6 +33,35 @@ export function IntensityPlanner({
   const [weeks, setWeeks] = useState<ChartWeek[]>(macrocycle.weeks);
   const [mesocycles, setMesocycles] = useState(macrocycle.mesocycles);
   const [failed, setFailed] = useState(false);
+  const [mode, setMode] = useState<"curve" | "weeks">("curve");
+  const [curve, setCurve] = useState<Curve>(macrocycle.curve);
+
+  async function changeCurve(next: Curve) {
+    const previous = curve;
+    setFailed(false);
+    // Optimistic update; the server's answer replaces it.
+    setCurve(next);
+    const response = await fetch(
+      `/api/athletes/${macrocycle.athleteId}/macrocycle/curve`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          entryValuePct: next.entryPct,
+          anchors: next.anchors,
+        }),
+      },
+    ).catch(() => null);
+    if (response?.ok) {
+      const saved = (await response.json()) as Macrocycle;
+      setCurve(saved.curve);
+      setWeeks(saved.weeks);
+      onSaved(saved);
+    } else {
+      setCurve(previous);
+      setFailed(true);
+    }
+  }
 
   async function changeLevel(week: number, level: WeekLevel) {
     const previous = weeks;
@@ -101,7 +135,30 @@ export function IntensityPlanner({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-zinc-600 dark:text-zinc-400">{t("help")}</p>
+      <div
+        role="group"
+        aria-label={t("mode.label")}
+        className="inline-flex self-start rounded-full border border-zinc-300 p-1 dark:border-zinc-700"
+      >
+        {(["curve", "weeks"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-pressed={mode === m}
+            onClick={() => setMode(m)}
+            className={`min-h-9 rounded-full px-4 text-sm font-medium ${
+              mode === m
+                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            }`}
+          >
+            {t(`mode.${m}`)}
+          </button>
+        ))}
+      </div>
+      <p className="text-zinc-600 dark:text-zinc-400">
+        {mode === "curve" ? t("helpCurve") : t("help")}
+      </p>
       {failed && (
         <p
           role="alert"
@@ -115,6 +172,9 @@ export function IntensityPlanner({
         mesocycles={mesocycles}
         onLevelChange={changeLevel}
         onBordersChange={changeBorders}
+        curveEditor={
+          mode === "curve" ? { curve, onChange: changeCurve } : undefined
+        }
         competition={{
           date: macrocycle.competitionDate,
           type: macrocycle.competitionType,

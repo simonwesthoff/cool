@@ -1,5 +1,5 @@
 /** Shapes of a macrocycle as the app and the API see it (no server imports). */
-import type { MesocycleType, WeekLevel } from "./calculation";
+import type { Curve, MesocycleType, WeekLevel } from "./calculation";
 
 export type { MesocycleType, WeekLevel };
 
@@ -81,6 +81,8 @@ export type MesocycleView = {
 export type Macrocycle = MacrocycleBaseData & {
   id: string;
   athleteId: string;
+  /** The progression curve: entry value, inner anchors and 100 %. */
+  curve: Curve;
   mesocycles: MesocycleView[];
   weeks: MacrocycleWeekView[];
 };

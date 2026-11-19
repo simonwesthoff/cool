@@ -42,16 +42,92 @@ export function curveShape(t: number): number {
   return (Math.sin(t * Math.PI - Math.PI / 2) + 1) / 2;
 }
 
+/** A point the progression curve passes through: cycle position and %. */
+export type CurveAnchor = { t: number; pct: number };
+
 /**
- * Intensity (share of the max values, 1 = 100 %) for entry value E (0..1):
- * ((1−E)/2)·sin(t·π − π/2) + E + (1−E)/2, ±5 points for high/low weeks.
+ * The progression curve: from the entry value (week 1) through the inner
+ * anchors to 100 % (last week). Inner anchors have 0 < t < 1.
+ */
+export type Curve = { entryPct: number; anchors: CurveAnchor[] };
+
+/** A curve, or just an entry value (0..1) for the straight line to 100 %. */
+type CurveInput = Curve | number;
+const asCurve = (curve: CurveInput): Curve =>
+  typeof curve === "number" ? { entryPct: curve * 100, anchors: [] } : curve;
+
+/** Natural cubic spline (zero curvature at both ends) through the points. */
+function naturalSpline(xs: number[], ys: number[]): (x: number) => number {
+  const n = xs.length - 1;
+  const h = xs.slice(1).map((x, i) => x - xs[i]!);
+  const alpha = new Array<number>(n + 1).fill(0);
+  for (let i = 1; i < n; i++)
+    alpha[i] =
+      (3 / h[i]!) * (ys[i + 1]! - ys[i]!) -
+      (3 / h[i - 1]!) * (ys[i]! - ys[i - 1]!);
+  const l = new Array<number>(n + 1).fill(1);
+  const mu = new Array<number>(n + 1).fill(0);
+  const z = new Array<number>(n + 1).fill(0);
+  for (let i = 1; i < n; i++) {
+    l[i] = 2 * (xs[i + 1]! - xs[i - 1]!) - h[i - 1]! * mu[i - 1]!;
+    mu[i] = h[i]! / l[i]!;
+    z[i] = (alpha[i]! - h[i - 1]! * z[i - 1]!) / l[i]!;
+  }
+  const c = new Array<number>(n + 1).fill(0);
+  const b = new Array<number>(n).fill(0);
+  const d = new Array<number>(n).fill(0);
+  for (let j = n - 1; j >= 0; j--) {
+    c[j] = z[j]! - mu[j]! * c[j + 1]!;
+    b[j] =
+      (ys[j + 1]! - ys[j]!) / h[j]! - (h[j]! * (c[j + 1]! + 2 * c[j]!)) / 3;
+    d[j] = (c[j + 1]! - c[j]!) / (3 * h[j]!);
+  }
+  return (x) => {
+    let j = 0;
+    while (j < n - 1 && x > xs[j + 1]!) j++;
+    const dx = x - xs[j]!;
+    return ys[j]! + b[j]! * dx + c[j]! * dx * dx + d[j]! * dx * dx * dx;
+  };
+}
+
+/**
+ * The progression curve's value (1 = 100 %) at cycle progress t: a natural
+ * cubic spline through the entry value, the inner anchors and 100 %,
+ * capped to 0–100 %.
+ */
+export function curveValue(curve: CurveInput, t: number): number {
+  const { entryPct, anchors } = asCurve(curve);
+  const inner = [...anchors].sort((a, b) => a.t - b.t);
+  const xs = [0, ...inner.map((a) => a.t), 1];
+  const ys = [entryPct, ...inner.map((a) => a.pct), 100];
+  const value = naturalSpline(xs, ys)(Math.min(1, Math.max(0, t)));
+  return Math.min(100, Math.max(0, value)) / 100;
+}
+
+/**
+ * Intensity (share of the max values, 1 = 100 %) of a week: the progression
+ * curve at its cycle progress t, ±5 points for high/low weeks (a high week
+ * may exceed 100 %).
  */
 export function intensity(
-  entryValue: number,
+  curve: CurveInput,
   t: number,
   level: WeekLevel = "medium",
 ): number {
-  return entryValue + (1 - entryValue) * curveShape(t) + LEVEL_OFFSET[level];
+  return curveValue(curve, t) + LEVEL_OFFSET[level];
+}
+
+/**
+ * The two inner anchors that approximate the former S-curve for an entry
+ * value: at 1/3 and 2/3 of the cycle, 25 % and 75 % of the way to 100 %.
+ */
+export function sineLikeAnchors(entryPct: number): CurveAnchor[] {
+  const at = (share: number) =>
+    Math.round((entryPct + (100 - entryPct) * share) * 10) / 10;
+  return [
+    { t: 1 / 3, pct: at(0.25) },
+    { t: 2 / 3, pct: at(0.75) },
+  ];
 }
 
 /** Whole numbers, halves rounded up (also for values like 5.4999999 = 5.5). */
@@ -97,11 +173,11 @@ function falling(
 export function plannedExercise(
   exercise: ExerciseValues,
   goals: Goals,
-  entryValue: number,
+  curve: CurveInput,
   t: number,
   level: WeekLevel,
 ): PlannedExercise {
-  const value = intensity(entryValue, t, level);
+  const value = intensity(curve, t, level);
   const goal =
     exercise.referenceLift === "snatch"
       ? goals.snatchGoalKg

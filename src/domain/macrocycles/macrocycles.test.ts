@@ -16,6 +16,7 @@ const {
   findMacrocycle,
   getExerciseWeeks,
   getMacrocycle,
+  setCurve,
   setMesocycleBorders,
   removeMesocycleExercise,
   setMesocycleExercise,
@@ -124,7 +125,9 @@ describe("createMacrocycle", () => {
     expect(created.weeks.every((w) => w.level === "medium")).toBe(true);
     expect(
       created.weeks.map((w) => w.intensityPct).filter((_, i) => i % 5 === 0),
-    ).toEqual([60, 65.9, 80, 94.1, 100]);
+    ).toEqual([60, 70, 80, 90, 100]);
+    // A new macrocycle starts with the straight line: no inner anchors.
+    expect(created.curve).toEqual({ entryPct: 60, anchors: [] });
     expect(created.weeks[1]!.startDate).toBe("2026-12-07");
     expect(created.weeks[20]!.startDate).toBe("2027-04-19");
     expect(created.weeks[0]!.volume).toBeNull();
@@ -671,6 +674,98 @@ describe("updateBaseData", () => {
   });
 });
 
+describe("setCurve", () => {
+  it("sets the entry value and the inner anchors and recalculates the weeks", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setCurve(coach, athlete.id, {
+      entryValuePct: 60,
+      anchors: [
+        { t: 0.75, pct: 97.5 },
+        { t: 0.25, pct: 90 },
+      ],
+    });
+    // Stored sorted by position.
+    expect(m.curve).toEqual({
+      entryPct: 60,
+      anchors: [
+        { t: 0.25, pct: 90 },
+        { t: 0.75, pct: 97.5 },
+      ],
+    });
+    // Week 6 of 21 is at position 0.25.
+    expect(m.weeks[5]!.intensityPct).toBe(90);
+    expect(m.weeks[0]!.intensityPct).toBe(60);
+    expect(m.weeks[20]!.intensityPct).toBe(100);
+  });
+
+  it("changes the entry value (the first anchor), also in the base data", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setCurve(coach, athlete.id, {
+      entryValuePct: 65.5,
+      anchors: [],
+    });
+    expect(m.entryValuePct).toBe(65.5);
+    expect(m.weeks[0]!.intensityPct).toBe(65.5);
+  });
+
+  it("keeps the anchors' positions when the duration changes", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await setCurve(coach, athlete.id, {
+      entryValuePct: 60,
+      anchors: [{ t: 0.5, pct: 90 }],
+    });
+    const m = await updateBaseData(coach, athlete.id, {
+      durationWeeks: 41,
+      competitionDate: "2027-09-11",
+    });
+    expect(m.curve.anchors).toEqual([{ t: 0.5, pct: 90 }]);
+    // Position 0.5 of 41 weeks is week 21.
+    expect(m.weeks[20]!.intensityPct).toBe(90);
+  });
+
+  it("rejects invalid curves with field codes", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const set = (input: unknown) =>
+      fieldsOf(setCurve(coach, athlete.id, input));
+    expect(
+      await set({ entryValuePct: 60, anchors: [{ t: 1, pct: 90 }] }),
+    ).toEqual({ "anchors.0.t": ["OUT_OF_RANGE"] });
+    expect(
+      await set({ entryValuePct: 60, anchors: [{ t: 0.5, pct: 120 }] }),
+    ).toEqual({ "anchors.0.pct": ["OUT_OF_RANGE"] });
+    expect(await set({ entryValuePct: 20, anchors: [] })).toEqual({
+      entryValuePct: ["OUT_OF_RANGE"],
+    });
+    expect(await set({ entryValuePct: 60.25, anchors: [] })).toEqual({
+      entryValuePct: ["TOO_PRECISE"],
+    });
+    expect(
+      await set({
+        entryValuePct: 60,
+        anchors: [
+          { t: 0.5, pct: 80 },
+          { t: 0.5004, pct: 81 },
+        ],
+      }),
+    ).toEqual({ anchors: ["TOO_CLOSE"] });
+    expect(
+      await set({
+        entryValuePct: 60,
+        anchors: Array.from({ length: 21 }, (_, i) => ({
+          t: (i + 1) / 22,
+          pct: 80,
+        })),
+      }),
+    ).toEqual({ anchors: ["TOO_MANY"] });
+    // Nothing changed.
+    expect((await getMacrocycle(coach, athlete.id)).curve.anchors).toEqual([]);
+  });
+});
+
 describe("setMesocycleBorders", () => {
   it("moves the borders and the weeks follow", async () => {
     const { coach, athlete } = await setup();
@@ -768,6 +863,11 @@ describe("read access for the linked athlete", () => {
           "special_preparation",
           "13",
         ),
+      () =>
+        setCurve(linked, athlete.id, {
+          entryValuePct: 65,
+          anchors: [{ t: 0.25, pct: 90 }],
+        }),
     ];
     // Without a Team of their own: the answer for every user without a Team.
     for (const attempt of attempts()) {
