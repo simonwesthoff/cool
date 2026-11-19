@@ -52,7 +52,7 @@ there SHALL be no animation.
 
 ### Requirement: Planning in four steps
 The planning SHALL consist of four steps on one page that the coach goes
-through in order and can revisit at any time: 1. base data, 2. SWOT, 3.
+through in order and can revisit anytime: 1. base data, 2. SWOT, 3.
 intensity chart with week levels, 4. exercises per mesocycle. The page
 SHALL show a stepper and the title "<first name>'s macrocycle planning".
 Choosing another step while the current step's form has unsaved changes
