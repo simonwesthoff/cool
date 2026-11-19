@@ -85,8 +85,7 @@ function renderChart(
   );
 }
 
-// The current week (today in the cycle) adds a label row above the plot.
-const PLOT = { top: 44, height: 240 };
+const PLOT = { top: 28, height: 240 };
 // Width 800, margins 12 / 12 (no y-axis): 776 px up to the competition on
 // day 145 (Saturday of week 21), where the chart ends.
 const xOf = (index: number) => 12 + (776 / (145 / 7)) * index;
@@ -246,30 +245,38 @@ describe("ExerciseChart", () => {
     const line = container.querySelector("[data-current-week]")!;
     expect(line.getAttribute("data-current-week")).toBe("6");
     expect(Number(line.getAttribute("x1"))).toBeCloseTo(xOf(5), 5);
-    // "Current week" on top of the line, one row above the other labels.
-    const label = container.querySelector("[data-current-week-label]")!;
-    expect(label.textContent).toBe("Current week");
-    expect(Number(label.getAttribute("x"))).toBeCloseTo(xOf(5), 5);
-    expect(label.getAttribute("text-anchor")).toBe("middle");
-    const rowOf = (text: string) =>
-      [...container.querySelectorAll("svg text")]
-        .find((t) => t.textContent === text)!
-        .getAttribute("y");
-    expect(rowOf("SPB")).toBe(rowOf("German Championships"));
-    expect(Number(label.getAttribute("y"))).toBe(Number(rowOf("SPB")) - 16);
+    // No text above the line; the week number below is bold with
+    // "Current" under it.
+    expect(container.querySelector("[data-current-week-label]")).toBeNull();
+    const label = container.querySelector('[data-week-label="6"]')!;
+    expect(label.getAttribute("data-current")).toBe("true");
+    expect(label.getAttribute("class")).toContain("font-bold");
+    const current = container.querySelector("[data-current-label]")!;
+    expect(current.textContent).toBe("Current");
+    expect(current.getAttribute("class")).toContain("font-bold");
+    expect(Number(current.getAttribute("x"))).toBeCloseTo(xOf(5), 5);
+    expect(Number(current.getAttribute("y"))).toBe(
+      Number(label.getAttribute("y")) + 14,
+    );
     expect(Number(line.getAttribute("y1"))).toBe(PLOT.top);
     cleanup();
     for (const today of ["2026-11-20", "2027-05-03"]) {
       const view = renderChart({ today });
       expect(view.container.querySelector("[data-current-week]")).toBeNull();
-      expect(
-        view.container.querySelector("[data-current-week-label]"),
-      ).toBeNull();
+      expect(view.container.querySelector("[data-current-label]")).toBeNull();
+      expect(view.container.querySelector("[data-current]")).toBeNull();
       expect(screen.queryByText("Current week")).toBeNull();
       cleanup();
     }
     expect(currentWeekIndex("2026-11-30", 21, "2027-04-25")).toBe(20);
     expect(currentWeekIndex("2026-11-30", 21, "2027-04-26")).toBeNull();
+  });
+
+  it("keeps Current inside the chart when the first week is the current one", () => {
+    const { container } = renderChart({ today: "2026-12-01" });
+    const current = container.querySelector("[data-current-label]")!;
+    expect(current.getAttribute("text-anchor")).toBe("start");
+    expect(Number(current.getAttribute("x"))).toBeGreaterThanOrEqual(0);
   });
 
   it("is read-only and dims the curve while another exercise loads", () => {

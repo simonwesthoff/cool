@@ -326,7 +326,8 @@
         "averageKg": "Average weight: {value}",
         "setSize": "Set size: {value}",
         "weeklyReps": "Weekly reps: {value}"
-      }
+      },
+      "current": "Current"
     },
     "title": "{name}'s macrocycle",
     "chartTitle": "Planned values",

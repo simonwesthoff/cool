@@ -326,7 +326,8 @@
         "averageKg": "MHG: {value}",
         "setSize": "Seriengröße: {value}",
         "weeklyReps": "Wochenwdh.: {value}"
-      }
+      },
+      "current": "Aktuell"
     },
     "title": "Makrozyklus von {name}",
     "chartTitle": "Geplante Werte",

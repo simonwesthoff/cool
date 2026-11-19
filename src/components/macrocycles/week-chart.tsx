@@ -10,7 +10,6 @@ import {
   CompetitionMarkerLine,
   CompetitionSwatch,
   competitionTail,
-  LABEL_CHAR,
   MesocycleStarts,
   tooltipPlacement,
   useCompetitionMarker,
@@ -76,6 +75,8 @@ export type WeekChartProps = {
 };
 
 const TOOLTIP = { width: 208, height: 84, gap: 10 };
+/** Estimated width of one character of a bold 11 px label. */
+const BOLD_CHAR = 6.8;
 
 /**
  * The one chart of the app's macrocycle screens: a value per week as one
@@ -126,14 +127,15 @@ export function WeekChart({
   const n = weeks.length;
   const current =
     today && weeks[0] ? currentWeekIndex(weeks[0].startDate, n, today) : null;
-  // The current week's label gets its own row above the block and
-  // competition labels, so they never overlap.
-  const PLOT = { top: current === null ? 28 : 44, height: plotHeight };
+  const PLOT = { top: 28, height: plotHeight };
   const tail = competitionTail(competition?.date, weeks[0]?.startDate, n);
   const layout = weekLayout(width, n, 0, { yAxis: Boolean(yAxis), tail });
   const { x, column, margin, plotLeft, plotRight } = layout;
   const bottom = PLOT.top + PLOT.height;
-  const height = bottom + (xAxisTitle ? 44 : 28);
+  // Room below the plot for the week numbers, the "Current" line under the
+  // current week's number and the axis title.
+  const height =
+    bottom + 28 + (current !== null ? 14 : 0) + (xAxisTitle ? 16 : 0);
 
   // Mesocycles, with a border being dragged moved already.
   const savedBorders: [number, number] = [
@@ -365,26 +367,65 @@ export function WeekChart({
             stroke="var(--chart-ink)"
             strokeOpacity={0.25}
           />
-          {weeks.map(
-            (w, i) =>
-              showWeekLabel(w.number) && (
+          {weeks.map((w, i) => {
+            const isCurrent = i === current;
+            // The current week's number is always shown; numbers too close
+            // to it give way.
+            const shownLabel =
+              isCurrent ||
+              (showWeekLabel(w.number) &&
+                (current === null || Math.abs(i - current) >= layout.every));
+            if (!shownLabel) return null;
+            const label = tv("current");
+            // "Current" stays inside the chart at both ends.
+            const half = (label.length * BOLD_CHAR) / 2;
+            const anchor =
+              x(i) - half < 0
+                ? "start"
+                : x(i) + half > width
+                  ? "end"
+                  : "middle";
+            return (
+              <g key={w.number}>
                 <text
-                  key={w.number}
                   data-week-label={w.number}
+                  data-current={isCurrent || undefined}
                   x={x(i)}
                   y={bottom + 18}
                   textAnchor="middle"
-                  className="fill-zinc-500 text-[11px] tabular-nums"
+                  className={`text-[11px] tabular-nums ${
+                    isCurrent
+                      ? "fill-zinc-900 font-bold dark:fill-zinc-100"
+                      : "fill-zinc-500"
+                  }`}
                 >
                   {w.number}
                 </text>
-              ),
-          )}
+                {isCurrent && (
+                  <text
+                    data-current-label
+                    x={
+                      anchor === "start"
+                        ? Math.max(0, x(i) - 6)
+                        : anchor === "end"
+                          ? Math.min(width, x(i) + 6)
+                          : x(i)
+                    }
+                    y={bottom + 32}
+                    textAnchor={anchor}
+                    className="fill-zinc-900 text-[11px] font-bold dark:fill-zinc-100"
+                  >
+                    {label}
+                  </text>
+                )}
+              </g>
+            );
+          })}
           {xAxisTitle && (
             <text
               data-axis-title
               x={plotLeft + (plotRight - plotLeft) / 2}
-              y={bottom + 38}
+              y={bottom + (current !== null ? 52 : 38)}
               textAnchor="middle"
               className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
             >
@@ -402,14 +443,6 @@ export function WeekChart({
               stroke="var(--chart-ink)"
               strokeWidth={2}
               className="pointer-events-none"
-            />
-          )}
-          {current !== null && (
-            <CurrentWeekLabel
-              x={x(current)}
-              y={PLOT.top - 24}
-              width={width}
-              text={tv("currentWeek")}
             />
           )}
           {/* One pink stroke; the gradient below fades downwards. */}
@@ -611,40 +644,4 @@ export function useWeekDate() {
       dateStyle: "medium",
       timeZone: "UTC",
     });
-}
-
-/**
- * "Current week" above its line, one row above the block and competition
- * labels; kept inside the chart at both ends.
- */
-function CurrentWeekLabel({
-  x,
-  y,
-  width,
-  text,
-}: {
-  x: number;
-  y: number;
-  width: number;
-  text: string;
-}) {
-  const half = (text.length * LABEL_CHAR) / 2;
-  const anchor = x - half < 0 ? "start" : x + half > width ? "end" : "middle";
-  return (
-    <text
-      data-current-week-label
-      x={
-        anchor === "start"
-          ? Math.max(0, x - 4)
-          : anchor === "end"
-            ? Math.min(width, x + 4)
-            : x
-      }
-      y={y}
-      textAnchor={anchor}
-      className="pointer-events-none fill-zinc-900 text-[11px] font-medium dark:fill-zinc-100"
-    >
-      {text}
-    </text>
-  );
 }
