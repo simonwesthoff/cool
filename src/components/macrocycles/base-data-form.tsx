@@ -16,7 +16,12 @@ import type {
 } from "@/domain/macrocycles/macrocycle-types";
 import { FocusPointsField } from "./focus-points-field";
 import { SchedulePicker } from "./schedule-picker";
-import { useUnsavedChangesGuard } from "./unsaved-changes";
+import {
+  BACK_BUTTON,
+  PRIMARY_BUTTON,
+  StepperActions,
+} from "../stepper-actions";
+import { usePendingSave } from "./pending-save";
 
 type FieldName = Exclude<
   keyof MacrocycleBaseData,
@@ -50,6 +55,40 @@ const numberFields: FieldName[] = [
   "muscleMassPct",
 ];
 const optionalFields: FieldName[] = ["bodyFatPct", "muscleMassPct"];
+
+/** Saving starts this long (ms) after the last change. */
+const AUTOSAVE_DELAY = 600;
+type SaveStatus = "idle" | "saving" | "saved" | "invalid" | "failed";
+
+/** The base data a new macrocycle needs before it can be created. */
+const requiredBaseFields: FieldName[] = [
+  "snatchBestKg",
+  "cleanAndJerkBestKg",
+  "bodyWeightKg",
+  "startDate",
+  "durationWeeks",
+  "competitionDate",
+  "competitionType",
+  "entryValuePct",
+  "snatchGoalKg",
+  "cleanAndJerkGoalKg",
+  "targetBodyWeightKg",
+];
+function requiredFilled(values: Record<string, unknown>) {
+  return (
+    requiredBaseFields.every((f) => values[f] !== undefined) &&
+    Array.isArray(values.sessions) &&
+    values.sessions.length > 0
+  );
+}
+/** The errors without those of the given fields (and their items). */
+function withoutFields(errors: FieldErrors, fields: string[]): FieldErrors {
+  return Object.fromEntries(
+    Object.entries(errors).filter(
+      ([key]) => !fields.includes(key.split(".")[0]!),
+    ),
+  );
+}
 
 function valuesOf(form: HTMLFormElement): Record<string, unknown> {
   const data = new FormData(form);
@@ -99,8 +138,10 @@ type Props = {
   defaultStartDate: string;
   /** The macrocycle as stored after each successful save. */
   onSaved: (macrocycle: Macrocycle) => void;
-  /** "Continue" after a successful save: the planning opens the next step. */
+  /** "Continue" once the step is complete: the planning opens the next step. */
   onContinue: () => void;
+  /** "Back to base data" (SWOT step only). */
+  onBack?: () => void;
 };
 
 /** Planning steps 1 (base data) and 2 (SWOT) of a macrocycle. */
@@ -116,64 +157,194 @@ function BaseDataFormFields({
   defaultStartDate,
   onSaved,
   onContinue,
+  onBack,
 }: Props) {
   const t = useTranslations("Macrocycle.baseData");
   const formId = useId();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState<SaveStatus>("idle");
   const form = useRef<HTMLFormElement>(null);
-  // The values as stored, to tell whether the form has unsaved changes.
-  const stored = useRef<string | null>(null);
-  const snapshot = () =>
-    form.current ? JSON.stringify(valuesOf(form.current)) : null;
+  // The form's values as stored; null for a new macrocycle until created.
+  const stored = useRef<Record<string, unknown> | null>(null);
+  const exists = useRef(macrocycle !== undefined);
+  // The values a moment after the last change, for a save after unmount.
+  const lastValues = useRef<Record<string, unknown> | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queue = useRef<Promise<boolean>>(Promise.resolve(true));
+  const api = `/api/athletes/${athleteId}/macrocycle`;
   useEffect(() => {
-    stored.current = snapshot();
+    if (form.current && exists.current) stored.current = valuesOf(form.current);
   }, []);
 
-  /** Saves the form; true on success, otherwise the errors are shown. */
-  async function save(): Promise<boolean> {
-    if (!form.current) return false;
-    setPending(true);
-    setErrors({});
-    setFormError(null);
-    const body = valuesOf(form.current);
-    const api = `/api/athletes/${athleteId}/macrocycle`;
+  const current = () =>
+    form.current ? valuesOf(form.current) : lastValues.current;
+
+  /** Sends a body; the stored macrocycle, or the field errors. */
+  async function send(
+    body: Record<string, unknown>,
+  ): Promise<
+    | { ok: true; saved: Macrocycle | null }
+    | { ok: false; fields: FieldErrors | null }
+  > {
     const response = await fetch(part === "swot" ? `${api}/swot` : api, {
-      method: part === "swot" ? "PUT" : macrocycle ? "PATCH" : "POST",
+      method: part === "swot" ? "PUT" : exists.current ? "PATCH" : "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+      // Also sent when the tab is closed right after a change.
+      keepalive: true,
     }).catch(() => null);
-    setPending(false);
     if (response?.ok) {
-      stored.current = snapshot();
       const saved = (await response
         .json()
         .catch(() => null)) as Macrocycle | null;
-      if (saved) onSaved(saved);
-      return true;
+      return { ok: true, saved };
     }
     const result = (await response?.json().catch(() => null)) as {
       error?: { code?: string; fields?: FieldErrors };
     } | null;
-    if (result?.error?.code === "VALIDATION_FAILED" && result.error.fields) {
-      setErrors(result.error.fields);
+    return {
+      ok: false,
+      fields:
+        result?.error?.code === "VALIDATION_FAILED"
+          ? (result.error.fields ?? {})
+          : null,
+    };
+  }
+
+  /** Records a successful save of `body`. */
+  function markStored(body: Record<string, unknown>, saved: Macrocycle | null) {
+    exists.current = true;
+    stored.current = { ...(stored.current ?? {}), ...body };
+    setErrors((all) => withoutFields(all, Object.keys(body)));
+    if (saved) onSaved(saved);
+  }
+
+  /**
+   * Saves the changed fields that are filled in. Fields the server rejects
+   * are marked and left out, and the rest is sent once more. A new
+   * macrocycle is only created once all required base data are filled.
+   */
+  async function saveChanges(): Promise<boolean> {
+    const values = current();
+    if (!values) return true;
+    let body: Record<string, unknown>;
+    if (!exists.current) {
+      if (part !== "base" || !requiredFilled(values)) return true;
+      body = values;
+    } else {
+      body = Object.fromEntries(
+        Object.entries(values).filter(
+          ([key, value]) =>
+            value !== undefined &&
+            !(
+              Array.isArray(value) &&
+              value.length === 0 &&
+              key === "focusPoints"
+            ) &&
+            JSON.stringify(value) !== JSON.stringify(stored.current?.[key]),
+        ),
+      );
+    }
+    if (Object.keys(body).length === 0) return true;
+    setStatus("saving");
+    // Whether a field was left out: then the status asks to check it.
+    let rejectedSome = false;
+    for (;;) {
+      const result = await send(body);
+      if (result.ok) {
+        markStored(body, result.saved);
+        setStatus(rejectedSome ? "invalid" : "saved");
+        return !rejectedSome;
+      }
+      if (!result.fields) {
+        setStatus("failed");
+        return false;
+      }
+      const fields = result.fields;
+      setErrors((all) => ({
+        ...withoutFields(all, Object.keys(body)),
+        ...fields,
+      }));
+      const rejected = new Set(Object.keys(fields).map((k) => k.split(".")[0]));
+      const rest = Object.fromEntries(
+        Object.entries(body).filter(([key]) => !rejected.has(key)),
+      );
+      // A new macrocycle needs all fields; otherwise retry with the rest.
+      const size = Object.keys(rest).length;
+      if (!exists.current || size === 0 || size === Object.keys(body).length) {
+        setStatus("invalid");
+        return false;
+      }
+      body = rest;
+      rejectedSome = true;
+    }
+  }
+
+  /** Sends the pending changes now; one save after the other. */
+  function flush(): Promise<boolean> {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    const run = queue.current.then(saveChanges, saveChanges);
+    queue.current = run;
+    return run;
+  }
+
+  /** Saves shortly after the last change. */
+  function scheduleSave() {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => void flush(), AUTOSAVE_DELAY);
+    // After React applied the change (e.g. a session added by a button).
+    setTimeout(() => {
+      if (form.current) lastValues.current = valuesOf(form.current);
+    }, 0);
+  }
+
+  // Leaving the step or the page sends what is still waiting.
+  usePendingSave(flush);
+  useEffect(
+    () => () => {
+      if (timer.current) void flush();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  /**
+   * "Continue": saves what is left, then checks that the step is
+   * complete; with missing or invalid fields the step stays open.
+   */
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!form.current) return;
+    setPending(true);
+    setFormError(null);
+    await flush();
+    const values = valuesOf(form.current);
+    // The SWOT sends empty fields too, so the server names them.
+    const body =
+      part === "swot"
+        ? Object.fromEntries(
+            Object.entries(values).map(([k, v]) => [k, v ?? ""]),
+          )
+        : values;
+    const result = await send(body);
+    setPending(false);
+    if (result.ok) {
+      markStored(body, result.saved);
+      setErrors({});
+      onContinue();
+      return;
+    }
+    if (result.fields) {
+      setErrors(result.fields);
       setFormError(t("checkFields"));
     } else {
       setFormError(t("saveFailed"));
     }
-    return false;
-  }
-
-  // The stepper asks before leaving the step with unsaved changes.
-  useUnsavedChangesGuard({
-    isDirty: () => stored.current !== null && snapshot() !== stored.current,
-    save,
-  });
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (await save()) onContinue();
   }
 
   const message = (code: string) =>
@@ -287,6 +458,12 @@ function BaseDataFormFields({
     <form
       ref={form}
       onSubmit={submit}
+      onChange={scheduleSave}
+      onClick={(event) => {
+        // Buttons inside fields (sessions, focus points) change values too.
+        if ((event.target as HTMLElement).closest('button[type="button"]'))
+          scheduleSave();
+      }}
       noValidate
       className="flex flex-col gap-8"
     >
@@ -471,15 +648,48 @@ function BaseDataFormFields({
           ))}
         </>
       )}
-      <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-6 font-medium text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-        >
-          {t("continue")}
-        </button>
-      </div>
+      <StepperActions
+        back={
+          onBack && (
+            <button type="button" onClick={onBack} className={BACK_BUTTON}>
+              {t("back")}
+            </button>
+          )
+        }
+        status={
+          status !== "idle" && (
+            <>
+              <p
+                role={
+                  status === "saved" || status === "saving" ? "status" : "alert"
+                }
+                data-save-status={status}
+                className={`text-sm ${
+                  status === "failed" || status === "invalid"
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-zinc-600 dark:text-zinc-400"
+                }`}
+              >
+                {t(`status.${status}`)}
+              </p>
+              {status === "failed" && (
+                <button
+                  type="button"
+                  onClick={() => void flush()}
+                  className={BACK_BUTTON}
+                >
+                  {t("retry")}
+                </button>
+              )}
+            </>
+          )
+        }
+        next={
+          <button type="submit" disabled={pending} className={PRIMARY_BUTTON}>
+            {part === "swot" ? t("continueToCurve") : t("continue")}
+          </button>
+        }
+      />
     </form>
   );
 }

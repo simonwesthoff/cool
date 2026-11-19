@@ -12,7 +12,12 @@ import {
   type WeekPlan,
 } from "@/domain/week-plans/week-plan-types";
 import { PlusIcon } from "../icons";
-import { useUnsavedChangesGuard } from "../macrocycles/unsaved-changes";
+import { usePendingSave } from "../macrocycles/pending-save";
+import {
+  BACK_BUTTON,
+  PRIMARY_BUTTON,
+  StepperActions,
+} from "../stepper-actions";
 import { Stepper } from "../stepper";
 import {
   ExerciseList,
@@ -222,6 +227,8 @@ export function WeekEditor({
           method: "PUT",
           headers: { "content-type": "application/json" },
           body,
+          // Also sent when the tab is closed right after a change.
+          keepalive: true,
         },
       )
         .then((response) => response.ok)
@@ -256,13 +263,8 @@ export function WeekEditor({
     };
   }, [sessions, flush]);
 
-  // Leaving with a change that is not saved yet asks first.
-  useUnsavedChangesGuard({
-    isDirty: () =>
-      hasErrors(latest.current) ||
-      JSON.stringify(payloadOf(latest.current)) !== stored.current,
-    save: flush,
-  });
+  // Leaving sends a change that is not saved yet (invalid ones are not).
+  usePendingSave(flush);
 
   const actuals = actualsOf(sessions);
   // Values off the plan are allowed (the coach may intend it), but warned.
@@ -304,7 +306,6 @@ export function WeekEditor({
 
   const button =
     "inline-flex min-h-11 items-center justify-center rounded-full px-5 font-medium disabled:opacity-60";
-  const primary = `${button} bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300`;
   const secondary = `${button} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`;
   const slide =
     "transition-[translate,opacity] duration-300 ease-out motion-reduce:transition-none";
@@ -494,63 +495,77 @@ export function WeekEditor({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {step === 0 ? (
-          <button type="button" onClick={() => setStep(1)} className={primary}>
-            {t("continue")}
-          </button>
-        ) : (
-          <>
+      {step === 1 && offPlan > 0 && (
+        <p
+          data-off-plan={offPlan}
+          className="text-sm text-zinc-700 dark:text-zinc-300"
+        >
+          {t("offPlan", { count: offPlan })}
+        </p>
+      )}
+      <StepperActions
+        back={
+          step === 1 && (
+            <button
+              type="button"
+              onClick={() => setStep(0)}
+              className={BACK_BUTTON}
+            >
+              {t("back")}
+            </button>
+          )
+        }
+        status={
+          status !== "untouched" && (
+            <>
+              <p
+                role={
+                  status === "failed" || status === "invalid"
+                    ? "alert"
+                    : "status"
+                }
+                data-save-status={status}
+                className={`text-sm ${
+                  status === "failed" || status === "invalid"
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-zinc-600 dark:text-zinc-400"
+                }`}
+              >
+                {t(`status.${status}`)}
+              </p>
+              {status === "failed" && (
+                <button
+                  type="button"
+                  onClick={() => void flush()}
+                  className={secondary}
+                >
+                  {t("retry")}
+                </button>
+              )}
+            </>
+          )
+        }
+        next={
+          step === 0 ? (
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className={PRIMARY_BUTTON}
+            >
+              {t("continue")}
+            </button>
+          ) : (
             <button
               type="button"
               onClick={() => void finish()}
               disabled={finishing}
-              className={primary}
+              className={PRIMARY_BUTTON}
             >
               {t("finish")}
             </button>
-            <button
-              type="button"
-              onClick={() => setStep(0)}
-              className={secondary}
-            >
-              {t("back")}
-            </button>
-          </>
-        )}
-        {status !== "untouched" && (
-          <p
-            role={
-              status === "failed" || status === "invalid" ? "alert" : "status"
-            }
-            data-save-status={status}
-            className={`text-sm ${
-              status === "failed" || status === "invalid"
-                ? "text-red-700 dark:text-red-400"
-                : "text-zinc-600 dark:text-zinc-400"
-            }`}
-          >
-            {t(`status.${status}`)}
-          </p>
-        )}
-        {step === 1 && offPlan > 0 && (
-          <p
-            data-off-plan={offPlan}
-            className="basis-full text-sm text-zinc-700 dark:text-zinc-300"
-          >
-            {t("offPlan", { count: offPlan })}
-          </p>
-        )}
-        {status === "failed" && (
-          <button
-            type="button"
-            onClick={() => void flush()}
-            className={secondary}
-          >
-            {t("retry")}
-          </button>
-        )}
-      </div>
+          )
+        }
+      />
 
       <ExercisePicker
         open={pickingSession !== undefined}

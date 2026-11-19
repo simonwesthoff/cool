@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { LoadingPlaceholder } from "@/components/loading-placeholder";
-import { GuardedBackLink } from "@/components/macrocycles/leave-guard";
+import { SavingBackLink } from "@/components/macrocycles/pending-save";
 import { PageMain } from "@/components/page-main";
 import { WeekEditor } from "@/components/week-plans/week-editor";
 import { getAthlete } from "@/domain/athletes";
@@ -45,7 +45,7 @@ export async function WeekPlanEditor({ params, searchParams }: Props) {
   const tb = await getTranslations("Back");
   return (
     <div className="flex flex-col gap-6">
-      <GuardedBackLink
+      <SavingBackLink
         href={`/athletes/${id}`}
         label={tb("athlete", { name: athlete.name })}
       />

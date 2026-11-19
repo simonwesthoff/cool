@@ -303,22 +303,41 @@ describe("setSwot", () => {
     expect(m).toMatchObject({ ...baseData, ...swot });
   });
 
-  it("requires every SWOT field", async () => {
+  it("requires each SWOT field it is given", async () => {
     const { coach, athlete } = await setup();
     await createMacrocycle(coach, athlete.id, baseData);
-    const incomplete: Record<string, unknown> = { ...swot, cleanDeficits: " " };
-    delete incomplete.strengths;
-    delete incomplete.jerkDeficits;
-    expect(await fieldsOf(setSwot(coach, athlete.id, incomplete))).toEqual({
+    expect(
+      await fieldsOf(
+        setSwot(coach, athlete.id, {
+          ...swot,
+          strengths: "",
+          cleanDeficits: " ",
+          focusPoints: [],
+        }),
+      ),
+    ).toEqual({
       strengths: ["REQUIRED"],
       cleanDeficits: ["REQUIRED"],
-      jerkDeficits: ["REQUIRED"],
+      focusPoints: ["REQUIRED"],
     });
     expect(
       await fieldsOf(
         setSwot(coach, athlete.id, { ...swot, snatchGoalKg: 100 }),
       ),
     ).toEqual({ snatchGoalKg: ["UNKNOWN_FIELD"] });
+  });
+
+  it("saves single SWOT fields and keeps the others", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    await setSwot(coach, athlete.id, swot);
+    const m = await setSwot(coach, athlete.id, { strengths: "Fast pull" });
+    expect(m).toMatchObject({ ...swot, strengths: "Fast pull" });
+    // Nothing given changes nothing.
+    expect(await setSwot(coach, athlete.id, {})).toMatchObject({
+      ...swot,
+      strengths: "Fast pull",
+    });
   });
 
   it("keeps 1 to 3 focus points in order", async () => {

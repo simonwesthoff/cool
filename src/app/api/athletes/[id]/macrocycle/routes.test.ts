@@ -151,6 +151,14 @@ describe("macrocycle API", () => {
       ...swotData,
       snatchGoalKg: 105,
     });
+    const single = await swot.PUT(
+      json("PUT", { experience: "Ten years" }),
+      ctx(id),
+    );
+    expect(await single.json()).toMatchObject({
+      ...swotData,
+      experience: "Ten years",
+    });
     const incomplete = await swot.PUT(
       json("PUT", { ...swotData, strengths: "" }),
       ctx(id),
