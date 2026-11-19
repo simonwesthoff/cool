@@ -97,5 +97,9 @@ Out of scope:
 - The exercise chart on the athlete page and in the macrocycle view drops
   the mesocycle colours and the y-axis: a thin line at each block start,
   one smoothed pink curve (#ba2db3) with a gradient fading downwards
-  (user decision). The planning chart keeps its bands for now.
-
+  (user decision).
+- Follow-up (user decision): the planning chart uses the same style, with
+  the y-axis, week handles and block sliders; all three charts are one
+  element with parameters. A main competition after the start of the last
+  week ends the chart, the curve continuing to it; its label shows only
+  the name. The exercise table and the app drop the mesocycle colours.

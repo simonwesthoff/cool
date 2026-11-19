@@ -255,7 +255,6 @@
       "axisWeek": "Woche",
       "legendCompetition": "Hauptwettkampf",
       "competitionValue": "Hauptwettkampf: {type}, {date}",
-      "competitionLabel": "{type} · {date}",
       "levelsShort": {
         "high": "hoch",
         "medium": "mittel",

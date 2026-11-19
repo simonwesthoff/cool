@@ -97,11 +97,9 @@ function renderIn(node: React.ReactNode, locale: "en" | "de" = "en") {
 }
 
 const pointOf = (container: HTMLElement, week: number) =>
-  container.querySelector(`[data-week-point="${week}"]`)!;
+  container.querySelector(`[data-point="${week}"]`)!;
 const dotX = (container: HTMLElement, week: number) =>
-  Number(
-    pointOf(container, week).querySelectorAll("circle")[1]!.getAttribute("cx"),
-  );
+  Number(pointOf(container, week).querySelector("circle")!.getAttribute("cx"));
 
 describe("chart geometry", () => {
   it("separates the curve from the week's step", () => {
@@ -232,7 +230,11 @@ describe("fit to the width", () => {
     containerWidth = widthPx;
     const weeks = makeWeeks(count);
     const { container } = renderIn(
-      <MacrocycleChart weeks={weeks} mesocycles={splitMesocycles(count)} />,
+      <MacrocycleChart
+        weeks={weeks}
+        mesocycles={splitMesocycles(count)}
+        onLevelChange={() => {}}
+      />,
     );
     const svg = container.querySelector("svg")!;
     expect(Number(svg.getAttribute("width"))).toBe(widthPx);
@@ -240,48 +242,58 @@ describe("fit to the width", () => {
     expect(dotX(container, 1)).toBeGreaterThan(0);
     // Points never get smaller than a 2.5 px radius.
     const r = Number(
-      pointOf(container, 1).querySelectorAll("circle")[1]!.getAttribute("r"),
+      pointOf(container, 1).querySelector("circle")!.getAttribute("r"),
     );
-    expect(r).toBeGreaterThanOrEqual(2.5);
+    expect(r).toBeGreaterThanOrEqual(3);
   });
 });
 
-describe("week positions and colours", () => {
-  it("puts a week's point and number at the start of its area (on the block border)", () => {
+describe("week positions and style", () => {
+  it("puts a week's point and number on the line where its block starts", () => {
     const { container } = renderIn(
-      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        onLevelChange={() => {}}
+      />,
     );
-    const bands = container.querySelectorAll(
-      'svg[aria-label="Intensity per week"] > g > rect',
+    const specialStart = Number(
+      container
+        .querySelector('[data-block-start="4"] line')!
+        .getAttribute("x1"),
     );
-    const specialStart = Number(bands[1]!.getAttribute("x"));
     expect(dotX(container, 4)).toBeCloseTo(specialStart, 5);
-    const labels = [...container.querySelectorAll("text")].filter((t) =>
-      /^\d+$/.test(t.textContent ?? ""),
-    );
-    const label4 = labels.find((t) => t.textContent === "4")!;
+    const label4 = container.querySelector('[data-week-label="4"]')!;
     expect(Number(label4.getAttribute("x"))).toBeCloseTo(specialStart, 5);
-    const numbers = labels.map((t) => Number(t.textContent));
+    const numbers = [...container.querySelectorAll("[data-week-label]")].map(
+      (t) => Number(t.textContent),
+    );
     expect(numbers).toEqual(expect.arrayContaining([1, 4, 14]));
   });
 
-  it("colours the bands with the palette and draws the intensity white", () => {
+  it("has no mesocycle colours and draws the intensity as one pink curve with pink handles, a y-axis and ▲▼", () => {
     const { container } = renderIn(
-      <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
+      <MacrocycleChart
+        weeks={makeWeeks(21, { 11: "high" })}
+        mesocycles={mesocycles}
+        onLevelChange={() => {}}
+      />,
     );
-    const bands = container.querySelectorAll(
-      'svg[aria-label="Intensity per week"] > g > rect',
+    expect(container.querySelectorAll("rect[fill^='var(--band']")).toHaveLength(
+      0,
     );
-    expect([0, 1, 2].map((i) => bands[i]!.getAttribute("fill"))).toEqual([
-      "var(--band-1)",
-      "var(--band-2)",
-      "var(--band-3)",
-    ]);
+    expect(container.querySelectorAll("[data-block-start]")).toHaveLength(3);
+    const line = container.querySelector("[data-line]")!;
+    expect(line.getAttribute("stroke")).toBe("var(--chart-curve)");
+    expect(line.getAttribute("d")).toContain(" C");
+    expect(container.querySelector("[data-area]")).toBeTruthy();
     expect(
-      container.querySelector("[data-intensity-line]")!.getAttribute("class"),
-    ).toBe("stroke-white");
-    const dot = pointOf(container, 4).querySelectorAll("circle")[1]!;
-    expect(dot.getAttribute("class")).toBe("fill-white");
+      pointOf(container, 4).querySelector("circle")!.getAttribute("fill"),
+    ).toBe("var(--chart-curve)");
+    expect(pointOf(container, 11).textContent).toBe("▲");
+    expect(
+      [...container.querySelectorAll("[data-axis]")].map((t) => t.textContent),
+    ).toEqual(["50%", "60%", "70%", "80%", "90%", "100%", "110%"]);
   });
 });
 
@@ -357,7 +369,7 @@ describe("week tooltip", () => {
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
     );
     fireEvent.pointerEnter(container.querySelector('rect[data-week="21"]')!);
-    const tooltip = screen.getByTestId("week-tooltip");
+    const tooltip = screen.getByTestId("chart-tooltip");
     const tip = box(tooltip);
     const hit = container.querySelector('rect[data-week="21"]')!;
     expect(tip.right).toBeLessThanOrEqual(Number(hit.getAttribute("x")));
@@ -373,7 +385,7 @@ describe("week tooltip", () => {
       />,
     );
     fireEvent.pointerEnter(container.querySelector('rect[data-week="1"]')!);
-    const tip = box(screen.getByTestId("week-tooltip"));
+    const tip = box(screen.getByTestId("chart-tooltip"));
     const hit = container.querySelector('rect[data-week="1"]')!;
     expect(tip.left).toBeGreaterThanOrEqual(
       Number(hit.getAttribute("x")) + Number(hit.getAttribute("width")),
@@ -391,7 +403,7 @@ describe("week tooltip", () => {
     );
     fireEvent.pointerEnter(container.querySelector('rect[data-week="11"]')!);
     const lines = [
-      ...screen.getByTestId("week-tooltip").querySelectorAll("p"),
+      ...screen.getByTestId("chart-tooltip").querySelectorAll("p"),
     ].map((p) => p.textContent);
     expect(lines).toEqual(["85% (high)", "Week 11 from Feb 8, 2027", "SPB"]);
   });
@@ -406,7 +418,7 @@ describe("week tooltip", () => {
     );
     fireEvent.pointerEnter(container.querySelector('rect[data-week="2"]')!);
     const lines = [
-      ...screen.getByTestId("week-tooltip").querySelectorAll("p"),
+      ...screen.getByTestId("chart-tooltip").querySelectorAll("p"),
     ].map((p) => p.textContent);
     expect(lines[0]).toMatch(/^\d+(,\d)?\s% \(niedrig\)$/);
     expect(lines.slice(1)).toEqual(["Woche 2 ab 07.12.2026", "GLP"]);
@@ -517,10 +529,12 @@ describe("main competition marker", () => {
   const competition = { date: "2027-04-24", type: "German Championships" };
   const markerOf = (container: HTMLElement) =>
     container.querySelector("[data-competition]")!;
-  // Width 800, margins 56/16: 21 columns of 728/21 px; day 0 = Monday 2026-11-30.
-  const xOfDay = (day: number) => 56 + (728 / 21) * (day / 7);
+  // Width 800, margins 56/16; day 0 = Monday 2026-11-30. The chart ends at
+  // the competition (day 145, Saturday of week 21), or at week 21's point.
+  const xOfDay = (day: number, end = 145) =>
+    56 + (728 / Math.max(end / 7, 20)) * (day / 7);
 
-  it("draws a line at the competition day, labelled with type and date above the chart", () => {
+  it("draws a line at the competition day, labelled with its name above the chart, where the chart ends", () => {
     const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -535,8 +549,13 @@ describe("main competition marker", () => {
     // Saturday of week 21 = day 145.
     const line = marker.querySelector("line")!;
     expect(Number(line.getAttribute("x1"))).toBeCloseTo(xOfDay(145), 5);
+    // The curve continues to the competition and the chart ends there.
+    expect(Number(line.getAttribute("x1"))).toBeCloseTo(784, 5);
+    expect(container.querySelector("[data-line]")!.getAttribute("d")).toMatch(
+      /784\.0,[\d.]+$/,
+    );
     const text = marker.querySelector("text")!;
-    expect(text.textContent).toBe("German Championships · Apr 24, 2027");
+    expect(text.textContent).toBe("German Championships");
     // Same row and style as the mesocycle labels (y = plot top − 8).
     expect(text.getAttribute("y")).toBe("20");
     expect(text.getAttribute("class")).toBe(
@@ -585,10 +604,11 @@ describe("main competition marker", () => {
     );
     const text = markerOf(container).querySelector("text")!;
     expect(text.getAttribute("text-anchor")).toBe("start");
-    expect(Number(text.getAttribute("x"))).toBeCloseTo(xOfDay(12) + 4, 5);
+    // The cycle ends at week 21's point (day 140).
+    expect(Number(text.getAttribute("x"))).toBeCloseTo(xOfDay(12, 140) + 4, 5);
   });
 
-  it("marks a competition after the cycle at the end, with type and date only", () => {
+  it("marks a competition after the cycle at the end, with its name only", () => {
     const { container } = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -601,7 +621,7 @@ describe("main competition marker", () => {
       Number(marker.querySelector("line")!.getAttribute("x1")),
     ).toBeCloseTo(784, 5);
     expect(marker.querySelector("text")!.textContent).toBe(
-      "European Championships · May 8, 2027",
+      "European Championships",
     );
   });
 
@@ -618,7 +638,7 @@ describe("main competition marker", () => {
     );
     const marker = markerOf(container);
     const text = marker.querySelector("text")!.textContent!;
-    expect(text).toMatch(/… · Apr 24, 2027$/);
+    expect(text).toMatch(/…$/);
     // Fits between the y-axis and the line.
     expect(text.length * 6.2).toBeLessThanOrEqual(
       Number(marker.querySelector("text")!.getAttribute("x")) - 44,
@@ -637,7 +657,7 @@ describe("main competition marker", () => {
     expect(container.querySelector("[data-competition]")).toBeNull();
   });
 
-  it("is not drawn without a competition, in German with the German date", () => {
+  it("is not drawn without a competition, and names the German date only for screen readers", () => {
     const { container } = renderIn(
       <MacrocycleChart weeks={makeWeeks()} mesocycles={mesocycles} />,
     );
@@ -653,6 +673,11 @@ describe("main competition marker", () => {
     );
     expect(
       view.container.querySelector("[data-competition] text")!.textContent,
-    ).toBe("German Championships · 24.04.2027");
+    ).toBe("German Championships");
+    expect(
+      view.container
+        .querySelector("[data-competition]")!
+        .getAttribute("aria-label"),
+    ).toContain("24.04.2027");
   });
 });

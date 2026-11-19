@@ -7,7 +7,8 @@ does not use the exercise: the best value (kg), the average weight (kg),
 the set size or the weekly reps. It SHALL be minimal (user decision): one
 smoothed curve as a single pink stroke without point handles or outline,
 a pink gradient below it fading downwards, no y-axis and no values on it.
-The x-axis SHALL show only week numbers.
+The x-axis SHALL show only week numbers. It is the week chart without
+the y-axis, with the current week.
 
 #### Scenario: Best value of the snatch by default
 - **GIVEN** a 21-week macrocycle with a snatch goal of 100 kg and entry value 60 %

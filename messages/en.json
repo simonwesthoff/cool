@@ -255,7 +255,6 @@
       "axisWeek": "Week",
       "legendCompetition": "Main competition",
       "competitionValue": "Main competition: {type}, {date}",
-      "competitionLabel": "{type} · {date}",
       "levelsShort": {
         "high": "high",
         "medium": "medium",

@@ -86,8 +86,9 @@ function renderChart(
 }
 
 const PLOT = { top: 28, height: 240 };
-// Width 800, margins 12 / 12 (no y-axis): 776 px for 21 weeks.
-const xOf = (index: number) => 12 + (776 / 21) * index;
+// Width 800, margins 12 / 12 (no y-axis): 776 px up to the competition on
+// day 145 (Saturday of week 21), where the chart ends.
+const xOf = (index: number) => 12 + (776 / (145 / 7)) * index;
 const pointOf = (container: HTMLElement, week: number) =>
   container.querySelector(`[data-curve] [data-point="${week}"]`);
 const yOf = (d: { min: number; max: number }, v: number) =>
@@ -221,7 +222,7 @@ describe("ExerciseChart", () => {
     const { container } = renderChart({ value: "averageKg" });
     fireEvent.pointerEnter(container.querySelector('rect[data-week="11"]')!);
     const lines = [
-      ...screen.getByTestId("exercise-tooltip").querySelectorAll("p"),
+      ...screen.getByTestId("chart-tooltip").querySelectorAll("p"),
     ].map((p) => p.textContent);
     expect(lines).toEqual([
       "Average weight: 69 kg",
@@ -234,7 +235,7 @@ describe("ExerciseChart", () => {
     const { container } = renderChart({}, "de");
     fireEvent.pointerEnter(container.querySelector('rect[data-week="11"]')!);
     const lines = [
-      ...screen.getByTestId("exercise-tooltip").querySelectorAll("p"),
+      ...screen.getByTestId("chart-tooltip").querySelectorAll("p"),
     ].map((p) => p.textContent);
     expect(lines).toEqual(["Bestwert: 80 kg", "Woche 11 ab 08.02.2027", "ABP"]);
   });
@@ -262,5 +263,19 @@ describe("ExerciseChart", () => {
     expect(
       container.querySelector("[data-curve]")!.getAttribute("opacity"),
     ).toBe("0.35");
+  });
+
+  it("continues the curve to the competition in the last week and ends there", () => {
+    const { container } = renderChart();
+    const d = container.querySelector("[data-line]")!.getAttribute("d")!;
+    expect(d).toMatch(/788\.0,[\d.]+$/);
+    expect(
+      Number(
+        container.querySelector("[data-competition] line")!.getAttribute("x1"),
+      ),
+    ).toBeCloseTo(788, 5);
+    expect(
+      container.querySelector("[data-competition] text")!.textContent,
+    ).toBe("German Championships");
   });
 });
