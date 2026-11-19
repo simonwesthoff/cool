@@ -64,6 +64,7 @@
 ## 6. Acceptance feedback
 
 - [x] 6.1 Week view tables fit the content width on desktop (column shares, no sideways scroll); no coach note column, a note indicator after the exercise name with a hover/focus tooltip; bold lines between exercises in the week view and the editor. Verify with component tests and a browser check (scroll width equals the container, tooltip visible on hover, screenshots).
+- [x] 6.2 The note tooltip shows when hovering the whole exercise name cell. Verify with a browser check (hover at the cell's corner shows the tooltip).
 
 ## Workflow follow-up
 

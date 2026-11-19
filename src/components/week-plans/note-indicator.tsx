@@ -4,7 +4,8 @@ import { useId } from "react";
 
 /**
  * A small note icon after an exercise name: the coach's note appears as a
- * tooltip on hover, and on focus for keyboards and touch.
+ * tooltip when hovering the cell (a `group/note` ancestor), and on focus
+ * for keyboards and touch.
  */
 export function NoteIndicator({
   note,
@@ -15,7 +16,7 @@ export function NoteIndicator({
 }) {
   const id = useId();
   return (
-    <span className="group relative ml-1 inline-flex align-middle">
+    <span className="relative ml-1 inline-flex align-middle">
       <button
         type="button"
         aria-label={label}
@@ -38,7 +39,7 @@ export function NoteIndicator({
       <span
         id={id}
         role="tooltip"
-        className="pointer-events-none invisible absolute top-full left-0 z-20 mt-1 w-56 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-normal whitespace-pre-wrap text-zinc-900 shadow-md group-focus-within:visible group-hover:visible dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+        className="pointer-events-none invisible absolute top-full left-0 z-20 mt-1 w-56 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-normal whitespace-pre-wrap text-zinc-900 shadow-md group-focus-within/note:visible group-hover/note:visible dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
       >
         {note}
       </span>

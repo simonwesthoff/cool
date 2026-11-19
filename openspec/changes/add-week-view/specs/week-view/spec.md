@@ -42,12 +42,13 @@ without scrolling sideways.
 
 ### Requirement: Coach note indicator
 A coach note on an exercise SHALL show as an indicator after the exercise
-name; hovering or focusing it SHALL show the note as a tooltip. Exercises
+name; hovering anywhere over the exercise's name cell, or focusing the
+indicator, SHALL show the note as a tooltip. Exercises
 without a note SHALL have no indicator.
 
 #### Scenario: Hover the note
 - **GIVEN** the coach note "Fast turnover" on Monday's snatch
-- **WHEN** the athlete hovers the indicator after "1 Snatch"
+- **WHEN** the athlete hovers the cell with "1 Snatch", not only the indicator
 - **THEN** a tooltip shows "Fast turnover"
 
 ### Requirement: Feedback per exercise

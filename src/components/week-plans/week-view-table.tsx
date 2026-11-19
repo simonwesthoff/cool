@@ -146,7 +146,8 @@ export function WeekViewTable({
                     <th
                       scope="rowgroup"
                       rowSpan={2}
-                      className={`${line} ${stickyName} px-2 text-left align-middle font-medium`}
+                      // Hovering anywhere in the cell shows the coach note.
+                      className={`${line} ${stickyName} group/note px-2 text-left align-middle font-medium`}
                     >
                       {name}
                       {e.note && (
