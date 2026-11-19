@@ -1,0 +1,1 @@
+ALTER TABLE "exercise" ADD COLUMN "lift_categories" text[] DEFAULT '{}'::text[] NOT NULL;

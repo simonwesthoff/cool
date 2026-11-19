@@ -67,6 +67,7 @@ export async function WeekPlanEditor({ params, searchParams }: Props) {
           exercises: g.exercises.map((e) => ({
             number: e.number,
             name: e.name,
+            liftCategories: e.liftCategories,
           })),
         }))}
         projections={projections}

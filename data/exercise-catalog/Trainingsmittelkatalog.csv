@@ -1,46 +1,46 @@
-Komplex,Nr.,Bezeichnung,Bestwert (% vom Reiß-/Stoß Max.),Max. Wochen Mittleres Hantelgewicht (MHG),Minimale Wdh,Maximale Wdh,Referenzübung,min Wochen Wdh,max Wochen Wdh,Kommentar,Addresses
-K1 Wettkampfübungen (WKÜ),1,Reißen,100,86,1,5,Reißen,10,30,"Wettkampfübung, Variation: Komische 1 = ohne Füße setzen",WKÜ
-K1 Wettkampfübungen (WKÜ),2,Reißen mit Bändern,102,88,1,5,Reißen,10,30,,
-K1 Wettkampfübungen (WKÜ),3,Stoßen,100,84,1,5,Stoßen,10,30,Wettkampfübung,WKÜ
-K1 Wettkampfübungen (WKÜ),4,Umsetzen,102,86,1,5,Stoßen,10,30,,"Umsatz, Beschleunigung im 2. Zug, Abbremsen, Schnelles Abtauchen"
-K1 Wettkampfübungen (WKÜ),5,Ausstoßen,104,88,1,5,Stoßen,10,30,,"Ausstoß, Rhythmus im Auftakt"
-K2 Teilwettkampfübungen (TWKÜ),6,Reißen erhöhte Position,102,88,1,5,Reißen,10,30,"Variationen: im Hang, vom Bock","Beschleunigung im 2. Zug, Umgruppieren, Schnelles Abtauchen"
-K2 Teilwettkampfübungen (TWKÜ),7,Standreißen,90,75,1,5,Reißen,10,30,,"Beschleunigung im 2. Zug, Hoher Zug"
-K2 Teilwettkampfübungen (TWKÜ),8,Umgruppieren breit,80,65,1,5,Reißen,10,30,Variationen: mit/ohne Dip,"Umgruppieren, Schnelles Abtauchen"
-K2 Teilwettkampfübungen (TWKÜ),9,Umsetzen erhöhte Position,102,88,1,5,Stoßen,10,30,"Variationen: im Hang, vom Bock","Beschleunigung im 2. Zug, Umgruppieren, Schnelles Abtauchen"
-K2 Teilwettkampfübungen (TWKÜ),10,Standumsetzen,85,75,1,5,Stoßen,10,30,,"Beschleunigung im 2. Zug, Hoher Zug"
-K2 Teilwettkampfübungen (TWKÜ),11,Umgruppieren eng,80,65,1,5,Stoßen,10,30,Variationen: mit/ohne Dip,"Umgruppieren, Schnelles Abtauchen"
-K2 Teilwettkampfübungen (TWKÜ),12,Standstoßen,102,88,1,5,Stoßen,10,30,,"Rhythmus im Auftakt, Gerader Hantelweg"
-K3 Schnellkraftfähigkeit (SKF),13,Zug breit,108,94,3,8,Reißen,18,48,,SKF
-K3 Schnellkraftfähigkeit (SKF),14,Zug eng,105,94,3,8,Stoßen,18,48,,SKF
-K4 Maximalkraftfähigkeit Beschleunigen (MKF),15,Lastheben breit,130,115,3,8,Reißen,18,48,Erst ab 18 Jahren,"MKF, Position halten im 1. Zug"
-K4 Maximalkraftfähigkeit Beschleunigen (MKF),16,Lastheben eng,125,110,3,8,Stoßen,18,48,Erst ab 18 Jahren,"MKF, Position halten im 1. Zug"
-K4 Maximalkraftfähigkeit Beschleunigen (MKF),17,Anstoßkniebeuge,140,125,1,5,Stoßen,10,30,Erst ab 18 Jahren,"Rhythmus im Auftakt, Gefühl für höhere Lasten"
-K5 MKF Abbremsen,18,Reißkniebeuge,110,100,3,6,Reißen,18,36,"Variationen: Reißkniebeuge, Hockesenken, Unterhocken","Mobility, Stabilität über Kopf, Bremsphase im Reißen, Schnelles Abbremsen (beim Unterhocken)"
-K5 MKF Abbremsen,19,Kniebeuge vorn,105,94,3,8,Stoßen,18,48,Bestwert für 3 Wdh,MKF
-K5 MKF Abbremsen,20,Kniebeuge hinten,120,102,3,8,Stoßen,18,48,Bestwert für 3 Wdh,MKF
-K5 MKF Abbremsen,21,Halbkniebeuge,150,130,3,8,Stoßen,18,48,Wird nicht mehr genutzt,
-K6 MKF Umgruppieren,22,Powerzug breit,90,82,3,5,Reißen,18,30,"Variation: ohne Auftakt als Maximalkraftübung, Gut in Kombination 22 + 6","MKF für obere Extremitäten, Gerader 2. Zug, Gefühl für Hantelbeschleunigung aus der Hüfte"
-K6 MKF Umgruppieren,23,Kraftreißen,80,70,1,5,Reißen,10,30,,"MKF für obere Extremitäten, Konstante Beschleunigung 1. + 2. Zug (Technikschulung)"
-K6 MKF Umgruppieren,24,Powerzug eng,80,72,3,5,Stoßen,18,30,"Variation: ohne Auftakt als Maximalkraftübung, Gut in Kombination 22 + 6","MKF für obere Extremitäten, Gerader 2. Zug, Gefühl für Hantelbeschleunigung aus der Hüfte"
-K6 MKF Umgruppieren,25,Kraftdrücken,60,52,1,10,Stoßen,10,50,,MKF für obere Extremitäten
-K6 MKF Umgruppieren,26,Schwungdrücken,85,75,1,6,Stoßen,10,36,,"Maximal- und Schnellkraft beim Ausstoß, Beschleunigung aus Auftakt"
-K7 Übungskombinationen,27,Umsetzen + Kniebeuge vorne,100,88,1,4,Stoßen,6,24,,MKF
-K7 Übungskombinationen,28,Standumsetzen + Standstoßen,85,72,1,4,Stoßen,10,30,Variation: Standumsetzen + Ausstoßen,"Wettkampfvorbereitung, SKF"
-K7 Übungskombinationen,29,Kniebeuge vorne + Ausstoßen,100,90,1,4,Stoßen,6,24,Bestwert >100,Ausstoßen unter Vorbelastung
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),30,Nackendrücken,70,,,,,,,"Variationen: eng, breit, breit in der Hocke","Stabilität über Kopf, MKF für obere Extremitäten"
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),31,Bankdrücken,,,,,,,,,
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),32,Beugestütz (Dips),50,,,,,,,,
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),33,Klimmzug,,,,,,,,,
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),34,Beindrücken Herkules,,,,,,,,,
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),35,Beindrücken im Liegen,,,,,,,,,
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),36,Zug im Liegen (Bankziehen),,,,,,,,,
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),37,Bauchmuskel,,,,,,,,,
-K8 Allgemeines Muskelkrafttraining 1 (AMKT),38,Rückenmuskel,,,,,,,,,
-K9 AMKT 2,39,Beinbeuger-Maschine,,,,,,,,,
-K9 AMKT 2,40,Gesäß-Maschine,,,,,,,,,
-K9 AMKT 2,41,Rücken-Maschine,,,,,,,,,
-K9 AMKT 2,42,Latissimus-Maschine,,,,,,,,,
-K9 AMKT 2,43,Delta-Maschine,,,,,,,,,
-K9 AMKT 2,44,Beinstrecker-Maschine,,,,,,,,,
-K9 AMKT 2,45,Weitere AMKT-Übungen,,,,,,,,,
+Komplex,Nr.,Bezeichnung,Bestwert (% vom Reiß-/Stoß Max.),Max. Wochen Mittleres Hantelgewicht (MHG),Minimale Wdh,Maximale Wdh,Referenzübung,min Wochen Wdh,max Wochen Wdh,Kommentar,Addresses,Kategorie
+K1 Wettkampfübungen (WKÜ),1,Reißen,100,86,1,5,Reißen,10,30,"Wettkampfübung, Variation: Komische 1 = ohne Füße setzen",WKÜ,Reißen
+K1 Wettkampfübungen (WKÜ),2,Reißen mit Bändern,102,88,1,5,Reißen,10,30,,,Reißen
+K1 Wettkampfübungen (WKÜ),3,Stoßen,100,84,1,5,Stoßen,10,30,Wettkampfübung,WKÜ,"Umsetzen, Ausstoßen"
+K1 Wettkampfübungen (WKÜ),4,Umsetzen,102,86,1,5,Stoßen,10,30,,"Umsatz, Beschleunigung im 2. Zug, Abbremsen, Schnelles Abtauchen",Umsetzen
+K1 Wettkampfübungen (WKÜ),5,Ausstoßen,104,88,1,5,Stoßen,10,30,,"Ausstoß, Rhythmus im Auftakt",Ausstoßen
+K2 Teilwettkampfübungen (TWKÜ),6,Reißen erhöhte Position,102,88,1,5,Reißen,10,30,"Variationen: im Hang, vom Bock","Beschleunigung im 2. Zug, Umgruppieren, Schnelles Abtauchen",Reißen
+K2 Teilwettkampfübungen (TWKÜ),7,Standreißen,90,75,1,5,Reißen,10,30,,"Beschleunigung im 2. Zug, Hoher Zug",Reißen
+K2 Teilwettkampfübungen (TWKÜ),8,Umgruppieren breit,80,65,1,5,Reißen,10,30,Variationen: mit/ohne Dip,"Umgruppieren, Schnelles Abtauchen",Reißen
+K2 Teilwettkampfübungen (TWKÜ),9,Umsetzen erhöhte Position,102,88,1,5,Stoßen,10,30,"Variationen: im Hang, vom Bock","Beschleunigung im 2. Zug, Umgruppieren, Schnelles Abtauchen",Umsetzen
+K2 Teilwettkampfübungen (TWKÜ),10,Standumsetzen,85,75,1,5,Stoßen,10,30,,"Beschleunigung im 2. Zug, Hoher Zug",Umsetzen
+K2 Teilwettkampfübungen (TWKÜ),11,Umgruppieren eng,80,65,1,5,Stoßen,10,30,Variationen: mit/ohne Dip,"Umgruppieren, Schnelles Abtauchen",Umsetzen
+K2 Teilwettkampfübungen (TWKÜ),12,Standstoßen,102,88,1,5,Stoßen,10,30,,"Rhythmus im Auftakt, Gerader Hantelweg",Ausstoßen
+K3 Schnellkraftfähigkeit (SKF),13,Zug breit,108,94,3,8,Reißen,18,48,,SKF,Reißen
+K3 Schnellkraftfähigkeit (SKF),14,Zug eng,105,94,3,8,Stoßen,18,48,,SKF,Umsetzen
+K4 Maximalkraftfähigkeit Beschleunigen (MKF),15,Lastheben breit,130,115,3,8,Reißen,18,48,Erst ab 18 Jahren,"MKF, Position halten im 1. Zug",Reißen
+K4 Maximalkraftfähigkeit Beschleunigen (MKF),16,Lastheben eng,125,110,3,8,Stoßen,18,48,Erst ab 18 Jahren,"MKF, Position halten im 1. Zug",Umsetzen
+K4 Maximalkraftfähigkeit Beschleunigen (MKF),17,Anstoßkniebeuge,140,125,1,5,Stoßen,10,30,Erst ab 18 Jahren,"Rhythmus im Auftakt, Gefühl für höhere Lasten",Ausstoßen
+K5 MKF Abbremsen,18,Reißkniebeuge,110,100,3,6,Reißen,18,36,"Variationen: Reißkniebeuge, Hockesenken, Unterhocken","Mobility, Stabilität über Kopf, Bremsphase im Reißen, Schnelles Abbremsen (beim Unterhocken)",Reißen
+K5 MKF Abbremsen,19,Kniebeuge vorn,105,94,3,8,Stoßen,18,48,Bestwert für 3 Wdh,MKF,Umsetzen
+K5 MKF Abbremsen,20,Kniebeuge hinten,120,102,3,8,Stoßen,18,48,Bestwert für 3 Wdh,MKF,Umsetzen
+K5 MKF Abbremsen,21,Halbkniebeuge,150,130,3,8,Stoßen,18,48,Wird nicht mehr genutzt,,Umsetzen
+K6 MKF Umgruppieren,22,Powerzug breit,90,82,3,5,Reißen,18,30,"Variation: ohne Auftakt als Maximalkraftübung, Gut in Kombination 22 + 6","MKF für obere Extremitäten, Gerader 2. Zug, Gefühl für Hantelbeschleunigung aus der Hüfte",Reißen
+K6 MKF Umgruppieren,23,Kraftreißen,80,70,1,5,Reißen,10,30,,"MKF für obere Extremitäten, Konstante Beschleunigung 1. + 2. Zug (Technikschulung)",Reißen
+K6 MKF Umgruppieren,24,Powerzug eng,80,72,3,5,Stoßen,18,30,"Variation: ohne Auftakt als Maximalkraftübung, Gut in Kombination 22 + 6","MKF für obere Extremitäten, Gerader 2. Zug, Gefühl für Hantelbeschleunigung aus der Hüfte",Umsetzen
+K6 MKF Umgruppieren,25,Kraftdrücken,60,52,1,10,Stoßen,10,50,,MKF für obere Extremitäten,Ausstoßen
+K6 MKF Umgruppieren,26,Schwungdrücken,85,75,1,6,Stoßen,10,36,,"Maximal- und Schnellkraft beim Ausstoß, Beschleunigung aus Auftakt",Ausstoßen
+K7 Übungskombinationen,27,Umsetzen + Kniebeuge vorne,100,88,1,4,Stoßen,6,24,,MKF,Umsetzen
+K7 Übungskombinationen,28,Standumsetzen + Standstoßen,85,72,1,4,Stoßen,10,30,Variation: Standumsetzen + Ausstoßen,"Wettkampfvorbereitung, SKF","Umsetzen, Ausstoßen"
+K7 Übungskombinationen,29,Kniebeuge vorne + Ausstoßen,100,90,1,4,Stoßen,6,24,Bestwert >100,Ausstoßen unter Vorbelastung,Ausstoßen
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),30,Nackendrücken,70,,,,,,,"Variationen: eng, breit, breit in der Hocke","Stabilität über Kopf, MKF für obere Extremitäten",
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),31,Bankdrücken,,,,,,,,,,
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),32,Beugestütz (Dips),50,,,,,,,,,
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),33,Klimmzug,,,,,,,,,,
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),34,Beindrücken Herkules,,,,,,,,,,
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),35,Beindrücken im Liegen,,,,,,,,,,
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),36,Zug im Liegen (Bankziehen),,,,,,,,,,
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),37,Bauchmuskel,,,,,,,,,,
+K8 Allgemeines Muskelkrafttraining 1 (AMKT),38,Rückenmuskel,,,,,,,,,,
+K9 AMKT 2,39,Beinbeuger-Maschine,,,,,,,,,,
+K9 AMKT 2,40,Gesäß-Maschine,,,,,,,,,,
+K9 AMKT 2,41,Rücken-Maschine,,,,,,,,,,
+K9 AMKT 2,42,Latissimus-Maschine,,,,,,,,,,
+K9 AMKT 2,43,Delta-Maschine,,,,,,,,,,
+K9 AMKT 2,44,Beinstrecker-Maschine,,,,,,,,,,
+K9 AMKT 2,45,Weitere AMKT-Übungen,,,,,,,,,,

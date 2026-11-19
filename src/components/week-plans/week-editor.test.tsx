@@ -53,17 +53,35 @@ const catalog = [
   {
     code: "K1",
     name: { de: "Wettkampfübungen", en: "Competition exercises" },
-    exercises: [{ number: 1, name: { de: "Reißen", en: "Snatch" } }],
+    exercises: [
+      {
+        number: 1,
+        name: { de: "Reißen", en: "Snatch" },
+        liftCategories: ["snatch" as const],
+      },
+    ],
   },
   {
     code: "K3",
     name: { de: "Schnellkraft", en: "Speed strength" },
-    exercises: [{ number: 13, name: { de: "Zug breit", en: "Snatch pull" } }],
+    exercises: [
+      {
+        number: 13,
+        name: { de: "Zug breit", en: "Snatch pull" },
+        liftCategories: ["snatch" as const],
+      },
+    ],
   },
   {
     code: "K5",
     name: { de: "Maximalkraft Abbremsen", en: "Maximum strength" },
-    exercises: [{ number: 20, name: { de: "Kniebeuge", en: "Back squat" } }],
+    exercises: [
+      {
+        number: 20,
+        name: { de: "Kniebeuge", en: "Back squat" },
+        liftCategories: ["clean" as const],
+      },
+    ],
   },
 ];
 /** Week 11 projection of the snatch from the spec. */
@@ -277,7 +295,7 @@ describe("WeekEditor step 1", () => {
     await userEvent.click(
       within(document.querySelector("dialog[open]") as HTMLElement).getByRole(
         "button",
-        { name: /^13 Snatch pull/ },
+        { name: /^Snatch: ?13 Snatch pull/ },
       ),
     );
     expect(numbers("Wednesday")).toEqual(["1", "13"]);
@@ -321,7 +339,7 @@ describe("WeekEditor step 1", () => {
       "text-zinc-400",
     );
     await userEvent.click(
-      within(dialog).getByRole("button", { name: /^20 Back squat/ }),
+      within(dialog).getByRole("button", { name: /^Clean: ?20 Back squat/ }),
     );
     const wednesday = sessionNamed("Wednesday");
     expect(wednesday.textContent).toContain("20 Back squat");
@@ -463,7 +481,7 @@ describe("WeekEditor step 2", () => {
     const name = table.querySelector("tbody th[scope=rowgroup]")!;
     // Bold lines between exercises.
     expect(table.querySelector("tbody")!.className).toContain("border-t-2");
-    expect(name.textContent).toBe("1 Snatch");
+    expect(name.textContent).toBe("Snatch: 1 Snatch");
     expect(name.getAttribute("rowspan")).toBe("2");
     // No buttons to add or remove sets.
     expect(
@@ -606,7 +624,13 @@ describe("WeekEditor step 2 layout", () => {
     {
       code: "K8",
       name: { de: "Allgemeines Muskelkrafttraining", en: "General strength" },
-      exercises: [{ number: 33, name: { de: "Klimmzug", en: "Pull-up" } }],
+      exercises: [
+        {
+          number: 33,
+          name: { de: "Klimmzug", en: "Pull-up" },
+          liftCategories: [],
+        },
+      ],
     },
   ];
   const renderWithPullUp = () =>
@@ -647,6 +671,56 @@ describe("WeekEditor step 2 layout", () => {
       freeText: "3 × 10, slow, 2 min rest",
       setGroups: [],
     });
+  });
+});
+
+describe("WeekEditor lift categories", () => {
+  const marks = (root: Element | null) =>
+    [...(root?.querySelectorAll("[data-lift]") ?? [])].map((d) =>
+      d.getAttribute("data-lift"),
+    );
+  const monday: PlannedSession[] = [
+    {
+      weekday: 1,
+      slot: 1,
+      exercises: [
+        { exerciseNumber: 1, note: null, setGroups: [] },
+        { exerciseNumber: 20, note: null, setGroups: [] },
+      ],
+    },
+  ];
+
+  it("marks the categories in the exercise list and on the session cards", async () => {
+    renderEditor(monday);
+    const aside = screen.getByRole("complementary", { name: "Exercises" });
+    expect(marks(aside.querySelector('[data-exercise="1"]'))).toEqual([
+      "snatch",
+    ]);
+    await userEvent.click(
+      within(aside).getByRole("button", { name: "Show all exercises" }),
+    );
+    expect(marks(aside.querySelector('[data-exercise="20"]'))).toEqual([
+      "clean",
+    ]);
+    // Monday's card: a snatch and a clean movement are planned.
+    expect(marks(sessionNamed("Monday"))).toEqual(["snatch", "clean"]);
+    expect(
+      within(sessionNamed("Monday")).getByTitle("Clean").closest("li"),
+    ).toBeTruthy();
+  });
+
+  it("marks the categories in the step 2 tables", async () => {
+    renderEditor(monday);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const table = sessionNamed("Monday");
+    expect(
+      marks(table.querySelector('tbody[data-exercise="1"] th[scope=rowgroup]')),
+    ).toEqual(["snatch"]);
+    expect(
+      marks(
+        table.querySelector('tbody[data-exercise="20"] th[scope=rowgroup]'),
+      ),
+    ).toEqual(["clean"]);
   });
 });
 

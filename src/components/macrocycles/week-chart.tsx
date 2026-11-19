@@ -72,6 +72,8 @@ export type WeekChartProps = {
   handles?: LevelHandles;
   /** Draggable sliders for the two mesocycle borders (planning). */
   onBordersChange?: (specialStart: number, competitionStart: number) => void;
+  /** Colour of the curve, its gradient and its points (a CSS colour). */
+  color?: string;
 };
 
 const TOOLTIP = { width: 208, height: 84, gap: 10 };
@@ -108,6 +110,7 @@ export function WeekChart({
   pointLabel,
   handles,
   onBordersChange,
+  color = "var(--chart-curve)",
 }: WeekChartProps) {
   const t = useTranslations("Macrocycle.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
@@ -328,12 +331,8 @@ export function WeekChart({
         >
           <defs>
             <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-              <stop
-                offset="0"
-                stopColor="var(--chart-curve)"
-                stopOpacity={0.3}
-              />
-              <stop offset="1" stopColor="var(--chart-curve)" stopOpacity={0} />
+              <stop offset="0" stopColor={color} stopOpacity={0.3} />
+              <stop offset="1" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
           <MesocycleStarts
@@ -466,7 +465,7 @@ export function WeekChart({
               data-line
               d={path}
               fill="none"
-              stroke="var(--chart-curve)"
+              stroke={color}
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -508,7 +507,7 @@ export function WeekChart({
                       cx={x(i)}
                       cy={y(v)}
                       r={active && handles ? radius + 1.5 : radius}
-                      fill="var(--chart-curve)"
+                      fill={color}
                       stroke="var(--surface)"
                       strokeWidth={2}
                     />

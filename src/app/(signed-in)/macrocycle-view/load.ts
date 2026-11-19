@@ -28,7 +28,11 @@ export async function loadMacrocycleView(user: CurrentUser, athleteId: string) {
   return {
     macrocycle,
     initialValues,
-    exercises: exercises.map((e) => ({ number: e.number, name: e.name })),
+    exercises: exercises.map((e) => ({
+      number: e.number,
+      name: e.name,
+      liftCategories: e.liftCategories,
+    })),
     today: today(),
     // "Change planning" only for the coach of the athlete's Team, on
     // whichever page the view is opened.
@@ -75,11 +79,12 @@ export async function loadCurrentWeek(user: CurrentUser, athleteId: string) {
         )
       : [],
   );
-  const names = Object.fromEntries(
-    catalog
-      .flatMap((g) => g.exercises)
-      .filter((e) => numbers.has(e.number))
-      .map((e) => [e.number, e.name]),
+  const inWeek = catalog
+    .flatMap((g) => g.exercises)
+    .filter((e) => numbers.has(e.number));
+  const names = Object.fromEntries(inWeek.map((e) => [e.number, e.name]));
+  const categories = Object.fromEntries(
+    inWeek.map((e) => [e.number, e.liftCategories]),
   );
-  return { current, names, canGiveFeedback };
+  return { current, names, categories, canGiveFeedback };
 }

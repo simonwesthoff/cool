@@ -1,5 +1,6 @@
 // The exercise catalog (see src/domain/exercises). Filled by a generated data
 // migration from data/exercise-catalog (npm run catalog:migration).
+import { sql } from "drizzle-orm";
 import {
   numeric,
   pgEnum,
@@ -42,6 +43,11 @@ export const exercise = pgTable("exercise", {
   maxRepsPerWeek: smallint("max_reps_per_week"),
   commentDe: text("comment_de"),
   commentEn: text("comment_en"),
+  /** Lift categories ("snatch", "clean", "jerk"), in that order. */
+  liftCategories: text("lift_categories")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
 });
 
 /** A point exercises address (e.g. "Hoher Zug"); the German name is the key. */

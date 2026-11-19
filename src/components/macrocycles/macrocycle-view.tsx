@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useId, useState } from "react";
 import {
   localized,
+  type LiftCategory,
   type LocalizedText,
 } from "@/domain/exercises/catalog-types";
 import type {
@@ -14,7 +15,11 @@ import type {
 import { ExerciseChart, VALUES, type ValueKey } from "./exercise-chart";
 import { MacrocycleSummary } from "./macrocycle-summary";
 
-export type ExerciseOption = { number: number; name: LocalizedText };
+export type ExerciseOption = {
+  number: number;
+  name: LocalizedText;
+  liftCategories: LiftCategory[];
+};
 
 type Props = {
   macrocycle: Macrocycle;
@@ -137,6 +142,9 @@ export function MacrocycleView({
           }}
           today={today}
           dimmed={loading}
+          categories={
+            exercises.find((e) => e.number === shown)?.liftCategories ?? []
+          }
         />
       </section>
       <MacrocycleSummary macrocycle={macrocycle} />

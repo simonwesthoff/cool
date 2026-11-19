@@ -1,4 +1,9 @@
 @import "tailwindcss";
+/*
+ * Planning documents are not app code: class-like text in them (e.g. a
+ * placeholder in a design note) must not become CSS.
+ */
+@source not "../../openspec";
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
@@ -27,6 +32,10 @@ body {
  */
 :root {
   --surface: #ffffff;
+  /* Lift categories of exercises (user decision): marks and chart curves. */
+  --lift-snatch: var(--color-palette-cyan);
+  --lift-clean: var(--color-palette-purple);
+  --lift-jerk: var(--color-palette-magenta);
   /* The curve of the exercise chart and its gradient. */
   --chart-curve: var(--color-palette-magenta);
   /* Lines and labels in charts (borders, competition, current week). */

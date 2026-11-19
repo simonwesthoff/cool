@@ -47,6 +47,7 @@ const k3: ExerciseGroup = {
       repsPerWeek: { min: 18, max: 48 },
       comment: null,
       addresses: [{ key: "SKF", name: { de: "SKF", en: "Speed strength" } }],
+      liftCategories: ["snatch"],
     },
   ],
 };
@@ -69,6 +70,7 @@ const k8: ExerciseGroup = {
       repsPerWeek: { min: null, max: null },
       comment: null,
       addresses: [],
+      liftCategories: [],
     },
   ],
 };
@@ -95,12 +97,18 @@ describe("ExerciseList", () => {
     ).getAllByRole("button");
     expect(k3Rows).toHaveLength(1);
     expect(k3Rows[0]!.getAttribute("aria-haspopup")).toBe("dialog");
-    expect(k3Rows[0]!.textContent).toBe("13Snatch pullBest value 108%");
+    // A cyan dot (named "Snatch") before the name.
+    expect(k3Rows[0]!.textContent).toBe("13Snatch: Snatch pullBest value 108%");
+    const dot = k3Rows[0]!.querySelector("[data-lift]") as HTMLElement;
+    expect(dot.dataset.lift).toBe("snatch");
+    expect(dot.style.background).toBe("var(--lift-snatch)");
     expect(k3Rows[0]!.textContent).not.toContain("K3");
     const k8Rows = within(
       screen.getByRole("list", { name: "K8 · General strength training 1" }),
     ).getAllByRole("button");
     expect(k8Rows[0]!.textContent).toContain("31Bench press");
+    // No category, no mark.
+    expect(k8Rows[0]!.querySelector("[data-lift-marks]")).toBeNull();
     expect(within(k8Rows[0]!).getByLabelText("Not defined").textContent).toBe(
       "–",
     );
@@ -145,7 +153,9 @@ describe("exercise dialog", () => {
     expect(title.textContent).toBe("13 Snatch pull");
     expect(title.children).toHaveLength(0);
     expect(
-      within(dialog).getByText("K3 · Speed strength · Snatch exercise"),
+      within(dialog).getByText(
+        "K3 · Speed strength · Snatch exercise · Snatch",
+      ),
     ).toBeTruthy();
     expect(valuesOf(dialog)).toEqual({
       "Best value (% of snatch / clean & jerk max)": "108%",
@@ -157,17 +167,23 @@ describe("exercise dialog", () => {
     });
   });
 
-  it("names clean & jerk exercises in the subtitle, in German too", async () => {
+  it("names clean & jerk exercises and their categories in the subtitle, in German too", async () => {
     const clean = {
       ...k3,
       exercises: [
-        { ...k3.exercises[0]!, referenceLift: "clean_and_jerk" as const },
+        {
+          ...k3.exercises[0]!,
+          referenceLift: "clean_and_jerk" as const,
+          liftCategories: ["clean" as const, "jerk" as const],
+        },
       ],
     };
     renderIn("en", <ExerciseList groups={[clean]} />);
     const dialog = await openExercise("Snatch pull");
     expect(
-      within(dialog).getByText("K3 · Speed strength · C&J exercise"),
+      within(dialog).getByText(
+        "K3 · Speed strength · C&J exercise · Clean, Jerk",
+      ),
     ).toBeTruthy();
     cleanup();
     renderIn("de", <ExerciseList groups={[k3]} />);
@@ -177,7 +193,7 @@ describe("exercise dialog", () => {
     ).toBe("13 Zug breit");
     expect(
       within(dialogDe).getByText(
-        "K3 · Schnellkraftfähigkeit (SKF) · Reißübung",
+        "K3 · Schnellkraftfähigkeit (SKF) · Reißübung · Reißen",
       ),
     ).toBeTruthy();
   });

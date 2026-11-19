@@ -71,6 +71,7 @@ const exercise = (
   repsPerWeek: { min: null, max: null },
   comment: comment ? { de: comment, en: comment } : null,
   addresses,
+  liftCategories: [],
 });
 const catalog: ExerciseGroup[] = [
   {

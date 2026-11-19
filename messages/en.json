@@ -136,7 +136,13 @@
       "snatch": "Snatch exercise",
       "clean_and_jerk": "C&J exercise"
     },
-    "addresses": "Addresses"
+    "addresses": "Addresses",
+    "categories": {
+      "snatch": "Snatch",
+      "clean": "Clean",
+      "jerk": "Jerk"
+    },
+    "liftPrefix": "{names}: "
   },
   "Navigation": {
     "label": "Main navigation",

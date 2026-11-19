@@ -7,6 +7,7 @@ import {
   type ExerciseGroup,
 } from "@/domain/exercises/catalog-types";
 import { ExerciseDialog } from "./exercise-dialog";
+import { LiftMarks } from "./lift-marks";
 
 /**
  * The exercise catalog: one block per exercise group with its exercises.
@@ -55,8 +56,11 @@ export function ExerciseList({ groups }: { groups: ExerciseGroup[] }) {
                     <span className="text-sm text-zinc-500 tabular-nums">
                       {exercise.number}
                     </span>
-                    <span className="min-w-0 break-words">
-                      {localized(exercise.name, locale)}
+                    <span className="flex min-w-0 items-center gap-2 break-words">
+                      <LiftMarks categories={exercise.liftCategories} />
+                      <span className="min-w-0">
+                        {localized(exercise.name, locale)}
+                      </span>
                     </span>
                     <span className="text-right text-sm tabular-nums">
                       {exercise.bestValuePct === null ? (

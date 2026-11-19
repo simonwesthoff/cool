@@ -7,7 +7,9 @@ import {
   type Deviation,
   type WeekActuals,
 } from "@/domain/week-plans/calculation";
+import type { LiftCategory } from "@/domain/exercises/catalog-types";
 import { usesFreeText } from "@/domain/week-plans/week-plan-types";
+import { LiftMarks } from "../exercises/lift-marks";
 import {
   EDITOR_TABLE_WIDTH,
   EDITOR_WIDTH,
@@ -51,6 +53,7 @@ export function SessionTable({
   session,
   label,
   exerciseName,
+  categoriesOf,
   actualsOf,
   projectionOf,
   ...handlers
@@ -59,6 +62,8 @@ export function SessionTable({
   /** "Monday" or "Monday 1". */
   label: string;
   exerciseName: (exerciseNumber: number) => string;
+  /** Lift categories of an exercise, shown as marks before its name. */
+  categoriesOf: (exerciseNumber: number) => LiftCategory[];
   actualsOf: (exerciseNumber: number) => WeekActuals | undefined;
   projectionOf: (exerciseNumber: number) => PlannedExercise | undefined;
 } & Handlers) {
@@ -141,6 +146,7 @@ export function SessionTable({
                 key={e.key}
                 exercise={e}
                 name={exerciseName(e.exerciseNumber)}
+                categories={categoriesOf(e.exerciseNumber)}
                 actuals={actualsOf(e.exerciseNumber)}
                 projection={projectionOf(e.exerciseNumber)}
                 handlers={handlers}
@@ -156,12 +162,14 @@ export function SessionTable({
 function ExerciseRows({
   exercise,
   name,
+  categories,
   actuals,
   projection,
   handlers,
 }: {
   exercise: DraftExercise;
   name: string;
+  categories: LiftCategory[];
   actuals: WeekActuals | undefined;
   projection: PlannedExercise | undefined;
   handlers: Handlers;
@@ -203,7 +211,10 @@ function ExerciseRows({
           // Stays in view while the table scrolls sideways on phones.
           className={`${line} sticky left-0 z-[1] bg-white px-2 text-left align-middle font-medium dark:bg-zinc-950`}
         >
-          {name}
+          <span className="flex items-center gap-1.5">
+            <LiftMarks categories={categories} />
+            <span className="min-w-0">{name}</span>
+          </span>
         </th>
         {free ? (
           <td colSpan={MAX_SETS + 1} rowSpan={2} className={`${line} p-0`}>

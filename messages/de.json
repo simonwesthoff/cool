@@ -136,7 +136,13 @@
       "snatch": "Reißübung",
       "clean_and_jerk": "Stoßübung"
     },
-    "addresses": "Adressiert"
+    "addresses": "Adressiert",
+    "categories": {
+      "snatch": "Reißen",
+      "clean": "Umsetzen",
+      "jerk": "Ausstoßen"
+    },
+    "liftPrefix": "{names}: "
   },
   "Navigation": {
     "label": "Hauptnavigation",

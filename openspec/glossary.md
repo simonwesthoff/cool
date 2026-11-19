@@ -32,6 +32,7 @@ Domain terms for the weightlifting coaching app.
 | Komplex | K | Exercise group | Group of exercises in the exercise catalog with the same training focus, numbered K1–K9. |
 | Bestwert | - | Best value | Reference value of an exercise in % of the max of its reference lift. |
 | Referenzübung | - | Reference lift | The competition lift (snatch or clean & jerk) an exercise's percentages refer to. |
+| Bewegungskategorie | - | Lift category | The competition movement an exercise trains: snatch (Reißen), clean (Umsetzen) or jerk (Ausstoßen); an exercise can have several or none. |
 
 | Einstiegswert | - | Entry value | Share of the max values (in %) a macrocycle starts with, usually 60 %. |
 | Intensität | - | Intensity | Planned share of the max values for a week, following the macrocycle's curve. |

@@ -2,6 +2,10 @@
 
 export type ReferenceLift = "snatch" | "clean_and_jerk";
 
+/** A competition movement an exercise trains: snatch, clean or jerk. */
+export type LiftCategory = "snatch" | "clean" | "jerk";
+export const LIFT_CATEGORIES: LiftCategory[] = ["snatch", "clean", "jerk"];
+
 /** A text in both catalog languages. */
 export type LocalizedText = { de: string; en: string };
 
@@ -19,6 +23,8 @@ export type Exercise = {
   comment: LocalizedText | null;
   /** Points the exercise addresses, in catalog order (may be empty). */
   addresses: ExerciseTag[];
+  /** Lift categories in the order snatch, clean, jerk (may be empty). */
+  liftCategories: LiftCategory[];
 };
 
 /** A point exercises address; `key` is its German name. */
