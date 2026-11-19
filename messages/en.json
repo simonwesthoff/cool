@@ -201,7 +201,7 @@
       "mondayHint": "Macrocycles start on a Monday.",
       "durationHint": "7 to 52 weeks.",
       "entryValueHint": "Share of the max values the cycle starts with, usually 60 %.",
-      "continue": "Save and continue",
+      "continue": "Continue to SWOT",
       "checkFields": "Please check the marked fields.",
       "saveFailed": "Could not save. Please try again.",
       "errors": {
@@ -233,6 +233,15 @@
         "count": "{count, plural, =0 {No sessions} one {# session} other {# sessions}} per week · up to 3 per day",
         "required": "Choose at least one training session.",
         "tooMany": "At most 14 sessions per week."
+      },
+      "continueToCurve": "Continue to curve",
+      "back": "Back to base data",
+      "retry": "Try again",
+      "status": {
+        "saving": "Saving…",
+        "saved": "Saved",
+        "invalid": "Check the marked fields.",
+        "failed": "Could not save."
       }
     },
     "mesocycles": {
@@ -310,13 +319,6 @@
       "deficitsLabel": "Athlete's deficits",
       "ownReasonRemove": "Remove own reason: {reason}",
       "ownReasonCancel": "Cancel own reason"
-    },
-    "unsaved": {
-      "title": "Save changes?",
-      "text": "There are changes that are not saved yet.",
-      "save": "Save",
-      "discard": "Discard",
-      "cancel": "Cancel"
     }
   },
   "MacrocycleView": {

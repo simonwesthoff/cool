@@ -7,6 +7,11 @@ import type {
   Macrocycle,
   WeekLevel,
 } from "@/domain/macrocycles/macrocycle-types";
+import {
+  BACK_BUTTON,
+  PRIMARY_BUTTON,
+  StepperActions,
+} from "../stepper-actions";
 import { baseIntensity, intensityAt } from "./chart-geometry";
 import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 
@@ -164,22 +169,18 @@ export function IntensityPlanner({
           type: macrocycle.competitionType,
         }}
       />
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={onContinue}
-          className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-6 font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-        >
-          {mode === "curve" ? t("continueToWeeks") : t("continue")}
-        </button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
-        >
-          {mode === "curve" ? t("back") : t("backToCurve")}
-        </button>
-      </div>
+      <StepperActions
+        back={
+          <button type="button" onClick={onBack} className={BACK_BUTTON}>
+            {mode === "curve" ? t("back") : t("backToCurve")}
+          </button>
+        }
+        next={
+          <button type="button" onClick={onContinue} className={PRIMARY_BUTTON}>
+            {mode === "curve" ? t("continueToWeeks") : t("continue")}
+          </button>
+        }
+      />
     </div>
   );
 }

@@ -27,7 +27,7 @@ import {
 import type { Macrocycle } from "@/domain/macrocycles/macrocycle-types";
 import { MacrocyclePlanning } from "./macrocycle-planning";
 import type { PlanningStep } from "./planning-steps";
-import { UnsavedChangesProvider } from "./unsaved-changes";
+import { PendingSaveProvider } from "./pending-save";
 
 const router = { push: vi.fn(), refresh: vi.fn(), bfcacheId: "v1" };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
@@ -138,7 +138,7 @@ function renderPlanning(
       messages={locale === "de" ? de : en}
       timeZone="UTC"
     >
-      <UnsavedChangesProvider>
+      <PendingSaveProvider>
         <MacrocyclePlanning
           athleteId="a1"
           athleteName="Anna Weber"
@@ -147,7 +147,7 @@ function renderPlanning(
           catalog={[]}
           defaultStartDate="2026-11-30"
         />
-      </UnsavedChangesProvider>
+      </PendingSaveProvider>
     </NextIntlClientProvider>,
   );
 }
@@ -156,7 +156,6 @@ const stepOf = (container: HTMLElement) =>
     .querySelector("[data-planning-step]")!
     .getAttribute("data-planning-step");
 const stepButton = (name: string) => screen.getByRole("button", { name });
-const dialog = () => document.querySelector("dialog") as HTMLDialogElement;
 async function fill(label: string, value: string) {
   const input = screen.getByLabelText(new RegExp(`^${label}`));
   await userEvent.clear(input);
@@ -256,7 +255,7 @@ describe("MacrocyclePlanning", () => {
     await userEvent.click(
       screen.getByRole("button", { name: "Add a session on Monday" }),
     );
-    await userEvent.click(stepButton("Save and continue"));
+    await userEvent.click(stepButton("Continue to SWOT"));
     await waitFor(() => expect(stepOf(container)).toBe("swot"));
     expect(window.location.search).toBe("?step=swot");
     expect(nav.querySelectorAll("[aria-disabled=true]")).toHaveLength(0);
@@ -269,7 +268,7 @@ describe("MacrocyclePlanning", () => {
     respond(200, macrocycleOf(24));
     const { container } = renderPlanning({ step: "base-data" });
     await fill("Duration \\(weeks\\)", "24");
-    await userEvent.click(stepButton("Save and continue"));
+    await userEvent.click(stepButton("Continue to SWOT"));
     await waitFor(() => expect(stepOf(container)).toBe("swot"));
     await userEvent.click(stepButton("4 Weeks"));
     const labels = [...container.querySelectorAll("rect[data-week]")].map((t) =>
@@ -280,40 +279,41 @@ describe("MacrocyclePlanning", () => {
   });
 });
 
-describe("Unsaved changes when changing the step", () => {
-  it("asks before leaving with changes and discards them on request", async () => {
-    const { container } = renderPlanning();
-    await fill("Strengths", "Explosive");
-    await userEvent.click(stepButton("1 Base data, completed"));
-    expect(dialog().open).toBe(true);
-    expect(
-      within(dialog()).getByRole("heading", { name: "Save changes?" }),
-    ).toBeTruthy();
-    expect(
-      within(dialog())
-        .getAllByRole("button")
-        .map((b) => b.textContent),
-    ).toEqual(["Save", "Discard", "Cancel"]);
-    await userEvent.click(
-      within(dialog()).getByRole("button", { name: "Discard" }),
-    );
-    expect(dialog().open).toBe(false);
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(stepOf(container)).toBe("base-data");
+describe("Stepper buttons", () => {
+  it("shows back at the bottom left and continue at the bottom right in every step", async () => {
+    const expected: [PlanningStep, string | null, string][] = [
+      ["base-data", null, "Continue to SWOT"],
+      ["swot", "Back to base data", "Continue to curve"],
+      ["curve", "Back to SWOT", "Continue to weeks"],
+      ["intensity", "Back to curve", "Continue to exercises"],
+      ["exercises", "Back to weeks", "Finish planning"],
+    ];
+    for (const [step, back, next] of expected) {
+      renderPlanning({ step });
+      const row = document.querySelector("[data-stepper-actions]")!;
+      const left = row.querySelector("[data-stepper-back]")!;
+      const right = row.querySelector("[data-stepper-next]")!;
+      expect(left.textContent || null).toBe(back);
+      expect(right.textContent).toContain(next);
+      expect(right.lastElementChild!.className).toContain("bg-zinc-900");
+      if (back)
+        expect(left.firstElementChild!.className).not.toContain("border");
+      cleanup();
+    }
   });
+});
 
-  it("saves the changes and then opens the chosen step", async () => {
+describe("Changing the step right after a change", () => {
+  it("saves the change first and switches without a dialog", async () => {
     respond(200, { ...macrocycleOf(), strengths: "Explosive" });
     const { container } = renderPlanning();
     await fill("Strengths", "Explosive");
     await userEvent.click(stepButton("1 Base data, completed"));
-    await userEvent.click(
-      within(dialog()).getByRole("button", { name: "Save" }),
-    );
+    expect(document.querySelector("dialog")).toBeNull();
+    await waitFor(() => expect(stepOf(container)).toBe("base-data"));
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe("/api/athletes/a1/macrocycle/swot");
-    expect(JSON.parse(init.body)).toEqual({ ...swot, strengths: "Explosive" });
-    await waitFor(() => expect(stepOf(container)).toBe("base-data"));
+    expect(JSON.parse(init.body)).toEqual({ strengths: "Explosive" });
     // Back in step 2, the saved SWOT is shown.
     await userEvent.click(stepButton("2 SWOT"));
     expect(
@@ -321,42 +321,42 @@ describe("Unsaved changes when changing the step", () => {
     ).toBe("Explosive");
   });
 
-  it("stays on the step and shows the errors when saving fails", async () => {
+  it("switches without a dialog when the value is invalid, and stores nothing", async () => {
     respond(400, {
       error: { code: "VALIDATION_FAILED", fields: { strengths: ["TOO_LONG"] } },
     });
     const { container } = renderPlanning();
     await fill("Strengths", "Explosive");
     await userEvent.click(stepButton("1 Base data, completed"));
-    await userEvent.click(
-      within(dialog()).getByRole("button", { name: "Save" }),
-    );
-    await waitFor(() => expect(dialog().open).toBe(false));
-    expect(stepOf(container)).toBe("swot");
-    expect(
-      await screen.findByText("Please check the marked fields."),
-    ).toBeTruthy();
+    await waitFor(() => expect(stepOf(container)).toBe("base-data"));
+    expect(document.querySelector("dialog")).toBeNull();
   });
 
-  it("keeps the step and the changes when cancelled", async () => {
+  it("switches at once without changes", async () => {
     const { container } = renderPlanning();
+    await userEvent.click(stepButton("1 Base data, completed"));
+    await waitFor(() => expect(stepOf(container)).toBe("base-data"));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("goes back to the base data from the SWOT", async () => {
+    const { container } = renderPlanning();
+    await userEvent.click(stepButton("Back to base data"));
+    await waitFor(() => expect(stepOf(container)).toBe("base-data"));
+  });
+
+  it("sends a pending change before the back link leaves", async () => {
+    respond(200, macrocycleOf());
+    renderPlanning();
     await fill("Strengths", "Explosive");
-    await userEvent.click(stepButton("1 Base data, completed"));
     await userEvent.click(
-      within(dialog()).getByRole("button", { name: "Cancel" }),
+      screen.getByRole("link", { name: "Back to the macrocycle" }),
     );
-    expect(dialog().open).toBe(false);
-    expect(stepOf(container)).toBe("swot");
-    expect(
-      (screen.getByLabelText("Strengths") as HTMLTextAreaElement).value,
-    ).toBe("Explosive");
-  });
-
-  it("does not ask without changes", async () => {
-    const { container } = renderPlanning();
-    await userEvent.click(stepButton("1 Base data, completed"));
-    expect(dialog().open).toBe(false);
-    expect(stepOf(container)).toBe("base-data");
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith("/athletes/a1/macrocycle"),
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("dialog")).toBeNull();
   });
 
   it("uses German texts", async () => {
@@ -364,14 +364,12 @@ describe("Unsaved changes when changing the step", () => {
     expect(
       screen.getByRole("heading", { name: "Makrozyklusplanung für Anna" }),
     ).toBeTruthy();
-    await fill("Stärken", "Explosiv");
-    await userEvent.click(stepButton("1 Stammdaten, abgeschlossen"));
-    expect(
-      within(dialog()).getByRole("heading", { name: "Änderungen speichern?" }),
-    ).toBeTruthy();
-    for (const name of ["Speichern", "Verwerfen", "Abbrechen"])
-      expect(within(dialog()).getByRole("button", { name })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "3 Kurve" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "4 Wochen" })).toBeTruthy();
+    for (const name of [
+      "Zurück zu den Basisdaten",
+      "Weiter zur Kurve",
+      "3 Kurve",
+      "4 Wochen",
+    ])
+      expect(screen.getByRole("button", { name })).toBeTruthy();
   });
 });

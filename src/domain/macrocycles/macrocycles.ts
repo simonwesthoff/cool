@@ -385,17 +385,19 @@ export async function createMacrocycle(
   return getMacrocycle(coach, athleteId);
 }
 
-/** Step 2: the SWOT, replaced as a whole (all fields required). */
+/** Step 2: the SWOT, all or some of its fields (each one required). */
 export async function setSwot(
   coach: CurrentUser,
   athleteId: string,
   input: unknown,
 ): Promise<Macrocycle> {
   await requireOwnAthlete(coach, athleteId);
-  const swot = parseInput(swotSchema, input);
+  // Any subset: each given field is checked; the others stay unchanged.
+  const swot = parseInput(swotSchema.partial(), input);
   const row = await findMacrocycleRow(athleteId);
   if (!row) throw notFound();
-  await getDb().update(macrocycle).set(swot).where(eq(macrocycle.id, row.id));
+  if (Object.keys(swot).length > 0)
+    await getDb().update(macrocycle).set(swot).where(eq(macrocycle.id, row.id));
   return getMacrocycle(coach, athleteId);
 }
 

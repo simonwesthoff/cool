@@ -201,7 +201,7 @@
       "mondayHint": "Makrozyklen beginnen an einem Montag.",
       "durationHint": "7 bis 52 Wochen.",
       "entryValueHint": "Anteil der Maximalwerte zu Beginn des Zyklus, meist 60 %.",
-      "continue": "Speichern und weiter",
+      "continue": "Weiter zur SWOT",
       "checkFields": "Bitte prüfe die markierten Felder.",
       "saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
       "errors": {
@@ -233,6 +233,15 @@
         "count": "{count, plural, =0 {Keine Einheiten} one {# Einheit} other {# Einheiten}} pro Woche · bis zu 3 pro Tag",
         "required": "Wähle mindestens eine Trainingseinheit.",
         "tooMany": "Höchstens 14 Einheiten pro Woche."
+      },
+      "continueToCurve": "Weiter zur Kurve",
+      "back": "Zurück zu den Basisdaten",
+      "retry": "Erneut versuchen",
+      "status": {
+        "saving": "Wird gespeichert…",
+        "saved": "Gespeichert",
+        "invalid": "Bitte prüfe die markierten Felder.",
+        "failed": "Speichern fehlgeschlagen."
       }
     },
     "mesocycles": {
@@ -310,13 +319,6 @@
       "deficitsLabel": "Defizite des Athleten",
       "ownReasonRemove": "Eigene Begründung entfernen: {reason}",
       "ownReasonCancel": "Eigene Begründung verwerfen"
-    },
-    "unsaved": {
-      "title": "Änderungen speichern?",
-      "text": "Es gibt Änderungen, die noch nicht gespeichert sind.",
-      "save": "Speichern",
-      "discard": "Verwerfen",
-      "cancel": "Abbrechen"
     }
   },
   "MacrocycleView": {

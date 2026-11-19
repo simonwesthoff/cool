@@ -21,8 +21,10 @@ import {
 import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
 import type { PlannedSession } from "@/domain/week-plans/week-plan-types";
-import { GuardedBackLink } from "../macrocycles/leave-guard";
-import { UnsavedChangesProvider } from "../macrocycles/unsaved-changes";
+import {
+  PendingSaveProvider,
+  SavingBackLink,
+} from "../macrocycles/pending-save";
 import { WeekEditor } from "./week-editor";
 
 const router = { push: vi.fn(), refresh: vi.fn() };
@@ -145,8 +147,8 @@ function renderEditor(
       messages={locale === "de" ? de : en}
       timeZone="UTC"
     >
-      <UnsavedChangesProvider>
-        <GuardedBackLink href="/athletes/a1" label="Back to Anna Weber" />
+      <PendingSaveProvider>
+        <SavingBackLink href="/athletes/a1" label="Back to Anna Weber" />
         <WeekEditor
           athleteId="a1"
           plan={{ ...plan, variations }}
@@ -154,7 +156,7 @@ function renderEditor(
           catalog={catalog}
           projections={projections}
         />
-      </UnsavedChangesProvider>
+      </PendingSaveProvider>
     </NextIntlClientProvider>,
   );
 }
@@ -636,7 +638,7 @@ describe("WeekEditor step 2 layout", () => {
   const renderWithPullUp = () =>
     render(
       <NextIntlClientProvider locale="en" messages={en} timeZone="UTC">
-        <UnsavedChangesProvider>
+        <PendingSaveProvider>
           <WeekEditor
             athleteId="a1"
             plan={plan}
@@ -644,7 +646,7 @@ describe("WeekEditor step 2 layout", () => {
             catalog={catalogWithPullUp}
             projections={projections}
           />
-        </UnsavedChangesProvider>
+        </PendingSaveProvider>
       </NextIntlClientProvider>,
     );
 
@@ -927,32 +929,52 @@ describe("WeekEditor beyond the plan and finishing", () => {
 });
 
 describe("WeekEditor leaving", () => {
-  it("asks before leaving with a change that is not saved yet", async () => {
+  it("saves a change that is not saved yet before leaving, without a dialog", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderEditor();
     await userEvent.click(screen.getByRole("button", { name: "Add session" }));
-    // Leaving before the automatic save asks.
+    // Leaving before the automatic save sends it first.
     await userEvent.click(
       screen.getByRole("link", { name: /Back to Anna Weber/ }),
     );
-    const dialog = document.querySelector("dialog[open]") as HTMLElement;
-    expect(
-      within(dialog).getByRole("heading", { name: "Save changes?" }),
-    ).toBeTruthy();
-    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+    expect(document.querySelector("dialog[open]")).toBeNull();
     await waitFor(() =>
       expect(router.push).toHaveBeenCalledWith("/athletes/a1"),
     );
-    expect(fetchMock).toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]![1].keepalive).toBe(true);
   });
 
-  it("does not ask without changes", () => {
+  it("leaves without saving when nothing changed", async () => {
     renderEditor(week11);
-    const link = screen.getByRole("link", { name: /Back to Anna Weber/ });
-    const click = new MouseEvent("click", { bubbles: true, cancelable: true });
-    link.dispatchEvent(click);
-    expect(document.querySelector("dialog[open]")).toBeNull();
-    expect(click.defaultPrevented).toBe(false);
+    await userEvent.click(
+      screen.getByRole("link", { name: /Back to Anna Weber/ }),
+    );
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith("/athletes/a1"),
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("places back at the left and continue or finish at the right", async () => {
+    renderEditor(week11);
+    const actions = () => document.querySelector("[data-stepper-actions]")!;
+    expect(
+      actions().querySelector("[data-stepper-back]")!.children,
+    ).toHaveLength(0);
+    const next = within(
+      actions().querySelector("[data-stepper-next]") as HTMLElement,
+    ).getByRole("button", { name: "Continue" });
+    await userEvent.click(next);
+    const back = within(
+      actions().querySelector("[data-stepper-back]") as HTMLElement,
+    ).getByRole("button", { name: "Back" });
+    expect(back.className).not.toContain("border");
+    expect(
+      within(
+        actions().querySelector("[data-stepper-next]") as HTMLElement,
+      ).getByRole("button", { name: "Finish week planning" }),
+    ).toBeTruthy();
   });
 });
 

@@ -2,6 +2,11 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
+import {
+  BACK_BUTTON,
+  PRIMARY_BUTTON,
+  StepperActions,
+} from "../stepper-actions";
 import { useState } from "react";
 import {
   localized,
@@ -282,21 +287,18 @@ export function ExerciseSelection({
         onRemove={remove}
         onClose={() => setTarget(null)}
       />
-      <div className="flex flex-wrap gap-3">
-        <Link
-          href={base}
-          className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-6 font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-        >
-          {t("finish")}
-        </Link>
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
-        >
-          {t("back")}
-        </button>
-      </div>
+      <StepperActions
+        back={
+          <button type="button" onClick={onBack} className={BACK_BUTTON}>
+            {t("back")}
+          </button>
+        }
+        next={
+          <Link href={base} className={PRIMARY_BUTTON}>
+            {t("finish")}
+          </Link>
+        }
+      />
     </div>
   );
 }

@@ -4,12 +4,11 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { Macrocycle } from "@/domain/macrocycles/macrocycle-types";
 import type { ExerciseGroup } from "@/domain/exercises/catalog-types";
-import { BackLink } from "../back-link";
 import { firstName } from "../first-name";
 import { BaseDataForm } from "./base-data-form";
 import { ExerciseSelection } from "./exercise-selection";
 import { IntensityPlanner } from "./intensity-planner";
-import { useLeaveGuard } from "./leave-guard";
+import { SavingBackLink, useFlushPending } from "./pending-save";
 import { PLANNING_STEPS, type PlanningStep } from "./planning-steps";
 import { StepIndicator } from "./step-indicator";
 
@@ -22,7 +21,7 @@ const ENTER = {
 } as const;
 
 /**
- * The macrocycle planning: all four steps on one page. The current step is
+ * The macrocycle planning: all five steps on one page. The current step is
  * kept in the address (`?step=`) without navigating; every save hands the
  * stored macrocycle back, so each step shows the latest data.
  */
@@ -47,7 +46,7 @@ export function MacrocyclePlanning({
   // No slide on the first render, only when switching.
   const [direction, setDirection] = useState<keyof typeof ENTER | null>(null);
   const [macrocycle, setMacrocycle] = useState(initialMacrocycle);
-  const { guard, dialog } = useLeaveGuard();
+  const flushPending = useFlushPending();
 
   function open(next: PlanningStep) {
     if (next === step) return;
@@ -62,8 +61,9 @@ export function MacrocyclePlanning({
     // Replace, so browser back leaves the planning like the back link.
     window.history.replaceState(null, "", `?${params.toString()}`);
   }
-  /** Switches the step, asking first about unsaved changes. */
-  const select = (next: PlanningStep) => guard(() => open(next));
+  /** Switches the step once a pending save of the shown step is sent. */
+  const select = (next: PlanningStep) =>
+    void flushPending().then(() => open(next));
 
   const content = (() => {
     if (step === "base-data" || step === "swot" || !macrocycle)
@@ -75,6 +75,9 @@ export function MacrocyclePlanning({
           defaultStartDate={defaultStartDate}
           onSaved={setMacrocycle}
           onContinue={() => open(step === "swot" ? "curve" : "swot")}
+          onBack={
+            step === "swot" && macrocycle ? () => open("base-data") : undefined
+          }
         />
       );
     if (step === "curve")
@@ -112,12 +115,12 @@ export function MacrocyclePlanning({
       <div className="flex flex-col gap-4">
         {/* Back to the macrocycle view, or to the athlete before it exists. */}
         {macrocycle ? (
-          <BackLink
+          <SavingBackLink
             href={`/athletes/${athleteId}/macrocycle`}
             label={tb("macrocycle")}
           />
         ) : (
-          <BackLink
+          <SavingBackLink
             href={`/athletes/${athleteId}`}
             label={tb("athlete", { name: athleteName })}
           />
@@ -141,7 +144,6 @@ export function MacrocyclePlanning({
           {content}
         </div>
       </div>
-      {dialog}
     </div>
   );
 }
