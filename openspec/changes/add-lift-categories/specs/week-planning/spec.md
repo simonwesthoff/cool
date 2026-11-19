@@ -13,4 +13,4 @@ the session cards, in step 2 in the exercise cell of each session table.
 #### Scenario: Marks in step 2
 - **GIVEN** exercises 1 and 3 in Monday's session
 - **WHEN** the coach opens step 2
-- **THEN** the snatch has a cyan dot and the clean and jerk a purple and a magenta dot in their exercise cells
+- **THEN** the snatch has a cyan dot and the clean and jerk one purple-to-magenta dot in their exercise cells

@@ -17,24 +17,29 @@ const renderMarks = (categories: LiftCategory[], locale: "en" | "de" = "en") =>
       <LiftMarks categories={categories} />
     </NextIntlClientProvider>,
   );
+const dotsOf = (container: HTMLElement) =>
+  [...container.querySelectorAll("[data-lift]")] as HTMLElement[];
 
 describe("LiftMarks", () => {
-  it("shows one coloured dot per category, named on hover and once for screen readers", () => {
+  it("shows one dot in the category's colour", () => {
+    const { container } = renderMarks(["snatch"]);
+    const [dot] = dotsOf(container);
+    expect(dotsOf(container)).toHaveLength(1);
+    expect(dot!.style.background).toBe("var(--lift-snatch)");
+    expect(dot!.title).toBe("Snatch");
+  });
+
+  it("blends two categories in one dot from left to right, purple left and magenta right", () => {
     const { container } = renderMarks(["clean", "jerk"]);
-    const dots = [
-      ...container.querySelectorAll("[data-lift]"),
-    ] as HTMLElement[];
-    expect(dots.map((d) => d.dataset.lift)).toEqual(["clean", "jerk"]);
-    expect(dots.map((d) => d.style.background)).toEqual([
-      "var(--lift-clean)",
-      "var(--lift-jerk)",
-    ]);
-    expect(dots.map((d) => d.title)).toEqual(["Clean", "Jerk"]);
-    // Screen readers hear one prefix; the dots themselves are hidden.
-    expect(container.textContent).toBe("Clean, Jerk: ");
-    expect(dots.every((d) => d.getAttribute("aria-hidden") === "true")).toBe(
-      true,
+    const dots = dotsOf(container);
+    expect(dots).toHaveLength(1);
+    expect(dots[0]!.getAttribute("style")).toContain(
+      "linear-gradient(to right, var(--lift-clean), var(--lift-jerk))",
     );
+    expect(dots[0]!.title).toBe("Clean, Jerk");
+    // Screen readers hear one prefix; the dot itself is hidden.
+    expect(container.textContent).toBe("Clean, Jerk: ");
+    expect(dots[0]!.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("has no mark without a category", () => {
@@ -43,11 +48,7 @@ describe("LiftMarks", () => {
   });
 
   it("uses the German names", () => {
-    const { container } = renderMarks(["snatch", "clean", "jerk"], "de");
-    expect(
-      [...container.querySelectorAll("[data-lift]")].map(
-        (d) => (d as HTMLElement).title,
-      ),
-    ).toEqual(["Reißen", "Umsetzen", "Ausstoßen"]);
+    const { container } = renderMarks(["clean", "jerk"], "de");
+    expect(dotsOf(container)[0]!.title).toBe("Umsetzen, Ausstoßen");
   });
 });

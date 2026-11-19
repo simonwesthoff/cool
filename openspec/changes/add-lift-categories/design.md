@@ -48,7 +48,9 @@ See proposal.md - Why.
    column; the API returns it unchanged.
 
 3. **`LiftMarks` component** (`src/components/exercises/lift-marks.tsx`).
-   - **Look:** one `size-2.5` rounded dot per category, coloured with the category's colour token.
+   - **Look:** one `size-2.5` rounded dot in the category's colour token;
+     for two categories a `linear-gradient(to right, …)` in the order
+     snatch, clean, jerk (purple left, magenta right).
    - **Accessibility:** each dot has a `title` and an sr-only text with
      the category name, and the dots are wrapped in a span with
      `data-lift-marks`.
@@ -62,11 +64,14 @@ See proposal.md - Why.
    var(--color-palette-magenta)`, the same in both modes (user decision).
 
 5. **Chart colour.**
-   - **Parameter:** `WeekChart` gets a `color` prop (a CSS colour, default
+   - **Parameter:** `WeekChart` gets a `colors` prop (CSS colours, default
      `var(--chart-curve)`), used for the stroke, the gradient stops and the
      hover dot.
-   - **Exercise chart:** `ExerciseChart` passes the first category's token,
-     or `var(--chart-ink)` without a category. It needs the selected
+   - **Exercise chart:** `ExerciseChart` passes the categories' tokens, or
+     `var(--chart-ink)` without a category. With two colours, `WeekChart`
+     paints stroke, area and hover dot with a horizontal `userSpaceOnUse`
+     gradient across the plot, and the area keeps its downward fade through
+     an SVG mask. It needs the selected
      exercise's categories; the macrocycle view and the athlete page
      already have the exercise list, which now carries `liftCategories`.
 

@@ -6,8 +6,9 @@ for every week, calculated as in planning even in weeks whose mesocycle
 does not use the exercise: the best value (kg), the average weight (kg),
 the set size or the weekly reps. It SHALL be the week chart without a
 y-axis and with the current week: one smoothed curve without point
-handles, in the colour of the exercise's first lift category (neutral
-without one), a gradient below it, and week numbers on the x-axis.
+handles, in the colour of the exercise's lift category (for two, a
+gradient from purple on the left to magenta on the right; neutral without
+one), a gradient below it, and week numbers on the x-axis.
 
 #### Scenario: Best value of the snatch by default
 - **GIVEN** a 21-week macrocycle with a snatch goal of 100 kg and entry value 60 %
@@ -20,4 +21,4 @@ without one), a gradient below it, and week numbers on the x-axis.
 
 #### Scenario: Colour follows the exercise
 - **WHEN** the coach chooses exercise 4 "Umsetzen", then exercise 5 "Ausstoßen", then exercise 3 "Stoßen"
-- **THEN** the curve is purple, then magenta, then purple (the first category of the clean and jerk)
+- **THEN** the curve is purple, then magenta, then runs from purple on the left to magenta on the right (clean and jerk), its area in the same colours

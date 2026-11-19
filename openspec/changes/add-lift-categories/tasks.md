@@ -23,6 +23,10 @@
 
   Verify: screenshots and a script check of the dots' colours.
 
+## 4. Acceptance feedback
+
+- [x] 4.1 Two categories: one dot with a left-to-right gradient instead of two dots, and the chart's curve, area and hover dot with a left-to-right gradient; purple (clean) always left, magenta (jerk) right. Verify with component tests (gradient style of the dot, gradient stops and references in the chart) and the browser flow (computed gradient of the dot, gradient stops of the curve).
+
 ## Workflow follow-up
 
 - After acceptance: archive the change (sync the specs) and open a PR into main.

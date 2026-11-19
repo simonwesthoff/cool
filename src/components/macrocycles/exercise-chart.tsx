@@ -33,7 +33,7 @@ type Props = {
   today: string;
   /** While another exercise loads, the curve is dimmed. */
   dimmed?: boolean;
-  /** The exercise's lift categories: the curve has the first one's colour. */
+  /** The exercise's lift categories: the curve has their colours. */
   categories: LiftCategory[];
 };
 
@@ -81,8 +81,13 @@ export function ExerciseChart({
       competition={competition}
       today={today}
       dimmed={dimmed}
-      // The category's colour; neutral ink for an exercise without one.
-      color={categories[0] ? LIFT_COLOR[categories[0]] : "var(--chart-ink)"}
+      // The categories' colours (blended left to right for two); neutral ink
+      // for an exercise without one.
+      colors={
+        categories.length > 0
+          ? categories.map((c) => LIFT_COLOR[c])
+          : ["var(--chart-ink)"]
+      }
       tooltip={(week, v) => [
         t(`tooltip.${value}`, { value: valueText(v) }),
         t("tooltipWeek", { week: week.number, date: weekDate(week.startDate) }),

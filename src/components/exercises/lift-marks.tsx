@@ -11,30 +11,32 @@ export const LIFT_COLOR: Record<LiftCategory, string> = {
 };
 
 /**
- * One small coloured dot per lift category, before an exercise's name. The
- * dots show their category's name on hover; screen readers hear the names
- * once as a prefix ("Clean, Jerk: 3 Clean and jerk"). Exercises without a
- * category have no mark.
+ * One small dot before an exercise's name in its lift category's colour;
+ * for two categories a gradient from left to right in the order snatch,
+ * clean, jerk (clean purple left, jerk magenta right). The dot shows the
+ * names on hover; screen readers hear them once as a prefix ("Clean, Jerk:
+ * 3 Clean and jerk"). Exercises without a category have no mark.
  */
 export function LiftMarks({ categories }: { categories: LiftCategory[] }) {
   const t = useTranslations("Catalog.categories");
   const tc = useTranslations("Catalog");
   if (categories.length === 0) return null;
+  const names = categories.map((c) => t(c)).join(", ");
   return (
     <span data-lift-marks className="inline-flex shrink-0 items-center gap-0.5">
-      <span className="sr-only">
-        {tc("liftPrefix", { names: categories.map((c) => t(c)).join(", ") })}
-      </span>
-      {categories.map((category) => (
-        <span
-          key={category}
-          aria-hidden="true"
-          data-lift={category}
-          title={t(category)}
-          className="inline-block size-2.5 rounded-full"
-          style={{ background: LIFT_COLOR[category] }}
-        />
-      ))}
+      <span className="sr-only">{tc("liftPrefix", { names })}</span>
+      <span
+        aria-hidden="true"
+        data-lift={categories.join(" ")}
+        title={names}
+        className="inline-block size-2.5 rounded-full"
+        style={{
+          background:
+            categories.length === 1
+              ? LIFT_COLOR[categories[0]!]
+              : `linear-gradient(to right, ${categories.map((c) => LIFT_COLOR[c]).join(", ")})`,
+        }}
+      />
     </span>
   );
 }

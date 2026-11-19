@@ -23,8 +23,9 @@ does not tell a clean from a jerk movement (adjustment 3 in
   like the rest of the catalog.
 - **Colours** (user decision), the same in light and dark mode: snatch cyan
   `#3bc8c8`, clean purple `#6f3ab1`, jerk magenta `#ba2db3`.
-- **Category mark:** a small coloured dot before the exercise name, one per
-  category (two for 3 and 28). Screen readers hear the category's name, and
+- **Category mark:** a small coloured dot before the exercise name; for two
+  categories (3 and 28) one dot with a gradient from left to right, purple
+  (clean) left and magenta (jerk) right (user decision). Screen readers hear the category's name, and
   hovering shows it. It appears:
   - in the week editor's step 1: the exercise list and the exercises on the
     session cards;
@@ -38,7 +39,8 @@ does not tell a clean from a jerk movement (adjustment 3 in
   category.
 - **Assumptions:**
   - **Both categories:** an exercise with clean and jerk (3, 28) draws its
-    curve in its first category's colour (clean purple).
+    curve and area with a gradient from left to right, purple left and
+    magenta right (user decision).
   - **No category:** an exercise without a category draws its curve in the
     neutral chart ink (dark grey in light mode, light grey in dark mode).
   - **Planning chart:** the intensity chart has no exercise, so its curve

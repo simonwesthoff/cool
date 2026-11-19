@@ -321,7 +321,7 @@ describe("ExerciseChart", () => {
     expect(plotRatio(1200) * 1200).toBeCloseTo(240, 5);
   });
 
-  it("colours the curve by the exercise's first lift category, neutral without one", () => {
+  it("colours the curve by the exercise's lift category, neutral without one", () => {
     const strokeFor = (categories: ("snatch" | "clean" | "jerk")[]) => {
       const { container } = renderChart({ categories });
       const stroke = container
@@ -332,8 +332,32 @@ describe("ExerciseChart", () => {
     };
     expect(strokeFor(["clean"])).toBe("var(--lift-clean)");
     expect(strokeFor(["jerk"])).toBe("var(--lift-jerk)");
-    // Clean and jerk: the first category.
-    expect(strokeFor(["clean", "jerk"])).toBe("var(--lift-clean)");
     expect(strokeFor([])).toBe("var(--chart-ink)");
+  });
+
+  it("blends clean and jerk from left to right across the chart, purple left and magenta right", () => {
+    const { container } = renderChart({ categories: ["clean", "jerk"] });
+    const across = container.querySelector("linearGradient[data-across]")!;
+    expect(across.getAttribute("gradientUnits")).toBe("userSpaceOnUse");
+    // From the plot's left edge to its right end (the competition).
+    expect(Number(across.getAttribute("x1"))).toBeCloseTo(xOf(0), 5);
+    expect(Number(across.getAttribute("x2"))).toBeCloseTo(788, 5);
+    expect(
+      [...across.querySelectorAll("stop")].map((s) => [
+        s.getAttribute("offset"),
+        s.getAttribute("stop-color"),
+      ]),
+    ).toEqual([
+      ["0", "var(--lift-clean)"],
+      ["1", "var(--lift-jerk)"],
+    ]);
+    const ref = `url(#${across.id})`;
+    expect(container.querySelector("[data-line]")!.getAttribute("stroke")).toBe(
+      ref,
+    );
+    // The area takes the same colours and still fades downwards (mask).
+    const area = container.querySelector("[data-area]")!;
+    expect(area.getAttribute("fill")).toBe(ref);
+    expect(area.getAttribute("mask")).toMatch(/^url\(#/);
   });
 });

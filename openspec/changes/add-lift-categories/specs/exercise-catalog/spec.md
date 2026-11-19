@@ -24,16 +24,17 @@ with each exercise.
 - **THEN** exercise 12 "Standstoßen" is returned with the categories `["jerk"]`
 
 ### Requirement: Category marks
-Wherever an exercise is shown with a category mark, the mark SHALL be a
-small coloured dot before the name, one per category in the order snatch,
-clean, jerk: snatch cyan #3bc8c8, clean purple #6f3ab1, jerk magenta
-#ba2db3, the same in light and dark mode. Each dot SHALL name its category
-for screen readers and on hover (Snatch/Reißen, Clean/Umsetzen,
-Jerk/Ausstoßen). Exercises without a category SHALL have no mark.
+A category mark SHALL be one small dot before the exercise name in its
+category's colour (snatch cyan #3bc8c8, clean purple #6f3ab1, jerk magenta
+#ba2db3) in light and dark mode. Two categories SHALL share one dot with a
+gradient from left to right, purple (clean) left and magenta (jerk) right.
+The dot SHALL name the categories on hover and for screen readers
+(Snatch/Reißen, Clean/Umsetzen, Jerk/Ausstoßen); without a category there
+is no mark.
 
-#### Scenario: Two marks
+#### Scenario: Two categories
 - **WHEN** exercise 28 "Standumsetzen + Standstoßen" is shown with its mark
-- **THEN** a purple and a magenta dot precede its name, read as "Clean" and "Jerk"
+- **THEN** one dot precedes its name, purple on the left fading to magenta on the right, named "Clean, Jerk"
 
 #### Scenario: German names
 - **WHEN** a user hovers the cyan dot of exercise 1 in German
@@ -46,7 +47,7 @@ the exercise group.
 
 #### Scenario: Catalog list
 - **WHEN** a user opens the catalog
-- **THEN** exercise 4 "Umsetzen" has a purple dot, exercise 5 "Ausstoßen" a magenta dot and exercise 33 "Klimmzug" none
+- **THEN** exercise 4 "Umsetzen" has a purple dot, exercise 5 "Ausstoßen" a magenta dot, exercise 3 "Stoßen" one purple-to-magenta dot and exercise 33 "Klimmzug" none
 
 #### Scenario: Dialog subtitle
 - **WHEN** a user selects exercise 13 "Zug breit" in English
