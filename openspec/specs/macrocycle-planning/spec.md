@@ -177,7 +177,7 @@ it is medium.
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
-- **THEN** no area is coloured by mesocycle; thin lines at weeks 1, 4 and 14 are labelled GPB, SPB and CPB, and the legend names the three mesocycles
+- **THEN** no area is coloured by mesocycle, and thin lines at weeks 1, 4 and 14 are labelled GPB, SPB and CPB
 
 #### Scenario: Points at the start of a week
 - **GIVEN** the special preparation block starts in week 4
@@ -189,7 +189,7 @@ The mesocycles SHALL have abbreviations: GLP, ABP and LAP in German; GPB
 (general preparation block), SPB (special preparation block) and CPB
 (competition preparation block) in English. The labels above the chart,
 the tooltips and the exercise table's column headers SHALL use them; the
-legend SHALL use the full names.
+legend for screen readers SHALL use the full names.
 
 #### Scenario: English labels
 - **WHEN** the coach looks at the chart in English
@@ -198,8 +198,10 @@ legend SHALL use the full names.
 ### Requirement: Main competition in the chart
 Every chart SHALL mark the main competition with a dashed vertical line at
 its date and a label with only its name (no date) in the style of the
-mesocycle labels, one row above them, so neither hides the other; screen
-readers get the name and date. A competition after the last week SHALL be
+mesocycle labels, one row above them, so neither hides the other. The line
+SHALL reach from the plot's bottom up to the top of the name, with a gap
+where it would cross a mesocycle label. Screen readers get the name and
+date. A competition after the last week SHALL be
 marked at the end of the chart.
 
 #### Scenario: Competition in the last week
@@ -210,6 +212,20 @@ marked at the end of the chart.
 #### Scenario: Label above the chart
 - **WHEN** the coach looks at the chart
 - **THEN** the competition's label is one row above the mesocycle labels, covers no week point, and every mesocycle label stays visible, also on a phone
+
+#### Scenario: Line up to the name
+- **WHEN** the coach or athlete looks at any chart with a main competition
+- **THEN** the dashed line continues above the plot up to the top of the competition's name, which sits next to the line's end
+
+#### Scenario: Gap over a block label
+- **GIVEN** a macrocycle whose competition preparation block starts a few days before the main competition, so the extended line would run through the label "CPB"
+- **WHEN** the coach looks at the chart
+- **THEN** the line stops above and resumes below the label's row, and "CPB" is fully visible
+
+#### Scenario: No gap when nothing is crossed
+- **GIVEN** the main competition weeks after the last block start
+- **WHEN** the coach looks at the chart
+- **THEN** the line runs without a gap from the plot's bottom to the top of the name
 
 ### Requirement: Week tooltip
 Pointing at a week in the chart SHALL show a tooltip of three lines: the
@@ -478,3 +494,12 @@ the starting point instead.
 - **GIVEN** exercise 7 copied into the special preparation block
 - **WHEN** the coach taps its cell
 - **THEN** the dialog opens with the copied reasons and variation, to change or remove them
+
+### Requirement: No visible legend in the planning chart
+The planning chart in step 3 SHALL show no legend on screen; its legend
+(mesocycles, high and low weeks, main competition) SHALL stay available to
+screen readers, as in the exercise chart.
+
+#### Scenario: Step 3 without a legend
+- **WHEN** the coach opens step 3
+- **THEN** no legend is shown above the chart, and screen readers still find the legend with the three block names, "High / low week" and "Main competition"
