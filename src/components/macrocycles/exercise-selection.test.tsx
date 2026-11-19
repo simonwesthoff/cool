@@ -321,7 +321,8 @@ describe("ExerciseSelection", () => {
 
   it("shows clean and jerk deficits for a clean & jerk exercise, and none without a reference lift", async () => {
     renderIt();
-    await open("Power jerk, General preparation block: choose");
+    // The chosen cell opens the dialog (an empty one would copy the choice).
+    await open("Power jerk, Special preparation block: chosen, From the rack");
     expect(deficitKeys()).toEqual(["cleanDeficits", "jerkDeficits"]);
     expect(dialog().textContent).toContain(
       "Deficits in the jerkNot entered yet",
@@ -462,24 +463,15 @@ describe("ExerciseSelection", () => {
     expect(ownReasonTags()).toEqual(["B"]);
   });
 
-  it("prefills a new choice from the same exercise in another block", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify(macrocycle), { status: 200 }),
-    );
-    const chosen = {
+  const chosenIn = (
+    general: MesocycleExercise[],
+    special: MesocycleExercise[] = [],
+  ) =>
+    ({
       ...macrocycle,
-      mesocycles: mesocycles(
-        [],
-        [
-          {
-            exerciseNumber: 7,
-            variation: "From blocks",
-            tags: ["Hoher Zug"],
-            ownReasons: ["Technique"],
-          },
-        ],
-      ),
-    } as unknown as Macrocycle;
+      mesocycles: mesocycles(special, general),
+    }) as unknown as Macrocycle;
+  const renderChosen = (chosen: Macrocycle) =>
     render(
       <NextIntlClientProvider locale="en" messages={en}>
         <ExerciseSelection
@@ -490,31 +482,120 @@ describe("ExerciseSelection", () => {
         />
       </NextIntlClientProvider>,
     );
+  const fromBlocks: MesocycleExercise = {
+    exerciseNumber: 7,
+    variation: "From blocks",
+    tags: ["Hoher Zug"],
+    ownReasons: ["Technique"],
+  };
+
+  it("copies a choice from another block right away, without the dialog", async () => {
+    onSaved.mockReset();
+    const saved = chosenIn([fromBlocks], [fromBlocks]);
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(saved), { status: 200 }),
+    );
+    renderChosen(chosenIn([fromBlocks]));
     await open("Power snatch, Special preparation block: choose");
+    expect(document.querySelector("dialog[open]")).toBeNull();
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe(
+      "/api/athletes/a1/macrocycle/mesocycles/special_preparation/exercises/7",
+    );
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body)).toEqual({
+      tags: ["Hoher Zug"],
+      ownReasons: ["Technique"],
+      variation: "From blocks",
+    });
     expect(
-      within(dialog())
-        .getByRole("button", { name: "High pull" })
-        .getAttribute("aria-pressed"),
-    ).toBe("true");
-    expect(ownReasonTags()).toEqual(["Technique"]);
+      await screen.findByRole("button", {
+        name: "Power snatch, Special preparation block: chosen, From blocks",
+      }),
+    ).toBeTruthy();
+    expect(onSaved).toHaveBeenCalledWith(saved);
+  });
+
+  it("copies from the first block that has the exercise", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(macrocycle), { status: 200 }),
+    );
+    renderChosen(
+      chosenIn([fromBlocks], [{ ...fromBlocks, variation: "Hang" }]),
+    );
+    await open("Power snatch, Competition preparation block: choose");
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body).variation).toBe(
+      "From blocks",
+    );
+  });
+
+  it("opens the prefilled dialog when the other block's choice has no reason", async () => {
+    renderChosen(chosenIn([{ ...fromBlocks, tags: [], ownReasons: [] }]));
+    await open("Power snatch, Special preparation block: choose");
     expect(
       (within(dialog()).getByLabelText(/Variation/) as HTMLInputElement).value,
     ).toBe("From blocks");
     // Still a new choice: nothing saved yet, "Choose exercise" and no "Remove".
     expect(fetchMock).not.toHaveBeenCalled();
     expect(
+      within(dialog()).getByRole("button", { name: "Choose exercise" }),
+    ).toBeTruthy();
+    expect(
       within(dialog()).queryByRole("button", { name: "Remove" }),
     ).toBeNull();
-    await userEvent.click(
-      within(dialog()).getByRole("button", { name: "Choose exercise" }),
+  });
+
+  it("opens the empty dialog for an exercise chosen in no block", async () => {
+    renderChosen(chosenIn([]));
+    await open("Power snatch, Special preparation block: choose");
+    expect(
+      (within(dialog()).getByLabelText(/Variation/) as HTMLInputElement).value,
+    ).toBe("");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the cell empty and says so when the copy cannot be saved", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 500 }));
+    renderChosen(chosenIn([fromBlocks]));
+    await open("Power snatch, Special preparation block: choose");
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "The change could not be saved. Please try again.",
     );
-    const [url, init] = fetchMock.mock.calls[0]!;
-    expect(url).toContain("/mesocycles/special_preparation/exercises/7");
-    expect(JSON.parse(init.body)).toEqual({
-      tags: ["Hoher Zug"],
-      ownReasons: ["Technique"],
-      variation: "From blocks",
+    expect(
+      screen.getByRole("button", {
+        name: "Power snatch, Special preparation block: choose",
+      }),
+    ).toBeTruthy();
+    // A later successful copy hides the message.
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(chosenIn([fromBlocks], [fromBlocks])), {
+        status: 200,
+      }),
+    );
+    await open("Power snatch, Special preparation block: choose");
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  });
+
+  it("saves only once when the cell is tapped twice while copying", async () => {
+    let finish: (response: Response) => void = () => {};
+    fetchMock.mockReturnValue(new Promise<Response>((r) => (finish = r)));
+    renderChosen(chosenIn([fromBlocks]));
+    const cell = screen.getByRole("button", {
+      name: "Power snatch, Special preparation block: choose",
     });
+    await userEvent.click(cell);
+    await userEvent.click(cell);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    finish(
+      new Response(JSON.stringify(chosenIn([fromBlocks], [fromBlocks])), {
+        status: 200,
+      }),
+    );
+    expect(
+      await screen.findByRole("button", {
+        name: "Power snatch, Special preparation block: chosen, From blocks",
+      }),
+    ).toBeTruthy();
   });
 
   it("has no hint text under the reason", async () => {
@@ -621,7 +702,7 @@ describe("ExerciseSelection", () => {
 describe("ExerciseChoiceDialog closing", () => {
   it("stays open for a cell opened before the previous close event arrived", async () => {
     renderIt();
-    await open("Power jerk, General preparation block: choose");
+    await open("Power jerk, Special preparation block: chosen, From the rack");
     const element = dialog() as HTMLDialogElement;
     // Close without the event, open another cell, then deliver the late event.
     element.removeAttribute("open");

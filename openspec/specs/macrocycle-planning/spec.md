@@ -266,7 +266,7 @@ change the calculated values.
 #### Scenario: Prefill from another block
 - **GIVEN** exercise 7 chosen for the general preparation block with the tag "Hoher Zug", the own reason "Technique" and the variation "From blocks"
 - **WHEN** the coach taps "+" for exercise 7 in the special preparation column
-- **THEN** the dialog starts with the same tag, own reason and variation, and nothing is saved until the coach chooses the exercise
+- **THEN** no dialog opens; exercise 7 is chosen and saved for the special preparation block with the tag "Hoher Zug", the own reason "Technique" and the variation "From blocks", and its cell shows the check mark and "From blocks"
 
 #### Scenario: Remove an exercise
 - **GIVEN** exercise 13 chosen for a mesocycle
@@ -452,3 +452,30 @@ there SHALL be no animation.
 - **GIVEN** the device asks for reduced motion
 - **WHEN** the coach switches steps
 - **THEN** the new step appears without sliding
+
+### Requirement: Copy a choice from another block
+Choosing an exercise in a mesocycle while it is already chosen in another
+one SHALL copy the reasons and the variation of the first block that has
+it (general, special, then competition preparation) and save them without
+a dialog. When that choice has no reason, the dialog SHALL open with it as
+the starting point instead.
+
+#### Scenario: Copy from the first block that has it
+- **GIVEN** exercise 7 chosen for the general preparation block with the variation "From blocks" and for the special preparation block with the variation "Hang"
+- **WHEN** the coach taps "+" for exercise 7 in the competition preparation column
+- **THEN** it is chosen with the variation "From blocks"
+
+#### Scenario: Source without a reason
+- **GIVEN** exercise 7 chosen for the general preparation block without a tag and without own reasons ("Reason missing")
+- **WHEN** the coach taps "+" for exercise 7 in the special preparation column
+- **THEN** the dialog opens with the variation of the general preparation block, and nothing is saved until the coach chooses the exercise with a reason
+
+#### Scenario: Copy cannot be saved
+- **GIVEN** exercise 7 chosen for the general preparation block
+- **WHEN** the coach taps "+" for exercise 7 in the special preparation column and saving fails
+- **THEN** the cell stays empty and the step shows "The change could not be saved. Please try again."
+
+#### Scenario: Change a copied choice
+- **GIVEN** exercise 7 copied into the special preparation block
+- **WHEN** the coach taps its cell
+- **THEN** the dialog opens with the copied reasons and variation, to change or remove them

@@ -58,6 +58,10 @@ export function ExerciseSelection({
   const locale = useLocale();
   const [choices, setChoices] = useState<Choices>(() => choicesOf(macrocycle));
   const [target, setTarget] = useState<ChoiceTarget | null>(null);
+  // A copy from another block that could not be saved.
+  const [copyFailed, setCopyFailed] = useState(false);
+  // The cell being copied into, so a second tap does nothing meanwhile.
+  const [copying, setCopying] = useState<string | null>(null);
   const base = `/athletes/${macrocycle.athleteId}`;
   /** The same exercise in the first block (GPB, SPB, CPB) that has it. */
   const chosenElsewhere = (number: number) =>
@@ -67,9 +71,9 @@ export function ExerciseSelection({
   const api = (cell: ChoiceTarget) =>
     `/api/athletes/${macrocycle.athleteId}/macrocycle/mesocycles/${cell.type}/exercises/${cell.exercise.number}`;
 
-  async function save(input: ChoiceInput) {
-    if (!target) return false;
-    const response = await fetch(api(target), {
+  /** Stores a choice for a cell; false when saving failed. */
+  async function put(cell: ChoiceTarget, input: ChoiceInput) {
+    const response = await fetch(api(cell), {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input),
@@ -77,8 +81,40 @@ export function ExerciseSelection({
     if (!response?.ok) return false;
     const saved = (await response.json()) as Macrocycle;
     setChoices(choicesOf(saved));
+    setCopyFailed(false);
     onSaved(saved);
     return true;
+  }
+
+  async function save(input: ChoiceInput) {
+    if (!target) return false;
+    return put(target, input);
+  }
+
+  /**
+   * A tapped cell: a chosen one opens the dialog to change it; an exercise
+   * chosen in another block with a reason is copied from there right away;
+   * otherwise the dialog opens (prefilled from a source without a reason).
+   */
+  async function choose(cell: ChoiceTarget) {
+    const key = `${cell.type}.${cell.exercise.number}`;
+    if (copying === key) return;
+    const source = cell.choice ? null : chosenElsewhere(cell.exercise.number);
+    const hasReason =
+      source !== null &&
+      (source.tags.length > 0 || source.ownReasons.length > 0);
+    if (!source || !hasReason) {
+      setTarget({ ...cell, prefill: source });
+      return;
+    }
+    setCopying(key);
+    const copied = await put(cell, {
+      tags: source.tags,
+      ownReasons: source.ownReasons,
+      variation: source.variation,
+    });
+    setCopying(null);
+    if (!copied) setCopyFailed(true);
   }
 
   async function remove() {
@@ -123,6 +159,14 @@ export function ExerciseSelection({
           </div>
         ))}
       </dl>
+      {copyFailed && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100"
+        >
+          {t("saveFailed")}
+        </p>
+      )}
       <table className="w-full table-fixed border-collapse text-left">
         <caption className="sr-only">{t("tableCaption")}</caption>
         <colgroup>
@@ -203,14 +247,7 @@ export function ExerciseSelection({
                                 })
                           }
                           onOpen={() =>
-                            setTarget({
-                              exercise,
-                              type: m.type,
-                              choice,
-                              prefill: choice
-                                ? null
-                                : chosenElsewhere(exercise.number),
-                            })
+                            choose({ exercise, type: m.type, choice })
                           }
                         />
                       </td>
