@@ -112,6 +112,14 @@ describe("TrainingWeekSection", () => {
         .textContent,
     ).toBe("Fast turnover");
     expect(snatch.querySelector("[data-note]")).toBeNull();
+    // Fixed to the viewport, so it never makes the table scroll vertically.
+    const tooltip = document.getElementById(
+      indicator.getAttribute("aria-describedby")!,
+    )!;
+    expect(tooltip.className).toContain("fixed");
+    expect(monday.querySelector("table")!.parentElement!.className).toContain(
+      "overflow-y-hidden",
+    );
     // Bold lines between exercises; no note column.
     expect(snatch.className).toContain("border-t-2");
     expect(snatch.querySelector("[data-feedback]")!.textContent).toBe(

@@ -112,7 +112,6 @@ export type CompetitionMarker = {
   label: string;
   anchor: "start" | "end";
   textX: number;
-  extent: [number, number];
 };
 
 /**
@@ -148,28 +147,13 @@ export function useCompetitionMarker(
       ? `${competition.type.slice(0, maxType - 1).trimEnd()}…`
       : competition.type;
   const textX = toLeft ? mx - 4 : mx + 4;
-  const textWidth = text.length * LABEL_CHAR;
   return {
     x: mx,
     text,
     label: t("competitionValue", { type: competition.type, date }),
     anchor: toLeft ? "end" : "start",
     textX,
-    extent: toLeft ? [textX - textWidth, textX] : [textX, textX + textWidth],
   };
-}
-
-/** Mesocycle labels give way to the competition's label. */
-export function clearOfMarker(
-  marker: CompetitionMarker | null,
-  start: number,
-  label: string,
-) {
-  return (
-    !marker ||
-    start + label.length * LABEL_CHAR + 8 < marker.extent[0] ||
-    start > marker.extent[1] + 8
-  );
 }
 
 /**
@@ -217,12 +201,10 @@ export function MesocycleStarts({
   mesocycles,
   layout,
   plot,
-  marker,
 }: {
   mesocycles: ChartMesocycle[];
   layout: WeekLayout;
   plot: Plot;
-  marker: CompetitionMarker | null;
 }) {
   const tm = useTranslations("Macrocycle.mesocycles");
   const { x, column } = layout;
@@ -243,16 +225,15 @@ export function MesocycleStarts({
               strokeOpacity={0.25}
               strokeWidth={1}
             />
-            {fitsLabel(label, blockWidth) &&
-              clearOfMarker(marker, start + 4, label) && (
-                <text
-                  x={start + 4}
-                  y={plot.top - 8}
-                  className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
-                >
-                  {label}
-                </text>
-              )}
+            {fitsLabel(label, blockWidth) && (
+              <text
+                x={start + 4}
+                y={plot.top - 8}
+                className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
+              >
+                {label}
+              </text>
+            )}
           </g>
         );
       })}
@@ -286,7 +267,8 @@ export function CompetitionMarkerLine({
       />
       <text
         x={marker.textX}
-        y={plot.top - 8}
+        // One row above the block labels.
+        y={plot.top - 24}
         textAnchor={marker.anchor}
         className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
         aria-hidden="true"

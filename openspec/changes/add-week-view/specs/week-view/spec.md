@@ -40,6 +40,16 @@ without scrolling sideways.
 - **WHEN** the athlete opens "My training" on a desktop screen
 - **THEN** the week tables fit the content width and cannot be scrolled sideways
 
+### Requirement: No vertical scrolling of week tables
+On phones a session's table MAY scroll sideways but SHALL never scroll
+vertically; the coach note's tooltip SHALL open above the page without
+making the table taller or being covered by other cells.
+
+#### Scenario: Tap the note on a phone
+- **GIVEN** a coach note on Monday's snatch
+- **WHEN** the athlete taps the note indicator on a phone
+- **THEN** the note is shown in full, and Monday's table cannot be scrolled vertically
+
 ### Requirement: Coach note indicator
 A coach note on an exercise SHALL show as an indicator after the exercise
 name; hovering anywhere over the exercise's name cell, or focusing the

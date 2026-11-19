@@ -77,7 +77,7 @@ export function SessionTable({
       {session.exercises.length === 0 ? (
         <p className="text-sm text-zinc-500">{t("noExercises")}</p>
       ) : (
-        <div className="overflow-x-auto pr-px">
+        <div className="overflow-x-auto overflow-y-hidden pr-px">
           <table
             className="table-fixed border-collapse text-sm"
             style={{ width: `${TABLE_WIDTH}rem` }}

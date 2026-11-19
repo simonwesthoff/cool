@@ -85,7 +85,9 @@ function renderChart(
   );
 }
 
-const PLOT = { top: 28, height: 240 };
+// The competition's name adds a row above the block labels; at 800 px the
+// plot keeps the desktop proportions (240 px high at 960 px wide).
+const PLOT = { top: 44, height: 240 * (800 / 960) };
 // Width 800, margins 12 / 12 (no y-axis): 776 px up to the competition on
 // day 145 (Saturday of week 21), where the chart ends.
 const xOf = (index: number) => 12 + (776 / (145 / 7)) * index;
@@ -300,5 +302,20 @@ describe("ExerciseChart", () => {
     expect(
       container.querySelector("[data-competition] text")!.textContent,
     ).toBe("German Championships");
+  });
+
+  it("keeps the desktop proportions on narrow screens, getting smaller instead of squished", () => {
+    const plotRatio = (width: number) => {
+      containerWidth = width;
+      const { container } = renderChart();
+      const baseline = container.querySelector("[data-baseline]")!;
+      const plotHeight = Number(baseline.getAttribute("y1")) - PLOT.top;
+      cleanup();
+      return plotHeight / width;
+    };
+    expect(plotRatio(960)).toBeCloseTo(240 / 960, 5);
+    expect(plotRatio(390)).toBeCloseTo(240 / 960, 5);
+    // Not taller than on desktop on wider screens.
+    expect(plotRatio(1200) * 1200).toBeCloseTo(240, 5);
   });
 });

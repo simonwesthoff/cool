@@ -60,7 +60,7 @@ export function WeekViewTable({
       ) : (
         // On phones the table keeps its width and scrolls sideways; on wide
         // screens it fits the container and the columns shrink in proportion.
-        <div className="overflow-x-auto pr-px lg:overflow-visible">
+        <div className="overflow-x-auto overflow-y-hidden pr-px lg:overflow-visible">
           <table
             className="table-fixed border-collapse text-sm lg:!w-full"
             style={{ width: `${VIEW_TABLE_WIDTH}rem` }}

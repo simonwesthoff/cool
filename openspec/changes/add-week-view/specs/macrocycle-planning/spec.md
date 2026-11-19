@@ -23,6 +23,15 @@ last week's point.
 - **WHEN** the coach or athlete looks at any chart of it
 - **THEN** the curve continues from week 21's point to the competition line, which is the right end of the chart
 
+### Requirement: Chart proportions
+Every chart SHALL keep its desktop proportions on narrower screens: the
+plot's height shrinks with its width (never taller than on desktop), so
+the chart gets smaller instead of squished.
+
+#### Scenario: Chart on a phone
+- **WHEN** the coach or athlete looks at a chart on a 390 px wide phone
+- **THEN** the plot has the same ratio of height to width as on desktop
+
 ## MODIFIED Requirements
 
 ### Requirement: Intensity chart with week handles
@@ -70,10 +79,10 @@ it is medium.
 
 ### Requirement: Main competition in the chart
 Every chart SHALL mark the main competition with a dashed vertical line at
-its date and a label with only its name (no date), above the chart in the
-row and style of the mesocycle labels; screen readers get the name and
-date. A mesocycle label overlapping it SHALL be hidden. A competition after
-the last week SHALL be marked at the end of the chart.
+its date and a label with only its name (no date) in the style of the
+mesocycle labels, one row above them, so neither hides the other; screen
+readers get the name and date. A competition after the last week SHALL be
+marked at the end of the chart.
 
 #### Scenario: Competition in the last week
 - **GIVEN** a 21-week macrocycle from Monday 2026-11-30 with the German Championships on Saturday 2027-04-24
@@ -82,7 +91,7 @@ the last week SHALL be marked at the end of the chart.
 
 #### Scenario: Label above the chart
 - **WHEN** the coach looks at the chart
-- **THEN** the competition's label is in the row of the mesocycle labels, so it covers no week point
+- **THEN** the competition's label is one row above the mesocycle labels, covers no week point, and every mesocycle label stays visible, also on a phone
 
 ## REMOVED Requirements
 

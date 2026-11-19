@@ -75,6 +75,8 @@ export type WeekChartProps = {
 };
 
 const TOOLTIP = { width: 208, height: 84, gap: 10 };
+/** Content width on desktop: the chart's proportions at this width are kept. */
+const DESKTOP_WIDTH = 960;
 /** Estimated width of one character of a bold 11 px label. */
 const BOLD_CHAR = 6.8;
 
@@ -127,10 +129,22 @@ export function WeekChart({
   const n = weeks.length;
   const current =
     today && weeks[0] ? currentWeekIndex(weeks[0].startDate, n, today) : null;
-  const PLOT = { top: 28, height: plotHeight };
   const tail = competitionTail(competition?.date, weeks[0]?.startDate, n);
   const layout = weekLayout(width, n, 0, { yAxis: Boolean(yAxis), tail });
   const { x, column, margin, plotLeft, plotRight } = layout;
+  const marker = useCompetitionMarker(
+    competition,
+    weeks[0]?.startDate,
+    n,
+    layout,
+  );
+  // The competition's name has its own row above the block labels, so they
+  // never hide each other. Narrower than the desktop content width, the
+  // plot shrinks in height too: the chart keeps its desktop proportions.
+  const PLOT = {
+    top: marker ? 44 : 28,
+    height: plotHeight * Math.min(1, width / DESKTOP_WIDTH),
+  };
   const bottom = PLOT.top + PLOT.height;
   // Room below the plot for the week numbers, the "Current" line under the
   // current week's number and the axis title.
@@ -204,12 +218,6 @@ export function WeekChart({
 
   const radius = Math.min(4.5, Math.max(3, column * 0.3));
   const showWeekLabel = weekLabelShown(mesocycles, layout.every);
-  const marker = useCompetitionMarker(
-    competition,
-    weeks[0]?.startDate,
-    n,
-    layout,
-  );
 
   function svgPoint(event: PointerEvent<SVGElement>) {
     const svg = event.currentTarget.ownerSVGElement!;
@@ -332,22 +340,28 @@ export function WeekChart({
             mesocycles={mesocycles}
             layout={layout}
             plot={PLOT}
-            marker={marker}
           />
           {yAxis &&
-            domain.ticks.map((tick) => (
-              <text
-                key={tick}
-                data-axis
-                x={plotLeft - 6}
-                y={y(tick)}
-                textAnchor="end"
-                dominantBaseline="middle"
-                className="fill-zinc-500 text-[11px] tabular-nums"
-              >
-                {yAxis.formatTick(tick)}
-              </text>
-            ))}
+            domain.ticks
+              // Every other value when the plot is too low for all of them.
+              .filter(
+                (_, i) =>
+                  PLOT.height / Math.max(domain.ticks.length - 1, 1) >= 18 ||
+                  i % 2 === 0,
+              )
+              .map((tick) => (
+                <text
+                  key={tick}
+                  data-axis
+                  x={plotLeft - 6}
+                  y={y(tick)}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  className="fill-zinc-500 text-[11px] tabular-nums"
+                >
+                  {yAxis.formatTick(tick)}
+                </text>
+              ))}
           {yAxis?.title && (
             <text
               data-axis-title

@@ -556,7 +556,7 @@ describe("main competition marker", () => {
     );
     const text = marker.querySelector("text")!;
     expect(text.textContent).toBe("German Championships");
-    // Same row and style as the mesocycle labels (y = plot top − 8).
+    // Same style as the mesocycle labels, one row above them (plot top 44).
     expect(text.getAttribute("y")).toBe("20");
     expect(text.getAttribute("class")).toBe(
       "fill-zinc-600 text-[11px] dark:fill-zinc-400",
@@ -568,7 +568,7 @@ describe("main competition marker", () => {
     );
   });
 
-  it("labels the blocks with their abbreviations and hides one the competition label overlaps", () => {
+  it("labels the blocks with their abbreviations, with the competition's name one row above them so none is hidden", () => {
     const blockLabels = (container: HTMLElement) =>
       [...container.querySelectorAll("svg text")]
         .map((t) => t.textContent)
@@ -591,7 +591,14 @@ describe("main competition marker", () => {
         competition={competition}
       />,
     );
-    expect(blockLabels(view.container)).toEqual(["GPB", "SPB"]);
+    expect(blockLabels(view.container)).toEqual(["GPB", "SPB", "CPB"]);
+    const rowOf = (text: string) =>
+      Number(
+        [...view.container.querySelectorAll("svg text")]
+          .find((t) => t.textContent === text)!
+          .getAttribute("y"),
+      );
+    expect(rowOf("German Championships")).toBe(rowOf("CPB") - 16);
   });
 
   it("starts at the line early in the cycle", () => {
