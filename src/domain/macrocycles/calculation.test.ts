@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   curveShape,
+  curveValue,
+  sineLikeAnchors,
   cycleProgress,
   intensity,
   bordersAreValid,
@@ -48,22 +50,42 @@ describe("cycle progress", () => {
 });
 
 describe("intensity curve", () => {
-  it("follows the user's formula with entry value 60 %", () => {
+  it("is the straight line from the entry value to 100 % without inner anchors", () => {
     expect([1, 6, 11, 16, 21].map((w) => pct(intensity(0.6, t(w))))).toEqual([
-      60, 65.9, 80, 94.1, 100,
+      60, 70, 80, 90, 100,
     ]);
+    const curve = { entryPct: 60, anchors: [] };
+    expect(pct(intensity(curve, t(6)))).toBe(70);
   });
 
-  it("equals ((1−E)/2)·sin(t·π − π/2) + E + (1−E)/2 for other entry values", () => {
-    for (const entry of [0.3, 0.5, 0.95]) {
-      for (const progress of [0, 0.1, 0.37, 0.5, 0.8, 1]) {
-        const formula =
-          ((1 - entry) / 2) * Math.sin(progress * Math.PI - Math.PI / 2) +
-          entry +
-          (1 - entry) / 2;
-        expect(intensity(entry, progress)).toBeCloseTo(formula, 12);
-      }
-    }
+  it("runs smoothly through an inner anchor and stays within 0–100 %", () => {
+    const curve = { entryPct: 60, anchors: [{ t: 0.25, pct: 90 }] };
+    expect(pct(intensity(curve, t(6)))).toBe(90);
+    const values = Array.from({ length: 21 }, (_, i) =>
+      curveValue(curve, t(i + 1)),
+    );
+    expect(Math.max(...values)).toBeLessThanOrEqual(1);
+    // Smooth: no jump between neighbouring weeks.
+    for (let i = 1; i < values.length; i++)
+      expect(Math.abs(values[i]! - values[i - 1]!)).toBeLessThan(0.08);
+  });
+
+  it("caps the curve at 100 % where the spline bulges above it, but not high weeks", () => {
+    const curve = {
+      entryPct: 60,
+      anchors: [
+        { t: 0.4, pct: 98 },
+        { t: 0.6, pct: 100 },
+      ],
+    };
+    const bulge = Array.from({ length: 101 }, (_, i) =>
+      curveValue(curve, i / 100),
+    );
+    expect(Math.max(...bulge)).toBe(1);
+    // Where the curve is capped (before the end), a high week is 105 %.
+    const capped = bulge.findIndex((v, i) => v === 1 && i < 100) / 100;
+    expect(capped).toBeGreaterThan(0);
+    expect(intensity(curve, capped, "high")).toBeCloseTo(1.05, 12);
   });
 
   it("adds 5 points in high weeks and subtracts 5 in low weeks", () => {
@@ -71,14 +93,71 @@ describe("intensity curve", () => {
     expect(pct(intensity(0.6, t(11), "low"))).toBe(75);
   });
 
-  it("rises monotonically", () => {
-    const values = Array.from({ length: 52 }, (_, i) =>
-      intensity(0.6, cycleProgress(i + 1, 52)),
-    );
-    for (let i = 1; i < values.length; i++)
-      expect(values[i]!).toBeGreaterThan(values[i - 1]!);
-    expect(curveShape(0)).toBe(0);
-    expect(curveShape(1)).toBe(1);
+  it("stays level before a moved entry anchor and after a moved end anchor", () => {
+    const curve = {
+      entryPct: 60,
+      entryT: 0.2,
+      endPct: 95,
+      endT: 0.8,
+      anchors: [],
+    };
+    expect(curveValue(curve, 0)).toBeCloseTo(0.6, 12);
+    expect(curveValue(curve, 0.2)).toBeCloseTo(0.6, 12);
+    expect(curveValue(curve, 0.5)).toBeCloseTo(0.775, 12);
+    expect(curveValue(curve, 0.8)).toBeCloseTo(0.95, 12);
+    expect(curveValue(curve, 1)).toBeCloseTo(0.95, 12);
+  });
+
+  it("orders the inner anchors by position", () => {
+    const a = {
+      entryPct: 60,
+      anchors: [
+        { t: 0.7, pct: 95 },
+        { t: 0.3, pct: 65 },
+      ],
+    };
+    const b = {
+      entryPct: 60,
+      anchors: [
+        { t: 0.3, pct: 65 },
+        { t: 0.7, pct: 95 },
+      ],
+    };
+    expect(curveValue(a, 0.5)).toBeCloseTo(curveValue(b, 0.5), 12);
+  });
+});
+
+describe("approximation of the former S-curve", () => {
+  const sine = (entry: number, progress: number) =>
+    entry + (1 - entry) * curveShape(progress);
+
+  it("uses two inner anchors at 1/3 and 2/3, below and above the straight line", () => {
+    expect(sineLikeAnchors(60)).toEqual([
+      { t: 1 / 3, pct: 70 },
+      { t: 2 / 3, pct: 90 },
+    ]);
+  });
+
+  it("stays within 1.2 points of the sine for 60 % and 2.0 points for 30 %", () => {
+    for (const [entry, bound] of [
+      [0.6, 1.2],
+      [0.3, 2.0],
+    ] as const) {
+      const curve = {
+        entryPct: entry * 100,
+        anchors: sineLikeAnchors(entry * 100),
+      };
+      for (let i = 0; i <= 200; i++) {
+        const progress = i / 200;
+        expect(
+          Math.abs(curveValue(curve, progress) - sine(entry, progress)) * 100,
+        ).toBeLessThanOrEqual(bound + 0.05);
+      }
+    }
+    const curve = { entryPct: 60, anchors: sineLikeAnchors(60) };
+    expect([1, 11, 21].map((w) => pct(intensity(curve, t(w))))).toEqual([
+      60, 80, 100,
+    ]);
   });
 });
 

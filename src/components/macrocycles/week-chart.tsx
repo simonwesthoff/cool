@@ -7,6 +7,11 @@ import type {
   WeekLevel,
 } from "@/domain/macrocycles/macrocycle-types";
 import {
+  curveEnds,
+  curveValue,
+  type Curve,
+} from "@/domain/macrocycles/calculation";
+import {
   blockLabelSpans,
   CompetitionMarkerLine,
   CompetitionSwatch,
@@ -78,7 +83,37 @@ export type WeekChartProps = {
    * more run from left to right across the chart.
    */
   colors?: string[];
+  /**
+   * Curve mode (planning): the progression curve with its anchors instead of
+   * the weekly values; anchors are added, dragged and removed.
+   */
+  curveEditor?: CurveEditor;
 };
+
+/** Accessible names and the change callback of the curve mode. */
+export type CurveEditor = {
+  curve: Curve;
+  /** Called once per finished gesture with the new curve. */
+  onChange: (curve: Curve) => void;
+  labels: {
+    entry: (pct: number) => string;
+    anchor: (week: number, pct: number) => string;
+    end: (pct: number) => string;
+  };
+};
+
+/** Movement (px) that turns a press on an anchor into a drag. */
+const DRAG_THRESHOLD = 3;
+/** An inner anchor this close (weeks, horizontally) to a neighbour is removed. */
+const MERGE_WEEKS = 0.5;
+/** Smallest distance between two handles' positions (the API's limit). */
+const MIN_GAP = 0.002;
+/** A handle of the curve mode: an inner anchor's index or an end anchor. */
+type CurveHandle = number | "entry" | "end";
+const ENTRY_RANGE: [number, number] = [30, 95];
+const roundTenth = (v: number) => Math.round(v * 10) / 10;
+const clamp = (v: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, v));
 
 const TOOLTIP = { width: 208, height: 84, gap: 10 };
 /** Content width on desktop: the chart's proportions at this width are kept. */
@@ -115,6 +150,7 @@ export function WeekChart({
   handles,
   onBordersChange,
   colors = ["var(--chart-curve)"],
+  curveEditor,
 }: WeekChartProps) {
   const t = useTranslations("Macrocycle.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
@@ -133,6 +169,16 @@ export function WeekChart({
   const [borderDrag, setBorderDrag] = useState<{
     border: 0 | 1;
     week: number;
+  } | null>(null);
+  // Curve mode: the curve while a gesture is going on, and the gesture.
+  const [curveDraft, setCurveDraft] = useState<Curve | null>(null);
+  const [gesture, setGesture] = useState<{
+    anchor: CurveHandle;
+    startX: number;
+    startY: number;
+    moved: boolean;
+    /** The anchor was added by this gesture (a press on the plot). */
+    added: boolean;
   } | null>(null);
 
   const n = weeks.length;
@@ -203,8 +249,17 @@ export function WeekChart({
       ? intensityAt(handles.bases[i]!, dragging.level)
       : (values[i] ?? null);
 
+  // Curve mode: the progression curve shown (a gesture's draft or stored).
+  const shownCurve = curveEditor ? (curveDraft ?? curveEditor.curve) : null;
+  const xFirst = x(0);
+  const xLast = x(Math.max(n - 1, 0));
+  const xOfT = (t: number) => xFirst + t * (xLast - xFirst);
+  const tOfX = (px: number) =>
+    xLast > xFirst ? (px - xFirst) / (xLast - xFirst) : 0;
+
   // The curve, broken where a week has no value; it continues to the
-  // competition when that falls after the start of the last week.
+  // competition when that falls after the start of the last week. In curve
+  // mode it is the spline itself, sampled every 2 px.
   const runs: { x: number; y: number }[][] = [];
   let run: { x: number; y: number }[] | null = null;
   weeks.forEach((_, i) => {
@@ -217,7 +272,19 @@ export function WeekChart({
     run.push({ x: x(i), y: y(v) });
   });
   const lastValue = n > 0 ? valueOf(n - 1) : null;
-  if (tail > 0 && lastValue !== null)
+  if (shownCurve) {
+    runs.length = 0;
+    const samples: { x: number; y: number }[] = [];
+    const steps = Math.max(2, Math.ceil((xLast - xFirst) / 2));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      samples.push({ x: xOfT(t), y: y(curveValue(shownCurve, t) * 100) });
+    }
+    // On to the competition at the curve's last value (the end value).
+    if (tail > 0)
+      samples.push({ x: plotRight, y: y(curveValue(shownCurve, 1) * 100) });
+    runs.push(samples);
+  } else if (tail > 0 && lastValue !== null)
     runs.at(-1)!.push({ x: plotRight, y: y(lastValue) });
   const path = runs.map(smoothPath).join(" ");
   const area = runs
@@ -235,6 +302,143 @@ export function WeekChart({
     const svg = event.currentTarget.ownerSVGElement!;
     const rect = svg.getBoundingClientRect();
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  // --- Curve mode: add, drag and remove anchors -----------------------------
+  const endsOf = (c: Curve) => curveEnds(c);
+  /** An inner anchor at a pointer position (between the end anchors, 0–100 %). */
+  function anchorAt(c: Curve, px: number, py: number) {
+    const { entryT, endT } = endsOf(c);
+    return {
+      t: clamp(tOfX(px), entryT + MIN_GAP, endT - MIN_GAP),
+      pct: roundTenth(clamp(valueAtY(py), 0, 100)),
+    };
+  }
+  /**
+   * Whether the inner anchor `index` is within half a week (horizontally)
+   * of a neighbouring handle: it is removed right away while dragged.
+   */
+  function mergesWithNeighbour(c: Curve, index: number) {
+    const { entryT, endT } = endsOf(c);
+    const own = c.anchors[index]!.t;
+    const halfWeek = MERGE_WEEKS / Math.max(n - 1, 1);
+    const others = [
+      entryT,
+      endT,
+      ...c.anchors.filter((_, i) => i !== index).map((a) => a.t),
+    ];
+    return others.some((t) => Math.abs(t - own) < halfWeek);
+  }
+  /** Ends the gesture and saves the curve when it changed. */
+  function finishCurveGesture(next: Curve) {
+    setGesture(null);
+    setCurveDraft(null);
+    if (!curveEditor) return;
+    const sorted = {
+      ...next,
+      anchors: [...next.anchors].sort((a, b) => a.t - b.t),
+    };
+    const key = (c: Curve) =>
+      JSON.stringify([
+        c.entryPct,
+        endsOf(c),
+        [...c.anchors].sort((a, b) => a.t - b.t),
+      ]);
+    if (key(sorted) !== key(curveEditor.curve)) curveEditor.onChange(sorted);
+  }
+  function startCurveGesture(
+    event: PointerEvent<SVGElement>,
+    anchor: CurveHandle,
+    added: boolean,
+    draft: Curve,
+  ) {
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    const p = svgPoint(event);
+    setCurveDraft(draft);
+    setGesture({ anchor, startX: p.x, startY: p.y, moved: false, added });
+  }
+  function onCurvePress(event: PointerEvent<SVGRectElement>) {
+    if (!curveEditor) return;
+    const p = svgPoint(event);
+    const base = curveEditor.curve;
+    const anchors = [...base.anchors, anchorAt(base, p.x, p.y)];
+    startCurveGesture(event, anchors.length - 1, true, { ...base, anchors });
+  }
+  function onCurveMove(event: PointerEvent<SVGElement>) {
+    if (!gesture || !curveDraft) return;
+    const p = svgPoint(event);
+    const moved =
+      gesture.moved ||
+      Math.hypot(p.x - gesture.startX, p.y - gesture.startY) > DRAG_THRESHOLD;
+    if (!moved) return;
+    const inner = curveDraft.anchors.map((a) => a.t);
+    const { entryT, endT, endPct } = endsOf(curveDraft);
+    // The outer anchors snap to whole weeks: t = k / (n − 1).
+    const steps = Math.max(n - 1, 1);
+    const toWeek = (t: number) => Math.round(t * steps) / steps;
+    if (gesture.anchor === "entry") {
+      // Before the first inner anchor (on a whole week), in whole percents,
+      // and below the end value.
+      const limit =
+        Math.floor((Math.min(endT, ...inner) - MIN_GAP) * steps) / steps;
+      setCurveDraft({
+        ...curveDraft,
+        entryT: clamp(toWeek(tOfX(p.x)), 0, Math.max(0, limit)),
+        entryPct: Math.round(
+          clamp(
+            valueAtY(p.y),
+            ENTRY_RANGE[0],
+            Math.min(ENTRY_RANGE[1], endPct - 1),
+          ),
+        ),
+      });
+    } else if (gesture.anchor === "end") {
+      // After the last inner anchor (on a whole week), above the entry value.
+      const limit =
+        Math.ceil((Math.max(entryT, ...inner) + MIN_GAP) * steps) / steps;
+      setCurveDraft({
+        ...curveDraft,
+        endT: clamp(toWeek(tOfX(p.x)), Math.min(1, limit), 1),
+        endPct: roundTenth(clamp(valueAtY(p.y), curveDraft.entryPct + 1, 100)),
+      });
+    } else {
+      const index = gesture.anchor;
+      const anchors = [...curveDraft.anchors];
+      anchors[index] = anchorAt(curveDraft, p.x, p.y);
+      const draft = { ...curveDraft, anchors };
+      // Close to a neighbouring handle: removed at once, without releasing.
+      if (mergesWithNeighbour(draft, index)) {
+        finishCurveGesture({
+          ...draft,
+          anchors: anchors.filter((_, i) => i !== index),
+        });
+        return;
+      }
+      setCurveDraft(draft);
+    }
+    if (!gesture.moved) setGesture({ ...gesture, moved: true });
+  }
+  function onCurveRelease() {
+    if (!gesture || !curveDraft) return;
+    let next = curveDraft;
+    // A click on an existing inner anchor removes it.
+    if (
+      typeof gesture.anchor === "number" &&
+      !gesture.moved &&
+      !gesture.added
+    ) {
+      const index = gesture.anchor;
+      next = {
+        ...curveDraft,
+        anchors: curveDraft.anchors.filter((_, i) => i !== index),
+      };
+    }
+    finishCurveGesture(next);
+  }
+  function cancelCurveGesture() {
+    setGesture(null);
+    setCurveDraft(null);
   }
 
   // --- Week handles: drag up/down, or tap above/below the point -------------
@@ -523,70 +727,96 @@ export function WeekChart({
               strokeLinejoin="round"
               strokeLinecap="round"
             />
-            {weeks.map((w, i) => {
-              const v = valueOf(i);
-              if (v === null) return null;
-              const level = levelOf(i);
-              const active =
-                hovered === w.number || dragging?.week === w.number;
-              // Only handles have visible points; otherwise just the hovered one.
-              const dot = handles || active;
-              return (
-                <g
-                  key={w.number}
-                  data-point={w.number}
-                  data-value={v}
-                  data-level={level}
-                  role={pointLabel ? "img" : undefined}
-                  aria-label={pointLabel?.(w, v)}
-                >
-                  {level && level !== "medium" && (
-                    <text
-                      x={x(i)}
-                      y={
-                        level === "high"
-                          ? y(v) - radius - 6
-                          : y(v) + radius + 14
-                      }
-                      textAnchor="middle"
-                      className={`fill-zinc-600 dark:fill-zinc-400 ${column < 12 ? "text-[9px]" : "text-[11px]"}`}
-                      aria-hidden="true"
-                    >
-                      {level === "high" ? "▲" : "▼"}
-                    </text>
-                  )}
-                  {dot && (
-                    <circle
-                      cx={x(i)}
-                      cy={y(v)}
-                      r={active && handles ? radius + 1.5 : radius}
-                      fill={paint}
-                      stroke="var(--surface)"
-                      strokeWidth={2}
-                    />
-                  )}
-                </g>
-              );
-            })}
+            {!shownCurve &&
+              weeks.map((w, i) => {
+                const v = valueOf(i);
+                if (v === null) return null;
+                const level = levelOf(i);
+                const active =
+                  hovered === w.number || dragging?.week === w.number;
+                // Only handles have visible points; otherwise just the hovered one.
+                const dot = handles || active;
+                return (
+                  <g
+                    key={w.number}
+                    data-point={w.number}
+                    data-value={v}
+                    data-level={level}
+                    role={pointLabel ? "img" : undefined}
+                    aria-label={pointLabel?.(w, v)}
+                  >
+                    {level && level !== "medium" && (
+                      <text
+                        x={x(i)}
+                        y={
+                          level === "high"
+                            ? y(v) - radius - 6
+                            : y(v) + radius + 14
+                        }
+                        textAnchor="middle"
+                        className={`fill-zinc-600 dark:fill-zinc-400 ${column < 12 ? "text-[9px]" : "text-[11px]"}`}
+                        aria-hidden="true"
+                      >
+                        {level === "high" ? "▲" : "▼"}
+                      </text>
+                    )}
+                    {dot && (
+                      <circle
+                        cx={x(i)}
+                        cy={y(v)}
+                        r={active && handles ? radius + 1.5 : radius}
+                        fill={paint}
+                        stroke="var(--surface)"
+                        strokeWidth={2}
+                      />
+                    )}
+                  </g>
+                );
+              })}
           </g>
-          {weeks.map((w, i) => (
-            // The week's hit area: its whole column, centred on the point.
-            <rect
-              key={w.number}
-              data-week={w.number}
-              x={x(i) - column / 2}
-              y={PLOT.top}
-              width={column}
-              height={PLOT.height}
-              fill="transparent"
-              className={handles ? "cursor-ns-resize" : undefined}
-              onPointerEnter={() => setHovered(w.number)}
-              onPointerDown={(event) => onPointerDown(event, i)}
-              onPointerMove={(event) => onPointerMove(event, i)}
-              onPointerUp={(event) => onPointerUp(event, i)}
-              onPointerCancel={() => setDragging(null)}
+          {shownCurve && curveEditor && (
+            <CurveAnchors
+              curve={shownCurve}
+              xOfT={xOfT}
+              y={y}
+              xFirst={xFirst}
+              xLast={xLast}
+              plotTop={PLOT.top}
+              plotHeight={PLOT.height}
+              plotLeft={plotLeft}
+              plotRight={plotRight}
+              paint={paint}
+              weekOf={(t) => 1 + t * (n - 1)}
+              labels={curveEditor.labels}
+              active={gesture?.moved ? gesture.anchor : null}
+              onPress={onCurvePress}
+              onAnchorPress={(event, anchor) =>
+                startCurveGesture(event, anchor, false, curveEditor.curve)
+              }
+              onMove={onCurveMove}
+              onRelease={onCurveRelease}
+              onCancel={cancelCurveGesture}
             />
-          ))}
+          )}
+          {!shownCurve &&
+            weeks.map((w, i) => (
+              // The week's hit area: its whole column, centred on the point.
+              <rect
+                key={w.number}
+                data-week={w.number}
+                x={x(i) - column / 2}
+                y={PLOT.top}
+                width={column}
+                height={PLOT.height}
+                fill="transparent"
+                className={handles ? "cursor-ns-resize" : undefined}
+                onPointerEnter={() => setHovered(w.number)}
+                onPointerDown={(event) => onPointerDown(event, i)}
+                onPointerMove={(event) => onPointerMove(event, i)}
+                onPointerUp={(event) => onPointerUp(event, i)}
+                onPointerCancel={() => setDragging(null)}
+              />
+            ))}
           {onBordersChange &&
             mesocycles.slice(1).map((m, index) => {
               const border = index as 0 | 1;
@@ -710,4 +940,160 @@ export function useWeekDate() {
       dateStyle: "medium",
       timeZone: "UTC",
     });
+}
+
+/**
+ * The anchors of the curve mode over a transparent area that adds anchors:
+ * the entry and end anchors (movable in any direction, never removed, their
+ * value shown while moved) and the inner anchors (free; removed as soon
+ * as one comes within half a week of a neighbour).
+ */
+function CurveAnchors({
+  curve,
+  xOfT,
+  y,
+  plotTop,
+  plotHeight,
+  plotLeft,
+  plotRight,
+  paint,
+  weekOf,
+  labels,
+  active,
+  onPress,
+  onAnchorPress,
+  onMove,
+  onRelease,
+  onCancel,
+}: {
+  curve: Curve;
+  xOfT: (t: number) => number;
+  y: (pct: number) => number;
+  xFirst: number;
+  xLast: number;
+  plotTop: number;
+  plotHeight: number;
+  plotLeft: number;
+  plotRight: number;
+  paint: string;
+  weekOf: (t: number) => number;
+  labels: CurveEditor["labels"];
+  active: CurveHandle | null;
+  onPress: (event: PointerEvent<SVGRectElement>) => void;
+  onAnchorPress: (event: PointerEvent<SVGElement>, anchor: CurveHandle) => void;
+  onMove: (event: PointerEvent<SVGElement>) => void;
+  onRelease: () => void;
+  onCancel: () => void;
+}) {
+  const { entryT, endT, endPct } = curveEnds(curve);
+  const handlers = {
+    onPointerMove: onMove,
+    onPointerUp: onRelease,
+    onPointerCancel: onCancel,
+  };
+  const dot = (cx: number, cy: number, big: boolean) => (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={big ? 7 : 5.5}
+      fill={paint}
+      stroke="var(--surface)"
+      strokeWidth={2}
+    />
+  );
+  const outer = (
+    kind: "entry" | "end",
+    t: number,
+    pct: number,
+    label: string,
+  ) => {
+    const cx = xOfT(t);
+    const cy = y(pct);
+    // The value is written beside the handle while it is moved, towards the
+    // chart's middle so it stays inside.
+    const left = cx > (plotLeft + plotRight) / 2;
+    return (
+      <g
+        data-anchor={kind}
+        data-t={t}
+        data-pct={pct}
+        role="img"
+        aria-label={label}
+        className="cursor-move"
+        onPointerDown={(event) => onAnchorPress(event, kind)}
+        {...handlers}
+      >
+        <circle cx={cx} cy={cy} r={14} fill="transparent" />
+        {dot(cx, cy, active === kind)}
+        {active === kind && (
+          <text
+            data-anchor-value
+            x={left ? cx - 12 : cx + 12}
+            y={cy - 12}
+            textAnchor={left ? "end" : "start"}
+            className="pointer-events-none fill-zinc-900 text-[12px] font-semibold dark:fill-zinc-100"
+            stroke="var(--surface)"
+            strokeWidth={3}
+            paintOrder="stroke"
+          >
+            {label}
+          </text>
+        )}
+      </g>
+    );
+  };
+  return (
+    <g data-curve-editor>
+      {/* Horizontal guides at the entry and end values, styled like the
+          block start lines; they move with their anchors. */}
+      {(
+        [
+          ["entry", curve.entryPct],
+          ["end", endPct],
+        ] as const
+      ).map(([kind, pct]) => (
+        <line
+          key={kind}
+          data-guide={kind}
+          x1={plotLeft}
+          x2={plotRight}
+          y1={y(pct)}
+          y2={y(pct)}
+          stroke="var(--chart-ink)"
+          strokeOpacity={0.25}
+          strokeWidth={1}
+          className="pointer-events-none"
+        />
+      ))}
+      <rect
+        data-curve-area
+        x={plotLeft}
+        y={plotTop}
+        width={plotRight - plotLeft}
+        height={plotHeight}
+        fill="transparent"
+        className="cursor-crosshair"
+        onPointerDown={onPress}
+        {...handlers}
+      />
+      {outer("entry", entryT, curve.entryPct, labels.entry(curve.entryPct))}
+      {curve.anchors.map((a, i) => (
+        <g
+          key={i}
+          data-anchor={i}
+          data-t={a.t}
+          data-pct={a.pct}
+          role="img"
+          aria-label={labels.anchor(Math.round(weekOf(a.t) * 10) / 10, a.pct)}
+          className="cursor-move"
+          onPointerDown={(event) => onAnchorPress(event, i)}
+          {...handlers}
+        >
+          <circle cx={xOfT(a.t)} cy={y(a.pct)} r={14} fill="transparent" />
+          {dot(xOfT(a.t), y(a.pct), active === i)}
+        </g>
+      ))}
+      {outer("end", endT, endPct, labels.end(endPct))}
+    </g>
+  );
 }

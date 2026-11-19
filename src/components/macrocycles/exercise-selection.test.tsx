@@ -687,14 +687,12 @@ describe("ExerciseSelection", () => {
     ).toHaveProperty("pathname", "/athletes/a1");
   });
 
-  it("goes back to the intensity step on the same page", async () => {
+  it("goes back to the weeks step on the same page", async () => {
     onBack.mockReset();
     renderIt();
-    expect(
-      screen.queryByRole("link", { name: "Back to intensity" }),
-    ).toBeNull();
+    expect(screen.queryByRole("link", { name: "Back to weeks" })).toBeNull();
     await userEvent.click(
-      screen.getByRole("button", { name: "Back to intensity" }),
+      screen.getByRole("button", { name: "Back to weeks" }),
     );
     expect(onBack).toHaveBeenCalledTimes(1);
   });

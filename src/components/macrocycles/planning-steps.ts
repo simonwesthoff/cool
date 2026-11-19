@@ -2,6 +2,7 @@
 export const PLANNING_STEPS = [
   "base-data",
   "swot",
+  "curve",
   "intensity",
   "exercises",
 ] as const;

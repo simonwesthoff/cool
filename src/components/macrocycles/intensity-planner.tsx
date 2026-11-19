@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import type { Curve } from "@/domain/macrocycles/calculation";
 import type {
   Macrocycle,
   WeekLevel,
@@ -9,25 +10,63 @@ import type {
 import { baseIntensity, intensityAt } from "./chart-geometry";
 import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 
-/** Planning step 3: week levels on the macrocycle chart, saved per change. */
+/**
+ * Planning steps 3 and 4 on the macrocycle chart: the progression curve
+ * ("curve") and the week levels and block borders ("weeks"), each change
+ * saved.
+ */
 export function IntensityPlanner({
+  mode,
   macrocycle,
   onSaved,
   onContinue,
   onBack,
 }: {
+  /** Step 3 shapes the curve, step 4 sets high/low weeks and borders. */
+  mode: "curve" | "weeks";
   macrocycle: Macrocycle;
   /** The macrocycle as stored after each change. */
   onSaved: (macrocycle: Macrocycle) => void;
-  /** "Continue to exercises" (step 4). */
+  /** "Continue to weeks" (step 3) or "Continue to exercises" (step 4). */
   onContinue: () => void;
-  /** "Back to SWOT" (step 2). */
+  /** "Back to SWOT" (step 3) or "Back to curve" (step 4). */
   onBack: () => void;
 }) {
   const t = useTranslations("Macrocycle.intensity");
   const [weeks, setWeeks] = useState<ChartWeek[]>(macrocycle.weeks);
   const [mesocycles, setMesocycles] = useState(macrocycle.mesocycles);
   const [failed, setFailed] = useState(false);
+  const [curve, setCurve] = useState<Curve>(macrocycle.curve);
+
+  async function changeCurve(next: Curve) {
+    const previous = curve;
+    setFailed(false);
+    // Optimistic update; the server's answer replaces it.
+    setCurve(next);
+    const response = await fetch(
+      `/api/athletes/${macrocycle.athleteId}/macrocycle/curve`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          entryValuePct: next.entryPct,
+          entryT: next.entryT ?? 0,
+          anchors: next.anchors,
+          endValuePct: next.endPct ?? 100,
+          endT: next.endT ?? 1,
+        }),
+      },
+    ).catch(() => null);
+    if (response?.ok) {
+      const saved = (await response.json()) as Macrocycle;
+      setCurve(saved.curve);
+      setWeeks(saved.weeks);
+      onSaved(saved);
+    } else {
+      setCurve(previous);
+      setFailed(true);
+    }
+  }
 
   async function changeLevel(week: number, level: WeekLevel) {
     const previous = weeks;
@@ -101,7 +140,9 @@ export function IntensityPlanner({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-zinc-600 dark:text-zinc-400">{t("help")}</p>
+      <p className="text-zinc-600 dark:text-zinc-400">
+        {mode === "curve" ? t("helpCurve") : t("help")}
+      </p>
       {failed && (
         <p
           role="alert"
@@ -115,6 +156,9 @@ export function IntensityPlanner({
         mesocycles={mesocycles}
         onLevelChange={changeLevel}
         onBordersChange={changeBorders}
+        curveEditor={
+          mode === "curve" ? { curve, onChange: changeCurve } : undefined
+        }
         competition={{
           date: macrocycle.competitionDate,
           type: macrocycle.competitionType,
@@ -126,14 +170,14 @@ export function IntensityPlanner({
           onClick={onContinue}
           className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-6 font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
-          {t("continue")}
+          {mode === "curve" ? t("continueToWeeks") : t("continue")}
         </button>
         <button
           type="button"
           onClick={onBack}
           className="inline-flex min-h-11 items-center rounded-full px-4 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
-          {t("back")}
+          {mode === "curve" ? t("back") : t("backToCurve")}
         </button>
       </div>
     </div>

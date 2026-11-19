@@ -1,6 +1,9 @@
 // Macrocycles with their weeks and mesocycles (see src/domain/macrocycles).
+import { sql } from "drizzle-orm";
 import {
   date,
+  doublePrecision,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -36,6 +39,19 @@ export const macrocycle = pgTable("macrocycle", {
   startDate: date("start_date", { mode: "string" }).notNull(),
   durationWeeks: smallint("duration_weeks").notNull(),
   entryValuePct: pct("entry_value_pct").notNull(),
+  /**
+   * Inner anchors of the progression curve, sorted by position t (0..1);
+   * the entry value and 100 % are the curve's ends.
+   */
+  curveAnchors: jsonb("curve_anchors")
+    .$type<{ t: number; pct: number }[]>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+  /** Position (0..1) of the curve's entry anchor; its value is the entry value. */
+  curveEntryT: doublePrecision("curve_entry_t").notNull().default(0),
+  /** Value and position of the curve's end anchor. */
+  curveEndPct: pct("curve_end_pct").notNull().default(100),
+  curveEndT: doublePrecision("curve_end_t").notNull().default(1),
   snatchBestKg: kg("snatch_best_kg").notNull(),
   cleanAndJerkBestKg: kg("clean_and_jerk_best_kg").notNull(),
   snatchGoalKg: kg("snatch_goal_kg").notNull(),

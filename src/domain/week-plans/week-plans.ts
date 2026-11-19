@@ -461,7 +461,7 @@ export async function getWeekProjections(
           repsPerWeek: { min: e.minRepsPerWeek, max: e.maxRepsPerWeek },
         },
         goals,
-        row.entryValuePct / 100,
+        { entryPct: row.entryValuePct, anchors: row.curveAnchors },
         t,
         level?.level ?? "medium",
       ),

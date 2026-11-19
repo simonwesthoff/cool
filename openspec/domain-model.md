@@ -55,6 +55,7 @@ erDiagram
         date startDate
         int durationWeeks
         decimal entryValuePct
+        json curveAnchors
         decimal snatchGoalKg
         decimal cleanAndJerkGoalKg
         date competitionDate
@@ -127,7 +128,8 @@ erDiagram
   from mesocycles and weekly plans and add per-athlete adjustments of the
   values.
 - An Athlete has at most one Macrocycle, planned by the coach of the
-  athlete's Team. It consists of its weeks (each high, medium or low) and is
+  athlete's Team. Its intensity follows a progression curve from the
+  entry value through its anchors (curveAnchors) to 100 %. It consists of its weeks (each high, medium or low) and is
   divided into three Mesocycles (general preparation, special preparation
   and competition preparation block, by default 15 % / 50 % / rest of the
   weeks; the coach can move the borders, and a duration change scales the

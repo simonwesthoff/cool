@@ -163,9 +163,10 @@
       "label": "Planning steps",
       "base-data": "Base data",
       "swot": "SWOT",
-      "intensity": "Intensity",
+      "intensity": "Weeks",
       "exercises": "Exercises",
-      "completed": "completed"
+      "completed": "completed",
+      "curve": "Curve"
     },
     "baseData": {
       "sections": {
@@ -266,18 +267,24 @@
         "medium": "medium",
         "low": "low"
       },
-      "tooltipValue": "{intensity} ({level})"
+      "tooltipValue": "{intensity} ({level})",
+      "anchorEntry": "Entry value {value}",
+      "anchor": "Anchor at week {week}: {value}",
+      "anchorEnd": "End value {value}"
     },
     "intensity": {
       "help": "Drag a week's point up for a high week or down for a low week, or tap above or below it. Drag the handles on the borders to change the length of the mesocycles. Each change is saved.",
       "saveFailed": "The change could not be saved. Please try again.",
       "continue": "Continue to exercises",
-      "back": "Back to SWOT"
+      "back": "Back to SWOT",
+      "helpCurve": "Shape the overall progression curve. Add new anchors by clicking into the curve and drag them around to shape the progression for your athlete. High and low weeks can be set in the next step.",
+      "continueToWeeks": "Continue to weeks",
+      "backToCurve": "Back to curve"
     },
     "exercises": {
       "saveFailed": "The change could not be saved. Please try again.",
       "finish": "Finish planning",
-      "back": "Back to intensity",
+      "back": "Back to weeks",
       "tableCaption": "Exercises of the catalog per mesocycle",
       "exercise": "Exercise",
       "weeksShort": "Wk {first}–{last}",

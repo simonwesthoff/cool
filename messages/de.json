@@ -163,9 +163,10 @@
       "label": "Planungsschritte",
       "base-data": "Stammdaten",
       "swot": "SWOT",
-      "intensity": "Intensität",
+      "intensity": "Wochen",
       "exercises": "Übungen",
-      "completed": "abgeschlossen"
+      "completed": "abgeschlossen",
+      "curve": "Kurve"
     },
     "baseData": {
       "sections": {
@@ -266,18 +267,24 @@
         "medium": "mittel",
         "low": "niedrig"
       },
-      "tooltipValue": "{intensity} ({level})"
+      "tooltipValue": "{intensity} ({level})",
+      "anchorEntry": "Einstiegswert {value}",
+      "anchor": "Ankerpunkt bei Woche {week}: {value}",
+      "anchorEnd": "Endwert {value}"
     },
     "intensity": {
       "help": "Ziehe den Punkt einer Woche nach oben für eine hohe oder nach unten für eine niedrige Woche, oder tippe darüber oder darunter. Ziehe die Griffe an den Grenzen, um die Länge der Mesozyklen zu ändern. Jede Änderung wird gespeichert.",
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "continue": "Weiter zu den Übungen",
-      "back": "Zurück zur SWOT"
+      "back": "Zurück zur SWOT",
+      "helpCurve": "Forme die gesamte Progressionskurve. Füge neue Ankerpunkte hinzu, indem du in die Kurve klickst, und ziehe sie, um die Progression für deinen Athleten zu formen. Hohe und niedrige Wochen legst du im nächsten Schritt fest.",
+      "continueToWeeks": "Weiter zu den Wochen",
+      "backToCurve": "Zurück zur Kurve"
     },
     "exercises": {
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "finish": "Planung abschließen",
-      "back": "Zurück zur Intensität",
+      "back": "Zurück zu den Wochen",
       "tableCaption": "Übungen des Trainingsmittelkatalogs je Mesozyklus",
       "exercise": "Übung",
       "weeksShort": "Wo. {first}–{last}",

@@ -39,6 +39,7 @@ import {
   spansFromBorders,
   splitMesocycles,
   volume,
+  type Curve,
   type ExerciseValues,
   type MesocycleType,
   type WeekLevel,
@@ -78,6 +79,17 @@ function addDays(isoDate: string, days: number): string {
 }
 
 type BaseRow = typeof macrocycle.$inferSelect;
+
+/** The stored progression curve of a macrocycle row. */
+function curveOf(row: BaseRow): Curve {
+  return {
+    entryPct: row.entryValuePct,
+    entryT: row.curveEntryT,
+    anchors: row.curveAnchors,
+    endPct: row.curveEndPct,
+    endT: row.curveEndT,
+  };
+}
 
 async function scheduleOf(macrocycleId: string): Promise<ScheduledSession[]> {
   const rows = await getDb()
@@ -203,7 +215,7 @@ export async function getExerciseWeeks(
       ...plannedExercise(
         values,
         goals,
-        row.entryValuePct / 100,
+        curveOf(row),
         cycleProgress(week.number, row.durationWeeks),
         week.level,
       ),
@@ -282,7 +294,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
     };
   });
 
-  const entry = row.entryValuePct / 100;
+  const curve = curveOf(row);
   const goals = {
     snatchGoalKg: row.snatchGoalKg,
     cleanAndJerkGoalKg: row.cleanAndJerkGoalKg,
@@ -297,7 +309,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
         ...plannedExercise(
           values.get(exerciseNumber)!,
           goals,
-          entry,
+          curve,
           t,
           week.level,
         ),
@@ -307,7 +319,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
       startDate: addDays(row.startDate, 7 * (week.number - 1)),
       mesocycle: type,
       level: week.level,
-      intensityPct: Math.round(intensity(entry, t, week.level) * 1000) / 10,
+      intensityPct: Math.round(intensity(curve, t, week.level) * 1000) / 10,
       volume: volume(exercises),
       exercises,
     };
@@ -317,6 +329,7 @@ async function loadMacrocycle(row: BaseRow): Promise<Macrocycle> {
     id: row.id,
     athleteId: row.athleteId,
     ...baseDataOf(row, sessions),
+    curve,
     mesocycles: mesocycleViews,
     weeks: weekViews,
   };
@@ -674,5 +687,101 @@ export async function setMesocycleBorders(
         );
     }
   });
+  return getMacrocycle(coach, athleteId);
+}
+
+/** Most inner anchors a curve may have. */
+export const MAX_CURVE_ANCHORS = 20;
+/** Smallest distance between two anchor positions (equal ones break the spline). */
+const MIN_ANCHOR_DISTANCE = 0.001;
+
+const oneDecimal = (v: number) => Math.round(v * 10) / 10 === v;
+const position = z
+  .number()
+  .refine((v) => v >= 0 && v <= 1, { params: { code: "OUT_OF_RANGE" } });
+const curveSchema = z.strictObject({
+  entryT: position.optional(),
+  endT: position.optional(),
+  endValuePct: z
+    .number()
+    .refine((v) => v >= 0 && v <= 100, { params: { code: "OUT_OF_RANGE" } })
+    .refine(oneDecimal, { params: { code: "TOO_PRECISE" } })
+    .optional(),
+  entryValuePct: z
+    .number()
+    .refine(Number.isFinite, { params: { code: "INVALID_TYPE" } })
+    .refine((v) => v >= 30 && v <= 95, { params: { code: "OUT_OF_RANGE" } })
+    .refine(oneDecimal, { params: { code: "TOO_PRECISE" } }),
+  anchors: z
+    .array(
+      z.strictObject({
+        t: z
+          .number()
+          .refine((v) => v > 0 && v < 1, { params: { code: "OUT_OF_RANGE" } }),
+        pct: z
+          .number()
+          .refine((v) => v >= 0 && v <= 100, {
+            params: { code: "OUT_OF_RANGE" },
+          })
+          .refine(oneDecimal, { params: { code: "TOO_PRECISE" } }),
+      }),
+    )
+    .refine((list) => list.length <= MAX_CURVE_ANCHORS, {
+      params: { code: "TOO_MANY" },
+    })
+    .refine(
+      (list) => {
+        const ts = list.map((a) => a.t).sort((a, b) => a - b);
+        return ts.every(
+          (t, i) => i === 0 || t - ts[i - 1]! >= MIN_ANCHOR_DISTANCE,
+        );
+      },
+      { params: { code: "TOO_CLOSE" } },
+    ),
+});
+
+/**
+ * Step 3, curve mode: the entry value (the first anchor) and the inner
+ * anchors of the progression curve, stored together.
+ */
+export async function setCurve(
+  coach: CurrentUser,
+  athleteId: string,
+  input: unknown,
+): Promise<Macrocycle> {
+  await requireOwnAthlete(coach, athleteId);
+  const {
+    entryValuePct,
+    anchors,
+    entryT = 0,
+    endT = 1,
+    endValuePct = 100,
+  } = parseInput(curveSchema, input);
+  // The curve ends higher than it starts.
+  if (endValuePct <= entryValuePct) {
+    throw new DomainValidationError({ endValuePct: ["NOT_ABOVE_ENTRY"] });
+  }
+  // The inner anchors lie strictly between the entry and the end anchor.
+  const sorted = [...anchors].sort((a, b) => a.t - b.t);
+  const positions = [entryT, ...sorted.map((a) => a.t), endT];
+  if (
+    positions.some(
+      (t, i) => i > 0 && t - positions[i - 1]! < MIN_ANCHOR_DISTANCE,
+    )
+  ) {
+    throw new DomainValidationError({ anchors: ["OUTSIDE_ENDS"] });
+  }
+  const row = await findMacrocycleRow(athleteId);
+  if (!row) throw notFound();
+  await getDb()
+    .update(macrocycle)
+    .set({
+      entryValuePct,
+      curveEntryT: entryT,
+      curveAnchors: sorted,
+      curveEndPct: endValuePct,
+      curveEndT: endT,
+    })
+    .where(eq(macrocycle.id, row.id));
   return getMacrocycle(coach, athleteId);
 }
