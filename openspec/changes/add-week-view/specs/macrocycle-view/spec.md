@@ -29,3 +29,20 @@ abbreviation above the plot. The main competition marker stays.
 #### Scenario: No visible legend
 - **WHEN** the coach or the athlete looks at the exercise chart on the athlete's page or in the macrocycle view
 - **THEN** no legend is shown, no area is coloured by mesocycle, and thin lines at weeks 1, 4 and 14 carry the labels GPB, SPB and CPB
+
+### Requirement: Current week
+The exercise chart SHALL mark the week of the macrocycle that contains
+today with a solid vertical line at that week's value, labelled "Current
+week" on top. The label SHALL be one row above the mesocycle and main
+competition labels, so they never overlap. Before the start and after the
+end of the macrocycle there SHALL be no such line or label.
+
+#### Scenario: During the macrocycle
+- **GIVEN** a 21-week macrocycle from Monday 2026-11-30
+- **WHEN** the view is opened on Wednesday 2027-01-06
+- **THEN** a solid line marks week 6 in the chart, with "Current week" above it in a row above the labels SPB and the competition's name
+
+#### Scenario: Before the start or after the end
+- **GIVEN** a 21-week macrocycle from Monday 2026-11-30
+- **WHEN** the view is opened on 2026-11-20 or on 2027-05-03
+- **THEN** no week is marked

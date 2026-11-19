@@ -85,7 +85,8 @@ function renderChart(
   );
 }
 
-const PLOT = { top: 28, height: 240 };
+// The current week (today in the cycle) adds a label row above the plot.
+const PLOT = { top: 44, height: 240 };
 // Width 800, margins 12 / 12 (no y-axis): 776 px up to the competition on
 // day 145 (Saturday of week 21), where the chart ends.
 const xOf = (index: number) => 12 + (776 / (145 / 7)) * index;
@@ -245,10 +246,25 @@ describe("ExerciseChart", () => {
     const line = container.querySelector("[data-current-week]")!;
     expect(line.getAttribute("data-current-week")).toBe("6");
     expect(Number(line.getAttribute("x1"))).toBeCloseTo(xOf(5), 5);
+    // "Current week" on top of the line, one row above the other labels.
+    const label = container.querySelector("[data-current-week-label]")!;
+    expect(label.textContent).toBe("Current week");
+    expect(Number(label.getAttribute("x"))).toBeCloseTo(xOf(5), 5);
+    expect(label.getAttribute("text-anchor")).toBe("middle");
+    const rowOf = (text: string) =>
+      [...container.querySelectorAll("svg text")]
+        .find((t) => t.textContent === text)!
+        .getAttribute("y");
+    expect(rowOf("SPB")).toBe(rowOf("German Championships"));
+    expect(Number(label.getAttribute("y"))).toBe(Number(rowOf("SPB")) - 16);
+    expect(Number(line.getAttribute("y1"))).toBe(PLOT.top);
     cleanup();
     for (const today of ["2026-11-20", "2027-05-03"]) {
       const view = renderChart({ today });
       expect(view.container.querySelector("[data-current-week]")).toBeNull();
+      expect(
+        view.container.querySelector("[data-current-week-label]"),
+      ).toBeNull();
       expect(screen.queryByText("Current week")).toBeNull();
       cleanup();
     }

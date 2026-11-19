@@ -10,6 +10,7 @@ import {
   CompetitionMarkerLine,
   CompetitionSwatch,
   competitionTail,
+  LABEL_CHAR,
   MesocycleStarts,
   tooltipPlacement,
   useCompetitionMarker,
@@ -122,8 +123,12 @@ export function WeekChart({
     week: number;
   } | null>(null);
 
-  const PLOT = { top: 28, height: plotHeight };
   const n = weeks.length;
+  const current =
+    today && weeks[0] ? currentWeekIndex(weeks[0].startDate, n, today) : null;
+  // The current week's label gets its own row above the block and
+  // competition labels, so they never overlap.
+  const PLOT = { top: current === null ? 28 : 44, height: plotHeight };
   const tail = competitionTail(competition?.date, weeks[0]?.startDate, n);
   const layout = weekLayout(width, n, 0, { yAxis: Boolean(yAxis), tail });
   const { x, column, margin, plotLeft, plotRight } = layout;
@@ -203,8 +208,6 @@ export function WeekChart({
     n,
     layout,
   );
-  const current =
-    today && weeks[0] ? currentWeekIndex(weeks[0].startDate, n, today) : null;
 
   function svgPoint(event: PointerEvent<SVGElement>) {
     const svg = event.currentTarget.ownerSVGElement!;
@@ -399,6 +402,14 @@ export function WeekChart({
               stroke="var(--chart-ink)"
               strokeWidth={2}
               className="pointer-events-none"
+            />
+          )}
+          {current !== null && (
+            <CurrentWeekLabel
+              x={x(current)}
+              y={PLOT.top - 24}
+              width={width}
+              text={tv("currentWeek")}
             />
           )}
           {/* One pink stroke; the gradient below fades downwards. */}
@@ -600,4 +611,40 @@ export function useWeekDate() {
       dateStyle: "medium",
       timeZone: "UTC",
     });
+}
+
+/**
+ * "Current week" above its line, one row above the block and competition
+ * labels; kept inside the chart at both ends.
+ */
+function CurrentWeekLabel({
+  x,
+  y,
+  width,
+  text,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  text: string;
+}) {
+  const half = (text.length * LABEL_CHAR) / 2;
+  const anchor = x - half < 0 ? "start" : x + half > width ? "end" : "middle";
+  return (
+    <text
+      data-current-week-label
+      x={
+        anchor === "start"
+          ? Math.max(0, x - 4)
+          : anchor === "end"
+            ? Math.min(width, x + 4)
+            : x
+      }
+      y={y}
+      textAnchor={anchor}
+      className="pointer-events-none fill-zinc-900 text-[11px] font-medium dark:fill-zinc-100"
+    >
+      {text}
+    </text>
+  );
 }
