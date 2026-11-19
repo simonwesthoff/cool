@@ -83,7 +83,7 @@ stays level SHALL show no warning.
 ### Requirement: Editing anchors
 In step 3 a click on the chart outside an anchor SHALL add an anchor.
 Inner anchors SHALL drag smoothly in all directions; a click on one, or
-dropping it horizontally close to a neighbour, SHALL remove it. The entry
+dragging it within half a week of a neighbour, SHALL remove it at once. The entry
 and end anchors SHALL move to whole weeks only; the entry value in whole
 percent (30–95 %), the end value always above it. While either is moved,
 its value SHALL be shown beside it. Neither can be removed. Changes SHALL
@@ -99,8 +99,8 @@ be saved on release.
 - **THEN** the anchor follows the pointer continuously and stays between weeks 8 and 9 after release (only the entry and end anchors snap to weeks)
 
 #### Scenario: Remove by click or edge
-- **WHEN** the coach clicks an inner anchor, or drops it right next to a neighbouring anchor (horizontally)
-- **THEN** the anchor is removed and the curve is recalculated without it; dropped elsewhere, also at the chart's edge, it only moves
+- **WHEN** the coach clicks an inner anchor, or drags it within half a week (horizontally) of a neighbouring anchor
+- **THEN** the anchor disappears at once, even before the pointer is released, and the curve is saved without it; dragged elsewhere, also to the chart's edge, it only moves
 
 #### Scenario: Entry anchor sets the entry value
 - **WHEN** the coach drags the entry anchor from 60 % up to 65.4 % and to between weeks 2 and 3

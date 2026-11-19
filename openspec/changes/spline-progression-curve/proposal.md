@@ -28,8 +28,9 @@ move and remove, with a smooth curve through them (adjustment 5 in
     anchor there.
   - **Drag:** all anchors drag smoothly in all directions, without
     snapping to weeks.
-  - **Remove:** clicking an inner anchor removes it, and so does dropping
-    it horizontally close to a neighbouring anchor (user decision).
+  - **Remove:** clicking an inner anchor removes it, and so does dragging
+    it within half a week (horizontally) of a neighbouring anchor: it
+    disappears at once, without releasing (user decision).
   - **Entry anchor:** its value *is* the entry value. Dragging it changes
     the macrocycle's entry value (30–95 %, one decimal), and changing the
     entry value in step 1 moves it.

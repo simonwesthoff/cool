@@ -92,8 +92,9 @@ See proposal.md - Why.
        position follows the pointer continuously (t from x, pct from y,
        clamped).
      - **Remove:** a pointerup without movement on an inner anchor removes
-       it, and so does a drop within 10 px (horizontally) of a neighbouring
-       anchor; the anchor fades while a drop would remove it.
+       it. While dragged, an inner anchor that comes within half a week
+       (horizontally) of a neighbour is removed and saved at once, and the
+       gesture ends.
      - **Entry anchor:** dragging it sets the entry value, clamped to 30–95
        and rounded to 0.1.
    - **Saving:** each finished gesture calls `onChange` once, and

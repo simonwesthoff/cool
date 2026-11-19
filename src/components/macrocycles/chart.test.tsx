@@ -1005,7 +1005,7 @@ describe("curve mode", () => {
     expect(curve.anchors[0].pct).toBeCloseTo(85, 0);
   });
 
-  it("removes an inner anchor by a click or by dropping it close to a neighbouring anchor", () => {
+  it("removes an inner anchor by a click", () => {
     const click = renderCurve(withAnchor);
     press(click.container.querySelector('[data-anchor="0"]')!, [
       xOfT(0.25),
@@ -1014,17 +1014,45 @@ describe("curve mode", () => {
     expect(click.onChange).toHaveBeenCalledWith(
       expect.objectContaining({ entryPct: 60, anchors: [] }),
     );
-    cleanup();
-    // Dropped 5 px to the right of the entry anchor (horizontally): removed.
-    const near = renderCurve(withAnchor);
-    press(
-      near.container.querySelector('[data-anchor="0"]')!,
-      [xOfT(0.25), yOf(90)],
-      [xOfT(0) + 5, yOf(80)],
+  });
+
+  it("removes an inner anchor as soon as it comes within half a week of a neighbour, before release", () => {
+    // 21 weeks: one week is 728 / 20 = 36.4 px, half a week 18.2 px.
+    const week = 728 / 20;
+    const { container, onChange } = renderCurve(withAnchor);
+    const anchor = container.querySelector('[data-anchor="0"]')!;
+    fireEvent.pointerDown(anchor, {
+      clientX: xOfT(0.25),
+      clientY: yOf(90),
+      pointerId: 1,
+    });
+    // 0.6 weeks right of the entry anchor: still there.
+    fireEvent.pointerMove(anchor, {
+      clientX: xOfT(0) + 0.6 * week,
+      clientY: yOf(80),
+      pointerId: 1,
+    });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-anchor="0"]')).toBeTruthy();
+    // 0.4 weeks: removed and saved at once, the pointer still down.
+    fireEvent.pointerMove(anchor, {
+      clientX: xOfT(0) + 0.4 * week,
+      clientY: yOf(80),
+      pointerId: 1,
+    });
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ anchors: [] }),
     );
-    expect(near.onChange.mock.calls[0]![0].anchors).toEqual([]);
-    cleanup();
-    // Dropped away from its neighbours: moved, not removed.
+    // Releasing afterwards saves nothing more.
+    fireEvent.pointerUp(anchor, {
+      clientX: xOfT(0) + 0.4 * week,
+      clientY: yOf(80),
+      pointerId: 1,
+    });
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("moves an inner anchor dropped away from its neighbours", () => {
     const far = renderCurve(withAnchor);
     press(
       far.container.querySelector('[data-anchor="0"]')!,
@@ -1034,26 +1062,6 @@ describe("curve mode", () => {
     const [moved] = far.onChange.mock.calls[0]!;
     expect(moved.anchors).toHaveLength(1);
     expect(moved.anchors[0].t).toBeCloseTo(0.4, 3);
-  });
-
-  it("fades an inner anchor while dropping it would remove it", () => {
-    const { container } = renderCurve(withAnchor);
-    const anchor = container.querySelector('[data-anchor="0"]')!;
-    fireEvent.pointerDown(anchor, {
-      clientX: xOfT(0.25),
-      clientY: yOf(90),
-      pointerId: 1,
-    });
-    fireEvent.pointerMove(anchor, {
-      clientX: xOfT(1) - 4,
-      clientY: yOf(95),
-      pointerId: 1,
-    });
-    expect(
-      container
-        .querySelector('[data-anchor="0"]')!
-        .hasAttribute("data-merging"),
-    ).toBe(true);
   });
 
   it("moves the entry anchor in any direction, within 30–95 %, and never removes it", () => {

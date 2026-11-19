@@ -104,8 +104,8 @@ export type CurveEditor = {
 
 /** Movement (px) that turns a press on an anchor into a drag. */
 const DRAG_THRESHOLD = 3;
-/** Dropping an inner anchor this close (px, horizontally) to a neighbour removes it. */
-const MERGE_DISTANCE = 10;
+/** An inner anchor this close (weeks, horizontally) to a neighbour is removed. */
+const MERGE_WEEKS = 0.5;
 /** Smallest distance between two handles' positions (the API's limit). */
 const MIN_GAP = 0.002;
 /** A handle of the curve mode: an inner anchor's index or an end anchor. */
@@ -315,18 +315,36 @@ export function WeekChart({
     };
   }
   /**
-   * Whether the inner anchor `index` is horizontally so close to a
-   * neighbouring handle that releasing it there removes it.
+   * Whether the inner anchor `index` is within half a week (horizontally)
+   * of a neighbouring handle: it is removed right away while dragged.
    */
   function mergesWithNeighbour(c: Curve, index: number) {
     const { entryT, endT } = endsOf(c);
     const own = c.anchors[index]!.t;
+    const halfWeek = MERGE_WEEKS / Math.max(n - 1, 1);
     const others = [
       entryT,
       endT,
       ...c.anchors.filter((_, i) => i !== index).map((a) => a.t),
     ];
-    return others.some((t) => Math.abs(xOfT(t) - xOfT(own)) < MERGE_DISTANCE);
+    return others.some((t) => Math.abs(t - own) < halfWeek);
+  }
+  /** Ends the gesture and saves the curve when it changed. */
+  function finishCurveGesture(next: Curve) {
+    setGesture(null);
+    setCurveDraft(null);
+    if (!curveEditor) return;
+    const sorted = {
+      ...next,
+      anchors: [...next.anchors].sort((a, b) => a.t - b.t),
+    };
+    const key = (c: Curve) =>
+      JSON.stringify([
+        c.entryPct,
+        endsOf(c),
+        [...c.anchors].sort((a, b) => a.t - b.t),
+      ]);
+    if (key(sorted) !== key(curveEditor.curve)) curveEditor.onChange(sorted);
   }
   function startCurveGesture(
     event: PointerEvent<SVGElement>,
@@ -385,43 +403,38 @@ export function WeekChart({
         endPct: roundTenth(clamp(valueAtY(p.y), curveDraft.entryPct + 1, 100)),
       });
     } else {
+      const index = gesture.anchor;
       const anchors = [...curveDraft.anchors];
-      anchors[gesture.anchor] = anchorAt(curveDraft, p.x, p.y);
-      setCurveDraft({ ...curveDraft, anchors });
+      anchors[index] = anchorAt(curveDraft, p.x, p.y);
+      const draft = { ...curveDraft, anchors };
+      // Close to a neighbouring handle: removed at once, without releasing.
+      if (mergesWithNeighbour(draft, index)) {
+        finishCurveGesture({
+          ...draft,
+          anchors: anchors.filter((_, i) => i !== index),
+        });
+        return;
+      }
+      setCurveDraft(draft);
     }
     if (!gesture.moved) setGesture({ ...gesture, moved: true });
   }
   function onCurveRelease() {
-    if (!gesture || !curveDraft || !curveEditor) return;
+    if (!gesture || !curveDraft) return;
     let next = curveDraft;
-    if (typeof gesture.anchor === "number") {
+    // A click on an existing inner anchor removes it.
+    if (
+      typeof gesture.anchor === "number" &&
+      !gesture.moved &&
+      !gesture.added
+    ) {
       const index = gesture.anchor;
-      // A click on an existing inner anchor, or dropping it close to a
-      // neighbouring handle, removes it.
-      const clicked = !gesture.moved && !gesture.added;
-      if (
-        clicked ||
-        (gesture.moved && mergesWithNeighbour(curveDraft, index))
-      ) {
-        next = {
-          ...curveDraft,
-          anchors: curveDraft.anchors.filter((_, i) => i !== index),
-        };
-      }
+      next = {
+        ...curveDraft,
+        anchors: curveDraft.anchors.filter((_, i) => i !== index),
+      };
     }
-    setGesture(null);
-    setCurveDraft(null);
-    const sorted = {
-      ...next,
-      anchors: [...next.anchors].sort((a, b) => a.t - b.t),
-    };
-    const key = (c: Curve) =>
-      JSON.stringify([
-        c.entryPct,
-        endsOf(c),
-        [...c.anchors].sort((a, b) => a.t - b.t),
-      ]);
-    if (key(sorted) !== key(curveEditor.curve)) curveEditor.onChange(sorted);
+    finishCurveGesture(next);
   }
   function cancelCurveGesture() {
     setGesture(null);
@@ -776,14 +789,6 @@ export function WeekChart({
               weekOf={(t) => 1 + t * (n - 1)}
               labels={curveEditor.labels}
               active={gesture?.moved ? gesture.anchor : null}
-              merging={
-                gesture?.moved &&
-                typeof gesture.anchor === "number" &&
-                shownCurve.anchors[gesture.anchor] &&
-                mergesWithNeighbour(shownCurve, gesture.anchor)
-                  ? gesture.anchor
-                  : null
-              }
               onPress={onCurvePress}
               onAnchorPress={(event, anchor) =>
                 startCurveGesture(event, anchor, false, curveEditor.curve)
@@ -940,8 +945,8 @@ export function useWeekDate() {
 /**
  * The anchors of the curve mode over a transparent area that adds anchors:
  * the entry and end anchors (movable in any direction, never removed, their
- * value shown while moved) and the inner anchors (free; faded while
- * dropping one would remove it).
+ * value shown while moved) and the inner anchors (free; removed as soon
+ * as one comes within half a week of a neighbour).
  */
 function CurveAnchors({
   curve,
@@ -955,7 +960,6 @@ function CurveAnchors({
   weekOf,
   labels,
   active,
-  merging,
   onPress,
   onAnchorPress,
   onMove,
@@ -975,7 +979,6 @@ function CurveAnchors({
   weekOf: (t: number) => number;
   labels: CurveEditor["labels"];
   active: CurveHandle | null;
-  merging: number | null;
   onPress: (event: PointerEvent<SVGRectElement>) => void;
   onAnchorPress: (event: PointerEvent<SVGElement>, anchor: CurveHandle) => void;
   onMove: (event: PointerEvent<SVGElement>) => void;
@@ -988,7 +991,7 @@ function CurveAnchors({
     onPointerUp: onRelease,
     onPointerCancel: onCancel,
   };
-  const dot = (cx: number, cy: number, big: boolean, faded = false) => (
+  const dot = (cx: number, cy: number, big: boolean) => (
     <circle
       cx={cx}
       cy={cy}
@@ -996,7 +999,6 @@ function CurveAnchors({
       fill={paint}
       stroke="var(--surface)"
       strokeWidth={2}
-      opacity={faded ? 0.35 : 1}
     />
   );
   const outer = (
@@ -1060,7 +1062,6 @@ function CurveAnchors({
           data-anchor={i}
           data-t={a.t}
           data-pct={a.pct}
-          data-merging={merging === i || undefined}
           role="img"
           aria-label={labels.anchor(Math.round(weekOf(a.t) * 10) / 10, a.pct)}
           className="cursor-move"
@@ -1068,7 +1069,7 @@ function CurveAnchors({
           {...handlers}
         >
           <circle cx={xOfT(a.t)} cy={y(a.pct)} r={14} fill="transparent" />
-          {dot(xOfT(a.t), y(a.pct), active === i, merging === i)}
+          {dot(xOfT(a.t), y(a.pct), active === i)}
         </g>
       ))}
       {outer("end", endT, endPct, labels.end(endPct))}

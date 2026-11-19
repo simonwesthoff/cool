@@ -277,7 +277,7 @@
       "saveFailed": "The change could not be saved. Please try again.",
       "continue": "Continue to exercises",
       "back": "Back to SWOT",
-      "helpCurve": "Shape the progression curve: click into the chart to add an anchor, drag anchors freely, and click one or drop it close to a neighbouring anchor to remove it. The first and last anchors set the entry and end value; moved inwards, the curve stays level before and after them. Each change is saved.",
+      "helpCurve": "Shape the progression curve: click into the chart to add an anchor and drag anchors freely; click one, or drag it within half a week of a neighbouring anchor, to remove it. The first and last anchors set the entry and end value; moved inwards, the curve stays level before and after them. Each change is saved.",
       "continueToWeeks": "Continue to weeks",
       "backToCurve": "Back to curve",
       "dipWarning": "The curve shouldn't dip. You can set high and low weeks in the next step."
