@@ -103,3 +103,31 @@ export function currentWeekIndex(
   const index = Math.floor(days / 7);
   return index < weekCount ? index : null;
 }
+
+/**
+ * A smooth SVG path through the points that never overshoots them
+ * (monotone cubic, Fritsch–Butland tangents): rises and falls stay where
+ * the values are. A single point becomes a dot (with a round line cap).
+ */
+export function smoothPath(points: { x: number; y: number }[]): string {
+  const p = points;
+  if (p.length === 0) return "";
+  const f = (v: number) => v.toFixed(1);
+  if (p.length === 1) return `M${f(p[0]!.x)},${f(p[0]!.y)} l0.01,0`;
+  const slope = p.slice(1).map((b, i) => (b.y - p[i]!.y) / (b.x - p[i]!.x));
+  const tangent = p.map((_, i) => {
+    if (i === 0) return slope[0]!;
+    if (i === p.length - 1) return slope[i - 1]!;
+    const a = slope[i - 1]!;
+    const b = slope[i]!;
+    return a * b <= 0 ? 0 : (2 * a * b) / (a + b);
+  });
+  let d = `M${f(p[0]!.x)},${f(p[0]!.y)}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const a = p[i]!;
+    const b = p[i + 1]!;
+    const h = (b.x - a.x) / 3;
+    d += ` C${f(a.x + h)},${f(a.y + tangent[i]! * h)} ${f(b.x - h)},${f(b.y - tangent[i + 1]! * h)} ${f(b.x)},${f(b.y)}`;
+  }
+  return d;
+}

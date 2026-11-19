@@ -2,6 +2,30 @@
 
 ## MODIFIED Requirements
 
+### Requirement: Macrocycle entry point
+The macrocycle section of the athlete details page SHALL be the same as on
+the athlete's "My training" page: the macrocycle view's exercise chart
+(snatch, best value, with the mesocycle start lines, main competition
+and current week), and below it, aligned to the right, an "Open macrocycle" button that
+opens the macrocycle view. Changing the planning is offered in the
+macrocycle view. Without a macrocycle the coach SHALL get a "Plan
+macrocycle" card instead.
+
+#### Scenario: No macrocycle yet
+- **GIVEN** an athlete without a macrocycle
+- **WHEN** the coach opens the athlete's details page
+- **THEN** they see "Plan macrocycle", which opens step 1 of the planning
+
+#### Scenario: Planned macrocycle
+- **GIVEN** an athlete with a macrocycle from 2026-11-30 for 21 weeks towards the "German Championships" on 2027-04-24
+- **WHEN** the coach opens the athlete's details page
+- **THEN** they see the chart of the snatch's best value with 80 kg in week 11, and below it on the right the "Open macrocycle" button
+
+#### Scenario: Open the macrocycle view
+- **GIVEN** an athlete with a macrocycle
+- **WHEN** the coach chooses "Open macrocycle" on the athlete's details page
+- **THEN** the macrocycle view opens, which offers "Change planning"
+
 ### Requirement: Training week entry points
 The athlete page SHALL have a "Training week" section below the macrocycle
 with the current week (see the week view). For whoever leads the athlete's

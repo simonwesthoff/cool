@@ -56,11 +56,15 @@ export function weekLayout(
   width: number,
   weekCount: number,
   extraRight = 0,
+  /** Without a y-axis the plot starts near the left edge. */
+  { yAxis = true }: { yAxis?: boolean } = {},
 ): WeekLayout {
   const narrow = width < 500;
-  const margin = narrow
-    ? { left: 44, right: 10 + extraRight }
-    : { left: 56, right: 16 + extraRight };
+  const margin = !yAxis
+    ? { left: 12, right: 12 + extraRight }
+    : narrow
+      ? { left: 44, right: 10 + extraRight }
+      : { left: 56, right: 16 + extraRight };
   const column = (width - margin.left - margin.right) / Math.max(weekCount, 1);
   const x = (index: number) => margin.left + column * index;
   return {
@@ -211,6 +215,57 @@ export function MesocycleBands({
               clearOfMarker(marker, x(m.firstWeek - 1) + 4, label) && (
                 <text
                   x={x(m.firstWeek - 1) + 4}
+                  y={plot.top - 8}
+                  className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
+                >
+                  {label}
+                </text>
+              )}
+          </g>
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * A thin vertical line where each mesocycle starts, with its abbreviation
+ * above the plot; no colours (minimal exercise chart).
+ */
+export function MesocycleStarts({
+  mesocycles,
+  layout,
+  plot,
+  marker,
+}: {
+  mesocycles: ChartMesocycle[];
+  layout: WeekLayout;
+  plot: Plot;
+  marker: CompetitionMarker | null;
+}) {
+  const tm = useTranslations("Macrocycle.mesocycles");
+  const { x, column } = layout;
+  return (
+    <>
+      {mesocycles.map((m) => {
+        const label = tm(`abbr.${m.type}`);
+        const start = x(m.firstWeek - 1);
+        const blockWidth = column * (m.lastWeek - m.firstWeek + 1);
+        return (
+          <g key={m.type} data-block-start={m.firstWeek}>
+            <line
+              x1={start}
+              x2={start}
+              y1={plot.top}
+              y2={plot.top + plot.height}
+              stroke="var(--chart-ink)"
+              strokeOpacity={0.25}
+              strokeWidth={1}
+            />
+            {fitsLabel(label, blockWidth) &&
+              clearOfMarker(marker, start + 4, label) && (
+                <text
+                  x={start + 4}
                   y={plot.top - 8}
                   className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
                 >

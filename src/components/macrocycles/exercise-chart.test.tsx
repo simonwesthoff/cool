@@ -86,8 +86,8 @@ function renderChart(
 }
 
 const PLOT = { top: 28, height: 240 };
-// Width 800, margins 56 / 16: 728 px for 21 weeks.
-const xOf = (index: number) => 56 + (728 / 21) * index;
+// Width 800, margins 12 / 12 (no y-axis): 776 px for 21 weeks.
+const xOf = (index: number) => 12 + (776 / 21) * index;
 const pointOf = (container: HTMLElement, week: number) =>
   container.querySelector(`[data-curve] [data-point="${week}"]`);
 const yOf = (d: { min: number; max: number }, v: number) =>
@@ -104,26 +104,54 @@ describe("ExerciseChart", () => {
     });
   });
 
-  it("draws only the selected value as one white curve on a kg axis without a unit title", () => {
+  it("draws only the selected value as one smooth pink curve with a fading gradient, without a y-axis or point handles", () => {
     const { container } = renderChart();
     expect(container.querySelectorAll("[data-curve]")).toHaveLength(1);
     expect(
       container.querySelector("[data-curve]")!.getAttribute("data-curve"),
     ).toBe("bestKg");
-    expect(container.querySelector("[data-line]")!.getAttribute("class")).toBe(
-      "stroke-white",
-    );
-    const kg = niceDomain(snatch.map((w) => w.bestKg!));
-    const dot = pointOf(container, 11)!.querySelectorAll("circle")[1]!;
-    expect(Number(dot.getAttribute("cy"))).toBeCloseTo(yOf(kg, 80), 5);
-    expect(Number(dot.getAttribute("cx"))).toBeCloseTo(xOf(10), 5);
+    const line = container.querySelector("[data-line]")!;
+    expect(line.getAttribute("stroke")).toBe("var(--chart-curve)");
+    // Smoothed: cubic segments, no straight ones.
+    expect(line.getAttribute("d")).toMatch(/^M[\d.]+,[\d.]+ C/);
+    expect(line.getAttribute("d")).not.toContain("L");
+    // Only one stroke: no halo, no dots.
+    expect(container.querySelectorAll("[data-curve] path")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-curve] circle")).toHaveLength(0);
+    // The area below fades downwards in the same colour.
+    const area = container.querySelector("[data-area]")!;
+    const gradient = container.querySelector(
+      area.getAttribute("fill")!.slice(4, -1).replace(/:/g, "\\:"),
+    )!;
+    expect(gradient.getAttribute("y2")).toBe("1");
     expect(
-      [...container.querySelectorAll("[data-axis]")].map((t) =>
-        Number(t.textContent),
-      ),
-    ).toEqual(kg.ticks);
-    // No unit written next to the axis.
+      [...gradient.querySelectorAll("stop")].map((stop) => [
+        stop.getAttribute("stop-color"),
+        stop.getAttribute("stop-opacity"),
+      ]),
+    ).toEqual([
+      ["var(--chart-curve)", "0.3"],
+      ["var(--chart-curve)", "0"],
+    ]);
+    // Week 11 at 80 kg, on the line's path.
+    const kg = niceDomain(snatch.map((w) => w.bestKg!));
+    expect(line.getAttribute("d")).toContain(
+      `${xOf(10).toFixed(1)},${yOf(kg, 80).toFixed(1)}`,
+    );
+    expect(pointOf(container, 11)!.getAttribute("data-value")).toBe("80");
+    // No y-axis values or grid.
+    expect(container.querySelectorAll("[data-axis]")).toHaveLength(0);
     expect(container.querySelector("[data-axis-title]")).toBeNull();
+  });
+
+  it("shows a dot only on the hovered week", () => {
+    const { container } = renderChart();
+    fireEvent.pointerEnter(container.querySelector('rect[data-week="11"]')!);
+    const dots = container.querySelectorAll("[data-curve] circle");
+    expect(dots).toHaveLength(1);
+    expect(dots[0]!.closest("[data-point]")!.getAttribute("data-point")).toBe(
+      "11",
+    );
   });
 
   it("uses a reps axis from 0 for set size and weekly reps", () => {
@@ -134,11 +162,9 @@ describe("ExerciseChart", () => {
     );
     expect(reps.min).toBe(0);
     expect(pointOf(container, 11)!.getAttribute("data-value")).toBe("20");
-    expect(
-      [...container.querySelectorAll("[data-axis]")].map((t) =>
-        Number(t.textContent),
-      ),
-    ).toEqual(reps.ticks);
+    expect(container.querySelector("[data-line]")!.getAttribute("d")).toContain(
+      `,${yOf(reps, 20).toFixed(1)}`,
+    );
   });
 
   it("has the mesocycles, competition and current week in the legend, and only week numbers on the x-axis", () => {
@@ -155,11 +181,19 @@ describe("ExerciseChart", () => {
       "Main competition",
       "Current week",
     ]);
-    const bands = container.querySelectorAll("svg[role=group] > g > rect");
-    expect([0, 1, 2].map((i) => bands[i]!.getAttribute("fill"))).toEqual([
-      "var(--band-1)",
-      "var(--band-2)",
-      "var(--band-3)",
+    // No coloured bands: a thin line where each block starts.
+    expect(container.querySelectorAll("rect[fill^='var(--band']")).toHaveLength(
+      0,
+    );
+    expect(
+      [...container.querySelectorAll("[data-block-start]")].map((g) => [
+        g.getAttribute("data-block-start"),
+        Number(g.querySelector("line")!.getAttribute("x1")),
+      ]),
+    ).toEqual([
+      ["1", xOf(0)],
+      ["4", xOf(3)],
+      ["14", xOf(13)],
     ]);
     const texts = [...container.querySelectorAll("svg text")].map(
       (t) => t.textContent,
@@ -177,6 +211,10 @@ describe("ExerciseChart", () => {
       container.querySelector("[data-line]")!.getAttribute("d")!.match(/M/g),
     ).toHaveLength(2);
     expect(pointOf(container, 5)).toBeNull();
+    // The gradient breaks there too.
+    expect(
+      container.querySelector("[data-area]")!.getAttribute("d")!.match(/Z/g),
+    ).toHaveLength(2);
   });
 
   it("shows the selected value, the week and its block in the tooltip", () => {

@@ -91,3 +91,11 @@ Out of scope:
     read-only table component sharing the editor table's widths).
   - **Week editor:** shows the feedback read-only.
 - **Messages:** English and German; a glossary entry for "Feedback".
+
+## Acceptance feedback: minimal exercise chart
+
+- The exercise chart on the athlete page and in the macrocycle view drops
+  the mesocycle colours and the y-axis: a thin line at each block start,
+  one smoothed pink curve (#ba2db3) with a gradient fading downwards
+  (user decision). The planning chart keeps its bands for now.
+

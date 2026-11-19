@@ -7,10 +7,9 @@ import type {
   MacrocycleWeekView,
 } from "@/domain/macrocycles/macrocycle-types";
 import {
-  BandSwatch,
   CompetitionMarkerLine,
   CompetitionSwatch,
-  MesocycleBands,
+  MesocycleStarts,
   tooltipPlacement,
   useCompetitionMarker,
   useContainerWidth,
@@ -18,7 +17,7 @@ import {
   weekLayout,
   type ChartMesocycle,
 } from "./chart-frame";
-import { currentWeekIndex, niceDomain } from "./chart-geometry";
+import { currentWeekIndex, niceDomain, smoothPath } from "./chart-geometry";
 
 /** The planned values the chart can draw, with their unit. */
 export const VALUES = [
@@ -50,8 +49,9 @@ const X_AXIS = 28;
 const TOOLTIP = { width: 208, height: 84, gap: 10 };
 
 /**
- * Read-only chart of one planned value of one exercise for every week, as
- * a single curve on one y-axis over the mesocycle bands (macrocycle view).
+ * Read-only chart of one planned value of one exercise for every week:
+ * one smooth pink curve with a gradient fading downwards, a thin line where
+ * each mesocycle starts, and no y-axis (minimal, user decision).
  */
 export function ExerciseChart({
   weeks,
@@ -70,8 +70,9 @@ export function ExerciseChart({
   const [hovered, setHovered] = useState<number | null>(null);
 
   const n = weeks.length;
-  const layout = weekLayout(width, n);
-  const { x, plotLeft, plotRight, column } = layout;
+  const layout = weekLayout(width, n, 0, { yAxis: false });
+  const { x, column } = layout;
+  const gradientId = useId();
   const height = PLOT.top + PLOT.height + X_AXIS;
   const unit = VALUES.find((v) => v.key === value)!.unit;
   const byWeek = new Map(values.map((v) => [v.number, v[value]]));
@@ -84,8 +85,8 @@ export function ExerciseChart({
   const y = (v: number) =>
     PLOT.top + PLOT.height * (1 - (v - domain.min) / (domain.max - domain.min));
 
-  // Points shrink with narrow columns, so many weeks still fit side by side.
-  const radius = Math.min(4.5, Math.max(2.5, column * 0.3));
+  // The dot on the hovered week (there are no point handles otherwise).
+  const radius = Math.min(4.5, Math.max(3, column * 0.3));
   const showWeekLabel = weekLabelShown(mesocycles, layout.every);
   const marker = useCompetitionMarker(
     competition,
@@ -97,19 +98,28 @@ export function ExerciseChart({
     ? currentWeekIndex(weeks[0].startDate, n, today)
     : null;
 
-  // The curve, broken where a week has no value.
-  let path = "";
-  let open = false;
+  // The curve, broken where a week has no value: one run per stretch.
+  const runs: { x: number; y: number }[][] = [];
+  let run: { x: number; y: number }[] | null = null;
   weeks.forEach((w, i) => {
     const v = valueOf(w.number);
     if (v === null) {
-      open = false;
+      run = null;
       return;
     }
-    path += `${open ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)} `;
-    open = true;
+    if (!run) runs.push((run = []));
+    run.push({ x: x(i), y: y(v) });
   });
-  path = path.trim();
+  const path = runs.map(smoothPath).join(" ");
+  // The area below each run, down to the bottom of the plot.
+  const bottom = PLOT.top + PLOT.height;
+  const area = runs
+    .filter((r) => r.length > 1)
+    .map(
+      (r) =>
+        `${smoothPath(r)} L${r.at(-1)!.x.toFixed(1)},${bottom} L${r[0]!.x.toFixed(1)},${bottom} Z`,
+    )
+    .join(" ");
 
   const valueText = (v: number | null) =>
     v === null
@@ -140,11 +150,8 @@ export function ExerciseChart({
       </figcaption>
       {/* Legend hidden for now (user decision); screen readers keep it. */}
       <ul className="sr-only" aria-label={t("legend")}>
-        {mesocycles.map((m, i) => (
-          <li key={m.type} className="flex items-center gap-2">
-            <BandSwatch index={i} />
-            {tm(m.type)}
-          </li>
+        {mesocycles.map((m) => (
+          <li key={m.type}>{tm(m.type)}</li>
         ))}
         {marker && (
           <li className="flex items-center gap-2">
@@ -180,34 +187,31 @@ export function ExerciseChart({
           aria-label={caption}
           className="block select-none"
         >
-          <MesocycleBands
+          <defs>
+            <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+              <stop
+                offset="0"
+                stopColor="var(--chart-curve)"
+                stopOpacity={0.3}
+              />
+              <stop offset="1" stopColor="var(--chart-curve)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <MesocycleStarts
             mesocycles={mesocycles}
             layout={layout}
             plot={PLOT}
             marker={marker}
           />
-          {domain.ticks.map((tick) => (
-            <g key={tick}>
-              <line
-                x1={plotLeft}
-                x2={plotRight}
-                y1={y(tick)}
-                y2={y(tick)}
-                stroke="var(--chart-ink)"
-                strokeOpacity={0.12}
-              />
-              <text
-                data-axis
-                x={plotLeft - 6}
-                y={y(tick)}
-                textAnchor="end"
-                dominantBaseline="middle"
-                className="fill-zinc-500 text-[11px] tabular-nums"
-              >
-                {format.number(tick)}
-              </text>
-            </g>
-          ))}
+          <line
+            data-baseline
+            x1={layout.plotLeft}
+            x2={layout.plotRight - column}
+            y1={bottom}
+            y2={bottom}
+            stroke="var(--chart-ink)"
+            strokeOpacity={0.25}
+          />
           {weeks.map(
             (w, i) =>
               showWeekLabel(w.number) && (
@@ -235,22 +239,14 @@ export function ExerciseChart({
               className="pointer-events-none"
             />
           )}
-          {/* White curve with a dark halo, readable on every band colour. */}
+          {/* One pink stroke, no point handles; the gradient fades downwards. */}
           <g data-curve={value} opacity={dimmed ? 0.35 : 1}>
-            <path
-              d={path}
-              fill="none"
-              stroke="var(--chart-halo)"
-              strokeOpacity={0.85}
-              strokeWidth={5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
+            <path data-area d={area} fill={`url(#${gradientId})`} />
             <path
               data-line
               d={path}
               fill="none"
-              className="stroke-white"
+              stroke="var(--chart-curve)"
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -258,21 +254,18 @@ export function ExerciseChart({
             {weeks.map((w, i) => {
               const v = valueOf(w.number);
               if (v === null) return null;
-              const active = hovered === w.number;
               return (
                 <g key={w.number} data-point={w.number} data-value={v}>
-                  <circle
-                    cx={x(i)}
-                    cy={y(v)}
-                    r={(active ? radius + 1.5 : radius) + 2.5}
-                    fill="var(--chart-halo)"
-                  />
-                  <circle
-                    cx={x(i)}
-                    cy={y(v)}
-                    r={active ? radius + 1.5 : radius}
-                    className="fill-white"
-                  />
+                  {hovered === w.number && (
+                    <circle
+                      cx={x(i)}
+                      cy={y(v)}
+                      r={radius}
+                      fill="var(--chart-curve)"
+                      stroke="var(--surface)"
+                      strokeWidth={2}
+                    />
+                  )}
                 </g>
               );
             })}
