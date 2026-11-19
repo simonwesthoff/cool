@@ -2,6 +2,7 @@
 import { sql } from "drizzle-orm";
 import {
   date,
+  doublePrecision,
   jsonb,
   numeric,
   pgEnum,
@@ -46,6 +47,11 @@ export const macrocycle = pgTable("macrocycle", {
     .$type<{ t: number; pct: number }[]>()
     .notNull()
     .default(sql`'[]'::jsonb`),
+  /** Position (0..1) of the curve's entry anchor; its value is the entry value. */
+  curveEntryT: doublePrecision("curve_entry_t").notNull().default(0),
+  /** Value and position of the curve's end anchor. */
+  curveEndPct: pct("curve_end_pct").notNull().default(100),
+  curveEndT: doublePrecision("curve_end_t").notNull().default(1),
   snatchBestKg: kg("snatch_best_kg").notNull(),
   cleanAndJerkBestKg: kg("clean_and_jerk_best_kg").notNull(),
   snatchGoalKg: kg("snatch_goal_kg").notNull(),

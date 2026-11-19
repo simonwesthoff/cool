@@ -93,7 +93,7 @@ export function MacrocycleChart({
             entry: (value) => t("anchorEntry", { value: pct(value) }),
             anchor: (week, value) =>
               t("anchor", { week: format.number(week), value: pct(value) }),
-            end: t("anchorEnd", { value: pct(100) }),
+            end: (value) => t("anchorEnd", { value: pct(value) }),
           },
         }
       }

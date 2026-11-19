@@ -46,10 +46,30 @@ export function curveShape(t: number): number {
 export type CurveAnchor = { t: number; pct: number };
 
 /**
- * The progression curve: from the entry value (week 1) through the inner
- * anchors to 100 % (last week). Inner anchors have 0 < t < 1.
+ * The progression curve: from the entry anchor through the inner anchors to
+ * the end anchor. By default the entry anchor is in the first week (t = 0)
+ * and the end anchor at 100 % in the last week (t = 1); both can be moved.
+ * Inner anchors lie strictly between them. Before the entry anchor and
+ * after the end anchor the curve stays level.
  */
-export type Curve = { entryPct: number; anchors: CurveAnchor[] };
+export type Curve = {
+  entryPct: number;
+  anchors: CurveAnchor[];
+  /** Position of the entry anchor (default 0). */
+  entryT?: number;
+  /** Value and position of the end anchor (default 100 % at 1). */
+  endPct?: number;
+  endT?: number;
+};
+
+/** The curve's end anchors with their defaults. */
+export function curveEnds(curve: Curve) {
+  return {
+    entryT: curve.entryT ?? 0,
+    endT: curve.endT ?? 1,
+    endPct: curve.endPct ?? 100,
+  };
+}
 
 /** A curve, or just an entry value (0..1) for the straight line to 100 %. */
 type CurveInput = Curve | number;
@@ -92,15 +112,18 @@ function naturalSpline(xs: number[], ys: number[]): (x: number) => number {
 
 /**
  * The progression curve's value (1 = 100 %) at cycle progress t: a natural
- * cubic spline through the entry value, the inner anchors and 100 %,
- * capped to 0–100 %.
+ * cubic spline through the entry anchor, the inner anchors and the end
+ * anchor, level before the entry and after the end anchor, capped to
+ * 0–100 %.
  */
 export function curveValue(curve: CurveInput, t: number): number {
-  const { entryPct, anchors } = asCurve(curve);
-  const inner = [...anchors].sort((a, b) => a.t - b.t);
-  const xs = [0, ...inner.map((a) => a.t), 1];
-  const ys = [entryPct, ...inner.map((a) => a.pct), 100];
-  const value = naturalSpline(xs, ys)(Math.min(1, Math.max(0, t)));
+  const c = asCurve(curve);
+  const { entryT, endT, endPct } = curveEnds(c);
+  const inner = [...c.anchors].sort((a, b) => a.t - b.t);
+  const xs = [entryT, ...inner.map((a) => a.t), endT];
+  const ys = [c.entryPct, ...inner.map((a) => a.pct), endPct];
+  const at = Math.min(endT, Math.max(entryT, t));
+  const value = naturalSpline(xs, ys)(at);
   return Math.min(100, Math.max(0, value)) / 100;
 }
 

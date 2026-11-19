@@ -82,8 +82,9 @@ See proposal.md - Why.
    chart to curve mode.
    - **Drawing:** the curve is sampled densely (every 2 px) from
      `curveValue`, so it is the real spline, not the week points. The
-     anchors are pink circles with a surface ring: the entry anchor drags
-     only vertically, and the end anchor is drawn but inert.
+     anchors are pink circles with a surface ring. The entry and end anchors
+     move in any direction, stay before or after the inner anchors, and show
+     their value as text while moved.
    - **Gestures** (pointer events with capture, like the week handles):
      - **Add:** pointerdown on the plot outside an anchor adds an anchor
        at the pointer.
@@ -91,8 +92,8 @@ See proposal.md - Why.
        position follows the pointer continuously (t from x, pct from y,
        clamped).
      - **Remove:** a pointerup without movement on an inner anchor removes
-       it, and so does a pointerup within 8 px of the plot's left or right
-       edge.
+       it, and so does a drop within 10 px (horizontally) of a neighbouring
+       anchor; the anchor fades while a drop would remove it.
      - **Entry anchor:** dragging it sets the entry value, clamped to 30–95
        and rounded to 0.1.
    - **Saving:** each finished gesture calls `onChange` once, and
@@ -112,8 +113,9 @@ See proposal.md - Why.
 
 ## Domain model changes
 
-`Macrocycle` gains `curveAnchors` — the inner Anchors of its Progression
-curve (the entry anchor is `entryValuePct`, the end anchor is 100 %):
+`Macrocycle` gains `curveAnchors` (the inner Anchors of its Progression
+curve) and the end anchors' positions and end value (the entry anchor's
+value is `entryValuePct`):
 
 ```mermaid
 erDiagram
@@ -123,6 +125,9 @@ erDiagram
         int durationWeeks
         decimal entryValuePct
         json curveAnchors
+        decimal curveEntryT
+        decimal curveEndPct
+        decimal curveEndT
     }
 ```
 

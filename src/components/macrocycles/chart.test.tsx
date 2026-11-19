@@ -22,6 +22,7 @@ import {
   cycleProgress,
   intensity,
   splitMesocycles,
+  type Curve,
 } from "@/domain/macrocycles/calculation";
 import type {
   Macrocycle,
@@ -872,10 +873,7 @@ describe("curve mode", () => {
   const xOfT = (t: number) => 56 + 728 * t;
   const height = 220 * (800 / 960);
   const yOf = (pct: number) => 28 + height * (1 - pct / 110);
-  const renderCurve = (
-    curve: { entryPct: number; anchors: { t: number; pct: number }[] },
-    onChange = vi.fn(),
-  ) => {
+  const renderCurve = (curve: Curve, onChange = vi.fn()) => {
     const view = renderIn(
       <MacrocycleChart
         weeks={makeWeeks()}
@@ -914,7 +912,7 @@ describe("curve mode", () => {
       [...container.querySelectorAll("[data-anchor]")].map((a) =>
         a.getAttribute("aria-label"),
       ),
-    ).toEqual(["Entry value 60%", "Anchor at week 6: 90%", "End 100%"]);
+    ).toEqual(["Entry value 60%", "Anchor at week 6: 90%", "End value 100%"]);
     expect(container.querySelector("[data-border]")).toBeNull();
     expect(container.querySelector("[data-point]")).toBeNull();
     // The curve is the spline itself: it passes the anchor.
@@ -947,29 +945,67 @@ describe("curve mode", () => {
     expect(curve.anchors[0].pct).toBeCloseTo(85, 0);
   });
 
-  it("removes an inner anchor by a click or by dragging it to an edge", () => {
+  it("removes an inner anchor by a click or by dropping it close to a neighbouring anchor", () => {
     const click = renderCurve(withAnchor);
     press(click.container.querySelector('[data-anchor="0"]')!, [
       xOfT(0.25),
       yOf(90),
     ]);
-    expect(click.onChange).toHaveBeenCalledWith({ entryPct: 60, anchors: [] });
-    cleanup();
-    const edge = renderCurve(withAnchor);
-    press(
-      edge.container.querySelector('[data-anchor="0"]')!,
-      [xOfT(0.25), yOf(90)],
-      [790, yOf(90)],
+    expect(click.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ entryPct: 60, anchors: [] }),
     );
-    expect(edge.onChange).toHaveBeenCalledWith({ entryPct: 60, anchors: [] });
+    cleanup();
+    // Dropped 5 px to the right of the entry anchor (horizontally): removed.
+    const near = renderCurve(withAnchor);
+    press(
+      near.container.querySelector('[data-anchor="0"]')!,
+      [xOfT(0.25), yOf(90)],
+      [xOfT(0) + 5, yOf(80)],
+    );
+    expect(near.onChange.mock.calls[0]![0].anchors).toEqual([]);
+    cleanup();
+    // Dropped away from its neighbours: moved, not removed.
+    const far = renderCurve(withAnchor);
+    press(
+      far.container.querySelector('[data-anchor="0"]')!,
+      [xOfT(0.25), yOf(90)],
+      [xOfT(0.4), yOf(80)],
+    );
+    const [moved] = far.onChange.mock.calls[0]!;
+    expect(moved.anchors).toHaveLength(1);
+    expect(moved.anchors[0].t).toBeCloseTo(0.4, 3);
   });
 
-  it("moves the entry anchor only up and down, within 30–95 %, and never removes it", () => {
-    const up = renderCurve(line);
-    const entry = () => up.container.querySelector('[data-anchor="entry"]')!;
-    press(entry(), [xOfT(0), yOf(60)], [xOfT(0.3), yOf(65)]);
-    const [curve] = up.onChange.mock.calls[0]!;
+  it("fades an inner anchor while dropping it would remove it", () => {
+    const { container } = renderCurve(withAnchor);
+    const anchor = container.querySelector('[data-anchor="0"]')!;
+    fireEvent.pointerDown(anchor, {
+      clientX: xOfT(0.25),
+      clientY: yOf(90),
+      pointerId: 1,
+    });
+    fireEvent.pointerMove(anchor, {
+      clientX: xOfT(1) - 4,
+      clientY: yOf(95),
+      pointerId: 1,
+    });
+    expect(
+      container
+        .querySelector('[data-anchor="0"]')!
+        .hasAttribute("data-merging"),
+    ).toBe(true);
+  });
+
+  it("moves the entry anchor in any direction, within 30–95 %, and never removes it", () => {
+    const moved = renderCurve(line);
+    press(
+      moved.container.querySelector('[data-anchor="entry"]')!,
+      [xOfT(0), yOf(60)],
+      [xOfT(0.3), yOf(65)],
+    );
+    const [curve] = moved.onChange.mock.calls[0]!;
     expect(curve.entryPct).toBeCloseTo(65, 0);
+    expect(curve.entryT).toBeCloseTo(0.3, 3);
     expect(curve.anchors).toEqual([]);
     cleanup();
     const low = renderCurve(line);
@@ -989,13 +1025,106 @@ describe("curve mode", () => {
     expect(clicked.onChange).not.toHaveBeenCalled();
   });
 
-  it("keeps the end anchor fixed and adds nothing there", () => {
+  it("moves the end anchor in any direction and never removes it", () => {
     const { container, onChange } = renderCurve(line);
     press(
       container.querySelector('[data-anchor="end"]')!,
       [xOfT(1), yOf(100)],
-      [xOfT(0.8), yOf(70)],
+      [xOfT(0.8), yOf(95)],
     );
-    expect(onChange).not.toHaveBeenCalled();
+    const [curve] = onChange.mock.calls[0]!;
+    expect(curve.endT).toBeCloseTo(0.8, 3);
+    expect(curve.endPct).toBeCloseTo(95, 0);
+    cleanup();
+    const clicked = renderCurve(line);
+    press(clicked.container.querySelector('[data-anchor="end"]')!, [
+      xOfT(1),
+      yOf(100),
+    ]);
+    expect(clicked.onChange).not.toHaveBeenCalled();
+  });
+
+  it("shows the value next to an outer anchor while it is moved", () => {
+    const { container } = renderCurve(line);
+    const end = container.querySelector('[data-anchor="end"]')!;
+    expect(container.querySelector("[data-anchor-value]")).toBeNull();
+    fireEvent.pointerDown(end, {
+      clientX: xOfT(1),
+      clientY: yOf(100),
+      pointerId: 1,
+    });
+    fireEvent.pointerMove(end, {
+      clientX: xOfT(0.9),
+      clientY: yOf(95),
+      pointerId: 1,
+    });
+    expect(container.querySelector("[data-anchor-value]")!.textContent).toMatch(
+      /^End value 9[45](\.\d)?%$/,
+    );
+    fireEvent.pointerUp(end, {
+      clientX: xOfT(0.9),
+      clientY: yOf(95),
+      pointerId: 1,
+    });
+    expect(container.querySelector("[data-anchor-value]")).toBeNull();
+    cleanup();
+    const view = renderCurve(line);
+    const entry = view.container.querySelector('[data-anchor="entry"]')!;
+    fireEvent.pointerDown(entry, {
+      clientX: xOfT(0),
+      clientY: yOf(60),
+      pointerId: 1,
+    });
+    fireEvent.pointerMove(entry, {
+      clientX: xOfT(0.1),
+      clientY: yOf(70),
+      pointerId: 1,
+    });
+    expect(
+      view.container.querySelector("[data-anchor-value]")!.textContent,
+    ).toMatch(/^Entry value (69|70)(\.\d)?%$/);
+  });
+
+  it("continues to the competition at the end value, not at 100 %", () => {
+    const view = renderIn(
+      <MacrocycleChart
+        weeks={makeWeeks()}
+        mesocycles={mesocycles}
+        competition={{ date: "2027-04-24", type: "German Championships" }}
+        curveEditor={{
+          curve: { entryPct: 60, anchors: [], endPct: 95, endT: 0.8 },
+          onChange: vi.fn(),
+        }}
+      />,
+    );
+    const d = view.container.querySelector("[data-line]")!.getAttribute("d")!;
+    const points = [...d.matchAll(/([\d.]+),([\d.]+)/g)].map((m) =>
+      Number(m[2]),
+    );
+    // The last two points (week 21 and the competition) have the same height.
+    expect(points.at(-1)).toBeCloseTo(points.at(-2)!, 0);
+  });
+
+  it("draws the curve level from moved outer anchors to the start and the end", () => {
+    const { container } = renderCurve({
+      entryPct: 60,
+      entryT: 0.2,
+      anchors: [],
+      endPct: 95,
+      endT: 0.8,
+    });
+    const d = container.querySelector("[data-line]")!.getAttribute("d")!;
+    const ys = [...d.matchAll(/([\d.]+),([\d.]+)/g)].map((m) => [
+      Number(m[1]),
+      Number(m[2]),
+    ]);
+    const yAt = (x: number) =>
+      ys.reduce((best, p) =>
+        Math.abs(p[0]! - x) < Math.abs(best[0]! - x) ? p : best,
+      )[1]!;
+    expect(yAt(xOfT(0.05))).toBeCloseTo(yOf(60), 0);
+    expect(yAt(xOfT(0.15))).toBeCloseTo(yOf(60), 0);
+    expect(yAt(xOfT(0.9))).toBeCloseTo(yOf(95), 0);
+    expect(yAt(xOfT(1))).toBeCloseTo(yOf(95), 0);
   });
 });

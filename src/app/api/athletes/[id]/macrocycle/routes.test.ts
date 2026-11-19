@@ -221,6 +221,9 @@ describe("macrocycle API", () => {
     expect(body.curve).toEqual({
       entryPct: 60,
       anchors: [{ t: 0.25, pct: 90 }],
+      entryT: 0,
+      endPct: 100,
+      endT: 1,
     });
     expect(body.weeks[5].intensityPct).toBe(90);
     for (const anchor of [

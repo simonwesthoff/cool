@@ -48,7 +48,10 @@ export function IntensityPlanner({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           entryValuePct: next.entryPct,
+          entryT: next.entryT ?? 0,
           anchors: next.anchors,
+          endValuePct: next.endPct ?? 100,
+          endT: next.endT ?? 1,
         }),
       },
     ).catch(() => null);

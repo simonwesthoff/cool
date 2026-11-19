@@ -127,7 +127,13 @@ describe("createMacrocycle", () => {
       created.weeks.map((w) => w.intensityPct).filter((_, i) => i % 5 === 0),
     ).toEqual([60, 70, 80, 90, 100]);
     // A new macrocycle starts with the straight line: no inner anchors.
-    expect(created.curve).toEqual({ entryPct: 60, anchors: [] });
+    expect(created.curve).toEqual({
+      entryPct: 60,
+      anchors: [],
+      entryT: 0,
+      endPct: 100,
+      endT: 1,
+    });
     expect(created.weeks[1]!.startDate).toBe("2026-12-07");
     expect(created.weeks[20]!.startDate).toBe("2027-04-19");
     expect(created.weeks[0]!.volume).toBeNull();
@@ -686,17 +692,56 @@ describe("setCurve", () => {
       ],
     });
     // Stored sorted by position.
-    expect(m.curve).toEqual({
+    expect(m.curve).toMatchObject({
       entryPct: 60,
       anchors: [
         { t: 0.25, pct: 90 },
         { t: 0.75, pct: 97.5 },
       ],
+      entryT: 0,
+      endPct: 100,
+      endT: 1,
     });
     // Week 6 of 21 is at position 0.25.
     expect(m.weeks[5]!.intensityPct).toBe(90);
     expect(m.weeks[0]!.intensityPct).toBe(60);
     expect(m.weeks[20]!.intensityPct).toBe(100);
+  });
+
+  it("moves the entry and end anchors; the curve stays level before and after them", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    const m = await setCurve(coach, athlete.id, {
+      entryValuePct: 60,
+      entryT: 0.2,
+      endValuePct: 98,
+      endT: 0.8,
+      anchors: [],
+    });
+    expect(m.curve).toMatchObject({ entryT: 0.2, endPct: 98, endT: 0.8 });
+    // Weeks 1–5 (t ≤ 0.2) stay at the entry value, weeks 17–21 at the end value.
+    expect(m.weeks.slice(0, 5).map((w) => w.intensityPct)).toEqual([
+      60, 60, 60, 60, 60,
+    ]);
+    expect(m.weeks.slice(16).map((w) => w.intensityPct)).toEqual([
+      98, 98, 98, 98, 98,
+    ]);
+    // Straight between them: week 11 (t = 0.5) halfway.
+    expect(m.weeks[10]!.intensityPct).toBe(79);
+  });
+
+  it("rejects inner anchors outside the entry and end anchors", async () => {
+    const { coach, athlete } = await setup();
+    await createMacrocycle(coach, athlete.id, baseData);
+    expect(
+      await fieldsOf(
+        setCurve(coach, athlete.id, {
+          entryValuePct: 60,
+          entryT: 0.4,
+          anchors: [{ t: 0.3, pct: 70 }],
+        }),
+      ),
+    ).toEqual({ anchors: ["OUTSIDE_ENDS"] });
   });
 
   it("changes the entry value (the first anchor), also in the base data", async () => {

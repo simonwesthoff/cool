@@ -2,15 +2,20 @@
 
 ### Requirement: Curve anchors
 A macrocycle's progression curve SHALL pass through its anchors: the entry
-anchor at the first week with the entry value, any number of inner
-anchors, and the end anchor at the last week with 100 %. Inner anchors
-SHALL have a position in the cycle strictly between 0 (first week) and 1
-(last week) and a value from 0 to 100 %, so a duration change keeps the
-curve's shape. A new macrocycle SHALL have no inner anchors.
+anchor (the entry value, by default in the first week), any number of
+inner anchors, and the end anchor (by default 100 % in the last week).
+Positions SHALL be relative to the cycle (0 = first week, 1 = last week),
+so a duration change keeps the shape; inner anchors lie between the end
+anchors. Before the entry and after the end anchor the curve stays level.
 
 #### Scenario: New macrocycle
 - **WHEN** the coach creates a macrocycle with entry value 60 %
 - **THEN** its curve has only the entry anchor (60 %) and the end anchor (100 %)
+
+#### Scenario: Moved end anchors
+- **GIVEN** a 21-week macrocycle whose entry anchor (60 %) is at position 0.2 and end anchor at position 0.8 with 98 %
+- **WHEN** the intensities are calculated
+- **THEN** weeks 1–5 have 60 %, weeks 17–21 have 98 %, and the weeks between follow the curve
 
 #### Scenario: Longer cycle keeps the shape
 - **GIVEN** a 21-week macrocycle with an inner anchor at position 0.5 with 90 %

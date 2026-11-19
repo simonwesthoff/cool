@@ -24,16 +24,20 @@ move and remove, with a smooth curve through them (adjustment 5 in
     straight line.
   - **Add:** clicking anywhere in the chart (not on an anchor) adds an
     anchor there.
-  - **Drag:** inner anchors drag smoothly in all directions, without
+  - **Drag:** all anchors drag smoothly in all directions, without
     snapping to weeks.
-  - **Remove:** clicking an inner anchor removes it, and so does dragging
-    it to the very left or right of the chart.
-  - **Entry anchor:** the first anchor only moves up and down. It *is* the
-    entry value: dragging it changes the macrocycle's entry value (30–95 %,
-    one decimal), and changing the entry value in step 1 moves it. It can't
-    be removed.
-  - **End anchor:** the last anchor stays fixed at 100 % in the last week
-    and can't be moved or removed.
+  - **Remove:** clicking an inner anchor removes it, and so does dropping
+    it horizontally close to a neighbouring anchor (user decision).
+  - **Entry anchor:** its value *is* the entry value. Dragging it changes
+    the macrocycle's entry value (30–95 %, one decimal), and changing the
+    entry value in step 1 moves it.
+  - **End anchor:** it starts at 100 % in the last week and can be moved
+    too (end value 0–100 %).
+  - **Moving the outer anchors:** both move in any direction (user
+    decision). While one is moved, "Entry value X %" or "End value X %" is
+    shown next to it. Moved inwards, the curve stays level (a straight
+    horizontal line) from the start to the entry anchor and from the end
+    anchor to the end. Neither can be removed.
   - **Saving:** every change is saved when the pointer is released.
 - **Curve:** a natural cubic spline through all anchors (user decision; it
   may bulge between anchors). Its value is capped to 0–100 %. High and low
@@ -80,8 +84,10 @@ None.
 ## Impact
 
 - **Data:**
-  - **Column:** a migration adds `macrocycle.curve_anchors` (`jsonb`, inner
-    anchors `[{t, pct}]`, default `[]`).
+  - **Columns:** a migration adds `macrocycle.curve_anchors` (`jsonb`, inner
+    anchors `[{t, pct}]`, default `[]`); a second one adds
+    `curve_entry_t` (default 0), `curve_end_pct` (default 100) and
+    `curve_end_t` (default 1).
   - **Existing rows:** the same migration fills the two-anchor S-curve
     approximation for them.
 - **Domain:**

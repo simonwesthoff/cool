@@ -34,6 +34,10 @@
 
   Verify: a flow script with all checks passing and screenshots.
 
+## 4. Acceptance feedback
+
+- [x] 4.1 Movable end anchors: entry and end anchors move in any direction (end value 0–100 %), with "Entry value X %" / "End value X %" beside them while moved, and the curve level before and after them (migration 0023: `curve_entry_t`, `curve_end_pct`, `curve_end_t`; API fields `entryT`, `endValuePct`, `endT`). An inner anchor is removed by a click or by dropping it horizontally close to a neighbouring anchor, not at the chart's edge. Verify with calculation, domain and route tests (level stretches, validation `OUTSIDE_ENDS`) and chart tests (gestures, value text, fading, level lines), plus the browser flow.
+
 ## Workflow follow-up
 
 - After acceptance: archive the change (sync the specs) and open a PR into main.

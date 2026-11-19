@@ -6,7 +6,11 @@ import type {
   MacrocycleWeekView,
   WeekLevel,
 } from "@/domain/macrocycles/macrocycle-types";
-import { curveValue, type Curve } from "@/domain/macrocycles/calculation";
+import {
+  curveEnds,
+  curveValue,
+  type Curve,
+} from "@/domain/macrocycles/calculation";
 import {
   blockLabelSpans,
   CompetitionMarkerLine,
@@ -94,14 +98,18 @@ export type CurveEditor = {
   labels: {
     entry: (pct: number) => string;
     anchor: (week: number, pct: number) => string;
-    end: string;
+    end: (pct: number) => string;
   };
 };
 
 /** Movement (px) that turns a press on an anchor into a drag. */
 const DRAG_THRESHOLD = 3;
-/** Releasing an inner anchor this close (px) to an edge removes it. */
-const EDGE_REMOVE = 8;
+/** Dropping an inner anchor this close (px, horizontally) to a neighbour removes it. */
+const MERGE_DISTANCE = 10;
+/** Smallest distance between two handles' positions (the API's limit). */
+const MIN_GAP = 0.002;
+/** A handle of the curve mode: an inner anchor's index or an end anchor. */
+type CurveHandle = number | "entry" | "end";
 const ENTRY_RANGE: [number, number] = [30, 95];
 const roundTenth = (v: number) => Math.round(v * 10) / 10;
 const clamp = (v: number, min: number, max: number) =>
@@ -165,8 +173,7 @@ export function WeekChart({
   // Curve mode: the curve while a gesture is going on, and the gesture.
   const [curveDraft, setCurveDraft] = useState<Curve | null>(null);
   const [gesture, setGesture] = useState<{
-    /** Index of the inner anchor, or "entry". */
-    anchor: number | "entry";
+    anchor: CurveHandle;
     startX: number;
     startY: number;
     moved: boolean;
@@ -273,7 +280,9 @@ export function WeekChart({
       const t = i / steps;
       samples.push({ x: xOfT(t), y: y(curveValue(shownCurve, t) * 100) });
     }
-    if (tail > 0) samples.push({ x: plotRight, y: y(100) });
+    // On to the competition at the curve's last value (the end value).
+    if (tail > 0)
+      samples.push({ x: plotRight, y: y(curveValue(shownCurve, 1) * 100) });
     runs.push(samples);
   } else if (tail > 0 && lastValue !== null)
     runs.at(-1)!.push({ x: plotRight, y: y(lastValue) });
@@ -296,16 +305,32 @@ export function WeekChart({
   }
 
   // --- Curve mode: add, drag and remove anchors -----------------------------
-  /** An inner anchor at a pointer position (inside the cycle, 0–100 %). */
-  function anchorAt(px: number, py: number) {
+  const endsOf = (c: Curve) => curveEnds(c);
+  /** An inner anchor at a pointer position (between the end anchors, 0–100 %). */
+  function anchorAt(c: Curve, px: number, py: number) {
+    const { entryT, endT } = endsOf(c);
     return {
-      t: clamp(tOfX(px), 0.001, 0.999),
+      t: clamp(tOfX(px), entryT + MIN_GAP, endT - MIN_GAP),
       pct: roundTenth(clamp(valueAtY(py), 0, 100)),
     };
   }
+  /**
+   * Whether the inner anchor `index` is horizontally so close to a
+   * neighbouring handle that releasing it there removes it.
+   */
+  function mergesWithNeighbour(c: Curve, index: number) {
+    const { entryT, endT } = endsOf(c);
+    const own = c.anchors[index]!.t;
+    const others = [
+      entryT,
+      endT,
+      ...c.anchors.filter((_, i) => i !== index).map((a) => a.t),
+    ];
+    return others.some((t) => Math.abs(xOfT(t) - xOfT(own)) < MERGE_DISTANCE);
+  }
   function startCurveGesture(
     event: PointerEvent<SVGElement>,
-    anchor: number | "entry",
+    anchor: CurveHandle,
     added: boolean,
     draft: Curve,
   ) {
@@ -319,7 +344,7 @@ export function WeekChart({
     if (!curveEditor) return;
     const p = svgPoint(event);
     const base = curveEditor.curve;
-    const anchors = [...base.anchors, anchorAt(p.x, p.y)];
+    const anchors = [...base.anchors, anchorAt(base, p.x, p.y)];
     startCurveGesture(event, anchors.length - 1, true, { ...base, anchors });
   }
   function onCurveMove(event: PointerEvent<SVGElement>) {
@@ -329,30 +354,46 @@ export function WeekChart({
       gesture.moved ||
       Math.hypot(p.x - gesture.startX, p.y - gesture.startY) > DRAG_THRESHOLD;
     if (!moved) return;
+    const inner = curveDraft.anchors.map((a) => a.t);
+    const { entryT, endT } = endsOf(curveDraft);
     if (gesture.anchor === "entry") {
+      // In any direction, but before the first inner anchor.
+      const limit = Math.min(endT, ...inner) - MIN_GAP;
       setCurveDraft({
         ...curveDraft,
+        entryT: clamp(tOfX(p.x), 0, limit),
         entryPct: roundTenth(clamp(valueAtY(p.y), ...ENTRY_RANGE)),
+      });
+    } else if (gesture.anchor === "end") {
+      // In any direction, but after the last inner anchor.
+      const limit = Math.max(entryT, ...inner) + MIN_GAP;
+      setCurveDraft({
+        ...curveDraft,
+        endT: clamp(tOfX(p.x), limit, 1),
+        endPct: roundTenth(clamp(valueAtY(p.y), 0, 100)),
       });
     } else {
       const anchors = [...curveDraft.anchors];
-      anchors[gesture.anchor] = anchorAt(p.x, p.y);
+      anchors[gesture.anchor] = anchorAt(curveDraft, p.x, p.y);
       setCurveDraft({ ...curveDraft, anchors });
     }
     if (!gesture.moved) setGesture({ ...gesture, moved: true });
   }
-  function onCurveRelease(event: PointerEvent<SVGElement>) {
+  function onCurveRelease() {
     if (!gesture || !curveDraft || !curveEditor) return;
-    const p = svgPoint(event);
     let next = curveDraft;
-    if (gesture.anchor !== "entry") {
-      const atEdge =
-        p.x <= plotLeft + EDGE_REMOVE || p.x >= plotRight - EDGE_REMOVE;
-      // A click on an existing inner anchor, or a drag to an edge, removes it.
-      if ((!gesture.moved && !gesture.added) || atEdge) {
+    if (typeof gesture.anchor === "number") {
+      const index = gesture.anchor;
+      // A click on an existing inner anchor, or dropping it close to a
+      // neighbouring handle, removes it.
+      const clicked = !gesture.moved && !gesture.added;
+      if (
+        clicked ||
+        (gesture.moved && mergesWithNeighbour(curveDraft, index))
+      ) {
         next = {
           ...curveDraft,
-          anchors: curveDraft.anchors.filter((_, i) => i !== gesture.anchor),
+          anchors: curveDraft.anchors.filter((_, i) => i !== index),
         };
       }
     }
@@ -362,12 +403,13 @@ export function WeekChart({
       ...next,
       anchors: [...next.anchors].sort((a, b) => a.t - b.t),
     };
-    const before = curveEditor.curve;
-    const same =
-      sorted.entryPct === before.entryPct &&
-      JSON.stringify(sorted.anchors) ===
-        JSON.stringify([...before.anchors].sort((a, b) => a.t - b.t));
-    if (!same) curveEditor.onChange(sorted);
+    const key = (c: Curve) =>
+      JSON.stringify([
+        c.entryPct,
+        endsOf(c),
+        [...c.anchors].sort((a, b) => a.t - b.t),
+      ]);
+    if (key(sorted) !== key(curveEditor.curve)) curveEditor.onChange(sorted);
   }
   function cancelCurveGesture() {
     setGesture(null);
@@ -721,7 +763,15 @@ export function WeekChart({
               paint={paint}
               weekOf={(t) => 1 + t * (n - 1)}
               labels={curveEditor.labels}
-              active={gesture?.anchor ?? null}
+              active={gesture?.moved ? gesture.anchor : null}
+              merging={
+                gesture?.moved &&
+                typeof gesture.anchor === "number" &&
+                shownCurve.anchors[gesture.anchor] &&
+                mergesWithNeighbour(shownCurve, gesture.anchor)
+                  ? gesture.anchor
+                  : null
+              }
               onPress={onCurvePress}
               onAnchorPress={(event, anchor) =>
                 startCurveGesture(event, anchor, false, curveEditor.curve)
@@ -877,15 +927,14 @@ export function useWeekDate() {
 
 /**
  * The anchors of the curve mode over a transparent area that adds anchors:
- * the entry anchor (vertical only), the inner anchors (free) and the end
- * anchor (fixed, swallows presses so nothing is added there).
+ * the entry and end anchors (movable in any direction, never removed, their
+ * value shown while moved) and the inner anchors (free; faded while
+ * dropping one would remove it).
  */
 function CurveAnchors({
   curve,
   xOfT,
   y,
-  xFirst,
-  xLast,
   plotTop,
   plotHeight,
   plotLeft,
@@ -894,6 +943,7 @@ function CurveAnchors({
   weekOf,
   labels,
   active,
+  merging,
   onPress,
   onAnchorPress,
   onMove,
@@ -912,22 +962,21 @@ function CurveAnchors({
   paint: string;
   weekOf: (t: number) => number;
   labels: CurveEditor["labels"];
-  active: number | "entry" | null;
+  active: CurveHandle | null;
+  merging: number | null;
   onPress: (event: PointerEvent<SVGRectElement>) => void;
-  onAnchorPress: (
-    event: PointerEvent<SVGElement>,
-    anchor: number | "entry",
-  ) => void;
+  onAnchorPress: (event: PointerEvent<SVGElement>, anchor: CurveHandle) => void;
   onMove: (event: PointerEvent<SVGElement>) => void;
-  onRelease: (event: PointerEvent<SVGElement>) => void;
+  onRelease: () => void;
   onCancel: () => void;
 }) {
+  const { entryT, endT, endPct } = curveEnds(curve);
   const handlers = {
     onPointerMove: onMove,
     onPointerUp: onRelease,
     onPointerCancel: onCancel,
   };
-  const dot = (cx: number, cy: number, big: boolean) => (
+  const dot = (cx: number, cy: number, big: boolean, faded = false) => (
     <circle
       cx={cx}
       cy={cy}
@@ -935,8 +984,50 @@ function CurveAnchors({
       fill={paint}
       stroke="var(--surface)"
       strokeWidth={2}
+      opacity={faded ? 0.35 : 1}
     />
   );
+  const outer = (
+    kind: "entry" | "end",
+    t: number,
+    pct: number,
+    label: string,
+  ) => {
+    const cx = xOfT(t);
+    const cy = y(pct);
+    // The value is written beside the handle while it is moved, towards the
+    // chart's middle so it stays inside.
+    const left = cx > (plotLeft + plotRight) / 2;
+    return (
+      <g
+        data-anchor={kind}
+        data-t={t}
+        data-pct={pct}
+        role="img"
+        aria-label={label}
+        className="cursor-move"
+        onPointerDown={(event) => onAnchorPress(event, kind)}
+        {...handlers}
+      >
+        <circle cx={cx} cy={cy} r={14} fill="transparent" />
+        {dot(cx, cy, active === kind)}
+        {active === kind && (
+          <text
+            data-anchor-value
+            x={left ? cx - 12 : cx + 12}
+            y={cy - 12}
+            textAnchor={left ? "end" : "start"}
+            className="pointer-events-none fill-zinc-900 text-[12px] font-semibold dark:fill-zinc-100"
+            stroke="var(--surface)"
+            strokeWidth={3}
+            paintOrder="stroke"
+          >
+            {label}
+          </text>
+        )}
+      </g>
+    );
+  };
   return (
     <g data-curve-editor>
       <rect
@@ -950,23 +1041,14 @@ function CurveAnchors({
         onPointerDown={onPress}
         {...handlers}
       />
-      <g
-        data-anchor="entry"
-        role="img"
-        aria-label={labels.entry(curve.entryPct)}
-        className="cursor-ns-resize"
-        onPointerDown={(event) => onAnchorPress(event, "entry")}
-        {...handlers}
-      >
-        <circle cx={xFirst} cy={y(curve.entryPct)} r={14} fill="transparent" />
-        {dot(xFirst, y(curve.entryPct), active === "entry")}
-      </g>
+      {outer("entry", entryT, curve.entryPct, labels.entry(curve.entryPct))}
       {curve.anchors.map((a, i) => (
         <g
           key={i}
           data-anchor={i}
           data-t={a.t}
           data-pct={a.pct}
+          data-merging={merging === i || undefined}
           role="img"
           aria-label={labels.anchor(Math.round(weekOf(a.t) * 10) / 10, a.pct)}
           className="cursor-move"
@@ -974,18 +1056,10 @@ function CurveAnchors({
           {...handlers}
         >
           <circle cx={xOfT(a.t)} cy={y(a.pct)} r={14} fill="transparent" />
-          {dot(xOfT(a.t), y(a.pct), active === i)}
+          {dot(xOfT(a.t), y(a.pct), active === i, merging === i)}
         </g>
       ))}
-      <g
-        data-anchor="end"
-        role="img"
-        aria-label={labels.end}
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <circle cx={xLast} cy={y(100)} r={14} fill="transparent" />
-        {dot(xLast, y(100), false)}
-      </g>
+      {outer("end", endT, endPct, labels.end(endPct))}
     </g>
   );
 }

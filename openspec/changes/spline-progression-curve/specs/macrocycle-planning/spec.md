@@ -16,12 +16,13 @@ current curve. Each mode SHALL have its own help text.
 - **THEN** the anchors disappear and the week handles and block sliders appear on the same curve
 
 ### Requirement: Editing anchors
-In "Curve" mode a click on the chart outside an anchor SHALL add an anchor
-there. Inner anchors SHALL drag smoothly in all directions without
-snapping; a click on one, or dragging it to the chart's left or right
-edge, SHALL remove it. The entry anchor SHALL move only up and down and
-set the entry value (30–95 %); the end anchor SHALL stay fixed. Neither
-can be removed. Each change SHALL be saved on release.
+In "Curve" mode a click on the chart outside an anchor SHALL add an
+anchor. All anchors SHALL drag smoothly in all directions without
+snapping. A click on an inner anchor, or dropping it horizontally close to
+a neighbouring anchor, SHALL remove it. The entry anchor sets the entry
+value (30–95 %), the end anchor the end value (0–100 %); while either is
+moved, "Entry value X %" or "End value X %" SHALL be shown beside it.
+Neither can be removed. Each change SHALL be saved on release.
 
 #### Scenario: Add an anchor
 - **GIVEN** a new 21-week macrocycle with entry value 60 %
@@ -33,27 +34,28 @@ can be removed. Each change SHALL be saved on release.
 - **THEN** the anchor follows the pointer continuously and stays between weeks 8 and 9 after release
 
 #### Scenario: Remove by click or edge
-- **WHEN** the coach clicks an inner anchor, or drags it to the right edge of the chart
-- **THEN** the anchor is removed and the curve is recalculated without it
+- **WHEN** the coach clicks an inner anchor, or drops it right next to a neighbouring anchor (horizontally)
+- **THEN** the anchor is removed and the curve is recalculated without it; dropped elsewhere, also at the chart's edge, it only moves
 
 #### Scenario: Entry anchor sets the entry value
-- **WHEN** the coach drags the entry anchor from 60 % up to 65 %
-- **THEN** the entry value is 65 %, also in step 1, and clicking the entry anchor removes nothing
+- **WHEN** the coach drags the entry anchor from 60 % up to 65 % and to week 3
+- **THEN** "Entry value 65 %" is shown beside it while moving, the entry value is 65 %, also in step 1, weeks 1–3 have 65 %, and clicking the entry anchor removes nothing
 
 #### Scenario: End anchor fixed
-- **WHEN** the coach tries to drag or click the end anchor
-- **THEN** it stays at 100 % in the last week
+- **WHEN** the coach drags the end anchor from 100 % in week 21 to 95 % in week 18
+- **THEN** "End value 95 %" is shown beside it while moving, and weeks 18–21 have 95 %; clicking it removes nothing
 
 #### Scenario: Saving fails
 - **WHEN** saving an anchor change fails
 - **THEN** the curve returns to its stored shape and the step says the change could not be saved
 
 ### Requirement: Curve API
-The HTTP API SHALL let the coach set a macrocycle's entry value and inner
-anchors (`PUT …/macrocycle/curve`) and return the macrocycle with all
-recalculated weeks. Positions SHALL be strictly between 0 and 1 and
-distinct, values 0–100 %, at most 20 inner anchors, the entry value 30–95
-%; otherwise 400 `VALIDATION_FAILED`. The linked user SHALL not change it.
+The HTTP API SHALL let the coach set a macrocycle's curve (`PUT
+…/macrocycle/curve`: entry value and position, end value and position,
+inner anchors) and return the macrocycle with all recalculated weeks.
+Positions SHALL be 0–1 and in order (entry, inner, end), values 0–100 %
+with one decimal, the entry value 30–95 %, at most 20 inner anchors;
+otherwise 400 `VALIDATION_FAILED`. The linked user SHALL not change it.
 
 #### Scenario: Set the curve
 - **WHEN** the coach puts entry value 60 % and one anchor at position 0.25 with 90 %

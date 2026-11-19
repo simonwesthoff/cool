@@ -82,7 +82,13 @@ type BaseRow = typeof macrocycle.$inferSelect;
 
 /** The stored progression curve of a macrocycle row. */
 function curveOf(row: BaseRow): Curve {
-  return { entryPct: row.entryValuePct, anchors: row.curveAnchors };
+  return {
+    entryPct: row.entryValuePct,
+    entryT: row.curveEntryT,
+    anchors: row.curveAnchors,
+    endPct: row.curveEndPct,
+    endT: row.curveEndT,
+  };
 }
 
 async function scheduleOf(macrocycleId: string): Promise<ScheduledSession[]> {
@@ -690,7 +696,17 @@ export const MAX_CURVE_ANCHORS = 20;
 const MIN_ANCHOR_DISTANCE = 0.001;
 
 const oneDecimal = (v: number) => Math.round(v * 10) / 10 === v;
+const position = z
+  .number()
+  .refine((v) => v >= 0 && v <= 1, { params: { code: "OUT_OF_RANGE" } });
 const curveSchema = z.strictObject({
+  entryT: position.optional(),
+  endT: position.optional(),
+  endValuePct: z
+    .number()
+    .refine((v) => v >= 0 && v <= 100, { params: { code: "OUT_OF_RANGE" } })
+    .refine(oneDecimal, { params: { code: "TOO_PRECISE" } })
+    .optional(),
   entryValuePct: z
     .number()
     .refine(Number.isFinite, { params: { code: "INVALID_TYPE" } })
@@ -734,14 +750,33 @@ export async function setCurve(
   input: unknown,
 ): Promise<Macrocycle> {
   await requireOwnAthlete(coach, athleteId);
-  const { entryValuePct, anchors } = parseInput(curveSchema, input);
+  const {
+    entryValuePct,
+    anchors,
+    entryT = 0,
+    endT = 1,
+    endValuePct = 100,
+  } = parseInput(curveSchema, input);
+  // The inner anchors lie strictly between the entry and the end anchor.
+  const sorted = [...anchors].sort((a, b) => a.t - b.t);
+  const positions = [entryT, ...sorted.map((a) => a.t), endT];
+  if (
+    positions.some(
+      (t, i) => i > 0 && t - positions[i - 1]! < MIN_ANCHOR_DISTANCE,
+    )
+  ) {
+    throw new DomainValidationError({ anchors: ["OUTSIDE_ENDS"] });
+  }
   const row = await findMacrocycleRow(athleteId);
   if (!row) throw notFound();
   await getDb()
     .update(macrocycle)
     .set({
       entryValuePct,
-      curveAnchors: [...anchors].sort((a, b) => a.t - b.t),
+      curveEntryT: entryT,
+      curveAnchors: sorted,
+      curveEndPct: endValuePct,
+      curveEndT: endT,
     })
     .where(eq(macrocycle.id, row.id));
   return getMacrocycle(coach, athleteId);

@@ -93,6 +93,21 @@ describe("intensity curve", () => {
     expect(pct(intensity(0.6, t(11), "low"))).toBe(75);
   });
 
+  it("stays level before a moved entry anchor and after a moved end anchor", () => {
+    const curve = {
+      entryPct: 60,
+      entryT: 0.2,
+      endPct: 95,
+      endT: 0.8,
+      anchors: [],
+    };
+    expect(curveValue(curve, 0)).toBeCloseTo(0.6, 12);
+    expect(curveValue(curve, 0.2)).toBeCloseTo(0.6, 12);
+    expect(curveValue(curve, 0.5)).toBeCloseTo(0.775, 12);
+    expect(curveValue(curve, 0.8)).toBeCloseTo(0.95, 12);
+    expect(curveValue(curve, 1)).toBeCloseTo(0.95, 12);
+  });
+
   it("orders the inner anchors by position", () => {
     const a = {
       entryPct: 60,
