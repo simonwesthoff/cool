@@ -143,12 +143,13 @@ page.
 - **THEN** the step opens without a dialog
 
 ### Requirement: Intensity chart with week handles
-Step 3 SHALL show the macrocycle chart fitting the screen width: weeks on
-the x-axis ("Week"), each week's number and point at the start of its
-area, the intensity ("Intensity") as a curve with one handle per week, and
-the mesocycle backgrounds in their colours. Each handle SHALL move
-one 5 % step up (high week) or down (low week) by dragging or tapping; in
-between it is medium.
+Step 3 SHALL show the week chart fitting the screen width with the y-axis
+("Intensity", in %), weeks on the x-axis ("Week"), each week's number and
+point on the line where its block starts, the intensity as the curve with
+one pink handle per week, ▲/▼ above or below high and low weeks, and a
+slider on each of the two block borders. Each handle SHALL move one 5 %
+step up (high week) or down (low week) by dragging or tapping; in between
+it is medium.
 
 #### Scenario: Make a week high
 - **GIVEN** week 11 at 80 % intensity
@@ -177,12 +178,12 @@ between it is medium.
 
 #### Scenario: Mesocycle colours
 - **WHEN** the coach looks at the chart of a 21-week macrocycle
-- **THEN** weeks 1–3 have a #6f3ab1, weeks 4–13 a #ba2db3 and weeks 14–21 a #d7f212 background, with a legend and labels naming the three mesocycles
+- **THEN** no area is coloured by mesocycle; thin lines at weeks 1, 4 and 14 are labelled GPB, SPB and CPB, and the legend names the three mesocycles
 
 #### Scenario: Points at the start of a week
 - **GIVEN** the special preparation block starts in week 4
 - **WHEN** the coach looks at the chart
-- **THEN** the point and the number of week 4 are exactly on the border where the special preparation background begins
+- **THEN** the point and the number of week 4 are exactly on the line where the special preparation block begins
 
 ### Requirement: Mesocycle abbreviations
 The mesocycles SHALL have abbreviations: GLP, ABP and LAP in German; GPB
@@ -196,20 +197,20 @@ legend SHALL use the full names.
 - **THEN** the mesocycle labels above the chart read "GPB", "SPB" and "CPB"
 
 ### Requirement: Main competition in the chart
-The chart in step 3 SHALL mark the main competition with a vertical line
-at its date and a label with only its type and date, above the chart in
-the row and style of the mesocycle labels, and name it in the legend. A
-mesocycle label overlapping it SHALL be hidden. A competition after the
-last week SHALL be marked at the end of the chart.
+Every chart SHALL mark the main competition with a dashed vertical line at
+its date and a label with only its name (no date) in the style of the
+mesocycle labels, one row above them, so neither hides the other; screen
+readers get the name and date. A competition after the last week SHALL be
+marked at the end of the chart.
 
 #### Scenario: Competition in the last week
 - **GIVEN** a 21-week macrocycle from Monday 2026-11-30 with the German Championships on Saturday 2027-04-24
 - **WHEN** the coach opens step 3
-- **THEN** a vertical line marks Saturday of week 21, labelled "German Championships · Apr 24, 2027" above the chart
+- **THEN** a vertical line marks Saturday of week 21, labelled "German Championships" above the chart
 
 #### Scenario: Label above the chart
 - **WHEN** the coach looks at the chart
-- **THEN** the competition's label is in the row of the mesocycle labels, so it covers no week point
+- **THEN** the competition's label is one row above the mesocycle labels, covers no week point, and every mesocycle label stays visible, also on a phone
 
 ### Requirement: Week tooltip
 Pointing at a week in the chart SHALL show a tooltip of three lines: the
@@ -354,16 +355,6 @@ to read it. Errors: 400 `VALIDATION_FAILED` with field codes, 404
 - **WHEN** they try to change its base data, SWOT, week levels, borders or exercises
 - **THEN** nothing changes, and the response has status 403 `NOT_A_COACH` if they lead no Team, or 404 `ATHLETE_NOT_FOUND` if they lead another Team
 
-### Requirement: Mesocycle colours in the app
-Wherever the app shows the mesocycles by colour, it SHALL use the same
-colours: general preparation #6f3ab1, special preparation #ba2db3,
-competition preparation #d7f212. Marks drawn on them SHALL stay readable
-on every one of these colours.
-
-#### Scenario: Same colours everywhere
-- **WHEN** the coach looks at the intensity chart, the exercise table or the macrocycle view of a 21-week macrocycle
-- **THEN** the general, special and competition preparation blocks are shown in #6f3ab1, #ba2db3 and #d7f212, with labels naming them
-
 ### Requirement: Weekly schedule
 Instead of a number of sessions per week, the base data SHALL show a week
 (Monday–Sunday) in which the coach picks up to three training sessions per
@@ -382,3 +373,35 @@ sessions. Changing the schedule SHALL not change existing week plans.
 #### Scenario: Fourth session on a day
 - **GIVEN** three sessions on Tuesday
 - **THEN** no further session can be added to Tuesday
+
+### Requirement: One week chart
+The intensity chart of the planning, the exercise chart of the macrocycle
+view and the chart on the athlete page SHALL be one chart element in the
+same minimal style (one smoothed pink #ba2db3 curve with a gradient fading
+downwards, a thin line at each block start, week numbers). Parameters
+SHALL switch its parts on or off: the y-axis, axis titles, a visible
+legend, the current-week line, the week handles and the border sliders.
+
+#### Scenario: Same look in planning and view
+- **WHEN** the coach compares the chart in step 3 with the chart in the macrocycle view
+- **THEN** both show the same pink curve, gradient and block start lines; only step 3 shows the y-axis, the handles and the sliders
+
+### Requirement: Chart ends at the main competition
+When the main competition falls after the start of the last week, every
+chart SHALL continue the curve at the last week's value up to the
+competition's line and end there. Otherwise the chart SHALL end at the
+last week's point.
+
+#### Scenario: Competition on Saturday of the last week
+- **GIVEN** a 21-week macrocycle from Monday 2026-11-30 with the main competition on Saturday 2027-04-24
+- **WHEN** the coach or athlete looks at any chart of it
+- **THEN** the curve continues from week 21's point to the competition line, which is the right end of the chart
+
+### Requirement: Chart proportions
+Every chart SHALL keep its desktop proportions on narrower screens: the
+plot's height shrinks with its width (never taller than on desktop), so
+the chart gets smaller instead of squished.
+
+#### Scenario: Chart on a phone
+- **WHEN** the coach or athlete looks at a chart on a 390 px wide phone
+- **THEN** the plot has the same ratio of height to width as on desktop

@@ -4,11 +4,10 @@
 The view SHALL show a read-only chart of one planned value of one exercise
 for every week, calculated as in planning even in weeks whose mesocycle
 does not use the exercise: the best value (kg), the average weight (kg),
-the set size or the weekly reps. It SHALL be minimal (user decision): one
-smoothed curve as a single pink stroke without point handles or outline,
-a pink gradient below it fading downwards, no y-axis and no values on it.
-The x-axis SHALL show only week numbers. It is the week chart without
-the y-axis, with the current week.
+the set size or the weekly reps. It SHALL be the week chart (see
+macrocycle planning) without a y-axis and with the current week: one
+smoothed pink curve without point handles, a gradient below it, and only
+week numbers on the x-axis.
 
 #### Scenario: Best value of the snatch by default
 - **GIVEN** a 21-week macrocycle with a snatch goal of 100 kg and entry value 60 %

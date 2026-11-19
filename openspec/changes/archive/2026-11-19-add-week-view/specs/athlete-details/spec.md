@@ -29,11 +29,10 @@ macrocycle" card instead.
 ### Requirement: Training week entry points
 The athlete page SHALL have a "Training week" section below the macrocycle
 with the current week (see the week view). For whoever leads the athlete's
-Team (the coach, and a coach who trains themselves on "My training") it
-SHALL offer "Edit week" for a planned current week or "Plan this week" for
-an unplanned one at the bottom left below the week, and "Plan next week"
-or "Edit next week" (without the week number) at the bottom right. There
-SHALL be no list of planned weeks. Without a macrocycle there SHALL be no section.
+Team (also a coach who trains themselves) it SHALL offer below the week
+"Edit week" (planned) or "Plan this week" (unplanned) on the left, and
+"Plan next week" or "Edit next week" without the week number on the right.
+There SHALL be no list of planned weeks. Without a macrocycle there SHALL be no section.
 
 #### Scenario: Coach with planned weeks
 - **GIVEN** an athlete whose current week 6 has a week plan and week 7 has none
