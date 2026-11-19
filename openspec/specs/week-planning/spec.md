@@ -57,7 +57,8 @@ leaving the page.
 ### Requirement: Automatic saving
 Every change in the week editor SHALL be saved on its own shortly after it
 is made, so both steps always show the stored week; a week without
-sessions SHALL be unplanned again.
+sessions SHALL be unplanned again. A change still waiting for its save
+SHALL be sent when the editor is left, without a dialog.
 
 #### Scenario: Automatic saving
 - **WHEN** the coach adds a set in step 2 or moves an exercise in step 1
@@ -75,7 +76,7 @@ sessions SHALL be unplanned again.
 #### Scenario: Leaving before the change is saved
 - **GIVEN** a change that is not saved yet (just made, invalid or failed)
 - **WHEN** the coach chooses the back link
-- **THEN** a dialog asks "Save changes?" with "Save", "Discard" and "Cancel", as in the planning steps; switching between the two steps does not ask
+- **THEN** no dialog appears; a valid change is saved before the page changes, an invalid one is not stored
 
 ### Requirement: Values beyond the plan
 Values more than 5 % off the plan SHALL be saved like all others, because
