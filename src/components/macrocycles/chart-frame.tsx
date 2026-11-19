@@ -193,6 +193,12 @@ export function tooltipPlacement(
   return { left, top };
 }
 
+/** Rows above the plot: the block labels and, one row up, the competition. */
+const BLOCK_ROW = { baseline: 8, capHeight: 8 };
+const NAME_ROW = { baseline: 24, capHeight: 8 };
+/** Space kept free around a block label the line would cross. */
+const GAP_MARGIN = 3;
+
 /**
  * A thin vertical line where each mesocycle starts, with its abbreviation
  * above the plot; no colours (minimal exercise chart).
@@ -228,7 +234,7 @@ export function MesocycleStarts({
             {fitsLabel(label, blockWidth) && (
               <text
                 x={start + 4}
-                y={plot.top - 8}
+                y={plot.top - BLOCK_ROW.baseline}
                 className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
               >
                 {label}
@@ -241,14 +247,48 @@ export function MesocycleStarts({
   );
 }
 
+/** Where a shown block label lies on the x-axis (its text, estimated). */
+export type LabelSpan = { start: number; end: number };
+
+/** The x-spans of the block labels MesocycleStarts shows. */
+export function blockLabelSpans(
+  mesocycles: ChartMesocycle[],
+  layout: WeekLayout,
+  labelOf: (m: ChartMesocycle) => string,
+): LabelSpan[] {
+  return mesocycles.flatMap((m) => {
+    const label = labelOf(m);
+    const start = layout.x(m.firstWeek - 1);
+    const blockWidth = layout.column * (m.lastWeek - m.firstWeek + 1);
+    return fitsLabel(label, blockWidth)
+      ? [{ start: start + 4, end: start + 4 + label.length * LABEL_CHAR }]
+      : [];
+  });
+}
+
 /** Dashed line at the main competition's day with its label above the plot. */
 export function CompetitionMarkerLine({
   marker,
   plot,
+  blockLabels = [],
 }: {
   marker: CompetitionMarker;
   plot: Plot;
+  /** Block labels the line must not cross: it leaves a gap over them. */
+  blockLabels?: LabelSpan[];
 }) {
+  // From the top of the competition's name down to the plot's bottom.
+  const top = plot.top - NAME_ROW.baseline - NAME_ROW.capHeight;
+  const bottom = plot.top + plot.height;
+  const crosses = blockLabels.some(
+    (l) => marker.x >= l.start - GAP_MARGIN && marker.x <= l.end + GAP_MARGIN,
+  );
+  const segments: [number, number][] = crosses
+    ? [
+        [top, plot.top - BLOCK_ROW.baseline - BLOCK_ROW.capHeight - GAP_MARGIN],
+        [plot.top - BLOCK_ROW.baseline + GAP_MARGIN, bottom],
+      ]
+    : [[top, bottom]];
   return (
     <g
       data-competition
@@ -256,19 +296,23 @@ export function CompetitionMarkerLine({
       aria-label={marker.label}
       className="pointer-events-none"
     >
-      <line
-        x1={marker.x}
-        x2={marker.x}
-        y1={plot.top}
-        y2={plot.top + plot.height}
-        stroke="var(--chart-ink)"
-        strokeWidth={2}
-        strokeDasharray="5 3"
-      />
+      {segments.map(([y1, y2]) => (
+        <line
+          key={y1}
+          data-competition-line
+          x1={marker.x}
+          x2={marker.x}
+          y1={y1}
+          y2={y2}
+          stroke="var(--chart-ink)"
+          strokeWidth={2}
+          strokeDasharray="5 3"
+        />
+      ))}
       <text
         x={marker.textX}
         // One row above the block labels.
-        y={plot.top - 24}
+        y={plot.top - NAME_ROW.baseline}
         textAnchor={marker.anchor}
         className="fill-zinc-600 text-[11px] dark:fill-zinc-400"
         aria-hidden="true"

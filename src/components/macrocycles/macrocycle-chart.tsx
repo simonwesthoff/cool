@@ -66,7 +66,6 @@ export function MacrocycleChart({
       plotHeight={220}
       yAxis={{ formatTick: pct, title: t("axisIntensity") }}
       xAxisTitle={t("axisWeek")}
-      legendVisible
       legendExtra={[{ symbol: "▲▼", text: t("legendLevels") }]}
       handles={
         onLevelChange ? { bases, levels, onChange: onLevelChange } : undefined

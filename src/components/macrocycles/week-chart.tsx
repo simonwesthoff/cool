@@ -7,6 +7,7 @@ import type {
   WeekLevel,
 } from "@/domain/macrocycles/macrocycle-types";
 import {
+  blockLabelSpans,
   CompetitionMarkerLine,
   CompetitionSwatch,
   competitionTail,
@@ -484,7 +485,15 @@ export function WeekChart({
               {xAxisTitle}
             </text>
           )}
-          {marker && <CompetitionMarkerLine marker={marker} plot={PLOT} />}
+          {marker && (
+            <CompetitionMarkerLine
+              marker={marker}
+              plot={PLOT}
+              blockLabels={blockLabelSpans(mesocycles, layout, (m) =>
+                tm(`abbr.${m.type}`),
+              )}
+            />
+          )}
           {current !== null && (
             <line
               data-current-week={weeks[current]!.number}
