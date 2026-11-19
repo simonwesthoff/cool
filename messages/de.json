@@ -455,8 +455,8 @@
     "after": "Der Makrozyklus ist beendet.",
     "editWeek": "Woche bearbeiten",
     "planThis": "Diese Woche planen",
-    "planNext": "Nächste Woche planen (Woche {week})",
-    "editNext": "Nächste Woche bearbeiten (Woche {week})",
+    "planNext": "Nächste Woche planen",
+    "editNext": "Nächste Woche bearbeiten",
     "noteOf": "Trainerhinweis zu {name}"
   }
 }

@@ -89,8 +89,8 @@ export function TrainingWeekSection({
             planThis: t("planThis"),
             next: current.next
               ? current.next.planned
-                ? t("editNext", { week: current.next.weekNumber })
-                : t("planNext", { week: current.next.weekNumber })
+                ? t("editNext")
+                : t("planNext")
               : null,
           }}
           editor={editor}
@@ -158,8 +158,27 @@ function WeekContent({
           <span key={part}>{part}</span>
         ))}
       </p>
+      {!week.planned ? (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {labels.notPlanned}
+        </p>
+      ) : (
+        week.sessions.map((s) => (
+          <WeekViewTable
+            key={`${s.weekday}.${s.slot}`}
+            athleteId={athleteId}
+            weekNumber={week.weekNumber}
+            session={s}
+            label={sessionLabel(s.weekday, s.slot, perDay(s.weekday) > 1)}
+            names={names}
+            canGiveFeedback={canGiveFeedback}
+          />
+        ))
+      )}
       {canEdit && (
-        <div className="flex flex-wrap gap-2">
+        // Below the week: edit (or plan) this week on the left, the next
+        // week on the right.
+        <div data-week-actions className="flex flex-wrap justify-between gap-2">
           {week.planned ? (
             <Link href={editor(week.weekNumber, false)} className={primary}>
               {labels.editWeek}
@@ -178,23 +197,6 @@ function WeekContent({
             </Link>
           )}
         </div>
-      )}
-      {!week.planned ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {labels.notPlanned}
-        </p>
-      ) : (
-        week.sessions.map((s) => (
-          <WeekViewTable
-            key={`${s.weekday}.${s.slot}`}
-            athleteId={athleteId}
-            weekNumber={week.weekNumber}
-            session={s}
-            label={sessionLabel(s.weekday, s.slot, perDay(s.weekday) > 1)}
-            names={names}
-            canGiveFeedback={canGiveFeedback}
-          />
-        ))
       )}
     </>
   );

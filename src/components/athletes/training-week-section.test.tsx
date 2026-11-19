@@ -139,15 +139,23 @@ describe("TrainingWeekSection", () => {
     expect(monday.querySelector("table")!.className).toContain("table-fixed");
   });
 
-  it("gives the coach Edit week and Plan next week, and the athlete neither", () => {
-    renderSection({ canEdit: true });
+  it("gives the coach Edit week (left) and Plan next week (right) below the week, and the athlete neither", () => {
+    const { container } = renderSection({ canEdit: true });
+    const actions = container.querySelector("[data-week-actions]")!;
+    expect(actions.className).toContain("justify-between");
+    // Below the session tables.
+    expect(
+      table().compareDocumentPosition(actions) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      [...actions.querySelectorAll("a")].map((a) => a.textContent),
+    ).toEqual(["Edit week", "Plan next week"]);
     expect(
       screen.getByRole("link", { name: "Edit week" }).getAttribute("href"),
     ).toBe("/athletes/a1/macrocycle/weeks/11");
     expect(
-      screen
-        .getByRole("link", { name: "Plan next week (week 12)" })
-        .getAttribute("href"),
+      screen.getByRole("link", { name: "Plan next week" }).getAttribute("href"),
     ).toBe("/athletes/a1/macrocycle/weeks/12?prefill=previous");
     cleanup();
     renderSection();
@@ -217,6 +225,9 @@ describe("TrainingWeekSection", () => {
       container.querySelector("[data-week-header]")!.textContent,
     ).toContain("KW 6");
     expect(screen.getByRole("link", { name: "Woche bearbeiten" })).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Nächste Woche planen" }),
+    ).toBeTruthy();
     expect(
       [...container.querySelectorAll("thead th")].map((th) => th.textContent),
     ).toContain("Rückmeldung");

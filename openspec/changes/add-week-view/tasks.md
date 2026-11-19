@@ -68,6 +68,7 @@
 - [x] 6.3 Minimal exercise chart (athlete page and macrocycle view): no mesocycle colours, a thin line at each block start, no y-axis or values, one smoothed pink stroke without handles or halo, a pink gradient fading downwards; a dot only on the hovered week. Verify with component tests and screenshots (light, dark, phone).
 - [x] 6.4 One week chart element (`WeekChart`) for planning, macrocycle view and athlete page, with parameters for y-axis, axis titles, legend, current week, week handles and border sliders; planning in the new style with y-axis, handles and sliders; curve continues to a main competition after the start of the last week and the chart ends there; competition label shows only the name; no mesocycle colours anywhere (bands, swatches and colour tokens removed). Verify with component tests and a browser check (drag a handle and a slider, screenshots light/dark/phone).
 - [x] 6.5 Current week marked below the chart: its week number bold (always shown) with a bold "Current" under it, kept inside the chart at both ends; no text above the line. Verify with component tests and screenshots (mid-cycle, week 1 on a phone).
+- [x] 6.6 Coach buttons of the training week below the session tables: "Edit week"/"Plan this week" bottom left, "Plan next week"/"Edit next week" without the week number bottom right. Verify with component tests and a screenshot (German).
 
 ## Workflow follow-up
 

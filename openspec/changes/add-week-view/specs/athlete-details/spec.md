@@ -31,13 +31,14 @@ The athlete page SHALL have a "Training week" section below the macrocycle
 with the current week (see the week view). For whoever leads the athlete's
 Team (the coach, and a coach who trains themselves on "My training") it
 SHALL offer "Edit week" for a planned current week or "Plan this week" for
-an unplanned one, and "Plan next week" or "Edit next week". There SHALL be
-no list of planned weeks. Without a macrocycle there SHALL be no section.
+an unplanned one at the bottom left below the week, and "Plan next week"
+or "Edit next week" (without the week number) at the bottom right. There
+SHALL be no list of planned weeks. Without a macrocycle there SHALL be no section.
 
 #### Scenario: Coach with planned weeks
 - **GIVEN** an athlete whose current week 6 has a week plan and week 7 has none
 - **WHEN** the coach opens the athlete page
-- **THEN** the section shows week 6 with "Edit week" and "Plan next week", and no list of planned weeks
+- **THEN** the section shows week 6 with "Edit week" at the bottom left and "Plan next week" at the bottom right, and no list of planned weeks
 
 #### Scenario: Linked athlete
 - **WHEN** a linked athlete of another coach's Team opens "My training"
