@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import { useState, type DragEvent } from "react";
 import { CloseIcon, PlusIcon } from "../icons";
 import { MAX_PER_DAY, sessionsOnDay, type DraftSession } from "./week-draft";
+import { LiftMarks } from "../exercises/lift-marks";
+import type { LiftCategory } from "@/domain/exercises/catalog-types";
 
 /** Drag data of an exercise moved within the week. */
 export const MOVE_TYPE = "application/x-week-exercise";
@@ -85,6 +87,7 @@ export function SessionCard({
   label,
   dayName,
   exerciseName,
+  categoriesOf,
   chosen,
   blockName,
   onChangeDay,
@@ -100,6 +103,8 @@ export function SessionCard({
   label: string;
   dayName: (weekday: number) => string;
   exerciseName: (exerciseNumber: number) => string;
+  /** Lift categories of an exercise, shown as marks before its name. */
+  categoriesOf: (exerciseNumber: number) => LiftCategory[];
   chosen: number[];
   blockName: string;
   onChangeDay: (weekday: number) => void;
@@ -253,6 +258,7 @@ export function SessionCard({
                 >
                   <GripIcon />
                 </button>
+                <LiftMarks categories={categoriesOf(e.exerciseNumber)} />
                 <span className="min-w-0 flex-1 truncate text-sm">{name}</span>
                 {!planned && (
                   // Not planned for the week's mesocycle.

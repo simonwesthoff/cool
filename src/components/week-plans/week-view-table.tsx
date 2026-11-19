@@ -1,7 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import type { LiftCategory } from "@/domain/exercises/catalog-types";
 import { usesFreeText } from "@/domain/week-plans/week-plan-types";
+import { LiftMarks } from "../exercises/lift-marks";
 import type { PlannedSession } from "@/domain/week-plans/week-plan-types";
 import { FeedbackField } from "./feedback-field";
 import { NoteIndicator } from "./note-indicator";
@@ -28,6 +30,7 @@ export function WeekViewTable({
   session,
   label,
   names,
+  categories = {},
   canGiveFeedback,
 }: {
   athleteId: string;
@@ -37,6 +40,8 @@ export function WeekViewTable({
   label: string;
   /** Display names by exercise number ("13 Snatch pull (From blocks)"). */
   names: Record<string, string>;
+  /** Lift categories by exercise number, shown as marks before the name. */
+  categories?: Record<number, LiftCategory[]>;
   canGiveFeedback: boolean;
 }) {
   const t = useTranslations("WeekView");
@@ -149,6 +154,11 @@ export function WeekViewTable({
                       // Hovering anywhere in the cell shows the coach note.
                       className={`${line} ${stickyName} group/note px-2 text-left align-middle font-medium`}
                     >
+                      <span className="mr-1.5 inline-flex align-middle">
+                        <LiftMarks
+                          categories={categories[e.exerciseNumber] ?? []}
+                        />
+                      </span>
                       {name}
                       {e.note && (
                         <NoteIndicator

@@ -8,7 +8,7 @@ import {
 } from "./catalog-source";
 
 const header =
-  "Komplex,Nr.,Bezeichnung,Bestwert (% vom Reiß-/Stoß Max.),Max. Wochen Mittleres Hantelgewicht (MHG),Minimale Wdh,Maximale Wdh,Referenzübung,min Wochen Wdh,max Wochen Wdh,Kommentar,Addresses";
+  "Komplex,Nr.,Bezeichnung,Bestwert (% vom Reiß-/Stoß Max.),Max. Wochen Mittleres Hantelgewicht (MHG),Minimale Wdh,Maximale Wdh,Referenzübung,min Wochen Wdh,max Wochen Wdh,Kommentar,Addresses,Kategorie";
 const translations: Translations = {
   groups: { "1": "Competition exercises", "8": "General strength training 1" },
   exercises: { "1": "Snatch", "31": "Bench press" },
@@ -17,8 +17,8 @@ const translations: Translations = {
 };
 const csv = [
   header,
-  'K1 Wettkampfübungen (WKÜ),1,Reißen,100,86,1,5,Reißen,10,30,"Wettkampfübung, mit Komma","WKÜ, Hoher Zug"',
-  "K8 Allgemeines Muskelkrafttraining 1 (AMKT),31,Bankdrücken,,,,,,,,,-",
+  'K1 Wettkampfübungen (WKÜ),1,Reißen,100,86,1,5,Reißen,10,30,"Wettkampfübung, mit Komma","WKÜ, Hoher Zug",Reißen',
+  "K8 Allgemeines Muskelkrafttraining 1 (AMKT),31,Bankdrücken,,,,,,,,,-,",
 ].join("\n");
 
 describe("parseCsv", () => {
@@ -66,6 +66,7 @@ describe("buildCatalog", () => {
       commentDe: "Wettkampfübung, mit Komma",
       commentEn: "Competition exercise",
       addresses: ["WKÜ", "Hoher Zug"],
+      liftCategories: ["snatch"],
     });
     expect(catalog.exercises[1]).toMatchObject({
       number: 31,
@@ -75,6 +76,7 @@ describe("buildCatalog", () => {
       commentDe: null,
       commentEn: null,
       addresses: [],
+      liftCategories: [],
     });
     expect(catalog.tags).toEqual([
       { nameDe: "WKÜ", nameEn: "Competition exercise" },
@@ -155,6 +157,34 @@ describe("buildCatalog", () => {
     expect(catalogMigrationSql(catalog)).toContain("'Reißen''s'");
   });
 
+  const withCategoryCell = (cell: string) =>
+    csv.replace('"WKÜ, Hoher Zug",Reißen', `"WKÜ, Hoher Zug",${cell}`);
+
+  it("reads lift categories in the order snatch, clean, jerk", () => {
+    const catalog = buildCatalog(
+      withCategoryCell('"Ausstoßen, Umsetzen"'),
+      translations,
+    );
+    expect(catalog.exercises[0]!.liftCategories).toEqual(["clean", "jerk"]);
+  });
+
+  it("rejects an unknown or duplicate lift category", () => {
+    expect(() =>
+      buildCatalog(withCategoryCell("Drücken"), translations),
+    ).toThrow('unknown lift category "Drücken"');
+    expect(() =>
+      buildCatalog(withCategoryCell('"Reißen, Reißen"'), translations),
+    ).toThrow("duplicate entry");
+  });
+
+  it("writes the lift categories as text arrays", () => {
+    const sql = catalogMigrationSql(buildCatalog(csv, translations));
+    expect(sql).toContain('"comment_en", "lift_categories") VALUES');
+    expect(sql).toContain("ARRAY['snatch']::text[])");
+    expect(sql).toContain("ARRAY[]::text[])");
+    expect(sql).toContain('"lift_categories" = EXCLUDED."lift_categories"');
+  });
+
   it("replaces the addressed points in the generated SQL", () => {
     const sql = catalogMigrationSql(buildCatalog(csv, translations));
     expect(sql).toContain('DELETE FROM "exercise_addresses";');
@@ -188,5 +218,20 @@ describe("buildCatalog", () => {
       "Beschleunigung im 2. Zug",
       "Hoher Zug",
     ]);
+    // Lift categories as decided by the user.
+    const withCategory = (category: string) =>
+      catalog.exercises
+        .filter((e) => (e.liftCategories as string[]).includes(category))
+        .map((e) => e.number);
+    expect(withCategory("snatch")).toEqual([1, 2, 6, 7, 8, 13, 15, 18, 22, 23]);
+    expect(withCategory("clean")).toEqual([
+      3, 4, 9, 10, 11, 14, 16, 19, 20, 21, 24, 27, 28,
+    ]);
+    expect(withCategory("jerk")).toEqual([3, 5, 12, 17, 25, 26, 28, 29]);
+    expect(
+      catalog.exercises
+        .filter((e) => e.liftCategories.length === 0)
+        .map((e) => e.number),
+    ).toEqual(Array.from({ length: 16 }, (_, i) => i + 30));
   });
 });

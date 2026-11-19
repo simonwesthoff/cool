@@ -110,6 +110,7 @@ erDiagram
         int number
         string name
         string referenceLift
+        string[] liftCategories
         decimal bestValuePct
         decimal maxWeeklyAverageWeightPct
         int minRepsPerSet
@@ -121,7 +122,8 @@ erDiagram
 
 - The exercise catalog consists of exercise groups (K1–K9), each with its
   exercises. Exercises are identified by their catalog number. The catalog
-  is shared by all Teams and read-only; later changes reference exercises
+  is shared by all Teams and read-only (each exercise has its lift
+  categories: snatch, clean, jerk; several or none); later changes reference exercises
   from mesocycles and weekly plans and add per-athlete adjustments of the
   values.
 - An Athlete has at most one Macrocycle, planned by the coach of the

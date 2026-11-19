@@ -72,6 +72,11 @@ export type WeekChartProps = {
   handles?: LevelHandles;
   /** Draggable sliders for the two mesocycle borders (planning). */
   onBordersChange?: (specialStart: number, competitionStart: number) => void;
+  /**
+   * Colours of the curve, its gradient and its points (CSS colours). Two or
+   * more run from left to right across the chart.
+   */
+  colors?: string[];
 };
 
 const TOOLTIP = { width: 208, height: 84, gap: 10 };
@@ -108,12 +113,15 @@ export function WeekChart({
   pointLabel,
   handles,
   onBordersChange,
+  colors = ["var(--chart-curve)"],
 }: WeekChartProps) {
   const t = useTranslations("Macrocycle.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
   const tv = useTranslations("MacrocycleView.chart");
   const titleId = useId();
   const gradientId = useId();
+  const acrossId = useId();
+  const fadeId = useId();
   const { container, width } = useContainerWidth();
   const [hovered, setHovered] = useState<number | null>(null);
   const [dragging, setDragging] = useState<{
@@ -141,6 +149,9 @@ export function WeekChart({
   // The competition's name has its own row above the block labels, so they
   // never hide each other. Narrower than the desktop content width, the
   // plot shrinks in height too: the chart keeps its desktop proportions.
+  // Two or more colours blend from left to right (e.g. clean and jerk).
+  const blend = colors.length > 1;
+  const paint = blend ? `url(#${acrossId})` : colors[0]!;
   const PLOT = {
     top: marker ? 44 : 28,
     height: plotHeight * Math.min(1, width / DESKTOP_WIDTH),
@@ -327,14 +338,41 @@ export function WeekChart({
           className={`block select-none ${handles || onBordersChange ? "touch-none" : ""}`}
         >
           <defs>
+            {/* The area below the curve fades downwards. */}
             <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-              <stop
-                offset="0"
-                stopColor="var(--chart-curve)"
-                stopOpacity={0.3}
-              />
-              <stop offset="1" stopColor="var(--chart-curve)" stopOpacity={0} />
+              <stop offset="0" stopColor={colors[0]} stopOpacity={0.3} />
+              <stop offset="1" stopColor={colors[0]} stopOpacity={0} />
             </linearGradient>
+            {blend && (
+              <>
+                {/* Several colours: from left to right across the plot. */}
+                <linearGradient
+                  id={acrossId}
+                  data-across
+                  gradientUnits="userSpaceOnUse"
+                  x1={plotLeft}
+                  x2={plotRight}
+                  y1="0"
+                  y2="0"
+                >
+                  {colors.map((c, i) => (
+                    <stop
+                      key={c}
+                      offset={i / (colors.length - 1)}
+                      stopColor={c}
+                    />
+                  ))}
+                </linearGradient>
+                {/* The fade downwards as a mask over the coloured area. */}
+                <linearGradient id={`${fadeId}-g`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stopColor="white" stopOpacity={0.3} />
+                  <stop offset="1" stopColor="white" stopOpacity={0} />
+                </linearGradient>
+                <mask id={fadeId} maskContentUnits="objectBoundingBox">
+                  <rect width="1" height="1" fill={`url(#${fadeId}-g)`} />
+                </mask>
+              </>
+            )}
           </defs>
           <MesocycleStarts
             mesocycles={mesocycles}
@@ -461,12 +499,17 @@ export function WeekChart({
           )}
           {/* One pink stroke; the gradient below fades downwards. */}
           <g data-curve={series} opacity={dimmed ? 0.35 : 1}>
-            <path data-area d={area} fill={`url(#${gradientId})`} />
+            <path
+              data-area
+              d={area}
+              fill={blend ? `url(#${acrossId})` : `url(#${gradientId})`}
+              mask={blend ? `url(#${fadeId})` : undefined}
+            />
             <path
               data-line
               d={path}
               fill="none"
-              stroke="var(--chart-curve)"
+              stroke={paint}
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -508,7 +551,7 @@ export function WeekChart({
                       cx={x(i)}
                       cy={y(v)}
                       r={active && handles ? radius + 1.5 : radius}
-                      fill="var(--chart-curve)"
+                      fill={paint}
                       stroke="var(--surface)"
                       strokeWidth={2}
                     />

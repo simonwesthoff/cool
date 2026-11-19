@@ -44,13 +44,19 @@ export function ExerciseDialog({ exercise, group, onClose }: Props) {
     ? `${exercise.number} ${localized(exercise.name, locale)}`
     : "";
 
-  // Subtitle: exercise group and, if defined, the reference lift.
+  // Subtitle: exercise group and, if defined, the reference lift and the
+  // lift categories.
   const subtitle =
     exercise && group
       ? [
           `${group.code} · ${localized(group.name, locale)}`,
           exercise.referenceLift
             ? t(`liftExercise.${exercise.referenceLift}`)
+            : null,
+          exercise.liftCategories.length > 0
+            ? exercise.liftCategories
+                .map((c) => t(`categories.${c}`))
+                .join(", ")
             : null,
         ]
           .filter(Boolean)

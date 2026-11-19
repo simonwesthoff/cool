@@ -3,7 +3,7 @@
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { localized } from "@/domain/exercises/catalog-types";
+import { localized, type LiftCategory } from "@/domain/exercises/catalog-types";
 import type { PlannedExercise } from "@/domain/macrocycles/calculation";
 import { deviation } from "@/domain/week-plans/calculation";
 import {
@@ -100,6 +100,13 @@ export function WeekEditor({
         map.set(e.number, `${e.number} ${localized(e.name, locale)}`);
     return map;
   }, [catalog, locale]);
+  const categories = useMemo(() => {
+    const map = new Map<number, LiftCategory[]>();
+    for (const g of catalog)
+      for (const e of g.exercises) map.set(e.number, e.liftCategories);
+    return map;
+  }, [catalog]);
+  const categoriesOf = (n: number) => categories.get(n) ?? [];
   /** "13 Snatch pull", with the mesocycle's variation in brackets. */
   const exerciseName = (n: number) => {
     const name = names.get(n) ?? String(n);
@@ -392,6 +399,7 @@ export function WeekEditor({
                     label={label}
                     dayName={dayName}
                     exerciseName={exerciseName}
+                    categoriesOf={categoriesOf}
                     chosen={plan.chosen}
                     blockName={blockName}
                     onChangeDay={(weekday) =>
@@ -438,6 +446,7 @@ export function WeekEditor({
                   session={s}
                   label={label}
                   exerciseName={exerciseName}
+                  categoriesOf={categoriesOf}
                   actualsOf={(n) => actuals.get(n)}
                   projectionOf={(n) => projections[n]}
                   onChangeSet={(exerciseKey, index, field, value) =>

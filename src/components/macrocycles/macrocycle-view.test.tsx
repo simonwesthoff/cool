@@ -99,8 +99,21 @@ const valuesOf = (exerciseNumber: number, best: number): ExerciseWeeks => ({
   })),
 });
 const exercises = [
-  { number: 1, name: { de: "Reißen", en: "Snatch" } },
-  { number: 13, name: { de: "Zug breit", en: "Snatch pull" } },
+  {
+    number: 1,
+    name: { de: "Reißen", en: "Snatch" },
+    liftCategories: ["snatch" as const],
+  },
+  {
+    number: 4,
+    name: { de: "Umsetzen", en: "Clean" },
+    liftCategories: ["clean" as const],
+  },
+  {
+    number: 13,
+    name: { de: "Zug breit", en: "Snatch pull" },
+    liftCategories: ["snatch" as const],
+  },
 ];
 
 function renderView(
@@ -137,6 +150,7 @@ describe("MacrocycleView", () => {
     const value = screen.getByLabelText("Value") as HTMLSelectElement;
     expect([...exercise.options].map((o) => o.textContent)).toEqual([
       "1 Snatch",
+      "4 Clean",
       "13 Snatch pull",
     ]);
     expect(exercise.value).toBe("1");
@@ -231,6 +245,18 @@ describe("MacrocycleView", () => {
     await userEvent.selectOptions(screen.getByLabelText("Exercise"), "13");
     expect(valueOfWeek1(container)).toBe("95");
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("colours the curve by the chosen exercise's category", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(valuesOf(4, 100)), { status: 200 }),
+    );
+    const { container } = renderView();
+    const stroke = () =>
+      container.querySelector("[data-line]")!.getAttribute("stroke");
+    expect(stroke()).toBe("var(--lift-snatch)");
+    await userEvent.selectOptions(screen.getByLabelText("Exercise"), "4");
+    await waitFor(() => expect(stroke()).toBe("var(--lift-clean)"));
   });
 
   it("keeps the previous exercise and shows a message when loading fails", async () => {

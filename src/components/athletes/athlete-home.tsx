@@ -4,7 +4,10 @@ import type {
   ExerciseWeeks,
   Macrocycle,
 } from "@/domain/macrocycles/macrocycle-types";
-import type { LocalizedText } from "@/domain/exercises/catalog-types";
+import type {
+  LiftCategory,
+  LocalizedText,
+} from "@/domain/exercises/catalog-types";
 import type { CurrentWeek } from "@/domain/week-plans/week-plan-types";
 import { Avatar } from "../avatar";
 import { BackLink } from "../back-link";
@@ -37,6 +40,8 @@ type Props = {
   currentWeek?: {
     current: CurrentWeek;
     names: Record<number, LocalizedText>;
+    /** Lift categories of the week's exercises. */
+    categories: Record<number, LiftCategory[]>;
     canGiveFeedback: boolean;
   } | null;
 };
@@ -142,6 +147,8 @@ export function AthleteHome({
             mesocycles={macrocycle.macrocycle.mesocycles}
             values={macrocycle.values.weeks}
             value="bestKg"
+            // The athlete page shows the snatch (exercise 1).
+            categories={["snatch"]}
             competition={{
               date: macrocycle.macrocycle.competitionDate,
               type: macrocycle.macrocycle.competitionType,
@@ -179,6 +186,7 @@ export function AthleteHome({
           athleteId={athleteId}
           current={currentWeek.current}
           names={currentWeek.names}
+          categories={currentWeek.categories}
           canEdit={canEdit}
           canGiveFeedback={currentWeek.canGiveFeedback}
         />

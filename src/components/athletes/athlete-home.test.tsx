@@ -174,6 +174,7 @@ describe("AthleteHome", () => {
     const currentWeek = {
       current: { state: "before" as const, startDate: "2026-11-30" },
       names: {},
+      categories: {},
       canGiveFeedback: true,
     };
     renderHome({ canEdit: false, currentWeek });

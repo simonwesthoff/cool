@@ -46,6 +46,15 @@ describe("exercise catalog data migration", () => {
     });
   });
 
+  it("has the lift categories", async () => {
+    const rows = await testDb.db.select().from(exercise);
+    const byNumber = new Map(rows.map((r) => [r.number, r.liftCategories]));
+    expect(byNumber.get(3)).toEqual(["clean", "jerk"]);
+    expect(byNumber.get(19)).toEqual(["clean"]);
+    expect(byNumber.get(1)).toEqual(["snatch"]);
+    expect(byNumber.get(31)).toEqual([]);
+  });
+
   it("has the fixed typos", async () => {
     const [k8] = await testDb.db
       .select()

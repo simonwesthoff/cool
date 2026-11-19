@@ -4,13 +4,19 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
   localized,
+  type LiftCategory,
   type LocalizedText,
 } from "@/domain/exercises/catalog-types";
+import { LiftMarks } from "../exercises/lift-marks";
 
 export type CatalogGroup = {
   code: string;
   name: LocalizedText;
-  exercises: { number: number; name: LocalizedText }[];
+  exercises: {
+    number: number;
+    name: LocalizedText;
+    liftCategories: LiftCategory[];
+  }[];
 };
 
 /** Empty circle: chosen for the mesocycle, not in the week yet. */
@@ -117,6 +123,7 @@ export function ExerciseList({
                 }`;
                 const content = (
                   <>
+                    <LiftMarks categories={e.liftCategories} />
                     <span className="min-w-0 flex-1 truncate">{name}</span>
                     {inBlock ? (
                       <span

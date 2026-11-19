@@ -5,6 +5,8 @@
  */
 
 export type ReferenceLift = "snatch" | "clean_and_jerk";
+/** The competition movements an exercise trains (lift categories). */
+export type LiftCategory = "snatch" | "clean" | "jerk";
 
 export type CatalogGroup = {
   number: number;
@@ -29,6 +31,8 @@ export type CatalogExercise = {
   commentEn: string | null;
   /** German names of the addressed points (tags), in catalog order. */
   addresses: string[];
+  /** Lift categories in the order snatch, clean, jerk (may be empty). */
+  liftCategories: LiftCategory[];
 };
 
 /** A point an exercise addresses; the German name is its key. */
@@ -102,6 +106,7 @@ const COLUMNS = [
   "max Wochen Wdh",
   "Kommentar",
   "Addresses",
+  "Kategorie",
 ];
 
 function numberOrNull(value: string, where: string): number | null {
@@ -119,6 +124,27 @@ function referenceLift(value: string, where: string): ReferenceLift | null {
   if (trimmed === "Reißen") return "snatch";
   if (trimmed === "Stoßen") return "clean_and_jerk";
   throw new Error(`${where}: unknown reference lift "${value}"`);
+}
+
+const LIFT_CATEGORIES: Record<string, LiftCategory> = {
+  Reißen: "snatch",
+  Umsetzen: "clean",
+  Ausstoßen: "jerk",
+};
+const CATEGORY_ORDER: LiftCategory[] = ["snatch", "clean", "jerk"];
+
+/** The comma-separated "Kategorie" cell; empty means none. */
+function liftCategoriesOf(value: string, where: string): LiftCategory[] {
+  const trimmed = value.trim();
+  if (trimmed === "") return [];
+  const categories = trimmed.split(",").map((part) => {
+    const category = LIFT_CATEGORIES[part.trim()];
+    if (!category) throw new Error(`${where}: unknown lift category "${part}"`);
+    return category;
+  });
+  if (new Set(categories).size !== categories.length)
+    throw new Error(`${where}: duplicate entry in "${value}"`);
+  return CATEGORY_ORDER.filter((c) => categories.includes(c));
 }
 
 /** Builds and validates the catalog from the source files. */
@@ -155,6 +181,7 @@ export function buildCatalog(csv: string, translations: Translations): Catalog {
       maxWeek,
       comment,
       addressed,
+      category,
     ] = cells.map((c) => c.trim()) as [string, ...string[]];
     const match = /^K(\d+)\s+(.+)$/.exec(komplex);
     if (!match)
@@ -217,6 +244,7 @@ export function buildCatalog(csv: string, translations: Translations): Catalog {
       commentDe: comment || null,
       commentEn: comment ? commentEn : null,
       addresses: tagsOf(addressed!, `${where} Addresses`),
+      liftCategories: liftCategoriesOf(category!, `${where} Kategorie`),
     });
   }
 
@@ -257,6 +285,11 @@ function tagsOf(value: string, where: string): string[] {
   return tags;
 }
 
+/** A text array literal, e.g. ARRAY['clean','jerk']::text[]. */
+function liftCategoriesSql(categories: LiftCategory[]): string {
+  return `ARRAY[${categories.map(sql).join(",")}]::text[]`;
+}
+
 function sql(value: string | number | null): string {
   if (value === null) return "NULL";
   if (typeof value === "number") return String(value);
@@ -289,6 +322,7 @@ export function catalogMigrationSql(catalog: Catalog): string {
           e.commentEn,
         ]
           .map(sql)
+          .concat(liftCategoriesSql(e.liftCategories))
           .join(", ")})`,
     )
     .join(",\n  ");
@@ -299,7 +333,7 @@ INSERT INTO "exercise_group" ("number", "code", "name_de", "name_en") VALUES
 ON CONFLICT ("number") DO UPDATE SET
   "code" = EXCLUDED."code", "name_de" = EXCLUDED."name_de", "name_en" = EXCLUDED."name_en";
 --> statement-breakpoint
-INSERT INTO "exercise" ("number", "group_number", "name_de", "name_en", "reference_lift", "best_value_pct", "max_weekly_average_weight_pct", "min_reps_per_set", "max_reps_per_set", "min_reps_per_week", "max_reps_per_week", "comment_de", "comment_en") VALUES
+INSERT INTO "exercise" ("number", "group_number", "name_de", "name_en", "reference_lift", "best_value_pct", "max_weekly_average_weight_pct", "min_reps_per_set", "max_reps_per_set", "min_reps_per_week", "max_reps_per_week", "comment_de", "comment_en", "lift_categories") VALUES
   ${exercises}
 ON CONFLICT ("number") DO UPDATE SET
   "group_number" = EXCLUDED."group_number", "name_de" = EXCLUDED."name_de", "name_en" = EXCLUDED."name_en",
@@ -307,7 +341,8 @@ ON CONFLICT ("number") DO UPDATE SET
   "max_weekly_average_weight_pct" = EXCLUDED."max_weekly_average_weight_pct",
   "min_reps_per_set" = EXCLUDED."min_reps_per_set", "max_reps_per_set" = EXCLUDED."max_reps_per_set",
   "min_reps_per_week" = EXCLUDED."min_reps_per_week", "max_reps_per_week" = EXCLUDED."max_reps_per_week",
-  "comment_de" = EXCLUDED."comment_de", "comment_en" = EXCLUDED."comment_en";
+  "comment_de" = EXCLUDED."comment_de", "comment_en" = EXCLUDED."comment_en",
+  "lift_categories" = EXCLUDED."lift_categories";
 --> statement-breakpoint
 ${tagSql(catalog)}`;
 }

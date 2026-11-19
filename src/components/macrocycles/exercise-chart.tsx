@@ -5,6 +5,8 @@ import type {
   ExerciseWeek,
   MacrocycleWeekView,
 } from "@/domain/macrocycles/macrocycle-types";
+import type { LiftCategory } from "@/domain/exercises/catalog-types";
+import { LIFT_COLOR } from "../exercises/lift-marks";
 import type { ChartMesocycle } from "./chart-frame";
 import { niceDomain } from "./chart-geometry";
 import { useWeekDate, WeekChart } from "./week-chart";
@@ -31,6 +33,8 @@ type Props = {
   today: string;
   /** While another exercise loads, the curve is dimmed. */
   dimmed?: boolean;
+  /** The exercise's lift categories: the curve has their colours. */
+  categories: LiftCategory[];
 };
 
 /**
@@ -46,6 +50,7 @@ export function ExerciseChart({
   competition,
   today,
   dimmed = false,
+  categories,
 }: Props) {
   const t = useTranslations("MacrocycleView.chart");
   const tm = useTranslations("Macrocycle.mesocycles");
@@ -76,6 +81,13 @@ export function ExerciseChart({
       competition={competition}
       today={today}
       dimmed={dimmed}
+      // The categories' colours (blended left to right for two); neutral ink
+      // for an exercise without one.
+      colors={
+        categories.length > 0
+          ? categories.map((c) => LIFT_COLOR[c])
+          : ["var(--chart-ink)"]
+      }
       tooltip={(week, v) => [
         t(`tooltip.${value}`, { value: valueText(v) }),
         t("tooltipWeek", { week: week.number, date: weekDate(week.startDate) }),

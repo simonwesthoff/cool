@@ -15,10 +15,15 @@ vi.mock("@/domain/exercises", () => ({
   getCatalog: async () => [
     {
       exercises: [
-        { number: 1, name: { de: "Reißen", en: "Snatch" } },
+        {
+          number: 1,
+          name: { de: "Reißen", en: "Snatch" },
+          liftCategories: ["snatch"],
+        },
         {
           number: 2,
           name: { de: "Reißen mit Bändern", en: "Snatch with bands" },
+          liftCategories: ["snatch"],
         },
       ],
     },
@@ -65,6 +70,7 @@ describe("loadCurrentWeek", () => {
     isLinkedAthlete.mockResolvedValue(true);
     const loaded = await loadCurrentWeek(user, "a1");
     expect(loaded?.names).toEqual({ 1: { de: "Reißen", en: "Snatch" } });
+    expect(loaded?.categories).toEqual({ 1: ["snatch"] });
     expect(loaded?.canGiveFeedback).toBe(true);
     getCurrentWeek.mockResolvedValue(null);
     expect(await loadCurrentWeek(user, "a1")).toBeNull();

@@ -26,6 +26,10 @@ describe("GET /api/exercises", () => {
     );
     expect(exercises).toHaveLength(45);
     expect(exercises[3].name).toEqual({ de: "Umsetzen", en: "Clean" });
+    // Lift categories with each exercise.
+    expect(exercises[11].liftCategories).toEqual(["jerk"]);
+    expect(exercises[2].liftCategories).toEqual(["clean", "jerk"]);
+    expect(exercises[30].liftCategories).toEqual([]);
   });
 
   it("needs a session", async () => {

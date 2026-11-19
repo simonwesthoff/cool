@@ -2,6 +2,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   localized,
+  type LiftCategory,
   type LocalizedText,
 } from "@/domain/exercises/catalog-types";
 import type { CurrentWeek } from "@/domain/week-plans/week-plan-types";
@@ -24,6 +25,7 @@ export function TrainingWeekSection({
   athleteId,
   current,
   names,
+  categories,
   canEdit,
   canGiveFeedback,
 }: {
@@ -31,6 +33,8 @@ export function TrainingWeekSection({
   current: CurrentWeek;
   /** Catalog names of the week's exercises. */
   names: Record<number, LocalizedText>;
+  /** Lift categories of the week's exercises. */
+  categories: Record<number, LiftCategory[]>;
   canEdit: boolean;
   canGiveFeedback: boolean;
 }) {
@@ -101,6 +105,7 @@ export function TrainingWeekSection({
             });
             return several ? te("sessionLabel", { day, slot }) : day;
           }}
+          categories={categories}
           names={Object.fromEntries(
             Object.entries(names).map(([n, name]) => {
               const base = `${n} ${localized(name, locale)}`;
@@ -129,6 +134,7 @@ function WeekContent({
   editor,
   sessionLabel,
   names,
+  categories,
 }: {
   athleteId: string;
   current: Extract<CurrentWeek, { state: "week" }>;
@@ -144,6 +150,7 @@ function WeekContent({
   editor: (week: number, prefill: boolean) => string;
   sessionLabel: (weekday: number, slot: number, several: boolean) => string;
   names: Record<string, string>;
+  categories: Record<number, LiftCategory[]>;
 }) {
   const { week, next } = current;
   const perDay = (weekday: number) =>
@@ -171,6 +178,7 @@ function WeekContent({
             session={s}
             label={sessionLabel(s.weekday, s.slot, perDay(s.weekday) > 1)}
             names={names}
+            categories={categories}
             canGiveFeedback={canGiveFeedback}
           />
         ))

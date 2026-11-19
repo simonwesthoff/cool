@@ -81,6 +81,7 @@ function renderSection(
         athleteId="a1"
         current={week()}
         names={names}
+        categories={{ 1: ["snatch"], 33: [] }}
         canEdit={false}
         canGiveFeedback={false}
         {...props}
@@ -120,6 +121,15 @@ describe("TrainingWeekSection", () => {
     expect(monday.querySelector("table")!.parentElement!.className).toContain(
       "overflow-y-hidden",
     );
+    // A cyan mark (snatch) before the name; the pull-up has none.
+    expect(
+      [...snatch.querySelectorAll("[data-lift]")].map((d) =>
+        d.getAttribute("data-lift"),
+      ),
+    ).toEqual(["snatch"]);
+    expect(
+      monday.querySelector('tbody[data-exercise="33"] [data-lift-marks]'),
+    ).toBeNull();
     // Bold lines between exercises; no note column.
     expect(snatch.className).toContain("border-t-2");
     expect(snatch.querySelector("[data-feedback]")!.textContent).toBe(

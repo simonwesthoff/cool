@@ -47,6 +47,7 @@ describe("getCatalog", () => {
       addresses: [
         { key: "WKÜ", name: { de: "WKÜ", en: "Competition exercise" } },
       ],
+      liftCategories: ["snatch"],
     });
     expect(exercises[30]).toMatchObject({
       number: 31,
@@ -55,6 +56,7 @@ describe("getCatalog", () => {
       repsPerSet: { min: null, max: null },
       comment: null,
       addresses: [],
+      liftCategories: [],
     });
   });
 });

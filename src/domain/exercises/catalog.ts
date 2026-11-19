@@ -7,7 +7,12 @@ import {
   exerciseGroup,
   exerciseTag,
 } from "@/server/db/schema";
-import type { Exercise, ExerciseGroup, ExerciseTag } from "./catalog-types";
+import {
+  LIFT_CATEGORIES,
+  type Exercise,
+  type ExerciseGroup,
+  type ExerciseTag,
+} from "./catalog-types";
 
 type ExerciseRow = typeof exercise.$inferSelect;
 
@@ -58,6 +63,9 @@ function toExercise(
         ? { de: row.commentDe, en: row.commentEn }
         : null,
     addresses: addresses.get(row.number) ?? [],
+    liftCategories: LIFT_CATEGORIES.filter((c) =>
+      row.liftCategories.includes(c),
+    ),
   };
 }
 
