@@ -43,8 +43,9 @@ None.
 ### Modified Capabilities
 
 - `macrocycle-planning`: "Exercises per mesocycle" — the scenario "Prefill
-  from another block" becomes a direct copy without the dialog; new
-  scenarios for a source without a reason and for a failed save.
+  from another block" becomes a direct copy without the dialog. New
+  requirement "Copy a choice from another block" with the source block, a
+  source without a reason, a failed save and changing a copy.
 
 ## Impact
 
