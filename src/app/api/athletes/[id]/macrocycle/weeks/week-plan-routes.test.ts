@@ -8,6 +8,7 @@ vi.mock("@/server/auth", () => ({ getAuth: () => ({ api: { getSession } }) }));
 
 const plan = await import("./[week]/plan/route");
 const plans = await import("./plans/route");
+const feedback = await import("./[week]/plan/feedback/route");
 const { athlete: athleteTable } = await import("@/server/db/schema");
 const { eq } = await import("drizzle-orm");
 const { startAsCoach } = await import("@/domain/roles");
@@ -156,5 +157,48 @@ describe("week plan API", () => {
     expect(write.status).toBe(403);
     expect(await write.json()).toEqual({ error: { code: "NOT_A_COACH" } });
     void coach;
+  });
+
+  it("lets only the linked athlete write feedback, which GET returns", async () => {
+    const { athlete } = await setup();
+    const id = athlete.id;
+    await plan.PUT(json("PUT", week), ctx({ id, week: "11" }));
+    const body = { weekday: 1, slot: 1, exerciseNumber: 1, feedback: "Heavy" };
+    // The coach of the Team is not the athlete.
+    const asCoach = await feedback.PUT(
+      json("PUT", body),
+      ctx({ id, week: "11" }),
+    );
+    expect(asCoach.status).toBe(403);
+    expect(await asCoach.json()).toEqual({
+      error: { code: "NOT_THE_ATHLETE" },
+    });
+    const linked = await createUser(testDb.db);
+    await testDb.db
+      .update(athleteTable)
+      .set({ userAccountId: linked.id })
+      .where(eq(athleteTable.id, id));
+    as(linked);
+    const ok = await feedback.PUT(json("PUT", body), ctx({ id, week: "11" }));
+    expect(ok.status).toBe(200);
+    const read = await plan.GET(get(), ctx({ id, week: "11" }));
+    expect((await read.json()).sessions[0].exercises[0].feedback).toBe("Heavy");
+    const missing = await feedback.PUT(
+      json("PUT", { ...body, exerciseNumber: 13 }),
+      ctx({ id, week: "11" }),
+    );
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({
+      error: { code: "EXERCISE_NOT_IN_WEEK" },
+    });
+    const tooLong = await feedback.PUT(
+      json("PUT", { ...body, feedback: "x".repeat(501) }),
+      ctx({ id, week: "11" }),
+    );
+    expect(tooLong.status).toBe(400);
+    as(null);
+    expect(
+      (await feedback.PUT(json("PUT", body), ctx({ id, week: "11" }))).status,
+    ).toBe(401);
   });
 });

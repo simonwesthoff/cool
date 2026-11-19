@@ -4,7 +4,8 @@ import type {
   ExerciseWeeks,
   Macrocycle,
 } from "@/domain/macrocycles/macrocycle-types";
-import type { TrainingWeeks } from "@/domain/week-plans/week-plan-types";
+import type { LocalizedText } from "@/domain/exercises/catalog-types";
+import type { CurrentWeek } from "@/domain/week-plans/week-plan-types";
 import { Avatar } from "../avatar";
 import { BackLink } from "../back-link";
 import { ExerciseChart } from "../macrocycles/exercise-chart";
@@ -32,8 +33,12 @@ type Props = {
   canEdit: boolean;
   /** The planned macrocycle with the chart data, or null. */
   macrocycle: AthleteHomeMacrocycle | null;
-  /** Entry points of the week planning; only for whoever may plan. */
-  trainingWeeks?: TrainingWeeks | null;
+  /** The current week with the names of its exercises; null without one. */
+  currentWeek?: {
+    current: CurrentWeek;
+    names: Record<number, LocalizedText>;
+    canGiveFeedback: boolean;
+  } | null;
 };
 
 const card =
@@ -82,7 +87,7 @@ export function AthleteHome({
   coachName,
   canEdit,
   macrocycle,
-  trainingWeeks,
+  currentWeek,
 }: Props) {
   const t = useTranslations("AthleteHome");
   const tb = useTranslations("Back");
@@ -120,9 +125,6 @@ export function AthleteHome({
         </div>
         <p className="text-zinc-600 dark:text-zinc-400">
           {t("coach", { name: coachName })}
-        </p>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {coach ? t("placeholderCoach") : t("placeholder")}
         </p>
       </section>
       {macrocycle ? (
@@ -172,8 +174,14 @@ export function AthleteHome({
           </Link>
         )
       )}
-      {canEdit && macrocycle && trainingWeeks && (
-        <TrainingWeekSection athleteId={athleteId} weeks={trainingWeeks} />
+      {macrocycle && currentWeek && (
+        <TrainingWeekSection
+          athleteId={athleteId}
+          current={currentWeek.current}
+          names={currentWeek.names}
+          canEdit={canEdit}
+          canGiveFeedback={currentWeek.canGiveFeedback}
+        />
       )}
     </div>
   );

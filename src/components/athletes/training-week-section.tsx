@@ -1,31 +1,53 @@
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import type { TrainingWeeks } from "@/domain/week-plans/week-plan-types";
+import {
+  localized,
+  type LocalizedText,
+} from "@/domain/exercises/catalog-types";
+import type { CurrentWeek } from "@/domain/week-plans/week-plan-types";
+import { WeekViewTable } from "../week-plans/week-view-table";
 
 const button =
   "inline-flex min-h-11 items-center justify-center rounded-full px-5 font-medium";
+const primary = `${button} bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300`;
+const secondary = `${button} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`;
+
+/** Monday 2024-01-01 plus `weekday - 1` days, for localized weekday names. */
+const dayDate = (weekday: number) => new Date(Date.UTC(2024, 0, weekday));
 
 /**
- * "Training week" on the athlete page, for whoever may plan: plan or edit
- * the next week, plan an unplanned current week, and the planned weeks.
+ * "Training week" on the athlete page: the plan of the current week,
+ * read-only, with the athlete's feedback per exercise. Whoever may plan
+ * also gets "Edit week" / "Plan this week" and "Plan next week".
  */
 export function TrainingWeekSection({
   athleteId,
-  weeks,
+  current,
+  names,
+  canEdit,
+  canGiveFeedback,
 }: {
   athleteId: string;
-  weeks: TrainingWeeks;
+  current: CurrentWeek;
+  /** Catalog names of the week's exercises. */
+  names: Record<number, LocalizedText>;
+  canEdit: boolean;
+  canGiveFeedback: boolean;
 }) {
-  const t = useTranslations("AthleteHome.trainingWeek");
+  const t = useTranslations("WeekView");
+  const tm = useTranslations("Macrocycle.mesocycles");
+  const tl = useTranslations("Macrocycle.chart.levels");
+  const te = useTranslations("WeekEditor");
+  const ta = useTranslations("AthleteHome.trainingWeek");
   const format = useFormatter();
-  const editor = (week: number, prefill: boolean) =>
-    `/athletes/${athleteId}/macrocycle/weeks/${week}${prefill ? "?prefill=previous" : ""}`;
+  const locale = useLocale();
   const date = (iso: string) =>
     format.dateTime(new Date(`${iso}T00:00:00Z`), {
       dateStyle: "medium",
       timeZone: "UTC",
     });
-  const { current, next, planned } = weeks;
+  const editor = (week: number, prefill: boolean) =>
+    `/athletes/${athleteId}/macrocycle/weeks/${week}${prefill ? "?prefill=previous" : ""}`;
 
   return (
     <section
@@ -33,68 +55,149 @@ export function TrainingWeekSection({
       className="mt-4 flex flex-col gap-3"
     >
       <h2 id="training-week-heading" className="text-lg font-semibold">
-        {t("title")}
+        {ta("title")}
       </h2>
-      <div className="flex flex-wrap gap-2">
-        {next &&
-          (next.planned ? (
-            <Link
-              href={editor(next.weekNumber, false)}
-              className={`${button} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`}
-            >
-              {t("editNext", { week: next.weekNumber })}
-            </Link>
-          ) : (
-            <Link
-              href={editor(next.weekNumber, true)}
-              className={`${button} bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300`}
-            >
-              {t("planNext", { week: next.weekNumber })}
-            </Link>
-          ))}
-        {current && !current.planned && (
-          <Link
-            href={editor(current.weekNumber, true)}
-            className={`${button} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`}
-          >
-            {t("planThis", { week: current.weekNumber })}
-          </Link>
-        )}
-      </div>
-      {planned.length === 0 ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("none")}</p>
-      ) : (
-        <ul className="flex flex-col divide-y divide-zinc-200 rounded-2xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-          {planned.map((w) => (
-            <li
-              key={w.weekNumber}
-              data-week={w.weekNumber}
-              className="flex items-center justify-between gap-3 px-4 py-2"
-            >
-              <span>
-                <span className="font-medium">
-                  {t("week", { week: w.weekNumber })}
-                </span>
-                <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
-                  {t("from", { date: date(w.startDate) })}
-                </span>
-                {current?.weekNumber === w.weekNumber && (
-                  <span className="ml-2 rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900">
-                    {t("current")}
-                  </span>
-                )}
-              </span>
-              <Link
-                href={editor(w.weekNumber, false)}
-                aria-label={t("editWeek", { week: w.weekNumber })}
-                className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              >
-                {t("edit")}
-              </Link>
-            </li>
-          ))}
-        </ul>
+      {current.state === "before" && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {t("before", { date: date(current.startDate) })}
+        </p>
+      )}
+      {current.state === "after" && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("after")}</p>
+      )}
+      {current.state === "week" && (
+        <WeekContent
+          athleteId={athleteId}
+          current={current}
+          canEdit={canEdit}
+          canGiveFeedback={canGiveFeedback}
+          header={[
+            t("weekOf", {
+              week: current.week.weekNumber,
+              weeks: current.week.durationWeeks,
+            }),
+            t("from", { date: date(current.week.startDate) }),
+            t("calendarWeek", { week: current.calendarWeek }),
+            t("blockAndLevel", {
+              block: tm(current.week.mesocycle),
+              level: tl(current.week.level),
+            }),
+          ]}
+          labels={{
+            notPlanned: t("notPlanned"),
+            editWeek: t("editWeek"),
+            planThis: t("planThis"),
+            next: current.next
+              ? current.next.planned
+                ? t("editNext")
+                : t("planNext")
+              : null,
+          }}
+          editor={editor}
+          sessionLabel={(weekday, slot, several) => {
+            const day = format.dateTime(dayDate(weekday), {
+              weekday: "long",
+              timeZone: "UTC",
+            });
+            return several ? te("sessionLabel", { day, slot }) : day;
+          }}
+          names={Object.fromEntries(
+            Object.entries(names).map(([n, name]) => {
+              const base = `${n} ${localized(name, locale)}`;
+              const variation = current.week.variations[Number(n)];
+              return [
+                n,
+                variation
+                  ? te("withVariation", { name: base, variation })
+                  : base,
+              ];
+            }),
+          )}
+        />
       )}
     </section>
+  );
+}
+
+function WeekContent({
+  athleteId,
+  current,
+  canEdit,
+  canGiveFeedback,
+  header,
+  labels,
+  editor,
+  sessionLabel,
+  names,
+}: {
+  athleteId: string;
+  current: Extract<CurrentWeek, { state: "week" }>;
+  canEdit: boolean;
+  canGiveFeedback: boolean;
+  header: string[];
+  labels: {
+    notPlanned: string;
+    editWeek: string;
+    planThis: string;
+    next: string | null;
+  };
+  editor: (week: number, prefill: boolean) => string;
+  sessionLabel: (weekday: number, slot: number, several: boolean) => string;
+  names: Record<string, string>;
+}) {
+  const { week, next } = current;
+  const perDay = (weekday: number) =>
+    week.sessions.filter((s) => s.weekday === weekday).length;
+  return (
+    <>
+      <p
+        data-week-header
+        className="flex flex-wrap gap-x-3 text-sm text-zinc-600 dark:text-zinc-400"
+      >
+        {header.map((part) => (
+          <span key={part}>{part}</span>
+        ))}
+      </p>
+      {!week.planned ? (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {labels.notPlanned}
+        </p>
+      ) : (
+        week.sessions.map((s) => (
+          <WeekViewTable
+            key={`${s.weekday}.${s.slot}`}
+            athleteId={athleteId}
+            weekNumber={week.weekNumber}
+            session={s}
+            label={sessionLabel(s.weekday, s.slot, perDay(s.weekday) > 1)}
+            names={names}
+            canGiveFeedback={canGiveFeedback}
+          />
+        ))
+      )}
+      {canEdit && (
+        // Below the week: edit (or plan) this week on the left, the next
+        // week on the right.
+        <div data-week-actions className="flex flex-wrap justify-between gap-2">
+          {week.planned ? (
+            <Link href={editor(week.weekNumber, false)} className={primary}>
+              {labels.editWeek}
+            </Link>
+          ) : (
+            <Link href={editor(week.weekNumber, true)} className={primary}>
+              {labels.planThis}
+            </Link>
+          )}
+          {next && labels.next && (
+            <Link
+              href={editor(next.weekNumber, !next.planned)}
+              className={secondary}
+            >
+              {labels.next}
+            </Link>
+          )}
+        </div>
+      )}
+    </>
   );
 }

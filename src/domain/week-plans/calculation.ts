@@ -90,3 +90,17 @@ export function currentAndNextWeek(
   if (current > durationWeeks) return { current: null, next: null };
   return { current, next: current < durationWeeks ? current + 1 : null };
 }
+
+/** ISO 8601 calendar week of a date (YYYY-MM-DD): weeks start on Monday. */
+export function isoWeek(isoDate: string): number {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  // The Thursday of the date's week decides the year of the week.
+  const day = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - day + 3);
+  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+  const firstDay = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDay + 3);
+  return (
+    1 + Math.round((date.getTime() - firstThursday.getTime()) / 604_800_000)
+  );
+}

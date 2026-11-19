@@ -14,7 +14,8 @@ import {
   type PlannedExercise,
 } from "@/domain/macrocycles/calculation";
 import { DomainValidationError, parseInput } from "@/domain/validation";
-import { currentAndNextWeek } from "./calculation";
+import { currentAndNextWeek, isoWeek } from "./calculation";
+import { getRoles } from "@/domain/roles";
 import { getDb } from "@/server/db";
 import {
   exercise,
@@ -31,7 +32,7 @@ import type {
   InitialSource,
   PlannedSession,
   PlannedWeekSummary,
-  TrainingWeeks,
+  CurrentWeek,
   WeekPlan,
 } from "./week-plan-types";
 
@@ -184,6 +185,7 @@ async function storedSessions(
           exerciseNumber: e.exerciseNumber,
           note: e.note,
           freeText: e.freeText,
+          feedback: e.feedback,
           setGroups: groups
             .filter((g) => g.sessionExerciseId === e.id)
             .map((g) => ({ sets: g.sets, reps: g.reps, weightKg: g.weightKg })),
@@ -312,6 +314,33 @@ export async function saveWeekPlan(
   if (Object.keys(unknown).length) throw new DomainValidationError(unknown);
 
   await getDb().transaction(async (tx) => {
+    // The athlete's feedback stays with the same exercise in the same
+    // session (weekday, slot, exercise); the plan payload cannot set it.
+    const kept = new Map(
+      (
+        await tx
+          .select({
+            weekday: trainingSession.weekday,
+            slot: trainingSession.slot,
+            exerciseNumber: sessionExercise.exerciseNumber,
+            feedback: sessionExercise.feedback,
+          })
+          .from(sessionExercise)
+          .innerJoin(
+            trainingSession,
+            eq(sessionExercise.sessionId, trainingSession.id),
+          )
+          .innerJoin(weekPlan, eq(trainingSession.weekPlanId, weekPlan.id))
+          .where(
+            and(
+              eq(weekPlan.macrocycleId, row.id),
+              eq(weekPlan.weekNumber, week),
+            ),
+          )
+      )
+        .filter((r) => r.feedback)
+        .map((r) => [`${r.weekday}.${r.slot}.${r.exerciseNumber}`, r.feedback]),
+    );
     await tx
       .delete(weekPlan)
       .where(
@@ -336,6 +365,8 @@ export async function saveWeekPlan(
             exerciseNumber: e.exerciseNumber,
             note: e.note,
             freeText: e.freeText,
+            feedback:
+              kept.get(`${s.weekday}.${s.slot}.${e.exerciseNumber}`) ?? null,
           })
           .returning({ id: sessionExercise.id });
         if (e.setGroups.length)
@@ -438,28 +469,101 @@ export async function getWeekProjections(
   );
 }
 
+/** Whether the user is linked to the Athlete and may give feedback. */
+export async function isLinkedAthlete(
+  user: CurrentUser,
+  athleteId: string,
+): Promise<boolean> {
+  const roles = await getRoles(user);
+  return roles.athlete?.athleteId === athleteId;
+}
+
+const feedbackSchema = z.strictObject({
+  weekday: int(1, 7),
+  slot: int(1, 3),
+  exerciseNumber: int(1, 32767),
+  feedback: z
+    .string()
+    .trim()
+    .refine((v) => v.length <= NOTE_MAX_LENGTH, code("TOO_LONG")),
+});
+
 /**
- * The entry points of the athlete page: current and next week and the
- * planned weeks (coach and linked athlete); null without a macrocycle.
+ * The athlete's feedback on one exercise of a session of a planned week.
+ * Only the user linked to the Athlete may write it (also a coach who
+ * trains themselves); empty text clears it.
  */
-export async function getTrainingWeeks(
+export async function setFeedback(
+  user: CurrentUser,
+  athleteId: string,
+  weekParam: string,
+  input: unknown,
+): Promise<WeekPlan> {
+  await requireViewableAthlete(user, athleteId);
+  if (!(await isLinkedAthlete(user, athleteId)))
+    throw new DomainError("forbidden", "NOT_THE_ATHLETE");
+  const { row, week } = await macrocycleAndWeek(athleteId, weekParam);
+  const data = parseInput(feedbackSchema, input);
+  const db = getDb();
+  const [target] = await db
+    .select({ id: sessionExercise.id })
+    .from(sessionExercise)
+    .innerJoin(
+      trainingSession,
+      eq(sessionExercise.sessionId, trainingSession.id),
+    )
+    .innerJoin(weekPlan, eq(trainingSession.weekPlanId, weekPlan.id))
+    .where(
+      and(
+        eq(weekPlan.macrocycleId, row.id),
+        eq(weekPlan.weekNumber, week),
+        eq(trainingSession.weekday, data.weekday),
+        eq(trainingSession.slot, data.slot),
+        eq(sessionExercise.exerciseNumber, data.exerciseNumber),
+      ),
+    );
+  if (!target) throw new DomainError("not_found", "EXERCISE_NOT_IN_WEEK");
+  await db
+    .update(sessionExercise)
+    .set({ feedback: data.feedback === "" ? null : data.feedback })
+    .where(eq(sessionExercise.id, target.id));
+  return weekPlanOf(row, week);
+}
+
+/**
+ * The current week for the athlete page (coach and linked athlete): its
+ * plan with the feedback, or whether the macrocycle has not started or has
+ * ended; null without a macrocycle.
+ */
+export async function getCurrentWeek(
   user: CurrentUser,
   athleteId: string,
   today: string,
-): Promise<TrainingWeeks | null> {
+): Promise<CurrentWeek | null> {
   await requireViewableAthlete(user, athleteId);
   const row = await findMacrocycleRow(athleteId);
   if (!row) return null;
-  const planned = await listWeekPlans(user, athleteId);
-  const numbers = new Set(planned.map((p) => p.weekNumber));
   const { current, next } = currentAndNextWeek(
     row.startDate,
     row.durationWeeks,
     today,
   );
-  const of = (weekNumber: number | null) =>
-    weekNumber === null
+  if (current === null)
+    return today < row.startDate
+      ? { state: "before", startDate: row.startDate }
+      : { state: "after" };
+  const week = await weekPlanOf(row, current);
+  const nextPlanned =
+    next === null
       ? null
-      : { weekNumber, planned: numbers.has(weekNumber) };
-  return { current: of(current), next: of(next), planned };
+      : {
+          weekNumber: next,
+          planned: (await storedSessions(row.id, next)) !== null,
+        };
+  return {
+    state: "week",
+    week,
+    calendarWeek: isoWeek(week.startDate),
+    next: nextPlanned,
+  };
 }

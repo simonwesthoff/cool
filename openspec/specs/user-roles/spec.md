@@ -76,15 +76,15 @@ a user without a role sees the start choice.
 ### Requirement: Athlete view
 An athlete SHALL have a page ("My training") with their profile picture,
 their Athlete's name, their coach and, once planned, the macrocycle chart
-with "Open macrocycle" below it on the right; for the coach it is the
-athlete details page. Whoever leads the athlete's Team SHALL get the edit
-icon next to the name and, without a macrocycle, "Plan macrocycle". This is
-a placeholder until the training plan views exist.
+with "Open macrocycle" below it on the right and the current week's plan
+with their feedback; for the coach it is the athlete details page.
+Whoever leads the athlete's Team SHALL get the edit icon next to the name
+and, without a macrocycle, "Plan macrocycle".
 
 #### Scenario: Athlete view content
 - **GIVEN** a user linked to the Athlete "Anna Weber" in the Team of coach "Max Berg"
 - **WHEN** they open their athlete view
-- **THEN** they see "Anna Weber", their profile picture and "Max Berg" as coach, and no edit icon
+- **THEN** they see "Anna Weber", their profile picture and "Max Berg" as coach, no edit icon, and no placeholder text about a coming training plan
 
 #### Scenario: Open the own macrocycle
 - **GIVEN** a user linked to an Athlete with a planned macrocycle

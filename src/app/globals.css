@@ -22,17 +22,13 @@ body {
 }
 
 /*
- * Mesocycle colours, the same on every screen and in light and dark mode
- * (user decision): general preparation purple, special preparation
- * magenta, competition preparation lime. Marks on them are white with a
- * dark halo so they stay readable on dark and light bands alike.
+ * Chart tokens. Mesocycles have no colours (user decision, 2026-11-19);
+ * the week chart's curve is the palette's magenta.
  */
 :root {
   --surface: #ffffff;
-  --band-1: var(--color-palette-purple);
-  --band-2: var(--color-palette-magenta);
-  --band-3: var(--color-palette-lime);
-  --chart-halo: #09090b;
+  /* The curve of the exercise chart and its gradient. */
+  --chart-curve: var(--color-palette-magenta);
   /* Lines and labels in charts (borders, competition, current week). */
   --chart-ink: #18181b;
 }

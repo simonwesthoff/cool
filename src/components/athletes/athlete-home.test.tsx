@@ -119,9 +119,8 @@ describe("AthleteHome", () => {
     ).toBeTruthy();
     expect(button.className).toContain("self-end");
     expect(links()).toEqual(["/training/macrocycle"]);
-    expect(
-      screen.getByText("Your training plan will appear here."),
-    ).toBeTruthy();
+    // No placeholder about a coming training plan any more.
+    expect(document.body.textContent).not.toContain("will appear here");
   });
 
   it("shows nothing for the athlete without a macrocycle", () => {
@@ -168,16 +167,19 @@ describe("AthleteHome", () => {
     expect(screen.queryByRole("link", { name: /Back/ })).toBeNull();
   });
 
-  it("shows the training week section only to whoever may plan", () => {
-    const weeks = {
-      current: null,
-      next: { weekNumber: 1, planned: false },
-      planned: [],
+  it("shows the current week to the athlete and the coach, with coach tools only for whoever may plan", () => {
+    const currentWeek = {
+      current: { state: "before" as const, startDate: "2026-11-30" },
+      names: {},
+      canGiveFeedback: true,
     };
-    renderHome({ canEdit: false, trainingWeeks: weeks });
-    expect(screen.queryByRole("heading", { name: "Training week" })).toBeNull();
+    renderHome({ canEdit: false, currentWeek });
+    expect(screen.getByRole("heading", { name: "Training week" })).toBeTruthy();
+    expect(
+      screen.getByText("The macrocycle starts on Nov 30, 2026."),
+    ).toBeTruthy();
     cleanup();
-    renderHome({ viewer: "coach", canEdit: true, trainingWeeks: weeks });
+    renderHome({ viewer: "coach", canEdit: true, currentWeek });
     expect(screen.getByRole("heading", { name: "Training week" })).toBeTruthy();
     cleanup();
     // Not without a macrocycle.
@@ -185,7 +187,7 @@ describe("AthleteHome", () => {
       viewer: "coach",
       canEdit: true,
       macrocycle: null,
-      trainingWeeks: weeks,
+      currentWeek,
     });
     expect(screen.queryByRole("heading", { name: "Training week" })).toBeNull();
   });

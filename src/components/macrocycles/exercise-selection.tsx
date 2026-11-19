@@ -29,9 +29,6 @@ const DEFICITS = [
   "otherDeficits",
 ] as const;
 
-/** Same colours as the mesocycle bands of the chart. */
-const SWATCH = ["var(--band-1)", "var(--band-2)", "var(--band-3)"];
-
 const choicesOf = (macrocycle: Pick<Macrocycle, "mesocycles">): Choices =>
   Object.fromEntries(
     macrocycle.mesocycles.map((m) => [m.type, m.exercises]),
@@ -118,7 +115,7 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
             <th scope="col" className="py-2 pr-2 text-sm font-semibold">
               {t("exercise")}
             </th>
-            {macrocycle.mesocycles.map((m, i) => (
+            {macrocycle.mesocycles.map((m) => (
               <th
                 key={m.type}
                 scope="col"
@@ -126,11 +123,6 @@ export function ExerciseSelection({ macrocycle, catalog }: Props) {
                 className="px-1 py-2 text-center text-sm font-semibold"
               >
                 <span className="flex flex-col items-center gap-1">
-                  <span
-                    aria-hidden="true"
-                    className="inline-block h-1.5 w-8 rounded-full ring-1 ring-zinc-400/70 ring-inset"
-                    style={{ background: SWATCH[i] }}
-                  />
                   <span title={tm(m.type)}>{tm(`abbr.${m.type}`)}</span>
                   <span className="text-[11px] font-normal whitespace-nowrap text-zinc-500 tabular-nums">
                     {t("weeksShort", { first: m.firstWeek, last: m.lastWeek })}

@@ -49,6 +49,7 @@ Domain terms for the weightlifting coaching app.
 | Wochenplan | - | Week plan | The planned training of one macrocycle week: its training sessions, each with exercises and their set groups. |
 | Satzgruppe | - | Set group | Sets of an exercise with the same repetitions and weight, written sets × reps @ weight (e.g. 3 × 2 @ 80 kg). |
 | Trainerhinweis | - | Coach note | The coach's annotation of an exercise in a training session. |
+| Rückmeldung | - | Feedback | The athlete's note on an exercise of a training session, written during or after training. |
 
 ### Exercise groups
 

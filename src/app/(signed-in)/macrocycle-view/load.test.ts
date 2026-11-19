@@ -12,9 +12,24 @@ vi.mock("@/domain/exercises", () => ({
   getExercisesWithValues: async () => [
     { number: 1, name: { de: "Reißen", en: "Snatch" }, group: "K1" },
   ],
+  getCatalog: async () => [
+    {
+      exercises: [
+        { number: 1, name: { de: "Reißen", en: "Snatch" } },
+        {
+          number: 2,
+          name: { de: "Reißen mit Bändern", en: "Snatch with bands" },
+        },
+      ],
+    },
+  ],
 }));
+const getCurrentWeek = vi.fn();
+const isLinkedAthlete = vi.fn();
+vi.mock("@/domain/week-plans", () => ({ getCurrentWeek, isLinkedAthlete }));
 
-const { loadMacrocycleView, loadMacrocycleChart } = await import("./load");
+const { loadMacrocycleView, loadMacrocycleChart, loadCurrentWeek } =
+  await import("./load");
 const user = { id: "u1", name: "Max", email: "m@x.invalid", image: null };
 
 describe("loadMacrocycleView", () => {
@@ -36,5 +51,20 @@ describe("loadMacrocycleView", () => {
     findMacrocycle.mockResolvedValue(null);
     expect(await loadMacrocycleView(user, "a1")).toBeNull();
     expect(await loadMacrocycleChart(user, "a1")).toBeNull();
+  });
+});
+
+describe("loadCurrentWeek", () => {
+  it("adds the names of the week's exercises and whether the user gives feedback", async () => {
+    getCurrentWeek.mockResolvedValue({
+      state: "week",
+      week: { sessions: [{ exercises: [{ exerciseNumber: 1 }] }] },
+    });
+    isLinkedAthlete.mockResolvedValue(true);
+    const loaded = await loadCurrentWeek(user, "a1");
+    expect(loaded?.names).toEqual({ 1: { de: "Reißen", en: "Snatch" } });
+    expect(loaded?.canGiveFeedback).toBe(true);
+    getCurrentWeek.mockResolvedValue(null);
+    expect(await loadCurrentWeek(user, "a1")).toBeNull();
   });
 });

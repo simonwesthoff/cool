@@ -113,24 +113,13 @@
   "AthleteHome": {
     "pictureAlt": "Profile picture of {name}",
     "coach": "Coach: {name}",
-    "placeholder": "Your training plan will appear here.",
-    "placeholderCoach": "The training plan will appear here.",
     "macrocycle": "Macrocycle",
     "macrocycleOpen": "Open macrocycle",
     "plan": "Plan macrocycle",
     "notPlanned": "No macrocycle planned yet.",
     "editBasicData": "Edit basic data",
     "trainingWeek": {
-      "title": "Training week",
-      "planNext": "Plan next week (week {week})",
-      "editNext": "Edit next week (week {week})",
-      "planThis": "Plan this week (week {week})",
-      "none": "No week is planned yet.",
-      "week": "Week {week}",
-      "from": "from {date}",
-      "current": "Current week",
-      "edit": "Edit",
-      "editWeek": "Edit week {week}"
+      "title": "Training week"
     }
   },
   "Catalog": {
@@ -266,7 +255,6 @@
       "axisWeek": "Week",
       "legendCompetition": "Main competition",
       "competitionValue": "Main competition: {type}, {date}",
-      "competitionLabel": "{type} · {date}",
       "levelsShort": {
         "high": "high",
         "medium": "medium",
@@ -338,7 +326,8 @@
         "averageKg": "Average weight: {value}",
         "setSize": "Set size: {value}",
         "weeklyReps": "Weekly reps: {value}"
-      }
+      },
+      "current": "Current"
     },
     "title": "{name}'s macrocycle",
     "chartTitle": "Planned values",
@@ -412,7 +401,8 @@
       "freeText": "Sets and reps, e.g. 3 × 12",
       "freeTextOf": "Sets and reps of {name}",
       "exercise": "Exercise",
-      "row": "Row"
+      "row": "Row",
+      "feedback": "Feedback: {text}"
     },
     "totals": {
       "title": "This week (all sessions)",
@@ -446,5 +436,27 @@
     "retry": "Try again",
     "finish": "Finish week planning",
     "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway."
+  },
+  "WeekView": {
+    "feedback": {
+      "title": "Feedback",
+      "of": "Feedback on {name}",
+      "placeholder": "How did it go?",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Not saved"
+    },
+    "weekOf": "Week {week} of {weeks}",
+    "from": "from {date}",
+    "calendarWeek": "Calendar week {week}",
+    "blockAndLevel": "{block} · {level}",
+    "notPlanned": "No plan for this week yet.",
+    "before": "The macrocycle starts on {date}.",
+    "after": "The macrocycle has ended.",
+    "editWeek": "Edit week",
+    "planThis": "Plan this week",
+    "planNext": "Plan next week",
+    "editNext": "Edit next week",
+    "noteOf": "Coach note on {name}"
   }
 }

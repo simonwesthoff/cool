@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { currentAndNextWeek, deviation, weekActuals } from "./calculation";
+import {
+  currentAndNextWeek,
+  deviation,
+  isoWeek,
+  weekActuals,
+} from "./calculation";
 
 /** The spec's week 11 snatch: Monday ramping up, Thursday 3 × 2 @ 75 kg. */
 const snatchWeek11 = [
@@ -79,5 +84,16 @@ describe("currentAndNextWeek", () => {
   it("has no next week in the last week and none after the end", () => {
     expect(of("2027-04-25")).toEqual({ current: 21, next: null });
     expect(of("2027-04-26")).toEqual({ current: null, next: null });
+  });
+});
+
+describe("isoWeek", () => {
+  it("counts ISO calendar weeks", () => {
+    expect(isoWeek("2027-02-08")).toBe(6);
+    expect(isoWeek("2026-11-30")).toBe(49);
+    // Year boundaries: Jan 1, 2027 is a Friday (week 53 of 2026).
+    expect(isoWeek("2027-01-01")).toBe(53);
+    expect(isoWeek("2027-01-04")).toBe(1);
+    expect(isoWeek("2025-12-29")).toBe(1);
   });
 });

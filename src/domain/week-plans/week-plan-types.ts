@@ -15,6 +15,8 @@ export type PlannedSessionExercise = {
   exerciseNumber: number;
   /** Coach note; null without one. */
   note: string | null;
+  /** The athlete's feedback; null without. Not part of plan saves. */
+  feedback?: string | null;
   /** Sets and reps as free text (exercises without values); null without. */
   freeText?: string | null;
   setGroups: PlannedSetGroup[];
@@ -66,9 +68,16 @@ export type InitialSource = "stored" | "previous" | "schedule";
 /** A week of the athlete page's entry points. */
 export type TrainingWeek = { weekNumber: number; planned: boolean };
 
-/** Entry points of the athlete page: current and next week, planned weeks. */
-export type TrainingWeeks = {
-  current: TrainingWeek | null;
-  next: TrainingWeek | null;
-  planned: PlannedWeekSummary[];
-};
+/** The athlete page's current week. */
+export type CurrentWeek =
+  | { state: "before"; startDate: string }
+  | { state: "after" }
+  | {
+      state: "week";
+      /** The current week's plan (`planned` false without one). */
+      week: WeekPlan;
+      /** ISO calendar week of the week's Monday. */
+      calendarWeek: number;
+      /** The week after the current one, for the coach tools. */
+      next: TrainingWeek | null;
+    };
