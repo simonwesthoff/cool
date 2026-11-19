@@ -66,7 +66,7 @@ None.
   steps.
 - `week-view`: new requirement for category marks in the week tables.
 - `macrocycle-view`: "Exercise chart" — the curve takes the category colour
-  instead of always pink.
+  instead of always pink; new requirement "Chart colour by lift category".
 - `macrocycle-planning`: "One week chart" — the curve colour is set per
   chart (magenta for intensity, the category colour for an exercise).
 

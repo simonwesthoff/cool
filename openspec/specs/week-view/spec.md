@@ -108,3 +108,12 @@ over 500 characters 400 `VALIDATION_FAILED`.
 #### Scenario: Exercise not in the session
 - **WHEN** the athlete sets feedback for exercise 13 on Monday, but Monday has no exercise 13
 - **THEN** the answer is 404 `EXERCISE_NOT_IN_WEEK`
+
+### Requirement: Category marks in the week view
+The training week's tables SHALL show each exercise's category marks (see
+the exercise catalog) before its name, for the coach and the athlete.
+
+#### Scenario: Athlete's week
+- **GIVEN** the current week has exercises 1 and 33 on Monday
+- **WHEN** the athlete looks at the training week
+- **THEN** the snatch has a cyan dot before its name and the pull-up none
