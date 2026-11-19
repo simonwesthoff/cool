@@ -277,10 +277,9 @@
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
       "continue": "Weiter zu den Übungen",
       "back": "Zurück zur SWOT",
-      "helpCurve": "Forme die Progressionskurve: Klicke in das Diagramm, um einen Ankerpunkt hinzuzufügen, und ziehe Ankerpunkte frei; klicke einen an oder ziehe ihn bis auf eine halbe Woche an einen benachbarten Ankerpunkt heran, um ihn zu entfernen. Der erste und der letzte Ankerpunkt bestimmen Einstiegs- und Endwert; nach innen verschoben, bleibt die Kurve davor und danach waagerecht. Jede Änderung wird gespeichert.",
+      "helpCurve": "Forme die gesamte Progressionskurve. Füge neue Ankerpunkte hinzu, indem du in die Kurve klickst, und ziehe sie, um die Progression für deinen Athleten zu formen. Hohe und niedrige Wochen legst du im nächsten Schritt fest.",
       "continueToWeeks": "Weiter zu den Wochen",
-      "backToCurve": "Zurück zur Kurve",
-      "dipWarning": "Die Kurve sollte nicht absinken. Hohe und niedrige Wochen legst du im nächsten Schritt fest."
+      "backToCurve": "Zurück zur Kurve"
     },
     "exercises": {
       "saveFailed": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",

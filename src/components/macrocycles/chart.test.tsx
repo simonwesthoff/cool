@@ -599,7 +599,11 @@ describe("IntensityPlanner", () => {
     ).toBeTruthy();
     expect(curveStep.container.querySelector("[data-border]")).toBeNull();
     expect(curveStep.container.querySelector("rect[data-week]")).toBeNull();
-    expect(screen.getByText(/Shape the progression curve/)).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Shape the overall progression curve. Add new anchors by clicking into the curve and drag them around to shape the progression for your athlete. High and low weeks can be set in the next step.",
+      ),
+    ).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Weeks" })).toBeNull();
     expect(
       screen.getByRole("button", { name: "Continue to weeks" }),
@@ -624,44 +628,6 @@ describe("IntensityPlanner", () => {
       screen.getByRole("button", { name: "Continue to exercises" }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Back to curve" })).toBeTruthy();
-  });
-
-  it("warns below the chart when the curve dips, and only then", () => {
-    const dipping = {
-      ...macrocycle,
-      curve: {
-        entryPct: 60,
-        anchors: [
-          { t: 0.5, pct: 98 },
-          { t: 0.7, pct: 80 },
-        ],
-      },
-    } as unknown as Macrocycle;
-    const view = renderIn(
-      <IntensityPlanner
-        mode="curve"
-        macrocycle={dipping}
-        onSaved={onSaved}
-        onContinue={onContinue}
-        onBack={onBack}
-      />,
-    );
-    expect(
-      view.container.querySelector("[data-curve-warning]")!.textContent,
-    ).toBe(
-      "The curve shouldn't dip. You can set high and low weeks in the next step.",
-    );
-    cleanup();
-    const rising = renderIn(
-      <IntensityPlanner
-        mode="curve"
-        macrocycle={macrocycle}
-        onSaved={onSaved}
-        onContinue={onContinue}
-        onBack={onBack}
-      />,
-    );
-    expect(rising.container.querySelector("[data-curve-warning]")).toBeNull();
   });
 
   it("saves a curve change and takes the server's weeks", async () => {
@@ -1091,6 +1057,39 @@ describe("curve mode", () => {
       yOf(60),
     ]);
     expect(clicked.onChange).not.toHaveBeenCalled();
+  });
+
+  it("draws horizontal guides at the entry and end values that move with their anchors", () => {
+    const { container } = renderCurve({
+      entryPct: 60,
+      anchors: [],
+      endPct: 95,
+    });
+    const guide = (kind: string) =>
+      container.querySelector(`[data-guide="${kind}"]`)!;
+    for (const [kind, pct] of [
+      ["entry", 60],
+      ["end", 95],
+    ] as const) {
+      expect(Number(guide(kind).getAttribute("y1"))).toBeCloseTo(yOf(pct), 5);
+      expect(Number(guide(kind).getAttribute("x1"))).toBe(56);
+      // The style of the block start lines.
+      expect(guide(kind).getAttribute("stroke")).toBe("var(--chart-ink)");
+      expect(guide(kind).getAttribute("stroke-opacity")).toBe("0.25");
+    }
+    // While the entry anchor is dragged, its guide follows.
+    const entry = container.querySelector('[data-anchor="entry"]')!;
+    fireEvent.pointerDown(entry, {
+      clientX: xOfT(0),
+      clientY: yOf(60),
+      pointerId: 1,
+    });
+    fireEvent.pointerMove(entry, {
+      clientX: xOfT(0),
+      clientY: yOf(70),
+      pointerId: 1,
+    });
+    expect(Number(guide("entry").getAttribute("y1"))).toBeCloseTo(yOf(70), 5);
   });
 
   it("snaps the entry and end anchors to whole weeks and the entry value to whole percents", () => {

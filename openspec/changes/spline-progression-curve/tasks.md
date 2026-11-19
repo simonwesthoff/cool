@@ -38,8 +38,9 @@
 
 - [x] 4.1 Movable end anchors: entry and end anchors move in any direction (end value 0–100 %), with "Entry value X %" / "End value X %" beside them while moved, and the curve level before and after them (migration 0023: `curve_entry_t`, `curve_end_pct`, `curve_end_t`; API fields `entryT`, `endValuePct`, `endT`). An inner anchor is removed by a click or by dropping it horizontally close to a neighbouring anchor, not at the chart's edge. Verify with calculation, domain and route tests (level stretches, validation `OUTSIDE_ENDS`) and chart tests (gestures, value text, fading, level lines), plus the browser flow.
 
-- [x] 4.2 Curve and weeks as separate steps 3 and 4 (five planning steps, old `intensity` address → step 4), both charts 0–110 %; entry and end anchors snap to whole weeks, the entry value moves in whole percents, the end value stays above the entry value (API `NOT_ABOVE_ENTRY`); a red warning below the chart when the curve dips. Verify with planning, chart and domain tests and the browser flow.
+- [x] 4.2 Curve and weeks as separate steps 3 and 4 (five planning steps, old `intensity` address → step 4), both charts 0–110 %; entry and end anchors snap to whole weeks, the entry value moves in whole percents, the end value stays above the entry value (API `NOT_ABOVE_ENTRY`) (the dip warning added here was removed again in 4.4). Verify with planning, chart and domain tests and the browser flow.
 - [x] 4.3 An inner anchor disappears while dragged as soon as it is within half a week (horizontally) of a neighbouring anchor, saved at once without releasing. Verify with chart tests (0.6 weeks: kept, 0.4 weeks: removed before release, saved once) and the browser flow (removed while the mouse is still down).
+- [x] 4.4 No dip warning; two horizontal guides at the entry and end values (block lines' style) that move with their anchors; the new help text of step 3. Verify with chart tests (guide positions, style, following a drag, help text) and the browser flow.
 
 ## Workflow follow-up
 

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { curveValue, type Curve } from "@/domain/macrocycles/calculation";
+import type { Curve } from "@/domain/macrocycles/calculation";
 import type {
   Macrocycle,
   WeekLevel,
@@ -13,7 +13,7 @@ import { MacrocycleChart, type ChartWeek } from "./macrocycle-chart";
 /**
  * Planning steps 3 and 4 on the macrocycle chart: the progression curve
  * ("curve") and the week levels and block borders ("weeks"), each change
- * saved. Step 3 warns when the curve dips.
+ * saved.
  */
 export function IntensityPlanner({
   mode,
@@ -164,15 +164,6 @@ export function IntensityPlanner({
           type: macrocycle.competitionType,
         }}
       />
-      {mode === "curve" && dips(curve) && (
-        <p
-          role="status"
-          data-curve-warning
-          className="text-sm font-medium text-red-700 dark:text-red-400"
-        >
-          {t("dipWarning")}
-        </p>
-      )}
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
@@ -191,15 +182,4 @@ export function IntensityPlanner({
       </div>
     </div>
   );
-}
-
-/** Whether the progression curve falls anywhere (it should only rise). */
-export function dips(curve: Curve): boolean {
-  let previous = curveValue(curve, 0);
-  for (let i = 1; i <= 400; i++) {
-    const value = curveValue(curve, i / 400);
-    if (value < previous - 1e-6) return true;
-    previous = value;
-  }
-  return false;
 }

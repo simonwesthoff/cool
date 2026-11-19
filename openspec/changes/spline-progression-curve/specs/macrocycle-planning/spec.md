@@ -64,21 +64,21 @@ step 4 continues to the exercises and back to the curve.
 - **WHEN** the coach chooses "Continue to weeks"
 - **THEN** step 4 shows the week handles and block sliders on the same curve, also on a 0–110 % scale
 
-### Requirement: Dip warning
-When the progression curve falls anywhere, step 3 SHALL show a red warning
-below the chart: "The curve shouldn't dip. You can set high and low weeks
-in the next step." ("Die Kurve sollte nicht absinken. Hohe und niedrige
-Wochen legst du im nächsten Schritt fest."). A curve that only rises or
-stays level SHALL show no warning.
+### Requirement: Entry and end guides
+Step 3 SHALL show two horizontal guides across the chart, in the style of
+the block start lines: one at the entry value and one at the end value.
+They SHALL move with the entry and end anchors while these are dragged.
+Step 3 SHALL not warn about a curve that dips; its help text SHALL say
+that high and low weeks are set in the next step.
 
-#### Scenario: Dipping curve
-- **GIVEN** inner anchors at position 0.5 with 98 % and at 0.7 with 80 %
-- **WHEN** the coach looks at step 3
-- **THEN** the red warning is shown below the chart
+#### Scenario: Guides follow the anchors
+- **GIVEN** a curve from 60 % to 100 %
+- **WHEN** the coach drags the entry anchor up to 70 %
+- **THEN** a thin horizontal line runs at 70 % across the chart while dragging, and another at 100 %
 
-#### Scenario: Rising curve
-- **WHEN** the curve rises from the entry value to the end value
-- **THEN** no warning is shown
+#### Scenario: Help text
+- **WHEN** the coach opens step 3 in English
+- **THEN** the text above the chart reads "Shape the overall progression curve. Add new anchors by clicking into the curve and drag them around to shape the progression for your athlete. High and low weeks can be set in the next step."
 
 ### Requirement: Editing anchors
 In step 3 a click on the chart outside an anchor SHALL add an anchor.

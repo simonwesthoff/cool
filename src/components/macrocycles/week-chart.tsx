@@ -1044,6 +1044,27 @@ function CurveAnchors({
   };
   return (
     <g data-curve-editor>
+      {/* Horizontal guides at the entry and end values, styled like the
+          block start lines; they move with their anchors. */}
+      {(
+        [
+          ["entry", curve.entryPct],
+          ["end", endPct],
+        ] as const
+      ).map(([kind, pct]) => (
+        <line
+          key={kind}
+          data-guide={kind}
+          x1={plotLeft}
+          x2={plotRight}
+          y1={y(pct)}
+          y2={y(pct)}
+          stroke="var(--chart-ink)"
+          strokeOpacity={0.25}
+          strokeWidth={1}
+          className="pointer-events-none"
+        />
+      ))}
       <rect
         data-curve-area
         x={plotLeft}

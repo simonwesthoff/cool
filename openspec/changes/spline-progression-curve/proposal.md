@@ -17,9 +17,12 @@ move and remove, with a smooth curve through them (adjustment 5 in
   current curve, as before) and 5 exercises. The old address
   `…/macrocycle/intensity` opens step 4. Both chart steps show the
   intensity from 0 to 110 %.
-- **Dip warning:** when the curve falls anywhere, step 3 shows a red text
-  below the chart: "The curve shouldn't dip. You can set high and low
-  weeks in the next step."
+- **Guides** (user decision): two horizontal helper lines, in the style of
+  the block start lines, mark the entry and the end value and move with
+  their anchors. There is no warning for a dipping curve; the help text
+  says "Shape the overall progression curve. Add new anchors by clicking
+  into the curve and drag them around to shape the progression for your
+  athlete. High and low weeks can be set in the next step."
 - **Anchors** (user decisions):
   - **Start and end:** a new macrocycle starts with two anchors, the entry
     value in the first week and 100 % in the last week, joined by a
@@ -84,8 +87,8 @@ None.
   requirements for the anchors and for existing macrocycles.
 - `macrocycle-planning`:
   - **Steps:** "Planning in four steps" is replaced by "Planning in five
-    steps", with new requirements for the curve and weeks steps, the dip
-    warning, anchor editing and the curve API.
+    steps", with new requirements for the curve and weeks steps, the
+    entry and end guides, anchor editing and the curve API.
   - **Renumbering:** the step numbers in the chart, border, exercise,
     legend and one-page requirements are updated.
 

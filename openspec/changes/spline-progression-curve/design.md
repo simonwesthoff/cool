@@ -112,8 +112,9 @@ See proposal.md - Why.
    - **Buttons and labels:** each step has its own continue/back buttons,
      and the stepper labels are "Curve" and "Weeks".
    - **Shared scale:** both steps use the fixed domain 0–110 %.
-   - **Dip warning:** `dips(curve)` samples the spline at 400 points and
-     reports any fall.
+   - **Guides:** in curve mode two horizontal lines at the shown curve's
+     entry and end values, in the block lines' style (chart ink, 25 %
+     opacity, 1 px); they follow the draft while an outer anchor moves.
 
 8. **Outer anchors:**
    - **Positions:** they snap to week positions `k / (n − 1)`, bounded by
