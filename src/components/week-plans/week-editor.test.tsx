@@ -483,12 +483,22 @@ describe("WeekEditor step 2", () => {
     const name = table.querySelector("tbody th[scope=rowgroup]")!;
     // Bold lines between exercises.
     expect(table.querySelector("tbody")!.className).toContain("border-t-2");
-    expect(name.textContent).toBe("Snatch: 1 Snatch");
+    // The marks and the number are shown, the name is for screen readers.
+    expect(
+      name.querySelector("[data-exercise-label] > [aria-hidden=true]")!
+        .textContent,
+    ).toBe("1");
+    expect(name.textContent).toBe("Snatch: 11 Snatch");
     expect(name.getAttribute("rowspan")).toBe("2");
     // No buttons to add or remove sets.
     expect(
       within(sessionNamed("Monday")).queryAllByRole("button"),
     ).toHaveLength(0);
+    // Hovering the cell shows the name.
+    fireEvent.pointerEnter(name);
+    expect((await screen.findByRole("tooltip")).textContent).toBe("1 Snatch");
+    fireEvent.pointerLeave(name);
+    expect(screen.queryByRole("tooltip")).toBeNull();
     expect(router.push).not.toHaveBeenCalled();
   });
 
@@ -999,5 +1009,277 @@ describe("WeekEditor in German", () => {
         name: /^Gewicht in kg von Satz \d+ von 1 Reißen$/,
       }),
     ).toHaveLength(10);
+  });
+});
+
+describe("WeekEditor autofill", () => {
+  const empty = (n: number) => ({
+    exerciseNumber: n,
+    note: null,
+    setGroups: [],
+  });
+  /** Snatch on Monday and Thursday without sets, the pull with sets on Monday only, the squat without projection. */
+  const week: PlannedSession[] = [
+    {
+      weekday: 1,
+      slot: 1,
+      exercises: [
+        empty(1),
+        {
+          exerciseNumber: 13,
+          note: null,
+          setGroups: [{ sets: 3, reps: 5, weightKg: 70 }],
+        },
+        empty(20),
+      ],
+    },
+    { weekday: 4, slot: 1, exercises: [empty(1), empty(13)] },
+  ];
+  const groupsOf = (
+    body: {
+      sessions: {
+        exercises: { exerciseNumber: number; setGroups: unknown[] }[];
+      }[];
+    },
+    day: number,
+    n: number,
+  ) =>
+    body.sessions[day]!.exercises.find((e) => e.exerciseNumber === n)!
+      .setGroups;
+
+  it("shows the button with a magic wand next to the Weights title, and fills nothing before", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    const { container } = renderEditor(week);
+    expect(screen.queryByRole("button", { name: "Autofill" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const button = screen.getByRole("button", { name: "Autofill" });
+    expect(button.querySelector("svg[aria-hidden=true]")).toBeTruthy();
+    // A toolbar below the Weights title: undo, redo, autofill, clear all.
+    const toolbar = screen.getByRole("toolbar", { name: "Weights and reps" });
+    expect(toolbar.previousElementSibling!.textContent).toBe("Weights");
+    expect(
+      within(toolbar)
+        .getAllByRole("button")
+        .map((b) => b.getAttribute("aria-label") ?? b.textContent),
+    ).toEqual(["Undo", "Redo", "Autofill", "Clear all weights"]);
+    expect(column(container).contains(button)).toBe(true);
+    expect(
+      (
+        within(sessionNamed("Monday")).getByRole("textbox", {
+          name: "Weight in kg of set 1 of 1 Snatch",
+        }) as HTMLInputElement
+      ).value,
+    ).toBe("");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("fills empty exercises, split over their sessions, and saves them", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor(week);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    const body = await nextSave();
+    // The snatch: 10 of the 20 reps per session, each ending at 80 kg.
+    for (const day of [0, 1]) {
+      const groups = groupsOf(body, day, 1) as {
+        sets: number;
+        reps: number;
+        weightKg: number;
+      }[];
+      expect(groups.reduce((s, g) => s + g.sets * g.reps, 0)).toBe(10);
+      expect(groups.at(-1)!.weightKg).toBe(80);
+    }
+    // The pull has sets on Monday: neither session is touched.
+    expect(groupsOf(body, 0, 13)).toEqual([{ sets: 3, reps: 5, weightKg: 70 }]);
+    expect(groupsOf(body, 1, 13)).toEqual([]);
+    // The squat has no projection.
+    expect(groupsOf(body, 0, 20)).toEqual([]);
+  });
+
+  it("fills the week 11 snatch without red or blue indicators", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    const monday = sessionNamed("Monday");
+    const weights = [1, 2, 3, 4, 5, 6, 7].map(
+      (i) =>
+        (
+          within(monday).getByRole("textbox", {
+            name: `Weight in kg of set ${i} of 1 Snatch`,
+          }) as HTMLInputElement
+        ).value,
+    );
+    expect(weights).toEqual(["65", "65", "70", "70", "75", "75", "80"]);
+    const marks = [...monday.querySelectorAll("[data-deviation]")].map((c) =>
+      c.getAttribute("data-deviation"),
+    );
+    expect(marks.length).toBeGreaterThan(0);
+    expect(marks.every((m) => m === "within")).toBe(true);
+  });
+
+  it("fills only an exercise added later on a second click", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    // The coach changes the first snatch weight by hand.
+    const first = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 1 of 1 Snatch",
+    });
+    await userEvent.clear(first);
+    await userEvent.type(first, "50");
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    // Add the pull to Monday by dropping it from the list.
+    await userEvent.click(
+      within(sessionNamed("Monday")).getByRole("button", {
+        name: /Add an exercise/,
+      }),
+    );
+    await userEvent.click(
+      within(document.querySelector("dialog[open]") as HTMLElement).getByRole(
+        "button",
+        { name: /13 Snatch pull/ },
+      ),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    const monday = sessionNamed("Monday");
+    expect(
+      (
+        within(monday).getByRole("textbox", {
+          name: "Weight in kg of set 1 of 1 Snatch",
+        }) as HTMLInputElement
+      ).value,
+    ).toBe("50");
+    expect(
+      (
+        within(monday).getByRole("textbox", {
+          name: "Weight in kg of set 1 of 13 Snatch pull",
+        }) as HTMLInputElement
+      ).value,
+    ).not.toBe("");
+  });
+
+  it("undoes and redoes autofill, typing and clearing, greying unavailable actions", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const button = (name: string) =>
+      screen.getByRole("button", { name }) as HTMLButtonElement;
+    const weight = (n: number) =>
+      (
+        within(sessionNamed("Monday")).getByRole("textbox", {
+          name: `Weight in kg of set ${n} of 1 Snatch`,
+        }) as HTMLInputElement
+      ).value;
+    expect(button("Undo").disabled).toBe(true);
+    expect(button("Redo").disabled).toBe(true);
+    expect(button("Clear all weights").disabled).toBe(true);
+    await userEvent.click(button("Autofill"));
+    expect(weight(1)).toBe("65");
+    expect(button("Undo").disabled).toBe(false);
+    // Typing "65" into one cell is one undo step.
+    const first = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 1 of 1 Snatch",
+    });
+    await userEvent.clear(first);
+    await userEvent.type(first, "60");
+    expect(weight(1)).toBe("60");
+    await userEvent.click(button("Undo"));
+    expect(weight(1)).toBe("65");
+    expect(button("Redo").disabled).toBe(false);
+    await userEvent.click(button("Redo"));
+    expect(weight(1)).toBe("60");
+    expect(button("Redo").disabled).toBe(true);
+    // The redone state is saved like any change.
+    await waitFor(
+      () =>
+        expect(lastBody().sessions[0].exercises[0].setGroups[0].weightKg).toBe(
+          60,
+        ),
+      { timeout: 2000 },
+    );
+    // Clear all, undo all the way back to the empty week.
+    await userEvent.click(button("Clear all weights"));
+    expect(weight(1)).toBe("");
+    expect(button("Clear all weights").disabled).toBe(true);
+    await userEvent.click(button("Undo"));
+    expect(weight(1)).toBe("60");
+    await userEvent.click(button("Undo"));
+    await userEvent.click(button("Undo"));
+    expect(weight(1)).toBe("");
+    expect(button("Undo").disabled).toBe(true);
+    await waitFor(
+      () => expect(lastBody().sessions[0].exercises[0].setGroups).toEqual([]),
+      { timeout: 2000 },
+    );
+  });
+
+  it("moves with Enter from weight to reps, to the next set, the note and the next exercise", async () => {
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1), empty(13)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const monday = within(sessionNamed("Monday"));
+    const box = (name: string) => monday.getByRole("textbox", { name });
+    box("Weight in kg of set 1 of 1 Snatch").focus();
+    await userEvent.keyboard("60{Enter}");
+    expect(document.activeElement).toBe(box("Reps of set 1 of 1 Snatch"));
+    await userEvent.keyboard("3{Enter}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 2 of 1 Snatch"),
+    );
+    box("Reps of set 10 of 1 Snatch").focus();
+    await userEvent.keyboard("{Enter}");
+    expect(document.activeElement).toBe(box("Coach note for 1 Snatch"));
+    await userEvent.keyboard("Fast{Enter}");
+    expect((box("Coach note for 1 Snatch") as HTMLTextAreaElement).value).toBe(
+      "Fast",
+    );
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 13 Snatch pull"),
+    );
+  });
+
+  it("moves between the cells with the arrow keys", async () => {
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1), empty(13)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const monday = within(sessionNamed("Monday"));
+    const box = (name: string) => monday.getByRole("textbox", { name });
+    box("Weight in kg of set 2 of 1 Snatch").focus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 3 of 1 Snatch"),
+    );
+    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 1 Snatch"),
+    );
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(box("Reps of set 1 of 1 Snatch"));
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 13 Snatch pull"),
+    );
+    await userEvent.keyboard("{ArrowUp}{ArrowUp}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 1 Snatch"),
+    );
+    // Inside a value, left moves the caret first.
+    await userEvent.keyboard("75{ArrowLeft}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 1 Snatch"),
+    );
+  });
+
+  it("uses the German label", async () => {
+    renderEditor(week, "de");
+    await userEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    for (const name of [
+      "Rückgängig",
+      "Wiederherstellen",
+      "Automatisch ausfüllen",
+      "Alle Gewichte löschen",
+    ])
+      expect(screen.getByRole("button", { name })).toBeTruthy();
   });
 });

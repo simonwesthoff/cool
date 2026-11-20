@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -104,22 +105,31 @@ describe("TrainingWeekSection", () => {
         .map((td) => td.textContent)
         .filter(Boolean),
     ).toEqual(["60", "60", "80"]);
-    // The coach note is an indicator after the name with a tooltip.
-    const indicator = within(snatch as HTMLElement).getByRole("button", {
-      name: "Coach note on 1 Snatch",
-    });
+    // Only as many set columns as the week's longest exercise (3 sets).
     expect(
-      document.getElementById(indicator.getAttribute("aria-describedby")!)!
+      snatch.querySelectorAll('tr[data-row="weight"] td[data-set]'),
+    ).toHaveLength(3);
+    // The exercise cell: marks and number; the name on hover.
+    const cell = snatch.querySelector("th[scope=rowgroup]")!;
+    expect(
+      cell.querySelector("[data-exercise-label] > [aria-hidden=true]")!
         .textContent,
-    ).toBe("Fast turnover");
-    expect(snatch.querySelector("[data-note]")).toBeNull();
+    ).toBe("1");
+    expect(within(cell as HTMLElement).queryAllByRole("button")).toHaveLength(
+      0,
+    );
+    fireEvent.pointerEnter(cell);
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip.textContent).toBe("1 Snatch");
     // Fixed to the viewport, so it never makes the table scroll vertically.
-    const tooltip = document.getElementById(
-      indicator.getAttribute("aria-describedby")!,
-    )!;
     expect(tooltip.className).toContain("fixed");
+    fireEvent.pointerLeave(cell);
     expect(monday.querySelector("table")!.parentElement!.className).toContain(
       "overflow-y-hidden",
+    );
+    // The coach note in the coach comment column.
+    expect(snatch.querySelector("[data-comment]")!.textContent).toBe(
+      "Fast turnover",
     );
     // A cyan mark (snatch) before the name; the pull-up has none.
     expect(
@@ -143,18 +153,35 @@ describe("TrainingWeekSection", () => {
     // Read-only, no indicator columns, a feedback column.
     expect(within(monday).queryAllByRole("textbox")).toHaveLength(0);
     expect(
-      monday.querySelector('tbody[data-exercise="33"] [data-note-indicator]'),
-    ).toBeNull();
+      monday.querySelector('tbody[data-exercise="33"] [data-comment]')!
+        .textContent,
+    ).toBe("");
     const headings = [...monday.querySelectorAll("thead th")].map(
       (th) => th.textContent,
     );
-    expect(headings).toContain("Feedback");
+    // The coach comment between the last set and the feedback.
+    expect(headings.slice(-3)).toEqual(["3", "Coach comment", "Feedback"]);
     expect(headings).not.toContain("Best value");
     expect(headings).not.toContain("mHG");
     expect(headings).not.toContain("Coach note");
     // The table fits the container on wide screens (no sideways scrolling).
     expect(monday.querySelector("table")!.className).toContain("lg:!w-full");
     expect(monday.querySelector("table")!.className).toContain("table-fixed");
+  });
+
+  it("writes the variation and the coach note into the coach comment", () => {
+    const current = week() as Extract<CurrentWeek, { state: "week" }>;
+    renderSection({
+      current: {
+        ...current,
+        week: { ...current.week, variations: { 1: "From the hang" } },
+      },
+    });
+    const comment = table().querySelector(
+      'tbody[data-exercise="1"] [data-comment]',
+    )!;
+    expect(comment.textContent).toBe("Variation: From the hang\nFast turnover");
+    expect(comment.className).toContain("whitespace-pre-wrap");
   });
 
   it("gives the coach Edit week (left) and Plan next week (right) below the week, and the athlete neither", () => {

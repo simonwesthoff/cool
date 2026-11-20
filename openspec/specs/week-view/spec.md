@@ -25,41 +25,36 @@ week level, and one table per session. No other week SHALL be shown there.
 
 ### Requirement: Week tables
 Each session SHALL be a read-only table like the week editor's "Sets &
-weights" table: each exercise two rows high, ten set columns with the
-weight above the reps (or the free text from exercise 30 on), and a
-"Feedback" column, with bold lines between exercises and no note or
-indicator columns. On wide screens the table SHALL fit the content width
-without scrolling sideways.
+weights" table: each exercise two rows high, a narrow exercise cell with
+the category marks and the number (the name on hover), as many set columns
+as the most sets of any exercise that week, with the weight above the reps
+(or the free text from exercise 30 on), then "Coach comment" and
+"Feedback", with bold lines between exercises and no indicator columns. On
+wide screens the table SHALL fit the content width.
 
 #### Scenario: Snatch on Monday
-- **GIVEN** the current week has the snatch on Monday with 2 × 3 @ 60 kg and 1 × 1 @ 80 kg and the coach note "Fast turnover"
+- **GIVEN** the current week has the snatch on Monday with 2 × 3 @ 60 kg and 1 × 1 @ 80 kg and the coach note "Fast turnover", and no exercise of the week has more sets
 - **WHEN** the athlete looks at the current week
-- **THEN** Monday's table shows the snatch with the sets 60/3, 60/3, 80/1, a note indicator after its name that shows "Fast turnover" on hover, and a feedback field
+- **THEN** Monday's table shows a cyan dot and "1" for the snatch ("1 Snatch" on hover), three set columns with 60/3, 60/3, 80/1, "Fast turnover" in the coach comment, and a feedback field
 
 #### Scenario: Desktop width
 - **WHEN** the athlete opens "My training" on a desktop screen
 - **THEN** the week tables fit the content width and cannot be scrolled sideways
 
+#### Scenario: Set columns of the week
+- **GIVEN** Monday's longest exercise has 4 sets and Thursday's clean has 7
+- **WHEN** the athlete looks at the week
+- **THEN** both tables have 7 set columns
+
 ### Requirement: No vertical scrolling of week tables
 On phones a session's table MAY scroll sideways but SHALL never scroll
-vertically; the coach note's tooltip SHALL open above the page without
+vertically; the exercise name's tooltip SHALL open above the page without
 making the table taller or being covered by other cells.
 
 #### Scenario: Tap the note on a phone
 - **GIVEN** a coach note on Monday's snatch
-- **WHEN** the athlete taps the note indicator on a phone
-- **THEN** the note is shown in full, and Monday's table cannot be scrolled vertically
-
-### Requirement: Coach note indicator
-A coach note on an exercise SHALL show as an indicator after the exercise
-name; hovering anywhere over the exercise's name cell, or focusing the
-indicator, SHALL show the note as a tooltip. Exercises
-without a note SHALL have no indicator.
-
-#### Scenario: Hover the note
-- **GIVEN** the coach note "Fast turnover" on Monday's snatch
-- **WHEN** the athlete hovers the cell with "1 Snatch", not only the indicator
-- **THEN** a tooltip shows "Fast turnover"
+- **WHEN** the athlete looks at Monday's table on a phone
+- **THEN** the note is shown in full in the coach comment, and Monday's table cannot be scrolled vertically
 
 ### Requirement: Feedback per exercise
 The user linked to the Athlete (also a coach who trains themselves) SHALL
@@ -111,9 +106,24 @@ over 500 characters 400 `VALIDATION_FAILED`.
 
 ### Requirement: Category marks in the week view
 The training week's tables SHALL show each exercise's category marks (see
-the exercise catalog) before its name, for the coach and the athlete.
+the exercise catalog) before its number, for the coach and the athlete.
 
 #### Scenario: Athlete's week
 - **GIVEN** the current week has exercises 1 and 33 on Monday
 - **WHEN** the athlete looks at the training week
-- **THEN** the snatch has a cyan dot before its name and the pull-up none
+- **THEN** the snatch has a cyan dot before its number and the pull-up none
+
+### Requirement: Coach comment in the week view
+Each session table of the training week SHALL have a "Coach comment"
+column between the last set and the feedback. It SHALL show the
+mesocycle's variation of the exercise as "Variation: <variation>" and the
+coach's note on the next line, each only if there is one.
+
+#### Scenario: Variation and note
+- **GIVEN** the snatch has the variation "From the hang" and the coach note "Fast turnover"
+- **WHEN** the athlete looks at the training week
+- **THEN** the snatch's coach comment reads "Variation: From the hang" and, below it, "Fast turnover"
+
+#### Scenario: Neither
+- **WHEN** an exercise has no variation and no coach note
+- **THEN** its coach comment cell is empty

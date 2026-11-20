@@ -10,6 +10,8 @@ import {
 import type { LiftCategory } from "@/domain/exercises/catalog-types";
 import { usesFreeText } from "@/domain/week-plans/week-plan-types";
 import { LiftMarks } from "../exercises/lift-marks";
+import { CellTooltip } from "./cell-tooltip";
+import { moveFocus } from "./table-keys";
 import {
   EDITOR_TABLE_WIDTH,
   EDITOR_WIDTH,
@@ -191,6 +193,9 @@ function ExerciseRows({
             onChange={(event) =>
               handlers.onChangeSet(exercise.key, i, field, event.target.value)
             }
+            onKeyDown={moveFocus}
+            data-cell={field}
+            data-set={i}
             aria-label={t(field === "weight" ? "weightOf" : "repsOf", {
               n: i + 1,
               name,
@@ -211,10 +216,13 @@ function ExerciseRows({
           // Stays in view while the table scrolls sideways on phones.
           className={`${line} sticky left-0 z-[1] bg-white px-2 text-left align-middle font-medium dark:bg-zinc-950`}
         >
-          <span className="flex items-center gap-1.5">
+          {/* Only the category marks and the number; the name on hover. */}
+          <span className="flex items-center gap-1.5" data-exercise-label>
             <LiftMarks categories={categories} />
-            <span className="min-w-0">{name}</span>
+            <span aria-hidden="true">{exercise.exerciseNumber}</span>
+            <span className="sr-only">{name}</span>
           </span>
+          <CellTooltip text={name} />
         </th>
         {free ? (
           <td colSpan={MAX_SETS + 1} rowSpan={2} className={`${line} p-0`}>
@@ -244,6 +252,8 @@ function ExerciseRows({
             onChange={(event) =>
               handlers.onChangeNote(exercise.key, event.target.value)
             }
+            onKeyDown={moveFocus}
+            data-note
             rows={exercise.feedback ? 1 : 2}
             maxLength={500}
             aria-label={t("noteOf", { name })}

@@ -450,7 +450,14 @@
     },
     "retry": "Try again",
     "finish": "Finish week planning",
-    "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway."
+    "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway.",
+    "autofill": "Autofill",
+    "toolbar": {
+      "label": "Weights and reps",
+      "undo": "Undo",
+      "redo": "Redo",
+      "clearAll": "Clear all weights"
+    }
   },
   "WeekView": {
     "feedback": {
@@ -472,6 +479,7 @@
     "planThis": "Plan this week",
     "planNext": "Plan next week",
     "editNext": "Edit next week",
-    "noteOf": "Coach note on {name}"
+    "comment": "Coach comment",
+    "variation": "Variation: {variation}"
   }
 }
