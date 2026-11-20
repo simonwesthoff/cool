@@ -450,7 +450,8 @@
     },
     "retry": "Erneut versuchen",
     "finish": "Wochenplanung abschließen",
-    "offPlan": "{count, plural, one {# Wert weicht} other {# Werte weichen}} mehr als 5 % vom Plan ab (rot: darüber, blau: darunter). Gespeichert wird trotzdem."
+    "offPlan": "{count, plural, one {# Wert weicht} other {# Werte weichen}} mehr als 5 % vom Plan ab (rot: darüber, blau: darunter). Gespeichert wird trotzdem.",
+    "autofill": "Automatisch ausfüllen"
   },
   "WeekView": {
     "feedback": {

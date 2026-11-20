@@ -450,7 +450,8 @@
     },
     "retry": "Try again",
     "finish": "Finish week planning",
-    "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway."
+    "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway.",
+    "autofill": "Autofill"
   },
   "WeekView": {
     "feedback": {

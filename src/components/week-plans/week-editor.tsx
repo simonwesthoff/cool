@@ -11,7 +11,8 @@ import {
   type PlannedSession,
   type WeekPlan,
 } from "@/domain/week-plans/week-plan-types";
-import { PlusIcon } from "../icons";
+import { MagicWandIcon, PlusIcon } from "../icons";
+import { prefillSets } from "@/domain/week-plans/prefill";
 import { usePendingSave } from "../macrocycles/pending-save";
 import {
   BACK_BUTTON,
@@ -298,6 +299,39 @@ export function WeekEditor({
       router.refresh();
     }
   }
+  /**
+   * "Autofill": every exercise 1–29 without sets in all its sessions gets
+   * the sets of its projection, split over its sessions in week order.
+   */
+  function autofill() {
+    update((list) => {
+      const filled = new Map<string, DraftSession["exercises"][number]>();
+      for (const n of exercisesOf(list)) {
+        if (usesFreeText(n)) continue;
+        const entries = list.flatMap((s) =>
+          s.exercises.filter((e) => e.exerciseNumber === n),
+        );
+        if (entries.some((e) => e.sets.length > 0)) continue;
+        const sets = prefillSets(projections[n], entries.length);
+        if (!sets) continue;
+        entries.forEach((e, i) =>
+          filled.set(e.key, {
+            ...e,
+            sets: sets[i]!.map((s) => ({
+              key: newKey(),
+              weight: String(s.weightKg),
+              reps: String(s.reps),
+            })),
+          }),
+        );
+      }
+      if (filled.size === 0) return list;
+      return list.map((s) => ({
+        ...s,
+        exercises: s.exercises.map((e) => filled.get(e.key) ?? e),
+      }));
+    });
+  }
   const onWeek = exercisesOf(sessions);
   const end = new Date(`${plan.startDate}T00:00:00Z`);
   end.setUTCDate(end.getUTCDate() + 6);
@@ -386,9 +420,22 @@ export function WeekEditor({
           }`}
         >
           {/* The column's title moves with the column. */}
-          <h2 className="text-lg font-semibold">
-            {step === 0 ? t("columns.sessions") : t("columns.weights")}
-          </h2>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <h2 className="text-lg font-semibold">
+              {step === 0 ? t("columns.sessions") : t("columns.weights")}
+            </h2>
+            {step === 1 && (
+              <button
+                type="button"
+                data-autofill
+                onClick={autofill}
+                className={`${secondary} gap-2`}
+              >
+                <MagicWandIcon />
+                {t("autofill")}
+              </button>
+            )}
+          </div>
           {sessions.map((s) => {
             const label = labelOf(s);
             if (step === 0)

@@ -1,0 +1,89 @@
+# Proposal
+
+## Why
+
+In step 2 of the week editor the coach types every weight and every rep by
+hand, although the macrocycle already projects four values per exercise
+and week: the best value, the average weight (mHG), the set size and the
+weekly reps. A starting point that already meets these projections lets
+the coach adjust instead of type, and makes planning a week much faster.
+
+## What Changes
+
+- **"Autofill" button in step 2** (user decisions):
+  - **Where:** next to the "Weights" ("Gewichte") title at the top of step
+    2, with a magic wand icon before the text "Autofill" ("Automatisch
+    ausfüllen" in German).
+  - **What it does:** clicking it fills the sets of every exercise 1–29
+    that has no sets yet in any of its sessions. Nothing is filled
+    automatically; exercises with sets stay untouched.
+  - **Saving:** the filled sets are saved like any other change, and the
+    coach can edit them as usual.
+  - **Not prefilled:**
+    - **Free text:** exercises from 30 on, which have free text instead of
+      sets.
+    - **No projection:** exercises without a complete projection (a best
+      value, an mHG, a set size and weekly reps).
+- **Rules for the sets of one exercise:**
+  - **Whole numbers** (user decision): the projections can be decimals
+    (e.g. 77.3 kg or a set size of 2.5), but the prefilled weights are
+    whole kilograms and the reps whole numbers. The best value is rounded
+    to whole kg and the weekly reps to a whole number.
+  - **Weights:** the last set's weight is the best value. From one set to
+    the next, the weight stays the same or rises by 5 kg, never more (user
+    decision). Only the jump into the first set at the best value may be
+    smaller; with several sets at the best value, that is the jump into
+    the first of them.
+  - **More jumps rather than bigger ones:** among equally close options,
+    the one with more 5 kg jumps wins. The mHG is always below the best
+    value; if it is too low to reach, every set is simply 5 kg above the
+    previous one.
+  - **Reps:** from one set to the next, the reps stay the same or fall.
+  - **Targets:**
+    - **Average reps per set:** they match the planned set size.
+    - **Weighted average weight:** the mHG, weighted by reps, as in the
+      editor's Actual row (user decision).
+    - **Sum of all reps:** the planned weekly reps.
+  - **Tolerance:** each target is met within 5 %, the editor's tolerance.
+- **Several sessions** (user decision): the weekly reps are split evenly
+  over the sessions with the exercise, and each session follows the same
+  rules on its share, reaching the best value.
+- **When the rules cannot all be met:** the values come as close as
+  possible, in this priority: best value and weekly reps exactly, then the
+  set size, then the mHG. Some combinations can't be met within 5 %:
+  - **Set size:** 18 reps at a set size of 4 gives 3.6 or 4.5 reps per
+    set.
+  - **mHG:** a low mHG with few sets can't be reached with 5 kg steps;
+    then every jump is 5 kg.
+
+  The usual red/blue indicators then show what is off.
+
+Out of scope: prefilling step 1 (which exercises); changing the
+projections; the copy of the previous week ("Plan next week" with the
+previous week's content), which brings its own sets and is therefore not
+prefilled.
+
+New domain terms: none (best value, mHG, set size and weekly reps are in
+the glossary).
+
+## Capabilities
+
+### New Capabilities
+
+None.
+
+### Modified Capabilities
+
+- `week-planning`: new requirements "Autofill in step 2" (the button and
+  which exercises) and "Autofill rules" (how the sets are built).
+
+## Impact
+
+- **Messages:** the button label in English and German.
+- **Icon:** a magic wand icon in `src/components/icons`.
+- **Calculation:** a new pure function `prefillSets(projection, sessions)`
+  in `src/domain/week-plans/prefill.ts`, with unit tests.
+- **Week editor:** the "Autofill" button next to the step 2 title fills
+  the draft with the sets of exercises without sets, and the existing
+  autosave stores them.
+- **No API or data changes.**

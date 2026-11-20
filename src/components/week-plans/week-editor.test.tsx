@@ -1001,3 +1001,156 @@ describe("WeekEditor in German", () => {
     ).toHaveLength(10);
   });
 });
+
+describe("WeekEditor autofill", () => {
+  const empty = (n: number) => ({
+    exerciseNumber: n,
+    note: null,
+    setGroups: [],
+  });
+  /** Snatch on Monday and Thursday without sets, the pull with sets on Monday only, the squat without projection. */
+  const week: PlannedSession[] = [
+    {
+      weekday: 1,
+      slot: 1,
+      exercises: [
+        empty(1),
+        {
+          exerciseNumber: 13,
+          note: null,
+          setGroups: [{ sets: 3, reps: 5, weightKg: 70 }],
+        },
+        empty(20),
+      ],
+    },
+    { weekday: 4, slot: 1, exercises: [empty(1), empty(13)] },
+  ];
+  const groupsOf = (
+    body: {
+      sessions: {
+        exercises: { exerciseNumber: number; setGroups: unknown[] }[];
+      }[];
+    },
+    day: number,
+    n: number,
+  ) =>
+    body.sessions[day]!.exercises.find((e) => e.exerciseNumber === n)!
+      .setGroups;
+
+  it("shows the button with a magic wand next to the Weights title, and fills nothing before", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    const { container } = renderEditor(week);
+    expect(screen.queryByRole("button", { name: "Autofill" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const button = screen.getByRole("button", { name: "Autofill" });
+    expect(button.querySelector("svg[aria-hidden=true]")).toBeTruthy();
+    expect(button.parentElement!.querySelector("h2")!.textContent).toBe(
+      "Weights",
+    );
+    expect(column(container).contains(button)).toBe(true);
+    expect(
+      (
+        within(sessionNamed("Monday")).getByRole("textbox", {
+          name: "Weight in kg of set 1 of 1 Snatch",
+        }) as HTMLInputElement
+      ).value,
+    ).toBe("");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("fills empty exercises, split over their sessions, and saves them", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor(week);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    const body = await nextSave();
+    // The snatch: 10 of the 20 reps per session, each ending at 80 kg.
+    for (const day of [0, 1]) {
+      const groups = groupsOf(body, day, 1) as {
+        sets: number;
+        reps: number;
+        weightKg: number;
+      }[];
+      expect(groups.reduce((s, g) => s + g.sets * g.reps, 0)).toBe(10);
+      expect(groups.at(-1)!.weightKg).toBe(80);
+    }
+    // The pull has sets on Monday: neither session is touched.
+    expect(groupsOf(body, 0, 13)).toEqual([{ sets: 3, reps: 5, weightKg: 70 }]);
+    expect(groupsOf(body, 1, 13)).toEqual([]);
+    // The squat has no projection.
+    expect(groupsOf(body, 0, 20)).toEqual([]);
+  });
+
+  it("fills the week 11 snatch without red or blue indicators", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    const monday = sessionNamed("Monday");
+    const weights = [1, 2, 3, 4, 5, 6, 7].map(
+      (i) =>
+        (
+          within(monday).getByRole("textbox", {
+            name: `Weight in kg of set ${i} of 1 Snatch`,
+          }) as HTMLInputElement
+        ).value,
+    );
+    expect(weights).toEqual(["55", "60", "65", "70", "75", "80", "80"]);
+    const marks = [...monday.querySelectorAll("[data-deviation]")].map((c) =>
+      c.getAttribute("data-deviation"),
+    );
+    expect(marks.length).toBeGreaterThan(0);
+    expect(marks.every((m) => m === "within")).toBe(true);
+  });
+
+  it("fills only an exercise added later on a second click", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    // The coach changes the first snatch weight by hand.
+    const first = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 1 of 1 Snatch",
+    });
+    await userEvent.clear(first);
+    await userEvent.type(first, "50");
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    // Add the pull to Monday by dropping it from the list.
+    await userEvent.click(
+      within(sessionNamed("Monday")).getByRole("button", {
+        name: /Add an exercise/,
+      }),
+    );
+    await userEvent.click(
+      within(document.querySelector("dialog[open]") as HTMLElement).getByRole(
+        "button",
+        { name: /13 Snatch pull/ },
+      ),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+    const monday = sessionNamed("Monday");
+    expect(
+      (
+        within(monday).getByRole("textbox", {
+          name: "Weight in kg of set 1 of 1 Snatch",
+        }) as HTMLInputElement
+      ).value,
+    ).toBe("50");
+    expect(
+      (
+        within(monday).getByRole("textbox", {
+          name: "Weight in kg of set 1 of 13 Snatch pull",
+        }) as HTMLInputElement
+      ).value,
+    ).not.toBe("");
+  });
+
+  it("uses the German label", async () => {
+    renderEditor(week, "de");
+    await userEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    expect(
+      screen.getByRole("button", { name: "Automatisch ausfüllen" }),
+    ).toBeTruthy();
+  });
+});
