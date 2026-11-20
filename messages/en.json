@@ -479,6 +479,7 @@
     "planThis": "Plan this week",
     "planNext": "Plan next week",
     "editNext": "Edit next week",
-    "noteOf": "Coach note on {name}"
+    "comment": "Coach comment",
+    "variation": "Variation: {variation}"
   }
 }

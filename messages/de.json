@@ -479,6 +479,7 @@
     "planThis": "Diese Woche planen",
     "planNext": "Nächste Woche planen",
     "editNext": "Nächste Woche bearbeiten",
-    "noteOf": "Trainerhinweis zu {name}"
+    "comment": "Trainerkommentar",
+    "variation": "Variation: {variation}"
   }
 }

@@ -6,23 +6,24 @@ import { usesFreeText } from "@/domain/week-plans/week-plan-types";
 import { LiftMarks } from "../exercises/lift-marks";
 import type { PlannedSession } from "@/domain/week-plans/week-plan-types";
 import { FeedbackField } from "./feedback-field";
-import { NoteIndicator } from "./note-indicator";
+import { CellTooltip } from "./cell-tooltip";
 import {
   exerciseDivider,
   line,
-  SETS,
   stickyName,
   VIEW_TABLE_WIDTH,
-  VIEW_WIDTH,
   viewShare,
+  viewWidths,
 } from "./table-layout";
 import { draftOf } from "./week-draft";
 
 /**
  * A session of the current week, read-only like the week editor's "Sets &
- * weights" table: each exercise two rows high (weight above reps, or the
- * free text from exercise 30 on) with an indicator for the coach's note
- * (shown on hover), and the athlete's feedback. Only the linked athlete can type feedback.
+ * weights" table: each exercise two rows high (marks and number, the name
+ * on hover; weight above reps, or the free text from exercise 30 on), the
+ * coach comment (variation and note) and the athlete's feedback. Only the
+ * linked athlete can type feedback. All tables of the week have the same
+ * number of set columns: the most sets of any exercise that week.
  */
 export function WeekViewTable({
   athleteId,
@@ -30,6 +31,8 @@ export function WeekViewTable({
   session,
   label,
   names,
+  variations = {},
+  setColumns,
   categories = {},
   canGiveFeedback,
 }: {
@@ -38,8 +41,12 @@ export function WeekViewTable({
   session: PlannedSession;
   /** "Monday" or "Monday 1". */
   label: string;
-  /** Display names by exercise number ("13 Snatch pull (From blocks)"). */
+  /** Display names by exercise number ("13 Snatch pull"). */
   names: Record<string, string>;
+  /** The mesocycle's variation by exercise number, for the coach comment. */
+  variations?: Record<number, string>;
+  /** Set columns of every table of the week (at least 1). */
+  setColumns: number;
   /** Lift categories by exercise number, shown as marks before the name. */
   categories?: Record<number, LiftCategory[]>;
   canGiveFeedback: boolean;
@@ -52,6 +59,8 @@ export function WeekViewTable({
     "px-1 py-1 text-xs font-semibold text-zinc-600 dark:text-zinc-400";
   const rowLabel = `${line} px-1 text-right text-xs font-normal text-zinc-500`;
   const cell = `${line} h-8 px-1 text-right tabular-nums`;
+  const sets = Array.from({ length: Math.max(setColumns, 1) }, (_, i) => i);
+  const width = viewWidths(sets.length);
 
   return (
     <section
@@ -71,14 +80,21 @@ export function WeekViewTable({
             style={{ width: `${VIEW_TABLE_WIDTH}rem` }}
           >
             <colgroup>
-              <col style={{ width: viewShare(VIEW_WIDTH.exercise) }} />
-              <col style={{ width: viewShare(VIEW_WIDTH.rowLabel) }} />
-              {SETS.map((i) => (
-                <col key={i} style={{ width: viewShare(VIEW_WIDTH.set) }} />
+              <col
+                data-col="exercise"
+                style={{ width: viewShare(width.exercise) }}
+              />
+              <col style={{ width: viewShare(width.rowLabel) }} />
+              {sets.map((i) => (
+                <col key={i} style={{ width: viewShare(width.set) }} />
               ))}
               <col
+                data-col="comment"
+                style={{ width: viewShare(width.comment) }}
+              />
+              <col
                 data-col="feedback"
-                style={{ width: viewShare(VIEW_WIDTH.feedback) }}
+                style={{ width: viewShare(width.feedback) }}
               />
             </colgroup>
             <thead>
@@ -92,7 +108,7 @@ export function WeekViewTable({
                 <th scope="col" className={line}>
                   <span className="sr-only">{tv("row")}</span>
                 </th>
-                {SETS.map((i) => (
+                {sets.map((i) => (
                   <th
                     key={i}
                     scope="col"
@@ -103,6 +119,13 @@ export function WeekViewTable({
                 ))}
                 <th
                   scope="col"
+                  data-heading="comment"
+                  className={`${line} ${head} text-left`}
+                >
+                  {t("comment")}
+                </th>
+                <th
+                  scope="col"
                   data-heading="feedback"
                   className={`${line} ${head} text-left`}
                 >
@@ -111,11 +134,25 @@ export function WeekViewTable({
               </tr>
             </thead>
             {session.exercises.map((e, i) => {
-              const sets = draft!.exercises[i]!.sets;
+              const exerciseSets = draft!.exercises[i]!.sets;
+              const variation = variations[e.exerciseNumber];
+              const comment = [
+                variation ? t("variation", { variation }) : null,
+                e.note || null,
+              ]
+                .filter(Boolean)
+                .join("\n");
               const name = names[e.exerciseNumber] ?? String(e.exerciseNumber);
               const free = usesFreeText(e.exerciseNumber);
               const shared = (
                 <>
+                  <td
+                    rowSpan={2}
+                    data-comment
+                    className={`${line} px-1 py-1 align-top text-sm whitespace-pre-wrap`}
+                  >
+                    {comment}
+                  </td>
                   <td
                     rowSpan={2}
                     data-feedback
@@ -151,25 +188,24 @@ export function WeekViewTable({
                     <th
                       scope="rowgroup"
                       rowSpan={2}
-                      // Hovering anywhere in the cell shows the coach note.
-                      className={`${line} ${stickyName} group/note px-2 text-left align-middle font-medium`}
+                      className={`${line} ${stickyName} px-2 text-left align-middle font-medium`}
                     >
-                      <span className="mr-1.5 inline-flex align-middle">
+                      {/* Marks and number; the name on hover. */}
+                      <span
+                        className="flex items-center gap-1.5"
+                        data-exercise-label
+                      >
                         <LiftMarks
                           categories={categories[e.exerciseNumber] ?? []}
                         />
+                        <span aria-hidden="true">{e.exerciseNumber}</span>
+                        <span className="sr-only">{name}</span>
                       </span>
-                      {name}
-                      {e.note && (
-                        <NoteIndicator
-                          note={e.note}
-                          label={t("noteOf", { name })}
-                        />
-                      )}
+                      <CellTooltip text={name} />
                     </th>
                     {free ? (
                       <td
-                        colSpan={SETS.length + 1}
+                        colSpan={sets.length + 1}
                         rowSpan={2}
                         data-free-text
                         className={`${line} px-1 py-1 align-top whitespace-pre-wrap`}
@@ -181,9 +217,9 @@ export function WeekViewTable({
                         <th scope="row" className={rowLabel}>
                           {tv("kg")}
                         </th>
-                        {SETS.map((s) => (
+                        {sets.map((s) => (
                           <td key={s} data-set={s + 1} className={cell}>
-                            {sets[s]?.weight}
+                            {exerciseSets[s]?.weight}
                           </td>
                         ))}
                       </>
@@ -196,9 +232,9 @@ export function WeekViewTable({
                         <th scope="row" className={rowLabel}>
                           {tv("reps")}
                         </th>
-                        {SETS.map((s) => (
+                        {sets.map((s) => (
                           <td key={s} className={cell}>
-                            {sets[s]?.reps}
+                            {exerciseSets[s]?.reps}
                           </td>
                         ))}
                       </>

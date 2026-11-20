@@ -107,17 +107,12 @@ export function TrainingWeekSection({
           }}
           categories={categories}
           names={Object.fromEntries(
-            Object.entries(names).map(([n, name]) => {
-              const base = `${n} ${localized(name, locale)}`;
-              const variation = current.week.variations[Number(n)];
-              return [
-                n,
-                variation
-                  ? te("withVariation", { name: base, variation })
-                  : base,
-              ];
-            }),
+            Object.entries(names).map(([n, name]) => [
+              n,
+              `${n} ${localized(name, locale)}`,
+            ]),
           )}
+          variations={current.week.variations}
         />
       )}
     </section>
@@ -134,6 +129,7 @@ function WeekContent({
   editor,
   sessionLabel,
   names,
+  variations,
   categories,
 }: {
   athleteId: string;
@@ -150,9 +146,17 @@ function WeekContent({
   editor: (week: number, prefill: boolean) => string;
   sessionLabel: (weekday: number, slot: number, several: boolean) => string;
   names: Record<string, string>;
+  variations: Record<number, string>;
   categories: Record<number, LiftCategory[]>;
 }) {
   const { week, next } = current;
+  // The same set columns in every table: the most sets of any exercise.
+  const setColumns = Math.max(
+    1,
+    ...week.sessions.flatMap((s) =>
+      s.exercises.map((e) => e.setGroups.reduce((sum, g) => sum + g.sets, 0)),
+    ),
+  );
   const perDay = (weekday: number) =>
     week.sessions.filter((s) => s.weekday === weekday).length;
   return (
@@ -178,6 +182,8 @@ function WeekContent({
             session={s}
             label={sessionLabel(s.weekday, s.slot, perDay(s.weekday) > 1)}
             names={names}
+            variations={variations}
+            setColumns={setColumns}
             categories={categories}
             canGiveFeedback={canGiveFeedback}
           />

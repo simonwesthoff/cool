@@ -32,9 +32,19 @@ export const EDITOR_TABLE_WIDTH =
   EDITOR_WIDTH.valueLabel +
   4 * EDITOR_WIDTH.indicator;
 
-/** The week view: the feedback instead of the note and the indicators. */
-export const VIEW_WIDTH = { ...SHARED_WIDTH, feedback: 24.75 } as const;
-export const VIEW_TABLE_WIDTH = shared + VIEW_WIDTH.feedback;
+/**
+ * The week view: a narrow exercise column (marks and number), as many set
+ * columns as the week needs, then the coach comment and the feedback,
+ * which share the rest of the 60 rem content width equally.
+ */
+export const VIEW_TABLE_WIDTH = 60;
+export function viewWidths(setColumns: number) {
+  const exercise = 4.5;
+  const rowLabel = SHARED_WIDTH.rowLabel;
+  const set = SHARED_WIDTH.set;
+  const text = (VIEW_TABLE_WIDTH - exercise - rowLabel - setColumns * set) / 2;
+  return { exercise, rowLabel, set, comment: text, feedback: text };
+}
 /** A column's share of the week view's width, so the table can shrink. */
 export const viewShare = (rem: number) => `${(rem / VIEW_TABLE_WIDTH) * 100}%`;
 

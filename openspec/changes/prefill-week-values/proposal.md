@@ -77,6 +77,15 @@ the coach adjust instead of type, and makes planning a week much faster.
 
   The usual red/blue indicators then show what is off.
 
+- **Week tables on the athlete page** (user decisions):
+  - **Exercise cell:** only the category marks and the number; the name
+    on hover. The column is narrower, and the note icons are gone.
+  - **Coach comment column:** a new column between the last set and the
+    feedback, with "Variation: <variation>" and the coach's note below
+    it, each if there is one.
+  - **Set columns:** as many as the most sets of any exercise that week,
+    the same in every table of the week.
+
 Out of scope: prefilling step 1 (which exercises); changing the
 projections; the copy of the previous week ("Plan next week" with the
 previous week's content), which brings its own sets and is therefore not
@@ -93,6 +102,12 @@ None.
 
 ### Modified Capabilities
 
+- `week-view` (athlete page):
+  - **New requirement:** "Coach comment in the week view".
+  - **Changed:** "Week tables" (narrow exercise cell, set columns per
+    week, the new column), "No vertical scrolling of week tables" and
+    "Category marks in the week view".
+  - **Removed:** "Coach note indicator".
 - `week-planning`:
   - **New requirements:** "Autofill in step 2" (the toolbar, the button
     and which exercises), "Autofill rules" (how the sets are built), "Undo,

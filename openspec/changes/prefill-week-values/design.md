@@ -153,6 +153,19 @@
    - **Selected value:** the focused cell's value is selected, so typing
      replaces it.
 
+9. **Week tables on the athlete page.**
+   - **Exercise cell:** the same as in the editor (marks, number,
+     `CellTooltip` with the name); `NoteIndicator` is removed.
+   - **Coach comment:** a `data-comment` cell, `whitespace-pre-wrap`,
+     built from the week's variations (passed separately; the names no
+     longer carry the variation) and the note.
+   - **Set columns:** `TrainingWeekSection` computes the most sets of any
+     exercise over all sessions of the week (at least 1) and passes it to
+     each table.
+   - **Widths:** `viewWidths(setColumns)` within the 60 rem content width:
+     4.5 rem exercise, 2.25 rem row label, 2.5 rem per set; coach comment
+     and feedback share the rest equally.
+
 ## Risks / Trade-offs
 
 - **The rules can't always be met together:**
