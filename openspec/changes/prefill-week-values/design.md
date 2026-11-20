@@ -47,6 +47,18 @@
      extra reps on the first sets, so the reps never rise. Example: 20 in
      7 sets → 3, 3, 3, 3, 3, 3, 2.
 
+   - **Equal reps first** (user decision): before the uneven split, equal
+     sets of r reps are tried, with r = the set size rounded, floored and
+     ceiled. Each session gets as many sets of r as come closest to its
+     share (at most 10), and weights are found as in decision 3.
+     - **Accepted when:** the whole week's best value, mHG, set size and
+       weekly reps are all within 5 % (`deviation`, as in the editor).
+     - **Choice:** among accepted options, the one closest to the planned
+       weekly reps wins. Otherwise the uneven split above is used.
+     - **Example:** week 11's snatch (set size 3, 20 reps) in one session
+       gets 7 × 3 = 21 reps; in two sessions, 3 × 3 per session gives 18
+       (10 % off), so the reps stay 4, 3, 3.
+
 3. **Weights by a small search.**
    - **Whole numbers:** B = the best value rounded to whole kg (half up);
      every weight is whole kg. The weekly reps are rounded to a whole
@@ -125,8 +137,9 @@
    - **Hover:** a `CellTooltip` shows it while the pointer is over the
      cell, in the style of the coach-note tooltip (rendered into the body,
      fixed to the viewport).
-   - **Width:** the column width stays shared with the week view on the
-     athlete page, which keeps the names.
+   - **Width:** the editor's exercise column is 4.5 rem instead of 8 rem,
+     and the coach note gets the saved width. The week view on the
+     athlete page keeps 8 rem, as it still shows the names.
 
 8. **Keyboard navigation** (user decision), in `table-keys.ts`, on the set
    inputs and the coach note:

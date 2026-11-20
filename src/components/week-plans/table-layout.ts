@@ -7,20 +7,27 @@ import { MAX_SETS } from "./week-draft";
 
 export const SETS = Array.from({ length: MAX_SETS }, (_, i) => i);
 
-/** Columns both tables have, with the same widths. */
+/** Columns both tables have; the editor narrows the exercise column. */
 export const SHARED_WIDTH = { exercise: 8, rowLabel: 2.25, set: 2.5 } as const;
 const shared =
   SHARED_WIDTH.exercise + SHARED_WIDTH.rowLabel + MAX_SETS * SHARED_WIDTH.set;
 
-/** The editor: note, Actual/Plan label and four equal indicator columns. */
+/**
+ * The editor: a narrow exercise column (marks and number, the name on
+ * hover), the coach note, the Actual/Plan label and four equal indicator
+ * columns. The width the exercise column saves goes to the note.
+ */
 export const EDITOR_WIDTH = {
   ...SHARED_WIDTH,
-  note: 7.75,
+  exercise: 4.5,
+  note: 11.25,
   valueLabel: 2.75,
   indicator: 3.5,
 } as const;
 export const EDITOR_TABLE_WIDTH =
-  shared +
+  shared -
+  SHARED_WIDTH.exercise +
+  EDITOR_WIDTH.exercise +
   EDITOR_WIDTH.note +
   EDITOR_WIDTH.valueLabel +
   4 * EDITOR_WIDTH.indicator;

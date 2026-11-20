@@ -29,14 +29,15 @@ exercises SHALL stay untouched.
 Autofilled sets SHALL be whole numbers meeting the projection within 5 %:
 the last weight is the rounded best value; weights rise by 5 kg (only the
 jump into the best value may be smaller), ideally every two sets, with more
-jumps from the heaviest weights down as the mHG needs, or every set when
-it is out of reach; reps stay or fall and average the set size; the reps
-sum to the rounded weekly reps, split evenly over the sessions.
+jumps from the top as the mHG needs, or every set when it is out of reach;
+reps stay or fall and average the set size, summing to the rounded weekly
+reps split evenly over the sessions. Equal reps SHALL win whenever all four
+values stay within 5 %.
 
 #### Scenario: Snatch in week 11
 - **GIVEN** week 11 projects 80 kg best value, 69 kg mHG, set size 3 and 20 weekly reps for the snatch, which is in Monday's session without sets
 - **WHEN** the coach chooses "Autofill"
-- **THEN** the snatch has 65/3, 65/3, 70/3, 70/3, 75/3, 75/3, 80/2 (mHG 71 kg); the values are saved and no indicator is red or blue
+- **THEN** the snatch has 65/3, 65/3, 70/3, 70/3, 75/3, 75/3, 80/3: equal reps, as 21 reps are within 5 % of 20 (mHG 71.4 kg); the values are saved and no indicator is red or blue
 
 #### Scenario: Decimal projection
 - **GIVEN** a projection of 77.3 kg best value, 66.6 kg mHG, set size 2.5 and 17.5 weekly reps
@@ -52,6 +53,11 @@ sum to the rounded weekly reps, split evenly over the sessions.
 - **GIVEN** a projection of 100 kg best value, 80 kg mHG, set size 2 and 20 weekly reps in one session
 - **WHEN** "Autofill" fills the exercise
 - **THEN** it gets 70, 70, 75, 75, 80, 80, 85, 90, 95, 100 kg: pairs at the lighter weights, a jump every set at the heavier ones
+
+#### Scenario: Equal reps would miss
+- **GIVEN** the same snatch in two sessions, 10 reps each
+- **WHEN** "Autofill" fills it
+- **THEN** each session gets 4, 3, 3 reps, because equal sets of 3 would give 18 reps, 10 % below the plan
 
 #### Scenario: Two sessions
 - **GIVEN** the snatch with 20 projected weekly reps is in Monday's and Thursday's sessions, both without sets

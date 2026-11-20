@@ -54,6 +54,10 @@ the coach adjust instead of type, and makes planning a week much faster.
     The mHG is always below the best value; if it is too low to reach,
     every set is simply 5 kg above the previous one.
   - **Reps:** from one set to the next, the reps stay the same or fall.
+  - **Equal reps first** (user decision): every set gets the same reps
+    whenever best value, mHG, set size and weekly reps all stay within
+    5 %, even if the weekly reps are then a little off (e.g. 7 × 3 = 21
+    instead of 20).
   - **Targets:**
     - **Average reps per set:** they match the planned set size.
     - **Weighted average weight:** the mHG, weighted by reps, as in the
@@ -94,7 +98,7 @@ None.
     and which exercises), "Autofill rules" (how the sets are built), "Undo,
     redo and clearing in step 2" and "Keyboard in step 2".
   - **"Step 2 values":** the exercise cell shows the marks and the number,
-    with the name on hover.
+    with the name on hover, in a narrower column.
 
 ## Impact
 

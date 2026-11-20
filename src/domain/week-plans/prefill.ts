@@ -119,6 +119,8 @@ export function weightsFor(
 /**
  * The sets of one exercise per session, or null without a complete
  * projection. Best value and weekly reps are rounded to whole numbers.
+ * Equal reps in every set are preferred whenever best value, mHG, set size
+ * and weekly reps all stay within 5 %.
  */
 export function prefillSets(
   projection: PlannedExercise | undefined,
@@ -137,10 +139,57 @@ export function prefillSets(
   const best = Math.round(bestKg);
   const total = Math.round(weeklyReps);
   if (best <= 0 || total <= 0) return null;
-  return splitReps(total, sessionCount).map((share) => {
-    const reps = repsPerSet(share, setSize);
-    if (reps.length === 0) return [];
-    const weights = weightsFor(reps, best, averageKg);
-    return reps.map((r, i) => ({ weightKg: weights[i]!, reps: r }));
-  });
+  const shares = splitReps(total, sessionCount);
+  const build = (repsOf: (share: number) => number[]) =>
+    shares.map((share) => {
+      const reps = repsOf(share);
+      if (reps.length === 0) return [];
+      const weights = weightsFor(reps, best, averageKg);
+      return reps.map((r, i) => ({ weightKg: weights[i]!, reps: r }));
+    });
+  // Equal reps in every set when all four values stay within 5 %, even if
+  // the week's reps are then a little off; else reps meeting them exactly.
+  const equal = equalRepsOptions(setSize)
+    .map((r) => build((share) => equalReps(share, r)))
+    .filter((sessions) => withinAll(sessions, projection))
+    .sort(
+      (a, b) =>
+        Math.abs(repsOf(a) - weeklyReps) - Math.abs(repsOf(b) - weeklyReps),
+    )[0];
+  return equal ?? build((share) => repsPerSet(share, setSize));
+}
+
+/** Whole reps per set to try for equal sets: around the set size. */
+function equalRepsOptions(setSize: number): number[] {
+  return [
+    ...new Set([Math.round(setSize), Math.floor(setSize), Math.ceil(setSize)]),
+  ].filter((r) => r >= 1 && r <= MAX_REPS);
+}
+
+/** `r` reps in each set, as many sets as come closest to `share`. */
+function equalReps(share: number, r: number): number[] {
+  if (share <= 0) return [];
+  const n = Math.min(Math.max(Math.round(share / r), 1), MAX_SETS);
+  return Array<number>(n).fill(r);
+}
+
+const repsOf = (sessions: PrefilledSet[][]) =>
+  sessions.flat().reduce((sum, s) => sum + s.reps, 0);
+
+/** Whether the week's values of these sets are all within 5 %. */
+function withinAll(
+  sessions: PrefilledSet[][],
+  projection: PlannedExercise,
+): boolean {
+  const a = weekActuals(
+    sessions
+      .flat()
+      .map((s) => ({ sets: 1, reps: s.reps, weightKg: s.weightKg })),
+  );
+  return (
+    deviation(a.heaviestKg, projection.bestKg) === "within" &&
+    deviation(a.averageKg, projection.averageKg) === "within" &&
+    deviation(a.setSize, projection.setSize) === "within" &&
+    deviation(a.weeklyReps, projection.weeklyReps) === "within"
+  );
 }

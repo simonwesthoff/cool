@@ -49,11 +49,13 @@ describe("splitReps and repsPerSet", () => {
 describe("prefillSets", () => {
   it("fills the week 11 snatch within 5 % of every projection", () => {
     const [sets] = prefillSets(week11, 1)!;
-    expect(sets!.map((s) => s.reps)).toEqual([3, 3, 3, 3, 3, 3, 2]);
+    // Equal reps: 21 instead of 20 weekly reps is still within 5 %.
+    expect(sets!.map((s) => s.reps)).toEqual([3, 3, 3, 3, 3, 3, 3]);
     expectRules(sets!, 80);
     const a = actualsOf(sets!);
     expect(a.heaviestKg).toBe(80);
-    expect(a.weeklyReps).toBe(20);
+    expect(a.weeklyReps).toBe(21);
+    expect(deviation(a.weeklyReps, 20)).toBe("within");
     expect(deviation(a.averageKg, 69)).toBe("within");
     expect(deviation(a.setSize, 3)).toBe("within");
   });
@@ -99,6 +101,21 @@ describe("prefillSets", () => {
     expect(sets!.map((s) => s.weightKg)).toEqual([100, 105, 110, 115, 120]);
   });
 
+  it("keeps uneven reps when equal reps would miss a value by more than 5 %", () => {
+    // Two sessions of 10: equal sets of 3 give 18 reps (10 % off).
+    const sessions = prefillSets(week11, 2)!;
+    expect(sessions.map((s) => s.map((x) => x.reps))).toEqual([
+      [4, 3, 3],
+      [4, 3, 3],
+    ]);
+    // Set size 2.5: neither 2 nor 3 reps per set is within 5 %.
+    const [decimal] = prefillSets(
+      { bestKg: 77.3, averageKg: 66.6, setSize: 2.5, weeklyReps: 17.5 },
+      1,
+    )!;
+    expect(new Set(decimal!.map((s) => s.reps)).size).toBeGreaterThan(1);
+  });
+
   it("splits over two sessions, each reaching the best value", () => {
     const sessions = prefillSets(week11, 2)!;
     expect(sessions).toHaveLength(2);
@@ -138,8 +155,16 @@ describe("prefillSets", () => {
                 { bestKg: best, averageKg: best * ratio, setSize, weeklyReps },
                 sessions,
               )!;
-              const total = result.flat().reduce((s, x) => s + x.reps, 0);
-              expect(total).toBe(Math.round(weeklyReps));
+              const sets = result.flat();
+              const total = sets.reduce((s, x) => s + x.reps, 0);
+              // Either the exact weekly reps, or equal reps within 5 %.
+              if (total !== Math.round(weeklyReps)) {
+                expect(new Set(sets.map((x) => x.reps)).size).toBe(1);
+                const a = actualsOf(sets);
+                expect(deviation(a.weeklyReps, weeklyReps)).toBe("within");
+                expect(deviation(a.setSize, setSize)).toBe("within");
+                expect(deviation(a.averageKg, best * ratio)).toBe("within");
+              }
               for (const sets of result)
                 if (sets.length) expectRules(sets, Math.round(best));
             }
