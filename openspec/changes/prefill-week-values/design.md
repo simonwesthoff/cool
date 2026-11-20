@@ -51,24 +51,28 @@
    - **Whole numbers:** B = the best value rounded to whole kg (half up);
      every weight is whole kg. The weekly reps are rounded to a whole
      number first, and the set size and mHG stay decimals as targets.
-   - **Shape:** the sets end with k ≥ 1 sets at B. Below them, the weights
-     fall backwards in steps of 0 or 5 kg; the step from the first set at
-     B down to the set before it is any whole number from 1 to 5 kg. No
-     step is ever above 5 kg.
-   - **Search:** for each k, the size of that step d (1–5) and every 0/5
-     pattern of the steps below it, the candidate is built. With n ≤ 10
-     this is at most a few thousand candidates. Each is scored by |its
-     rep-weighted mean − mHG|, computed with `weekActuals`, and weights
-     below 0 kg are skipped.
-   - **Choice:**
-     - **Smallest deviation** of the mHG wins.
-     - **Within tolerance:** among the candidates within 5 % of the mHG,
-       the one with the fewest jumps wins (user decision), then the
-       smaller deviation. Every change of weight counts as a jump, the
-       smaller one into the best value included.
-     - **Out of reach:** when no candidate is within 5 %, the closest one
-       wins. As the mHG is always below the best value, that is the ramp
-       with 5 kg steps in every set (k = 1, d = 5).
+   - **Shape:** runs of equal weight, from the lightest up. Every step
+     between runs is 5 kg, except the step into the top run at B, which
+     is any whole number d from 1 to 5 kg (5 kg preferred). No step is
+     ever above 5 kg.
+   - **Ideal** (user decision): a jump every two sets, i.e. runs of two;
+     with an odd number of sets the single set is the top one at B.
+     Example for 7 sets: 65 65 70 70 75 75 80.
+   - **mHG too high for the ideal:** more jumps are added from the
+     heaviest weights down. The top pairs are split into single sets one
+     at a time, so the lighter weights still repeat once and the heavier
+     ones rise every set. Example for 10 sets: 70 70 75 75 80 80 85 90
+     95 100.
+   - **mHG too low for the ideal (higher mHG):** the top run at B grows
+     instead (more sets at the best value).
+   - **Choice:** the first shape in this order whose mHG is within 5 %
+     wins. For each shape, d = 5 is used if it fits, else the d that
+     comes closest.
+     - **Out of reach:** if no shape fits, the closest one wins. As the
+       mHG is always below the best value, that is a 5 kg jump in every
+       set.
+     - **Measured like the editor:** the mean is computed with
+       `weekActuals`, weights below 0 kg are skipped.
    - *Alternatives:*
      - **Larger jumps:** rejected by the user.
      - **A closed formula (linear ramp):** rejected, because it can't
@@ -102,7 +106,7 @@
      "Clear all weights".
    - **History:** the editor keeps `past` and `future` lists of draft
      snapshots (at most 100), recorded by `changeValues` for every change
-     to the sets: typing into a cell, Autofill, Clear and Clear all.
+     to the sets: typing into a cell, Autofill and Clear all.
      - **Typing:** consecutive keystrokes into the same cell form one undo
        step.
      - **Per step:** the history belongs to step 2; leaving it and coming
@@ -110,13 +114,31 @@
      - **Saving:** undo and redo set the draft like any change, so the
        autosave stores the result.
      - **Not recorded:** coach notes and free text.
-   - **Greyed out:** undo without `past`, redo without `future`, "Clear all
-     weights" without any set, and an exercise's "Clear" without sets
-     (`disabled`, 40 % opacity).
-   - **Clear per exercise:** a small text button below the exercise name
-     in its session table, labelled "Clear the weights and reps of
-     <exercise>" for screen readers; exercises with free text have none.
+   - **Greyed out:** undo without `past`, redo without `future`, and "Clear
+     all weights" without any set (`disabled`, 40 % opacity).
    - **No confirmation:** clearing can be undone, so it doesn't ask.
+
+7. **Compact exercise cell** (user decision).
+   - **Content:** the exercise cell in the step 2 tables shows only the
+     category marks and the number. The name is in a screen-reader-only
+     text.
+   - **Hover:** a `CellTooltip` shows it while the pointer is over the
+     cell, in the style of the coach-note tooltip (rendered into the body,
+     fixed to the viewport).
+   - **Width:** the column width stays shared with the week view on the
+     athlete page, which keeps the names.
+
+8. **Keyboard navigation** (user decision), in `table-keys.ts`, on the set
+   inputs and the coach note:
+   - **Arrow keys:** up and down between the weight and reps rows, also
+     into the exercises above and below. Left and right between sets, once
+     the caret is at the edge of the value (or all is selected).
+   - **Enter:** weight → reps of the same set → weight of the next set.
+     From set 10's reps it goes to the coach note, and from the note to
+     the next exercise's first weight (also in the next session).
+     Shift+Enter keeps a line break in the note.
+   - **Selected value:** the focused cell's value is selected, so typing
+     replaces it.
 
 ## Risks / Trade-offs
 

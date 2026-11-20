@@ -417,9 +417,7 @@
       "freeTextOf": "Sets and reps of {name}",
       "exercise": "Exercise",
       "row": "Row",
-      "feedback": "Feedback: {text}",
-      "clear": "Clear",
-      "clearOf": "Clear the weights and reps of {name}"
+      "feedback": "Feedback: {text}"
     },
     "totals": {
       "title": "This week (all sessions)",

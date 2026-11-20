@@ -417,9 +417,7 @@
       "freeTextOf": "Sätze und Wiederholungen von {name}",
       "exercise": "Übung",
       "row": "Zeile",
-      "feedback": "Rückmeldung: {text}",
-      "clear": "Löschen",
-      "clearOf": "Gewichte und Wiederholungen von {name} löschen"
+      "feedback": "Rückmeldung: {text}"
     },
     "totals": {
       "title": "Diese Woche (alle Einheiten)",

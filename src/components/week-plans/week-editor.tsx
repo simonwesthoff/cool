@@ -643,11 +643,6 @@ export function WeekEditor({
                       `${exerciseKey}:${index}:${field}`,
                     )
                   }
-                  onClearExercise={(exerciseKey) =>
-                    changeValues((list) =>
-                      withoutSets(list, (e) => e.key === exerciseKey),
-                    )
-                  }
                   onChangeNote={(exerciseKey, note) =>
                     updateExercise(s.key, exerciseKey, (y) => ({ ...y, note }))
                   }

@@ -58,26 +58,37 @@ describe("prefillSets", () => {
     expect(deviation(a.setSize, 3)).toBe("within");
   });
 
-  it("prefers fewer jumps while within 5 %, then the closer mHG", () => {
+  it("jumps every second set when that meets the mHG", () => {
     const [sets] = prefillSets(week11, 1)!;
-    expect(sets!.map((s) => s.weightKg)).toEqual([70, 70, 70, 70, 70, 75, 80]);
-    // An mHG within 5 % of the best value needs no jump at all.
-    const [flat] = prefillSets(
+    expect(sets!.map((s) => s.weightKg)).toEqual([65, 65, 70, 70, 75, 75, 80]);
+    const [even] = prefillSets(
       { bestKg: 100, averageKg: 97, setSize: 2, weeklyReps: 10 },
       1,
     )!;
-    expect(flat!.map((s) => s.weightKg)).toEqual([100, 100, 100, 100, 100]);
+    expect(even!.map((s) => s.weightKg)).toEqual([90, 90, 95, 95, 100]);
   });
 
-  it("uses a plateau at the best value and a smaller jump into it for a high mHG", () => {
+  it("adds jumps from the heaviest weights down for a lower mHG", () => {
     const [sets] = prefillSets(
-      { bestKg: 100, averageKg: 98, setSize: 2, weeklyReps: 10 },
+      { bestKg: 100, averageKg: 80, setSize: 2, weeklyReps: 20 },
+      1,
+    )!;
+    // Pairs stay at the lighter weights, single jumps at the top.
+    expect(sets!.map((s) => s.weightKg)).toEqual([
+      70, 70, 75, 75, 80, 80, 85, 90, 95, 100,
+    ]);
+    expect(deviation(actualsOf(sets!).averageKg, 80)).toBe("within");
+  });
+
+  it("extends the top run at the best value for a higher mHG", () => {
+    const [sets] = prefillSets(
+      { bestKg: 100, averageKg: 99, setSize: 2, weeklyReps: 20 },
       1,
     )!;
     expectRules(sets!, 100);
     const weights = sets!.map((s) => s.weightKg);
-    expect(weights.filter((w) => w === 100).length).toBeGreaterThan(1);
-    expect(deviation(actualsOf(sets!).averageKg, 98)).toBe("within");
+    expect(weights.filter((w) => w === 100).length).toBeGreaterThan(2);
+    expect(deviation(actualsOf(sets!).averageKg, 99)).toBe("within");
   });
 
   it("jumps 5 kg in every set when the mHG is out of reach", () => {

@@ -20,8 +20,13 @@ the coach adjust instead of type, and makes planning a week much faster.
      nothing to undo or redo.
   2. **"Autofill".**
   3. **"Clear all weights":** it removes all weights and reps of the week.
-- **"Clear" per exercise** (user decision): it removes the weights and
-  reps of that exercise in its session.
+- **Compact exercise cell** (user decision): the step 2 tables show only
+  the category marks and the number of an exercise; its name appears when
+  hovering over the cell.
+- **Keyboard** (user decision): the arrow keys move between the weight and
+  reps cells. Enter moves from a weight to its reps, from reps to the next
+  set's weight, from the last set's reps to the coach note, and from the
+  note to the next exercise's first weight.
   - **What it does:** clicking it fills the sets of every exercise 1–29
     that has no sets yet in any of its sessions. Nothing is filled
     automatically; exercises with sets stay untouched.
@@ -42,10 +47,12 @@ the coach adjust instead of type, and makes planning a week much faster.
     decision). Only the jump into the first set at the best value may be
     smaller; with several sets at the best value, that is the jump into
     the first of them.
-  - **Fewer jumps** (user decision): among the options within 5 % of the
-    mHG, the one with the fewest changes of weight wins, then the one
-    closer to the mHG. The mHG is always below the best value; if it is
-    too low to reach, every set is simply 5 kg above the previous one.
+  - **A jump every two sets** (user decision): ideally each weight is
+    used for two sets (e.g. 65 65 70 70 75 75 80). If that misses the
+    mHG, more jumps are added from the heaviest weights down, so the
+    lighter weights still repeat once and the heavier ones rise every set.
+    The mHG is always below the best value; if it is too low to reach,
+    every set is simply 5 kg above the previous one.
   - **Reps:** from one set to the next, the reps stay the same or fall.
   - **Targets:**
     - **Average reps per set:** they match the planned set size.
@@ -82,9 +89,12 @@ None.
 
 ### Modified Capabilities
 
-- `week-planning`: new requirements "Autofill in step 2" (the toolbar,
-  the button and which exercises), "Autofill rules" (how the sets are
-  built) and "Undo, redo and clearing in step 2".
+- `week-planning`:
+  - **New requirements:** "Autofill in step 2" (the toolbar, the button
+    and which exercises), "Autofill rules" (how the sets are built), "Undo,
+    redo and clearing in step 2" and "Keyboard in step 2".
+  - **"Step 2 values":** the exercise cell shows the marks and the number,
+    with the name on hover.
 
 ## Impact
 
@@ -93,6 +103,7 @@ None.
 - **Calculation:** a new pure function `prefillSets(projection, sessions)`
   in `src/domain/week-plans/prefill.ts`, with unit tests.
 - **Week editor:** the toolbar below the step 2 title (undo, redo,
-  Autofill, clear all) and a "Clear" button per exercise in the session
-  tables; every change goes through the existing autosave.
+  Autofill, clear all), the compact exercise cell with a hover tooltip,
+  and keyboard navigation in the tables; every change goes through the
+  existing autosave.
 - **No API or data changes.**

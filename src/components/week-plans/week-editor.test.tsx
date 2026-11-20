@@ -483,14 +483,22 @@ describe("WeekEditor step 2", () => {
     const name = table.querySelector("tbody th[scope=rowgroup]")!;
     // Bold lines between exercises.
     expect(table.querySelector("tbody")!.className).toContain("border-t-2");
-    expect(name.textContent).toBe("Snatch: 1 SnatchClear");
-    expect(name.getAttribute("rowspan")).toBe("2");
-    // No buttons to add or remove sets; only "Clear" per exercise.
+    // The marks and the number are shown, the name is for screen readers.
     expect(
-      within(sessionNamed("Monday"))
-        .queryAllByRole("button")
-        .map((b) => b.getAttribute("aria-label")),
-    ).toEqual(["Clear the weights and reps of 1 Snatch"]);
+      name.querySelector("[data-exercise-label] > [aria-hidden=true]")!
+        .textContent,
+    ).toBe("1");
+    expect(name.textContent).toBe("Snatch: 11 Snatch");
+    expect(name.getAttribute("rowspan")).toBe("2");
+    // No buttons to add or remove sets.
+    expect(
+      within(sessionNamed("Monday")).queryAllByRole("button"),
+    ).toHaveLength(0);
+    // Hovering the cell shows the name.
+    fireEvent.pointerEnter(name);
+    expect((await screen.findByRole("tooltip")).textContent).toBe("1 Snatch");
+    fireEvent.pointerLeave(name);
+    expect(screen.queryByRole("tooltip")).toBeNull();
     expect(router.push).not.toHaveBeenCalled();
   });
 
@@ -1102,7 +1110,7 @@ describe("WeekEditor autofill", () => {
           }) as HTMLInputElement
         ).value,
     );
-    expect(weights).toEqual(["70", "70", "70", "70", "70", "75", "80"]);
+    expect(weights).toEqual(["65", "65", "70", "70", "75", "75", "80"]);
     const marks = [...monday.querySelectorAll("[data-deviation]")].map((c) =>
       c.getAttribute("data-deviation"),
     );
@@ -1169,41 +1177,35 @@ describe("WeekEditor autofill", () => {
     expect(button("Redo").disabled).toBe(true);
     expect(button("Clear all weights").disabled).toBe(true);
     await userEvent.click(button("Autofill"));
-    expect(weight(1)).toBe("70");
+    expect(weight(1)).toBe("65");
     expect(button("Undo").disabled).toBe(false);
     // Typing "65" into one cell is one undo step.
     const first = within(sessionNamed("Monday")).getByRole("textbox", {
       name: "Weight in kg of set 1 of 1 Snatch",
     });
     await userEvent.clear(first);
-    await userEvent.type(first, "65");
-    expect(weight(1)).toBe("65");
+    await userEvent.type(first, "60");
+    expect(weight(1)).toBe("60");
     await userEvent.click(button("Undo"));
-    expect(weight(1)).toBe("70");
+    expect(weight(1)).toBe("65");
     expect(button("Redo").disabled).toBe(false);
     await userEvent.click(button("Redo"));
-    expect(weight(1)).toBe("65");
+    expect(weight(1)).toBe("60");
     expect(button("Redo").disabled).toBe(true);
     // The redone state is saved like any change.
     await waitFor(
       () =>
         expect(lastBody().sessions[0].exercises[0].setGroups[0].weightKg).toBe(
-          65,
+          60,
         ),
       { timeout: 2000 },
     );
-    // Clear this exercise, then undo it.
-    await userEvent.click(button("Clear the weights and reps of 1 Snatch"));
-    expect(weight(1)).toBe("");
-    expect(button("Clear the weights and reps of 1 Snatch").disabled).toBe(
-      true,
-    );
-    await userEvent.click(button("Undo"));
-    expect(weight(1)).toBe("65");
     // Clear all, undo all the way back to the empty week.
     await userEvent.click(button("Clear all weights"));
     expect(weight(1)).toBe("");
+    expect(button("Clear all weights").disabled).toBe(true);
     await userEvent.click(button("Undo"));
+    expect(weight(1)).toBe("60");
     await userEvent.click(button("Undo"));
     await userEvent.click(button("Undo"));
     expect(weight(1)).toBe("");
@@ -1214,19 +1216,59 @@ describe("WeekEditor autofill", () => {
     );
   });
 
-  it("clears only the exercise whose Clear is chosen", async () => {
-    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
-    renderEditor(week11);
+  it("moves with Enter from weight to reps, to the next set, the note and the next exercise", async () => {
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1), empty(13)] }]);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    const clears = within(sessionNamed("Monday")).getAllByRole("button", {
-      name: "Clear the weights and reps of 1 Snatch",
-    });
-    await userEvent.click(clears[0]!);
-    const body = await nextSave();
-    expect(body.sessions[0].exercises[0].setGroups).toEqual([]);
-    expect(body.sessions[1].exercises[0].setGroups).toEqual([
-      { sets: 3, reps: 2, weightKg: 75 },
-    ]);
+    const monday = within(sessionNamed("Monday"));
+    const box = (name: string) => monday.getByRole("textbox", { name });
+    box("Weight in kg of set 1 of 1 Snatch").focus();
+    await userEvent.keyboard("60{Enter}");
+    expect(document.activeElement).toBe(box("Reps of set 1 of 1 Snatch"));
+    await userEvent.keyboard("3{Enter}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 2 of 1 Snatch"),
+    );
+    box("Reps of set 10 of 1 Snatch").focus();
+    await userEvent.keyboard("{Enter}");
+    expect(document.activeElement).toBe(box("Coach note for 1 Snatch"));
+    await userEvent.keyboard("Fast{Enter}");
+    expect((box("Coach note for 1 Snatch") as HTMLTextAreaElement).value).toBe(
+      "Fast",
+    );
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 13 Snatch pull"),
+    );
+  });
+
+  it("moves between the cells with the arrow keys", async () => {
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1), empty(13)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const monday = within(sessionNamed("Monday"));
+    const box = (name: string) => monday.getByRole("textbox", { name });
+    box("Weight in kg of set 2 of 1 Snatch").focus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 3 of 1 Snatch"),
+    );
+    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 1 Snatch"),
+    );
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(box("Reps of set 1 of 1 Snatch"));
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 13 Snatch pull"),
+    );
+    await userEvent.keyboard("{ArrowUp}{ArrowUp}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 1 Snatch"),
+    );
+    // Inside a value, left moves the caret first.
+    await userEvent.keyboard("75{ArrowLeft}");
+    expect(document.activeElement).toBe(
+      box("Weight in kg of set 1 of 1 Snatch"),
+    );
   });
 
   it("uses the German label", async () => {

@@ -27,17 +27,16 @@ exercises SHALL stay untouched.
 
 ### Requirement: Autofill rules
 Autofilled sets SHALL be whole numbers meeting the projection within 5 %:
-the last weight is the rounded best value; weights stay or rise by 5 kg,
-never more, and only the jump into the first set at the best value may be
-smaller; reps stay or fall; the reps per set average the set size; the
-rep-weighted mean is the mHG, or every jump is 5 kg when it is out of
-reach; the reps sum to the rounded weekly reps, split evenly over the
-exercise's sessions.
+the last weight is the rounded best value; weights rise by 5 kg (only the
+jump into the best value may be smaller), ideally every two sets, with more
+jumps from the heaviest weights down as the mHG needs, or every set when
+it is out of reach; reps stay or fall and average the set size; the reps
+sum to the rounded weekly reps, split evenly over the sessions.
 
 #### Scenario: Snatch in week 11
 - **GIVEN** week 11 projects 80 kg best value, 69 kg mHG, set size 3 and 20 weekly reps for the snatch, which is in Monday's session without sets
 - **WHEN** the coach chooses "Autofill"
-- **THEN** the snatch has 7 sets with 20 reps in all, reps that never rise, weights that never fall, the last at 80 kg, and an mHG between 65.6 and 72.4 kg; the values are saved and no indicator is red or blue
+- **THEN** the snatch has 65/3, 65/3, 70/3, 70/3, 75/3, 75/3, 80/2 (mHG 71 kg); the values are saved and no indicator is red or blue
 
 #### Scenario: Decimal projection
 - **GIVEN** a projection of 77.3 kg best value, 66.6 kg mHG, set size 2.5 and 17.5 weekly reps
@@ -49,6 +48,11 @@ exercise's sessions.
 - **WHEN** "Autofill" fills the exercise
 - **THEN** each set is 5 kg heavier than the one before, up to the best value
 
+#### Scenario: Lower mHG
+- **GIVEN** a projection of 100 kg best value, 80 kg mHG, set size 2 and 20 weekly reps in one session
+- **WHEN** "Autofill" fills the exercise
+- **THEN** it gets 70, 70, 75, 75, 80, 80, 85, 90, 95, 100 kg: pairs at the lighter weights, a jump every set at the heavier ones
+
 #### Scenario: Two sessions
 - **GIVEN** the snatch with 20 projected weekly reps is in Monday's and Thursday's sessions, both without sets
 - **WHEN** the coach chooses "Autofill"
@@ -59,8 +63,7 @@ The step 2 toolbar SHALL hold, in this order: undo, redo, "Autofill" and
 "Clear all weights". Undo and redo SHALL step through changes to weights
 and reps (typing into a cell, Autofill, clearing) and be greyed out when
 unavailable. "Clear all weights" SHALL remove all weights and reps of the
-week, and each exercise's "Clear" those of that exercise in its session.
-Every result SHALL be saved like any change.
+week. Every result SHALL be saved like any change.
 
 #### Scenario: Undo autofill
 - **GIVEN** the coach chose "Autofill"
@@ -75,7 +78,48 @@ Every result SHALL be saved like any change.
 - **WHEN** the coach opens step 2
 - **THEN** undo and redo are greyed out, and so is "Clear all weights" when there are no sets
 
-#### Scenario: Clear one exercise
-- **GIVEN** the snatch has sets on Monday and Thursday
-- **WHEN** the coach chooses "Clear" of Monday's snatch
-- **THEN** Monday's snatch has no weights and reps, and Thursday's keeps its sets
+### Requirement: Keyboard in step 2
+In the step 2 tables the arrow keys SHALL move between the weight and reps
+cells, also to the exercises above and below. Enter SHALL move from a
+weight to its reps, from reps to the next set's weight, from the last
+set's reps to the coach note, and from the note to the next exercise's
+first weight.
+
+#### Scenario: Entering a set with Enter
+- **GIVEN** the cursor in the first weight of the snatch
+- **WHEN** the coach types 60, Enter, 3, Enter
+- **THEN** set 1 is 60 kg × 3 and the cursor is in the weight of set 2
+
+#### Scenario: On to the next exercise
+- **GIVEN** the cursor in the coach note of the snatch, with the pull below it
+- **WHEN** the coach presses Enter
+- **THEN** the cursor is in the pull's first weight
+
+#### Scenario: Arrow keys
+- **GIVEN** the cursor in the reps of set 1 of the snatch
+- **WHEN** the coach presses the down arrow
+- **THEN** the cursor is in the first weight of the next exercise
+
+## MODIFIED Requirements
+
+### Requirement: Step 2 values
+Step 2 SHALL show a compact table per session over the whole width. Each
+exercise SHALL take two rows: its cell (category marks and number, the
+name on hover) and coach note span both, the ten set columns hold the
+weight in the first row and the reps in the second, and there are no
+buttons to add or remove sets; typing into an empty cell adds the set. A
+weight without reps SHALL be marked as incomplete. On phones the table
+SHALL scroll sideways with the exercise cells kept in view.
+
+#### Scenario: Sets of the snatch on Monday
+- **GIVEN** Monday's snatch with 2 × 3 @ 60 kg, 3 × 2 @ 70 kg and 2 × 1 @ 80 kg
+- **WHEN** the coach opens step 2
+- **THEN** Monday's table shows the snatch in two rows with the sets 60/3, 60/3, 70/2, 70/2, 70/2, 80/1, 80/1 in the first seven of ten set columns
+
+#### Scenario: Add a set by typing
+- **WHEN** the coach types 70 kg and 2 reps into the empty eighth set cells of the snatch
+- **THEN** the snatch has eight sets and the change is saved
+
+#### Scenario: Exercise cell
+- **WHEN** the coach looks at the snatch in step 2
+- **THEN** its cell shows the snatch mark and "1", and hovering over it shows "1 Snatch"

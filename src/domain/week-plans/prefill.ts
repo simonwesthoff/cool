@@ -42,10 +42,44 @@ const meanOf = (weights: number[], reps: number[]) =>
   ).averageKg!;
 
 /**
- * Weights for the given reps: ending at `best`, rising in steps of 0 or
- * 5 kg, where only the jump into the first set at `best` may be 1–5 kg.
- * Within 5 % of the mHG, the candidate with the fewest jumps wins,
- * then the closest one; otherwise the closest one, then the fewest jumps.
+ * Run lengths from the lightest weight up. The ideal is a jump every two
+ * sets (pairs); `singles` more jumps are added from the heaviest weights
+ * down (single sets at the top), and `plateau` extends the top run instead
+ * (several sets at the best value) for an mHG above the ideal's.
+ */
+export function shapeOf(n: number, extra: number, kind: "singles" | "plateau") {
+  const top =
+    kind === "singles"
+      ? Array<number>(Math.min((n % 2) + 2 * extra, n)).fill(1)
+      : [];
+  if (kind === "plateau") {
+    const t = Math.min((n % 2 === 0 ? 2 : 1) + extra, n);
+    top.push(t);
+  }
+  const rest = n - top.reduce((a, b) => a + b, 0);
+  const runs = Array<number>(Math.floor(rest / 2)).fill(2);
+  if (rest % 2) runs.unshift(1);
+  return [...runs, ...top];
+}
+
+/** Weights from run lengths: the top run at `best`, `d` below it, then 5 kg steps. */
+function ladder(runs: number[], best: number, d: number): number[] {
+  const weights: number[] = [];
+  let w = best;
+  for (let r = runs.length - 1; r >= 0; r--) {
+    for (let i = 0; i < runs[r]!; i++) weights.unshift(w);
+    w -= r === runs.length - 1 ? d : JUMP;
+  }
+  return weights;
+}
+
+/**
+ * Weights for the given reps, ending at `best` and rising by 5 kg (only the
+ * jump into the first set at `best` may be 1–5 kg). The ideal is a jump
+ * every two sets. If its mHG is not within 5 %, jumps are added from the
+ * heaviest weights down (for a lower mHG) or the top run at the best value
+ * grows (for a higher one), until it is; otherwise the closest shape wins,
+ * which for a low mHG is a 5 kg jump in every set.
  */
 export function weightsFor(
   reps: number[],
@@ -53,51 +87,33 @@ export function weightsFor(
   mhg: number,
 ): number[] {
   const n = reps.length;
-  type Candidate = { weights: number[]; jumps: number; distance: number };
-  let pick: Candidate | null = null;
-  const better = (a: Candidate, b: Candidate) => {
-    const aIn = deviation(meanOf(a.weights, reps), mhg) === "within";
-    const bIn = deviation(meanOf(b.weights, reps), mhg) === "within";
-    if (aIn !== bIn) return aIn;
-    if (aIn && a.jumps !== b.jumps) return a.jumps < b.jumps;
-    if (a.distance !== b.distance) return a.distance < b.distance;
-    return a.jumps < b.jumps;
+  const within = (w: number[]) => deviation(meanOf(w, reps), mhg) === "within";
+  const distance = (w: number[]) => Math.abs(meanOf(w, reps) - mhg);
+  /** The best jump d for a shape: 5 kg if it fits, else the closest. */
+  const bestOf = (runs: number[]) => {
+    const options = [5, 4, 3, 2, 1]
+      .map((d) => ({ d, w: ladder(runs, best, d) }))
+      .filter((o) => o.w.every((x) => x >= 0));
+    if (options.length === 0) return null;
+    // The usual 5 kg jump when it fits, else the closest fitting one.
+    const usual = options.find((o) => o.d === JUMP);
+    if (usual && within(usual.w)) return usual.w;
+    const fitting = options.filter((o) => within(o.w));
+    const pool = fitting.length ? fitting : options;
+    return pool.reduce((a, b) => (distance(b.w) < distance(a.w) ? b : a)).w;
   };
-  const consider = (weights: number[], jumps: number) => {
-    if (weights.some((w) => w < 0)) return;
-    const c = {
-      weights,
-      jumps,
-      distance: Math.abs(meanOf(weights, reps) - mhg),
-    };
-    if (!pick || better(c, pick)) pick = c;
-  };
-  // k sets at the best value, the jump d below them, then steps of 0/5.
-  for (let k = 1; k <= n; k++) {
-    const below = n - k;
-    if (below === 0) {
-      consider(Array(n).fill(best), 0);
-      continue;
-    }
-    for (let d = 1; d <= JUMP; d++) {
-      const patterns = 1 << (below - 1);
-      for (let mask = 0; mask < patterns; mask++) {
-        const weights = Array<number>(n).fill(best);
-        let w = best - d;
-        // Every change of weight counts, the smaller jump included.
-        let jumps = 1;
-        weights[below - 1] = w;
-        for (let i = below - 2; i >= 0; i--) {
-          const step = mask & (1 << i) ? JUMP : 0;
-          if (step) jumps++;
-          w -= step;
-          weights[i] = w;
-        }
-        consider(weights, jumps);
-      }
-    }
+  const ideal = bestOf(shapeOf(n, 0, "singles"))!;
+  if (within(ideal)) return ideal;
+  // Lower mHG: more jumps from the top; higher: a longer top run.
+  const kind = meanOf(ideal, reps) > mhg ? "singles" : "plateau";
+  let closest = ideal;
+  for (let extra = 1; extra <= n; extra++) {
+    const w = bestOf(shapeOf(n, extra, kind));
+    if (!w) continue;
+    if (within(w)) return w;
+    if (distance(w) < distance(closest)) closest = w;
   }
-  return pick!.weights;
+  return closest;
 }
 
 /**

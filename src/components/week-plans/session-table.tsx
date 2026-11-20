@@ -10,6 +10,8 @@ import {
 import type { LiftCategory } from "@/domain/exercises/catalog-types";
 import { usesFreeText } from "@/domain/week-plans/week-plan-types";
 import { LiftMarks } from "../exercises/lift-marks";
+import { CellTooltip } from "./cell-tooltip";
+import { moveFocus } from "./table-keys";
 import {
   EDITOR_TABLE_WIDTH,
   EDITOR_WIDTH,
@@ -34,8 +36,6 @@ type Handlers = {
   ) => void;
   onChangeNote: (exerciseKey: string, note: string) => void;
   onChangeFreeText: (exerciseKey: string, text: string) => void;
-  /** Clears all weights and reps of one exercise of the session. */
-  onClearExercise: (exerciseKey: string) => void;
 };
 
 const INDICATORS = ["heaviest", "average", "setSize", "reps"] as const;
@@ -193,6 +193,9 @@ function ExerciseRows({
             onChange={(event) =>
               handlers.onChangeSet(exercise.key, i, field, event.target.value)
             }
+            onKeyDown={moveFocus}
+            data-cell={field}
+            data-set={i}
             aria-label={t(field === "weight" ? "weightOf" : "repsOf", {
               n: i + 1,
               name,
@@ -213,22 +216,13 @@ function ExerciseRows({
           // Stays in view while the table scrolls sideways on phones.
           className={`${line} sticky left-0 z-[1] bg-white px-2 text-left align-middle font-medium dark:bg-zinc-950`}
         >
-          <span className="flex items-center gap-1.5">
+          {/* Only the category marks and the number; the name on hover. */}
+          <span className="flex items-center gap-1.5" data-exercise-label>
             <LiftMarks categories={categories} />
-            <span className="min-w-0">{name}</span>
+            <span aria-hidden="true">{exercise.exerciseNumber}</span>
+            <span className="sr-only">{name}</span>
           </span>
-          {!free && (
-            <button
-              type="button"
-              data-clear-exercise
-              onClick={() => handlers.onClearExercise(exercise.key)}
-              disabled={exercise.sets.length === 0}
-              aria-label={t("clearOf", { name })}
-              className="mt-0.5 rounded px-0 text-xs font-normal text-zinc-600 underline-offset-2 hover:underline disabled:text-zinc-300 disabled:no-underline dark:text-zinc-400 dark:disabled:text-zinc-700"
-            >
-              {t("clear")}
-            </button>
-          )}
+          <CellTooltip text={name} />
         </th>
         {free ? (
           <td colSpan={MAX_SETS + 1} rowSpan={2} className={`${line} p-0`}>
@@ -258,6 +252,8 @@ function ExerciseRows({
             onChange={(event) =>
               handlers.onChangeNote(exercise.key, event.target.value)
             }
+            onKeyDown={moveFocus}
+            data-note
             rows={exercise.feedback ? 1 : 2}
             maxLength={500}
             aria-label={t("noteOf", { name })}
