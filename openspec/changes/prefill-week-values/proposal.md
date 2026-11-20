@@ -11,9 +11,17 @@ the coach adjust instead of type, and makes planning a week much faster.
 ## What Changes
 
 - **"Autofill" button in step 2** (user decisions):
-  - **Where:** next to the "Weights" ("Gewichte") title at the top of step
+  - **Where:** in a toolbar below the "Weights" ("Gewichte") title of step
     2, with a magic wand icon before the text "Autofill" ("Automatisch
     ausfüllen" in German).
+- **Toolbar in step 2** (user decisions), in this order:
+  1. **Undo and redo:** they undo and redo changes to the weights and reps
+     (typing, Autofill, clearing). Each is greyed out when there is
+     nothing to undo or redo.
+  2. **"Autofill".**
+  3. **"Clear all weights":** it removes all weights and reps of the week.
+- **"Clear" per exercise** (user decision): it removes the weights and
+  reps of that exercise in its session.
   - **What it does:** clicking it fills the sets of every exercise 1–29
     that has no sets yet in any of its sessions. Nothing is filled
     automatically; exercises with sets stay untouched.
@@ -34,10 +42,10 @@ the coach adjust instead of type, and makes planning a week much faster.
     decision). Only the jump into the first set at the best value may be
     smaller; with several sets at the best value, that is the jump into
     the first of them.
-  - **More jumps rather than bigger ones:** among equally close options,
-    the one with more 5 kg jumps wins. The mHG is always below the best
-    value; if it is too low to reach, every set is simply 5 kg above the
-    previous one.
+  - **Fewer jumps** (user decision): among the options within 5 % of the
+    mHG, the one with the fewest changes of weight wins, then the one
+    closer to the mHG. The mHG is always below the best value; if it is
+    too low to reach, every set is simply 5 kg above the previous one.
   - **Reps:** from one set to the next, the reps stay the same or fall.
   - **Targets:**
     - **Average reps per set:** they match the planned set size.
@@ -74,16 +82,17 @@ None.
 
 ### Modified Capabilities
 
-- `week-planning`: new requirements "Autofill in step 2" (the button and
-  which exercises) and "Autofill rules" (how the sets are built).
+- `week-planning`: new requirements "Autofill in step 2" (the toolbar,
+  the button and which exercises), "Autofill rules" (how the sets are
+  built) and "Undo, redo and clearing in step 2".
 
 ## Impact
 
-- **Messages:** the button label in English and German.
-- **Icon:** a magic wand icon in `src/components/icons`.
+- **Messages:** the toolbar and clear labels in English and German.
+- **Icons:** magic wand, undo and redo icons in `src/components/icons`.
 - **Calculation:** a new pure function `prefillSets(projection, sessions)`
   in `src/domain/week-plans/prefill.ts`, with unit tests.
-- **Week editor:** the "Autofill" button next to the step 2 title fills
-  the draft with the sets of exercises without sets, and the existing
-  autosave stores them.
+- **Week editor:** the toolbar below the step 2 title (undo, redo,
+  Autofill, clear all) and a "Clear" button per exercise in the session
+  tables; every change goes through the existing autosave.
 - **No API or data changes.**

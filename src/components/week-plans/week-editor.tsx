@@ -11,7 +11,7 @@ import {
   type PlannedSession,
   type WeekPlan,
 } from "@/domain/week-plans/week-plan-types";
-import { MagicWandIcon, PlusIcon } from "../icons";
+import { MagicWandIcon, PlusIcon, RedoIcon, UndoIcon } from "../icons";
 import { prefillSets } from "@/domain/week-plans/prefill";
 import { usePendingSave } from "../macrocycles/pending-save";
 import {
@@ -65,6 +65,9 @@ const dayDate = (weekday: number) => new Date(Date.UTC(2024, 0, weekday));
  * on its own. Switching steps slides only the sessions
  * column (right → left and back) and never leaves the page.
  */
+/** Undo steps kept in step 2. */
+const UNDO_LIMIT = 100;
+
 export function WeekEditor({
   athleteId,
   plan,
@@ -299,12 +302,85 @@ export function WeekEditor({
       router.refresh();
     }
   }
+  // Undo and redo of the values in step 2 (sets of weights and reps).
+  // The history belongs to the step it was made in: undo never reaches
+  // into step 1, and going back and forth starts a new one.
+  const [savedHistory, setHistory] = useState<{
+    step: 0 | 1;
+    past: DraftSession[][];
+    future: DraftSession[][];
+  }>({ step: 0, past: [], future: [] });
+  const history =
+    savedHistory.step === step
+      ? savedHistory
+      : { step, past: [] as DraftSession[][], future: [] as DraftSession[][] };
+  // Typing into the same cell again extends the last undo step.
+  const lastGroup = useRef<string | null>(null);
+  /** Applies a change to the values as one undo step (or extends one). */
+  function changeValues(
+    change: (list: DraftSession[]) => DraftSession[],
+    group: string | null = null,
+  ) {
+    const next = change(sessions);
+    if (next === sessions) return;
+    // A fresh history (another step) never extends an earlier undo step.
+    const extends_ =
+      group !== null &&
+      group === lastGroup.current &&
+      savedHistory.step === step;
+    if (!extends_)
+      setHistory({
+        step,
+        past: [...history.past.slice(-(UNDO_LIMIT - 1)), sessions],
+        future: [],
+      });
+    else setHistory({ ...history, future: [] });
+    lastGroup.current = group;
+    setSessions(normalize(next));
+  }
+  function undo() {
+    const previous = history.past.at(-1);
+    if (!previous) return;
+    setHistory({
+      step,
+      past: history.past.slice(0, -1),
+      future: [sessions, ...history.future],
+    });
+    lastGroup.current = null;
+    setSessions(previous);
+  }
+  function redo() {
+    const next = history.future[0];
+    if (!next) return;
+    setHistory({
+      step,
+      past: [...history.past, sessions],
+      future: history.future.slice(1),
+    });
+    lastGroup.current = null;
+    setSessions(next);
+  }
+  /** The sets of the given exercises emptied; the list itself without any. */
+  const withoutSets = (
+    list: DraftSession[],
+    clears: (e: DraftSession["exercises"][number]) => boolean,
+  ) =>
+    list.some((s) => s.exercises.some((e) => clears(e) && e.sets.length > 0))
+      ? list.map((s) => ({
+          ...s,
+          exercises: s.exercises.map((e) =>
+            clears(e) && e.sets.length > 0 ? { ...e, sets: [] } : e,
+          ),
+        }))
+      : list;
+  const hasSets = sessions.some((s) => s.exercises.some((e) => e.sets.length));
+
   /**
    * "Autofill": every exercise 1–29 without sets in all its sessions gets
    * the sets of its projection, split over its sessions in week order.
    */
   function autofill() {
-    update((list) => {
+    changeValues((list) => {
       const filled = new Map<string, DraftSession["exercises"][number]>();
       for (const n of exercisesOf(list)) {
         if (usesFreeText(n)) continue;
@@ -340,7 +416,10 @@ export function WeekEditor({
 
   const button =
     "inline-flex min-h-11 items-center justify-center rounded-full px-5 font-medium disabled:opacity-60";
-  const secondary = `${button} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`;
+  const secondary = `${button} border border-zinc-300 hover:bg-zinc-100 disabled:hover:bg-transparent dark:border-zinc-700 dark:hover:bg-zinc-900`;
+  // Undo and redo: round icon buttons, greyed out when not available.
+  const iconButton =
+    "inline-flex size-11 items-center justify-center rounded-full border border-zinc-300 hover:bg-zinc-100 disabled:opacity-40 disabled:hover:bg-transparent dark:border-zinc-700 dark:hover:bg-zinc-900";
   const slide =
     "transition-[translate,opacity] duration-300 ease-out motion-reduce:transition-none";
 
@@ -420,11 +499,38 @@ export function WeekEditor({
           }`}
         >
           {/* The column's title moves with the column. */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <h2 className="text-lg font-semibold">
-              {step === 0 ? t("columns.sessions") : t("columns.weights")}
-            </h2>
-            {step === 1 && (
+          <h2 className="text-lg font-semibold">
+            {step === 0 ? t("columns.sessions") : t("columns.weights")}
+          </h2>
+          {step === 1 && (
+            <div
+              role="toolbar"
+              aria-label={t("toolbar.label")}
+              data-values-toolbar
+              className="flex flex-wrap items-center gap-2"
+            >
+              <button
+                type="button"
+                data-undo
+                onClick={undo}
+                disabled={history.past.length === 0}
+                aria-label={t("toolbar.undo")}
+                title={t("toolbar.undo")}
+                className={iconButton}
+              >
+                <UndoIcon />
+              </button>
+              <button
+                type="button"
+                data-redo
+                onClick={redo}
+                disabled={history.future.length === 0}
+                aria-label={t("toolbar.redo")}
+                title={t("toolbar.redo")}
+                className={iconButton}
+              >
+                <RedoIcon />
+              </button>
               <button
                 type="button"
                 data-autofill
@@ -434,8 +540,19 @@ export function WeekEditor({
                 <MagicWandIcon />
                 {t("autofill")}
               </button>
-            )}
-          </div>
+              <button
+                type="button"
+                data-clear-all
+                onClick={() =>
+                  changeValues((list) => withoutSets(list, () => true))
+                }
+                disabled={!hasSets}
+                className={secondary}
+              >
+                {t("toolbar.clearAll")}
+              </button>
+            </div>
+          )}
           {sessions.map((s) => {
             const label = labelOf(s);
             if (step === 0)
@@ -498,14 +615,38 @@ export function WeekEditor({
                   actualsOf={(n) => actuals.get(n)}
                   projectionOf={(n) => projections[n]}
                   onChangeSet={(exerciseKey, index, field, value) =>
-                    updateExercise(s.key, exerciseKey, (y) => {
-                      // Typing into an empty cell creates the sets up to it.
-                      const sets = [...y.sets];
-                      while (sets.length <= index)
-                        sets.push({ key: newKey(), weight: "", reps: "" });
-                      sets[index] = { ...sets[index]!, [field]: value };
-                      return { ...y, sets };
-                    })
+                    changeValues(
+                      (list) =>
+                        list.map((x) =>
+                          x.key !== s.key
+                            ? x
+                            : {
+                                ...x,
+                                exercises: x.exercises.map((y) => {
+                                  if (y.key !== exerciseKey) return y;
+                                  // Typing into an empty cell creates the sets up to it.
+                                  const sets = [...y.sets];
+                                  while (sets.length <= index)
+                                    sets.push({
+                                      key: newKey(),
+                                      weight: "",
+                                      reps: "",
+                                    });
+                                  sets[index] = {
+                                    ...sets[index]!,
+                                    [field]: value,
+                                  };
+                                  return { ...y, sets };
+                                }),
+                              },
+                        ),
+                      `${exerciseKey}:${index}:${field}`,
+                    )
+                  }
+                  onClearExercise={(exerciseKey) =>
+                    changeValues((list) =>
+                      withoutSets(list, (e) => e.key === exerciseKey),
+                    )
                   }
                   onChangeNote={(exerciseKey, note) =>
                     updateExercise(s.key, exerciseKey, (y) => ({ ...y, note }))

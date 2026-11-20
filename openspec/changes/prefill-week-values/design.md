@@ -63,8 +63,9 @@
    - **Choice:**
      - **Smallest deviation** of the mHG wins.
      - **Within tolerance:** among the candidates within 5 % of the mHG,
-       the one with the most 5 kg jumps wins (user: more jumps rather than
-       plateaus), then the smaller deviation.
+       the one with the fewest jumps wins (user decision), then the
+       smaller deviation. Every change of weight counts as a jump, the
+       smaller one into the best value included.
      - **Out of reach:** when no candidate is within 5 %, the closest one
        wins. As the mHG is always below the best value, that is the ramp
        with 5 kg steps in every set (k = 1, d = 5).
@@ -74,14 +75,15 @@
        respect whole kg, plateaus and the smaller jump together.
 
 4. **The "Autofill" button.**
-   - **Where:** in step 2's header row, next to the "Weights" title.
+   - **Where:** in the step 2 toolbar below the "Weights" title (design
+     6).
    - **Style:** a text button with the magic wand icon before the label,
      the editor's secondary style, at least 44 px high.
    - **Icon:** `MagicWandIcon` in `src/components/icons`, a 20 px stroke
      icon like the others, `aria-hidden`.
    - **Which exercises:** those that are not free text (number 1–29) and
      whose session entries all have no sets.
-   - **What it does:** it fills their sets in one `update`, so the
+   - **What it does:** it fills their sets as one undo step, so the
      existing autosave stores them, and the status shows "Saving…" / "All
      changes saved.". Nothing happens without such exercises.
    - **Order of sessions:** the editor's week order (weekday, slot); the
@@ -93,6 +95,28 @@
 5. **Only exercises with neither sets nor free text.** An exercise with
    sets in one session and none in another keeps both as they are, so
    the coach's own split is never doubled.
+
+6. **Toolbar, undo/redo and clearing.**
+   - **Toolbar:** `role="toolbar"` below the step 2 title: undo and redo
+     (round icon buttons with `aria-label` and `title`), "Autofill", and
+     "Clear all weights".
+   - **History:** the editor keeps `past` and `future` lists of draft
+     snapshots (at most 100), recorded by `changeValues` for every change
+     to the sets: typing into a cell, Autofill, Clear and Clear all.
+     - **Typing:** consecutive keystrokes into the same cell form one undo
+       step.
+     - **Per step:** the history belongs to step 2; leaving it and coming
+       back starts a new one, so undo never changes step 1.
+     - **Saving:** undo and redo set the draft like any change, so the
+       autosave stores the result.
+     - **Not recorded:** coach notes and free text.
+   - **Greyed out:** undo without `past`, redo without `future`, "Clear all
+     weights" without any set, and an exercise's "Clear" without sets
+     (`disabled`, 40 % opacity).
+   - **Clear per exercise:** a small text button below the exercise name
+     in its session table, labelled "Clear the weights and reps of
+     <exercise>" for screen readers; exercises with free text have none.
+   - **No confirmation:** clearing can be undone, so it doesn't ask.
 
 ## Risks / Trade-offs
 

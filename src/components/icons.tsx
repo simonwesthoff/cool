@@ -70,3 +70,41 @@ export function MagicWandIcon({
     </svg>
   );
 }
+
+/** A curved arrow back, for "Undo". */
+export function UndoIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M7.5 5 4 8.5 7.5 12" />
+      <path d="M4 8.5h8a4 4 0 0 1 0 8H9" />
+    </svg>
+  );
+}
+
+/** A curved arrow forward, for "Redo". */
+export function RedoIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12.5 5 16 8.5 12.5 12" />
+      <path d="M16 8.5H8a4 4 0 0 0 0 8h3" />
+    </svg>
+  );
+}

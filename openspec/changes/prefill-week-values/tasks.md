@@ -32,3 +32,8 @@
   - **Untouched:** an exercise filled by hand stays unchanged.
 
   Verify: a flow script with all checks passing and screenshots.
+
+## 4. Acceptance feedback
+
+- [x] 4.1 Fewest jumps instead of most (every weight change counts, the smaller jump included), then the closer mHG. Verify with unit tests: week 11 snatch 70 70 70 70 70 75 80, an mHG within 5 % of the best value with no jump.
+- [x] 4.2 Toolbar below the "Weights" title: undo, redo, Autofill, "Clear all weights"; undo/redo of value changes (typing per cell as one step, Autofill, clearing), greyed out when unavailable; "Clear" per exercise; new icons and texts in English and German. Verify with week editor tests (order, greying, undo/redo/clear, saving the result, German labels) and the browser flow.

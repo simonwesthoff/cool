@@ -417,7 +417,9 @@
       "freeTextOf": "Sets and reps of {name}",
       "exercise": "Exercise",
       "row": "Row",
-      "feedback": "Feedback: {text}"
+      "feedback": "Feedback: {text}",
+      "clear": "Clear",
+      "clearOf": "Clear the weights and reps of {name}"
     },
     "totals": {
       "title": "This week (all sessions)",
@@ -451,7 +453,13 @@
     "retry": "Try again",
     "finish": "Finish week planning",
     "offPlan": "{count, plural, one {# value is} other {# values are}} more than 5 % off the plan (red: above, blue: below). It is saved anyway.",
-    "autofill": "Autofill"
+    "autofill": "Autofill",
+    "toolbar": {
+      "label": "Weights and reps",
+      "undo": "Undo",
+      "redo": "Redo",
+      "clearAll": "Clear all weights"
+    }
   },
   "WeekView": {
     "feedback": {

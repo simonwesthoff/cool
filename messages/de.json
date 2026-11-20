@@ -417,7 +417,9 @@
       "freeTextOf": "Sätze und Wiederholungen von {name}",
       "exercise": "Übung",
       "row": "Zeile",
-      "feedback": "Rückmeldung: {text}"
+      "feedback": "Rückmeldung: {text}",
+      "clear": "Löschen",
+      "clearOf": "Gewichte und Wiederholungen von {name} löschen"
     },
     "totals": {
       "title": "Diese Woche (alle Einheiten)",
@@ -451,7 +453,13 @@
     "retry": "Erneut versuchen",
     "finish": "Wochenplanung abschließen",
     "offPlan": "{count, plural, one {# Wert weicht} other {# Werte weichen}} mehr als 5 % vom Plan ab (rot: darüber, blau: darunter). Gespeichert wird trotzdem.",
-    "autofill": "Automatisch ausfüllen"
+    "autofill": "Automatisch ausfüllen",
+    "toolbar": {
+      "label": "Gewichte und Wiederholungen",
+      "undo": "Rückgängig",
+      "redo": "Wiederherstellen",
+      "clearAll": "Alle Gewichte löschen"
+    }
   },
   "WeekView": {
     "feedback": {

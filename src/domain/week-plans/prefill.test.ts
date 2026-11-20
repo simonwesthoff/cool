@@ -58,9 +58,15 @@ describe("prefillSets", () => {
     expect(deviation(a.setSize, 3)).toBe("within");
   });
 
-  it("prefers more 5 kg jumps over plateaus while within 5 %", () => {
+  it("prefers fewer jumps while within 5 %, then the closer mHG", () => {
     const [sets] = prefillSets(week11, 1)!;
-    expect(sets!.map((s) => s.weightKg)).toEqual([55, 60, 65, 70, 75, 80, 80]);
+    expect(sets!.map((s) => s.weightKg)).toEqual([70, 70, 70, 70, 70, 75, 80]);
+    // An mHG within 5 % of the best value needs no jump at all.
+    const [flat] = prefillSets(
+      { bestKg: 100, averageKg: 97, setSize: 2, weeklyReps: 10 },
+      1,
+    )!;
+    expect(flat!.map((s) => s.weightKg)).toEqual([100, 100, 100, 100, 100]);
   });
 
   it("uses a plateau at the best value and a smaller jump into it for a high mHG", () => {

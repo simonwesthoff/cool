@@ -34,6 +34,8 @@ type Handlers = {
   ) => void;
   onChangeNote: (exerciseKey: string, note: string) => void;
   onChangeFreeText: (exerciseKey: string, text: string) => void;
+  /** Clears all weights and reps of one exercise of the session. */
+  onClearExercise: (exerciseKey: string) => void;
 };
 
 const INDICATORS = ["heaviest", "average", "setSize", "reps"] as const;
@@ -215,6 +217,18 @@ function ExerciseRows({
             <LiftMarks categories={categories} />
             <span className="min-w-0">{name}</span>
           </span>
+          {!free && (
+            <button
+              type="button"
+              data-clear-exercise
+              onClick={() => handlers.onClearExercise(exercise.key)}
+              disabled={exercise.sets.length === 0}
+              aria-label={t("clearOf", { name })}
+              className="mt-0.5 rounded px-0 text-xs font-normal text-zinc-600 underline-offset-2 hover:underline disabled:text-zinc-300 disabled:no-underline dark:text-zinc-400 dark:disabled:text-zinc-700"
+            >
+              {t("clear")}
+            </button>
+          )}
         </th>
         {free ? (
           <td colSpan={MAX_SETS + 1} rowSpan={2} className={`${line} p-0`}>

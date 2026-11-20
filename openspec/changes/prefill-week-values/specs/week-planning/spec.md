@@ -1,15 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Autofill in step 2
-Step 2 SHALL show an "Autofill" button with a magic wand icon next to its
-title. Nothing SHALL be filled in before it is chosen. Choosing it SHALL
+Step 2 SHALL show an "Autofill" button with a magic wand icon in a toolbar
+below its title. Nothing SHALL be filled in before it is chosen. Choosing it SHALL
 fill the sets of every exercise 1–29 that has no sets in any of its
 sessions and a complete projection, and save them like any change; other
 exercises SHALL stay untouched.
 
 #### Scenario: The button
 - **WHEN** the coach opens step 2 of a new week
-- **THEN** no sets are filled in yet, and "Autofill" with a magic wand icon is next to the "Weights" title ("Automatisch ausfüllen" next to "Gewichte" in German)
+- **THEN** no sets are filled in yet, and "Autofill" with a magic wand icon is in the toolbar below the "Weights" title ("Automatisch ausfüllen" below "Gewichte" in German)
 
 #### Scenario: Sets already there
 - **GIVEN** the clean has sets in Monday's session and none in Thursday's
@@ -53,3 +53,29 @@ exercise's sessions.
 - **GIVEN** the snatch with 20 projected weekly reps is in Monday's and Thursday's sessions, both without sets
 - **WHEN** the coach chooses "Autofill"
 - **THEN** each session gets 10 of the reps, and both reach 80 kg in their last set
+
+### Requirement: Undo, redo and clearing in step 2
+The step 2 toolbar SHALL hold, in this order: undo, redo, "Autofill" and
+"Clear all weights". Undo and redo SHALL step through changes to weights
+and reps (typing into a cell, Autofill, clearing) and be greyed out when
+unavailable. "Clear all weights" SHALL remove all weights and reps of the
+week, and each exercise's "Clear" those of that exercise in its session.
+Every result SHALL be saved like any change.
+
+#### Scenario: Undo autofill
+- **GIVEN** the coach chose "Autofill"
+- **WHEN** they choose undo
+- **THEN** the exercises are empty again, redo becomes available, and the empty state is saved
+
+#### Scenario: Typing is one step
+- **WHEN** the coach types "65" into a weight cell and chooses undo
+- **THEN** the cell shows its value from before the typing
+
+#### Scenario: Nothing to undo
+- **WHEN** the coach opens step 2
+- **THEN** undo and redo are greyed out, and so is "Clear all weights" when there are no sets
+
+#### Scenario: Clear one exercise
+- **GIVEN** the snatch has sets on Monday and Thursday
+- **WHEN** the coach chooses "Clear" of Monday's snatch
+- **THEN** Monday's snatch has no weights and reps, and Thursday's keeps its sets

@@ -44,8 +44,8 @@ const meanOf = (weights: number[], reps: number[]) =>
 /**
  * Weights for the given reps: ending at `best`, rising in steps of 0 or
  * 5 kg, where only the jump into the first set at `best` may be 1–5 kg.
- * Within 5 % of the mHG, the candidate with the most 5 kg jumps wins,
- * then the closest one; otherwise the closest one.
+ * Within 5 % of the mHG, the candidate with the fewest jumps wins,
+ * then the closest one; otherwise the closest one, then the fewest jumps.
  */
 export function weightsFor(
   reps: number[],
@@ -59,9 +59,9 @@ export function weightsFor(
     const aIn = deviation(meanOf(a.weights, reps), mhg) === "within";
     const bIn = deviation(meanOf(b.weights, reps), mhg) === "within";
     if (aIn !== bIn) return aIn;
-    if (aIn && a.jumps !== b.jumps) return a.jumps > b.jumps;
+    if (aIn && a.jumps !== b.jumps) return a.jumps < b.jumps;
     if (a.distance !== b.distance) return a.distance < b.distance;
-    return a.jumps > b.jumps;
+    return a.jumps < b.jumps;
   };
   const consider = (weights: number[], jumps: number) => {
     if (weights.some((w) => w < 0)) return;
@@ -84,7 +84,8 @@ export function weightsFor(
       for (let mask = 0; mask < patterns; mask++) {
         const weights = Array<number>(n).fill(best);
         let w = best - d;
-        let jumps = d === JUMP ? 1 : 0;
+        // Every change of weight counts, the smaller jump included.
+        let jumps = 1;
         weights[below - 1] = w;
         for (let i = below - 2; i >= 0; i--) {
           const step = mask & (1 << i) ? JUMP : 0;

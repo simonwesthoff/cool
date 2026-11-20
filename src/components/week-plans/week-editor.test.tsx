@@ -483,12 +483,14 @@ describe("WeekEditor step 2", () => {
     const name = table.querySelector("tbody th[scope=rowgroup]")!;
     // Bold lines between exercises.
     expect(table.querySelector("tbody")!.className).toContain("border-t-2");
-    expect(name.textContent).toBe("Snatch: 1 Snatch");
+    expect(name.textContent).toBe("Snatch: 1 SnatchClear");
     expect(name.getAttribute("rowspan")).toBe("2");
-    // No buttons to add or remove sets.
+    // No buttons to add or remove sets; only "Clear" per exercise.
     expect(
-      within(sessionNamed("Monday")).queryAllByRole("button"),
-    ).toHaveLength(0);
+      within(sessionNamed("Monday"))
+        .queryAllByRole("button")
+        .map((b) => b.getAttribute("aria-label")),
+    ).toEqual(["Clear the weights and reps of 1 Snatch"]);
     expect(router.push).not.toHaveBeenCalled();
   });
 
@@ -1044,9 +1046,14 @@ describe("WeekEditor autofill", () => {
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     const button = screen.getByRole("button", { name: "Autofill" });
     expect(button.querySelector("svg[aria-hidden=true]")).toBeTruthy();
-    expect(button.parentElement!.querySelector("h2")!.textContent).toBe(
-      "Weights",
-    );
+    // A toolbar below the Weights title: undo, redo, autofill, clear all.
+    const toolbar = screen.getByRole("toolbar", { name: "Weights and reps" });
+    expect(toolbar.previousElementSibling!.textContent).toBe("Weights");
+    expect(
+      within(toolbar)
+        .getAllByRole("button")
+        .map((b) => b.getAttribute("aria-label") ?? b.textContent),
+    ).toEqual(["Undo", "Redo", "Autofill", "Clear all weights"]);
     expect(column(container).contains(button)).toBe(true);
     expect(
       (
@@ -1095,7 +1102,7 @@ describe("WeekEditor autofill", () => {
           }) as HTMLInputElement
         ).value,
     );
-    expect(weights).toEqual(["55", "60", "65", "70", "75", "80", "80"]);
+    expect(weights).toEqual(["70", "70", "70", "70", "70", "75", "80"]);
     const marks = [...monday.querySelectorAll("[data-deviation]")].map((c) =>
       c.getAttribute("data-deviation"),
     );
@@ -1146,11 +1153,91 @@ describe("WeekEditor autofill", () => {
     ).not.toBe("");
   });
 
+  it("undoes and redoes autofill, typing and clearing, greying unavailable actions", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor([{ weekday: 1, slot: 1, exercises: [empty(1)] }]);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const button = (name: string) =>
+      screen.getByRole("button", { name }) as HTMLButtonElement;
+    const weight = (n: number) =>
+      (
+        within(sessionNamed("Monday")).getByRole("textbox", {
+          name: `Weight in kg of set ${n} of 1 Snatch`,
+        }) as HTMLInputElement
+      ).value;
+    expect(button("Undo").disabled).toBe(true);
+    expect(button("Redo").disabled).toBe(true);
+    expect(button("Clear all weights").disabled).toBe(true);
+    await userEvent.click(button("Autofill"));
+    expect(weight(1)).toBe("70");
+    expect(button("Undo").disabled).toBe(false);
+    // Typing "65" into one cell is one undo step.
+    const first = within(sessionNamed("Monday")).getByRole("textbox", {
+      name: "Weight in kg of set 1 of 1 Snatch",
+    });
+    await userEvent.clear(first);
+    await userEvent.type(first, "65");
+    expect(weight(1)).toBe("65");
+    await userEvent.click(button("Undo"));
+    expect(weight(1)).toBe("70");
+    expect(button("Redo").disabled).toBe(false);
+    await userEvent.click(button("Redo"));
+    expect(weight(1)).toBe("65");
+    expect(button("Redo").disabled).toBe(true);
+    // The redone state is saved like any change.
+    await waitFor(
+      () =>
+        expect(lastBody().sessions[0].exercises[0].setGroups[0].weightKg).toBe(
+          65,
+        ),
+      { timeout: 2000 },
+    );
+    // Clear this exercise, then undo it.
+    await userEvent.click(button("Clear the weights and reps of 1 Snatch"));
+    expect(weight(1)).toBe("");
+    expect(button("Clear the weights and reps of 1 Snatch").disabled).toBe(
+      true,
+    );
+    await userEvent.click(button("Undo"));
+    expect(weight(1)).toBe("65");
+    // Clear all, undo all the way back to the empty week.
+    await userEvent.click(button("Clear all weights"));
+    expect(weight(1)).toBe("");
+    await userEvent.click(button("Undo"));
+    await userEvent.click(button("Undo"));
+    await userEvent.click(button("Undo"));
+    expect(weight(1)).toBe("");
+    expect(button("Undo").disabled).toBe(true);
+    await waitFor(
+      () => expect(lastBody().sessions[0].exercises[0].setGroups).toEqual([]),
+      { timeout: 2000 },
+    );
+  });
+
+  it("clears only the exercise whose Clear is chosen", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderEditor(week11);
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const clears = within(sessionNamed("Monday")).getAllByRole("button", {
+      name: "Clear the weights and reps of 1 Snatch",
+    });
+    await userEvent.click(clears[0]!);
+    const body = await nextSave();
+    expect(body.sessions[0].exercises[0].setGroups).toEqual([]);
+    expect(body.sessions[1].exercises[0].setGroups).toEqual([
+      { sets: 3, reps: 2, weightKg: 75 },
+    ]);
+  });
+
   it("uses the German label", async () => {
     renderEditor(week, "de");
     await userEvent.click(screen.getByRole("button", { name: "Weiter" }));
-    expect(
-      screen.getByRole("button", { name: "Automatisch ausfüllen" }),
-    ).toBeTruthy();
+    for (const name of [
+      "Rückgängig",
+      "Wiederherstellen",
+      "Automatisch ausfüllen",
+      "Alle Gewichte löschen",
+    ])
+      expect(screen.getByRole("button", { name })).toBeTruthy();
   });
 });
